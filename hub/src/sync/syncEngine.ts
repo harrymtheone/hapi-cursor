@@ -541,8 +541,8 @@ export class SyncEngine {
         const target = targetResult.target
         const metadata = session.metadata!
         const flavor = target.flavor
-        if (flavor === 'codex') {
-            return { type: 'error', message: 'Codex sessions are no longer supported', code: 'resume_failed' }
+        if (flavor !== 'claude' && flavor !== 'cursor' && flavor !== 'gemini' && flavor !== 'opencode') {
+            return { type: 'error', message: `Sessions of flavor "${flavor}" are no longer supported`, code: 'resume_failed' }
         }
         const resumeToken = target.agentSessionId
 
