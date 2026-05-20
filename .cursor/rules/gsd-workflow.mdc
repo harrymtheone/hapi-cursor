@@ -1,0 +1,348 @@
+<!-- GSD:project-start source:PROJECT.md -->
+## Project
+
+**HAPI Cursor Edition**
+
+HAPI Cursor Edition 是一个**本地优先、单用户**的远程控制平台，专为「在手机/平板通过 Tailscale 内网远程驾驭本机 Cursor Agent」这一场景而生。它由 CLI（包裹 Cursor agent，连接 hub）+ Hub（Hono 服务 + Socket.IO + SSE + SQLite）+ Web PWA（手机端主界面）三层组成。本仓库 fork 自上游通用 HAPI 平台，**移除多 agent 支持、外部穿透、多用户隔离、Telegram/语音/ServerChan 等渠道**，聚焦到 Cursor + Tailscale + 个人使用这一条核心链路。
+
+**Core Value:** **让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性**——能看到、能控制、能在会话中切换模型 / skills / MCP servers，且 session 创建与恢复无缝。如果只能保留一件事，那就是：在床上拿手机也能像在电脑前一样推动一个 Cursor agent 完成任务。
+
+### Constraints
+
+- **Tech stack**：Bun runtime + TypeScript strict + Bun workspaces — 已落地，不动
+- **Tech stack**：React 19 + Vite + TanStack Router/Query + Tailwind + assistant-ui — 已落地，不动
+- **Tech stack**：`better-sqlite3` 持久化 — 已落地，不主动换
+- **Tech stack**：Hono + Socket.IO + SSE 服务端 — 已落地，不动
+- **Deployment**：本机 + Tailscale 内网；hub 不暴露公网；不依赖任何外部相对方（无 Cloudflare / ngrok / ServerChan / Telegram / ElevenLabs / HAPI relay）
+- **Compatibility**：**不保持向后兼容**——项目策略已经如此（见 AGENTS.md），且本 fork 强化这条原则。SQLite schema 迁移改为「版本不匹配 ⇒ 拒绝启动并提示离线迁移工具」，不再保留运行时迁移路径
+- **Dependencies**：尽量减少外部依赖——`grammy`、`@elevenlabs/react`、`tunwg` 等会随 CUT-* 一起移除
+- **Security**：Tailscale 内网信任模型——单 `CLI_API_TOKEN` 足够；不引入 token rotation、namespace 隔离、rate limiting 等多用户必需特性
+- **Performance**：单人使用，无并发压力——不为多用户场景做缓存/分片优化
+- **Code quality**：典型「不计较 token / 时间成本，只要清晰正确」——Milestone 1 完成时要求 0 循环依赖、typecheck/test/lint 全绿、超大文件拆分到位
+- **Process**：通过 GSD 工作流推进；当前 milestone 1 = 重构 + 瘦身；后续 milestone 2 = Cursor 增量编码
+<!-- GSD:project-end -->
+
+<!-- GSD:stack-start source:codebase/STACK.md -->
+## Technology Stack
+
+## Languages
+- TypeScript ^5 (strict) - All workspace packages (`cli/`, `hub/`, `web/`, `shared/`, `website/`, `docs/`)
+- TSX/React 19 - Web PWA (`web/src/`) and terminal UI components (`cli/src/ui/ink/`)
+- Shell scripts (Bun-runnable `.ts`) - Build/release tooling (`cli/scripts/`, `hub/scripts/`, repo `scripts/`)
+- YAML - GitHub Actions workflows (`.github/workflows/`)
+## Runtime
+- Bun 1.3.14 (`packageManager` in `cli/package.json`, runtime target for hub and CLI)
+- Node.js types ">=25" (`@types/node` declared in cli/hub devDependencies; Bun-native APIs used heavily)
+- Browser (Chromium/Safari/Firefox) for `web/` PWA, also runs as Telegram Mini App
+- Bun (workspaces declared in root `package.json`: `cli`, `shared`, `hub`, `web`, `website`, `docs`)
+- Lockfile: `bun.lock` (present, ~540 KB)
+- `@hapi/protocol` workspace package (`shared/`) consumed via `workspace:*` by cli/hub/web
+## Frameworks
+- Hono ^4.11.2 - HTTP server (`hub/src/web/server.ts`)
+- Socket.IO ^4.8.3 + `@socket.io/bun-engine` ^0.1.0 - CLI ↔ Hub realtime (`hub/src/socket/server.ts`)
+- `bun:sqlite` (built-in) - Persistence (`hub/src/store/index.ts`)
+- grammy ^1.38.4 - Telegram Bot framework (`hub/src/telegram/bot.ts`)
+- jose ^6.1.3 - JWT signing/verification (`hub/src/web/middleware/auth.ts`)
+- web-push ^3.6.7 - VAPID Web Push (`hub/src/push/pushService.ts`)
+- qrcode ^1.5.4 - Terminal QR code for tunnel URL (`hub/src/index.ts`)
+- Zod ^4.2.1 - Runtime validation (all `hub/src/**/*.ts` schemas)
+- Ink ^6.6.0 + React ^19.2.3 - Terminal UI (`cli/src/ui/ink/`)
+- Fastify ^5.6.2 + `fastify-type-provider-zod` 6.1.0 - Local runner HTTP control server (`cli/src/runner/controlServer.ts`)
+- socket.io-client ^4.8.3 - Hub connection (`cli/src/api/apiSession.ts`)
+- axios ^1.13.2 - REST calls to hub (`cli/src/api/api.ts`)
+- `@modelcontextprotocol/sdk` ^1.25.1 - MCP server/client (`cli/src/codex/happyMcpStdioBridge.ts`)
+- cross-spawn ^7.0.6 - Cross-platform process spawning (`cli/src/utils/spawnHappyCLI.ts`)
+- ps-list ^9.0.0 - Process listing (runner diagnostics)
+- chalk ^5.6.2 - Terminal coloring
+- yaml ^2.8.2 - Slash-command frontmatter parsing (`cli/src/modules/common/slashCommands.ts`)
+- tar ^7.5.2 - Runtime asset extraction
+- Zod ^4.2.1 - Runtime validation
+- React ^19.2.3 + React DOM ^19.2.3
+- `@tanstack/react-router` ^1.143.6 - Routing (`web/src/router.tsx`)
+- `@tanstack/react-query` ^5.90.12 + devtools - Server state (`web/src/hooks/queries/`, `web/src/hooks/mutations/`)
+- `@assistant-ui/react` ^0.11.53 + `@assistant-ui/react-markdown` ^0.11.9 - Chat surface (`web/src/components/AssistantChat/`, `web/src/chat/`)
+- `@radix-ui/react-dialog` ^1.1.15, `@radix-ui/react-slot` ^1.2.4 - Headless UI primitives
+- `@xterm/xterm` ^6.0.0 + addons (`canvas`, `fit`, `web-links`) - Terminal viewer (`web/src/components/Terminal/`)
+- `@elevenlabs/react` ^0.13.0 - Voice assistant client (`web/src/realtime/`)
+- shiki ^3.20.0 + `@shikijs/langs` / `@shikijs/themes` - Code highlighting
+- mermaid ^11.12.0 - Diagram rendering in chat
+- katex ^0.16.45 + rehype-katex + remark-math + remark-gfm - Markdown math/GFM
+- socket.io-client ^4.8.3 - SSE fallback / terminal websockets (`web/src/hooks/useTerminalSocket.ts`)
+- diff ^8.0.2 - Diff rendering (`web/src/components/DiffView.tsx`)
+- class-variance-authority ^0.7.1 + clsx ^2.1.1 + tailwind-merge ^3.4.0 - Styling utilities
+- `@lobehub/icons` ^5.4.0 - Provider/model icons
+- Vite ^7.3.0 + `@vitejs/plugin-react` ^5.1.2 - Web build (`web/vite.config.ts`)
+- Tailwind CSS ^4.1.18 + `@tailwindcss/postcss` ^4.1.18 + autoprefixer + postcss - Styling pipeline
+- `vite-plugin-pwa` ^1.2.0 (workbox-* ^7.4.0) - Service worker + manifest (custom `web/src/sw.ts`, `injectManifest` strategy)
+- `bun build --target bun` - Hub bundling (`hub/package.json` `build`)
+- `bun build --compile` (via `cli/scripts/build-executable.ts`) - Single-file CLI executables across `bun-darwin-x64`, `bun-darwin-arm64`, `bun-linux-x64-baseline`, `bun-linux-arm64`, `bun-windows-x64`
+- VitePress ^1.6.4 - Docs site (`docs/`)
+- Vitest ^4.0.16 - CLI/hub/web test runner (`*.test.ts` colocated with sources)
+- `bun test` - Hub test command (uses Bun's built-in runner; see `hub/package.json` `"test": "bun test"`)
+- `@testing-library/react` ^16.3.0 + `@testing-library/jest-dom` ^6.6.3 + jsdom ^26.1.0 - Web component tests
+- Playwright 1.49.1 (root devDependency) - E2E (currently no test files committed)
+## Key Dependencies
+- `@hapi/protocol` (workspace) - Shared Zod schemas, types, Socket.IO event contracts (`shared/src/socket.ts`, `shared/src/schemas.ts`, `shared/src/types.ts`)
+- `zod` ^4.2.1 - Single validation library across all packages (declared in cli, hub, web, shared)
+- `bun:sqlite` (built-in) - Persistence; `better-sqlite3` is **not** used despite AGENTS.md mention
+- Socket.IO suite - CLI ↔ Hub transport
+- Hono - Hub HTTP framework
+- React 19 - Web + CLI Ink UI
+- `tunwg` (external Go binary, downloaded at build time via `hub/scripts/download-tunwg.ts` into `hub/tools/tunwg/`) - WireGuard+TLS relay tunnel client; spawned by `hub/src/tunnel/tunnelManager.ts`
+- `ripgrep` (`rg`) - Bundled binary in `cli/src/modules/ripgrep/`, called by `cli/src/modules/ripgrep/index.ts` (path: `runtime/tools/unpacked/rg`)
+- `difftastic` (`difft`) - Bundled binary in `cli/src/modules/difftastic/`
+- React DevTools Core ^7.0.1 (devDependency) - Ink debugging
+- concurrently ^9.2.1 - Runs `dev:hub` + `dev:web` together
+- `@twsxtd/hapi-darwin-arm64`, `@twsxtd/hapi-darwin-x64`, `@twsxtd/hapi-linux-arm64`, `@twsxtd/hapi-linux-x64`, `@twsxtd/hapi-win32-x64` at version 0.18.1 - Platform-specific prebuilt single-exe shipped via npm `optionalDependencies` (see `cli/scripts/prepare-npm-packages.ts`)
+## Configuration
+- Root: `tsconfig.base.json` - ESNext target/module, `moduleResolution: "bundler"`, strict, ES2022 lib
+- Per-package: `cli/tsconfig.json`, `hub/tsconfig.json`, `web/tsconfig.json`, `shared/tsconfig.json` - extend base
+- Path alias `@/*` → `./src/*` per package (Vite alias in `web/vite.config.ts`; Bun resolves natively for hub/cli)
+- Hub config: `hub/src/configuration.ts` (env > `~/.hapi/settings.json` > defaults; auto-persists)
+- Hub generated secrets stored under `{HAPI_HOME}/`:
+- Web build: `VITE_BASE_URL` (default `/`), `VITE_HUB_PROXY` (default `http://127.0.0.1:3006`)
+- CLI dev env files (gitignored, present in `cli/` per scripts): `.env.dev-local-server`, `.env.integration-test`
+- Not detected (no `.eslintrc*`, `.prettierrc*`, `biome.json`, or `eslint.config.*` in repo root or workspaces — except `website/` uses prettier)
+- 4-space indentation per `AGENTS.md`
+- Root `package.json`:
+- Web outputs `dist/`; hub embeds via `hub/scripts/generate-embedded-web-assets.ts` → `hub/src/web/embeddedAssets.generated.ts` (gitignored)
+## Platform Requirements
+- Bun 1.3.14+ installed globally (used as runtime, package manager, test runner, bundler)
+- Linux x64/arm64, macOS x64/arm64, or Windows x64
+- For relay/tunnel: outbound UDP (WireGuard) or TCP fallback to `relay.hapi.run`
+- Distributed as Bun-compiled single executables via npm (`@twsxtd/hapi` + platform-suffixed optional deps) and Homebrew (formula updater: `cli/scripts/update-homebrew-formula.ts`)
+- Local-first: runs on the user's developer machine; hub binds `127.0.0.1:3006` by default
+- Web PWA hosted at `https://app.hapi.run` (GitHub Pages) when running in `--relay` mode; otherwise served from hub's embedded assets
+<!-- GSD:stack-end -->
+
+<!-- GSD:conventions-start source:CONVENTIONS.md -->
+## Conventions
+
+## Language & Strictness
+- **TypeScript only.** No untyped JavaScript in any package (`cli/`, `hub/`, `web/`, `shared/`).
+- `tsconfig.base.json` enables `strict`, `noImplicitAny`, `strictNullChecks`, `noImplicitReturns`, `target: ESNext`, `module: ESNext`, `moduleResolution: bundler`.
+- Each workspace package extends `../tsconfig.base.json` and adds `paths: { "@/*": ["./src/*"] }` plus `noEmit: true` (Bun runs `.ts` directly; web is bundled by Vite).
+- `bun-types` + `@types/node` provided as devDependencies in `cli/` and `hub/`.
+## Indentation & Formatting
+- **4-space indentation everywhere** (declared in `AGENTS.md`, seen consistently in `hub/src/sync/sessionCache.ts`, `cli/src/utils/errorUtils.ts`, `web/src/components/SessionList.tsx`).
+- **Single quotes** for string literals (`'vitest'`, `'@/lib/utils'`).
+- **Semicolons:** inconsistent across the repo. Newer code in `hub/` and most of `web/`/`shared/` omits trailing semicolons; older `cli/src/utils/*` files keep them (`MessageQueue2.ts`). When editing a file, match the file's existing style; do not mass-change semicolon style.
+- No project-wide Prettier or ESLint config. Only `website/.prettierrc` exists and applies to the marketing site, not to `cli`/`hub`/`web`/`shared`.
+- No Biome config. Style is enforced by review + existing-file convention only.
+- Trailing commas: present in multi-line object/array literals and function signatures (see `tsconfig.base.json`, `web/src/components/SessionList.tsx`).
+## Naming Patterns
+- TypeScript modules: `camelCase.ts` — `sessionCache.ts`, `errorUtils.ts`, `messageService.ts`, `cliApiToken.ts`.
+- React components & TSX containers: `PascalCase.tsx` — `SessionList.tsx`, `CodeBlock.tsx`, `HappyThread.tsx`.
+- shadcn/Radix-style primitives under `web/src/components/ui/`: lowercase — `button.tsx`, `card.tsx`, `dialog.tsx`, `badge.tsx`.
+- Tests: co-located with `.test.ts` or `.test.tsx` suffix matching the file under test.
+- Integration tests: `.integration.test.ts` suffix (e.g., `cli/src/runner/runner.integration.test.ts`).
+- Seam-style isolation tests: `.seam.test.ts` suffix (e.g., `cli/src/claude/claudeRemote.seam.test.ts`).
+- Functions, methods, variables: `camelCase` (`extractErrorInfo`, `getOrCreateSession`, `redundantGoalStatusContent`).
+- Classes & React components: `PascalCase` (`MessageService`, `SessionCache`, `MessageQueue2`, `HappyBot`).
+- Types & interfaces: `PascalCase` (`ErrorInfo`, `SessionSummary`, `SyncEngine`). Prefer `type` aliases over `interface` for object shapes that won't be extended (`type ErrorInfo = { ... }`). Use `interface` only when augmenting or extending (e.g., `QueueItem<T>` in `MessageQueue2.ts`).
+- Constants: `UPPER_SNAKE_CASE` for module-level numeric/string constants (`QUEUED_MESSAGE_THINKING_GRACE_MS`, `DEFAULT_SESSION_PREVIEW_LIMIT`).
+- Boolean-bearing flags: `isXxx` / `hasXxx` (`isClosed`, `hasMore`, `hasActiveSession`).
+- React hooks: `useXxx` (`useLongPress`, `usePlatform`, `useSessionPreviewLimit`).
+## Import Organization
+- `@/*` → `./src/*` in every package's `tsconfig.json` and Vitest/Vite config. Use `@/...` for any intra-package import deeper than the current directory.
+- `@hapi/protocol/*` → workspace package `shared/` via package `exports` (`./messages`, `./modes`, `./schemas`, `./types`, `./voice`).
+## Runtime Validation
+- **Zod (v4)** is the runtime validation library across all packages. Schemas live in `shared/src/schemas.ts` and are imported via `@hapi/protocol/schemas`.
+- Parse external/IPC payloads with `*.parse(...)` or `*.safeParse(...)` before trusting them. See `hub/src/sync/sessionCache.ts` import of `AgentStateSchema`, `MetadataSchema`, `TeamStateSchema`.
+- Hono routes use `fastify-type-provider-zod` / Hono Zod adapter for request validation; Zod issues are surfaced to clients in the response body (see `hub/src/web/routes/messages.ts`).
+## Error Handling
+- Throw native `Error` with a descriptive message; attach extra fields via `Object.assign(new Error(msg), { extra: value })` or cast through `unknown` to add a property (see `apiValidationError` in `cli/src/utils/errorUtils.ts`).
+- Centralized error introspection helpers live in `cli/src/utils/errorUtils.ts`:
+- Always narrow `unknown` before access: `error instanceof Error ? error.message : 'Unknown error'`. Do not `catch (e: any)`; let `catch` infer `unknown`.
+- Return-shape result tagging is used for control-flow errors instead of throwing (see `resolveSessionAccess` in `hub/src/sync/sessionCache.ts`):
+## Logging
+- CLI uses a project logger: `import { logger } from '@/ui/logger'`. Levels seen: `logger.debug(...)`, `logger.error(...)`. Tag log messages with a bracketed module prefix (`[MessageQueue2]`, `[HAPIBot]`) so terminal output stays greppable.
+- Hub side mostly uses `console.error`/`console.log` directly. When testing log output, spy on `console.error` rather than the logger module.
+- Never log secrets, tokens, or full message bodies; logs are tailed to `~/.hapi*` directories and can be uploaded with `doctor`.
+## Function & Module Design
+- **Small, single-responsibility functions.** `cli/src/utils/errorUtils.ts` keeps each concern (validation-error factory, info extractor, retry classifier) in its own exported function.
+- **Class for stateful services.** Long-lived components are classes with `private readonly` dependencies injected via the constructor (`SessionCache`, `MessageService`, `MessageQueue2`, `PermissionAdapter`). Avoid module-level mutable singletons; pass dependencies in.
+- **Exports:** named exports only. No `export default` for app modules. (Vitest config files do `export default defineConfig(...)` — that is the only acceptable default-export pattern.)
+- **Barrel files:** `shared/src/index.ts` is the only intentional barrel; do not add `index.ts` re-export files inside `cli/`, `hub/`, `web/` packages — import the leaf module directly.
+- **Async APIs:** prefer `async`/`await` over raw `.then()`. Functions that may not resolve (e.g., long polling loops) return `Promise<never>`-shaped values explicitly or never resolve.
+## React-Specific Conventions (web/)
+- React 19 + TanStack Router + TanStack Query + assistant-ui.
+- Components are typed function components, props declared inline or as a named `type FooProps = { ... }` just above the component.
+- Hooks live in `web/src/hooks/` (`queries/`, `mutations/`, plus standalone hooks). One hook per file, file name matches the hook name.
+- Styling uses Tailwind v4 utility classes plus CSS variables `var(--app-bg)`, `var(--app-fg)`, `var(--app-button)` for theming. Use the `cn(...)` helper from `@/lib/utils` to merge class names.
+- i18n: never hardcode user-facing strings. Use `useTranslation()` from `@/lib/use-translation` and route through `I18nProvider`.
+## Comments & JSDoc
+- Use JSDoc-style block comments above exported functions/classes to describe purpose, parameters, and return shape — required when the call is non-obvious (see `apiValidationError`, `extractErrorInfo`, `isRetryableConnectionError`).
+- Inline `//` comments only for non-obvious intent, invariants, or trade-offs. Do not narrate the code (`// increment i`).
+- Test files often start with a top-of-file block comment summarizing the race/scenario matrix being covered (see `hub/src/sync/messageService.test.ts`, `hub/src/web/routes/messages.test.ts`). Keep these in sync with the cases below.
+## Code Style Summary
+| Concern | Convention |
+|---------|------------|
+| Indentation | 4 spaces |
+| Quotes | Single `'` |
+| Semicolons | Match existing file; lean off in new `hub/`/`web/`, on in older `cli/` |
+| Trailing commas | Yes, on multi-line literals |
+| Exports | Named only (default reserved for config files) |
+| Path alias | `@/*` for intra-package, `@hapi/protocol/*` for shared |
+| Types | `type` for shapes, `interface` for extension |
+| Validation | Zod (v4) at every external boundary |
+| Errors | Narrow `unknown`, prefer discriminated-union results |
+| Logging | `logger` in cli; `console` in hub; bracketed tag prefix |
+<!-- GSD:conventions-end -->
+
+<!-- GSD:architecture-start source:ARCHITECTURE.md -->
+## Architecture
+
+## System Overview
+```text
+```
+## Component Responsibilities
+| Component | Responsibility | File |
+|-----------|----------------|------|
+| CLI command router | Parse argv, dispatch to subcommand | `cli/src/commands/registry.ts` |
+| CLI agent loops | Wrap external agent (Claude/Codex/etc), stream events | `cli/src/{claude,codex,cursor,gemini,opencode}/loop.ts` |
+| CLI hub client | Socket.IO + REST client, auth, versioned updates | `cli/src/api/api.ts`, `cli/src/api/apiSession.ts` |
+| CLI runner | Background daemon to spawn/manage remote sessions | `cli/src/runner/run.ts`, `cli/src/runner/controlServer.ts` |
+| Hub entrypoint | Wire store, sync engine, sockets, web, telegram, tunnel | `hub/src/index.ts` |
+| Hub HTTP server | Hono app, CORS, auth middleware, route mounting | `hub/src/web/server.ts` |
+| Hub Socket.IO | `/cli` (CLI_API_TOKEN) + `/terminal` (JWT) namespaces | `hub/src/socket/server.ts` |
+| SyncEngine | Facade over session/machine/message/rpc caches | `hub/src/sync/syncEngine.ts` |
+| SessionCache | In-memory session state w/ versioning + activity expiry | `hub/src/sync/sessionCache.ts` |
+| MessageService | Message persistence, pagination, send-to-CLI delivery | `hub/src/sync/messageService.ts` |
+| RpcGateway | Route web→hub→CLI RPC calls via socket | `hub/src/sync/rpcGateway.ts` |
+| EventPublisher | Fan-out SyncEvent → SSE subscribers + listeners | `hub/src/sync/eventPublisher.ts` |
+| SSE manager | Server-Sent Events stream w/ heartbeats | `hub/src/sse/sseManager.ts` |
+| Store | SQLite persistence (sessions/messages/machines/users) | `hub/src/store/index.ts` |
+| NotificationHub | Dispatch SyncEvent → push/telegram/serverchan channels | `hub/src/notifications/notificationHub.ts` |
+| Telegram bot | Mini App entrypoint + permission/notification callbacks | `hub/src/telegram/bot.ts` |
+| Tunnel manager | Optional WireGuard/TLS relay tunnel | `hub/src/tunnel/tunnelManager.ts` |
+| Web App | React PWA with chat + session list + terminal | `web/src/App.tsx`, `web/src/main.tsx` |
+| Web router | TanStack Router route tree | `web/src/router.tsx` |
+| Web API client | REST wrapper, JWT auth, optimistic updates | `web/src/api/client.ts` |
+| Chat reducer | Normalize agent events into UI timeline | `web/src/chat/reducer.ts`, `web/src/chat/normalize.ts` |
+| Shared protocol | Types/schemas/socket events used across packages | `shared/src/types.ts`, `shared/src/socket.ts`, `shared/src/schemas.ts` |
+## Pattern Overview
+- Local-first: hub runs on the user's machine; CLI connects over localhost or a tunnel.
+- Bidirectional sync: CLI pushes session/message/state events; hub broadcasts SSE updates; web→hub→CLI RPC for actions.
+- Versioned optimistic concurrency: `versionedUpdate.ts` (CLI) and `store/versionedUpdates.ts` (hub) reject stale updates.
+- Namespace-scoped multi-tenancy via `CLI_API_TOKEN:<namespace>` suffix.
+- Agent-agnostic core: each agent flavor lives in its own subdirectory but shares `cli/src/modules/common/`.
+- Single binary deployment: `bun build:single-exe` embeds web assets + tunwg into one executable.
+## Layers
+- Purpose: Source-of-truth types/schemas consumed by every package.
+- Location: `shared/src/`
+- Contains: `types.ts` (Session/Message/Machine), `schemas.ts` (Zod), `socket.ts` (event names), `messages.ts`, `flavors.ts`, `models.ts`, `modes.ts`.
+- Depends on: zod only.
+- Used by: cli, hub, web (imported as `@hapi/protocol` via bun workspace alias).
+- Purpose: Wrap each external coding agent CLI as a streamable session.
+- Pattern: Per-flavor `runX.ts` entry → `loop.ts` event pump → `session.ts` state → `xxxLocal.ts` / `xxxRemote.ts` launcher.
+- Depends on: `cli/src/modules/common/` for shared handlers (bash, git, ripgrep, files, slash commands, skills).
+- Purpose: Single Socket.IO + REST client to the hub.
+- Files: `api.ts`, `apiSession.ts`, `apiMachine.ts`, `auth.ts`, `versionedUpdate.ts`, `hubExtraHeaders.ts`, `rpc/RpcHandlerManager.ts`.
+- Purpose: Detached daemon that owns long-lived sessions and accepts spawn/list requests via a local HTTP control server.
+- Files: `run.ts`, `controlServer.ts`, `controlClient.ts`, `worktree.ts`.
+- Purpose: External interfaces (HTTP, Socket.IO, SSE).
+- Hono app under `web/server.ts`; route modules in `web/routes/`.
+- Socket namespaces wired in `socket/server.ts`; handlers in `socket/handlers/cli/`.
+- Purpose: Stateful glue between sockets, store, and clients.
+- Composes: `SessionCache`, `MachineCache`, `MessageService`, `RpcGateway`, `EventPublisher` behind `SyncEngine`.
+- Purpose: SQLite via better-sqlite3, JSON-encoded payloads.
+- Sub-stores: `sessionStore.ts`, `messageStore.ts`, `machineStore.ts`, `userStore.ts`, `pushStore.ts`.
+- Purpose: Optional, hot-pluggable notification channels and the relay tunnel.
+- Presentation: `components/`, `routes/`.
+- State/data: `hooks/queries/` (TanStack Query) + `hooks/mutations/` + `hooks/useSSE.ts`.
+- Chat domain: `chat/` reducer + normalizers turn raw events into a UI timeline.
+- Realtime extras: `realtime/` for ElevenLabs voice + Socket.IO terminal.
+## Data Flow
+### Primary Request Path (web user sends a message)
+### Web→CLI RPC (e.g. list files, git status)
+### CLI heartbeat / activity
+### Terminal session (xterm.js)
+- Server state: SQLite is durable truth; `SessionCache` / `MachineCache` mirror it in memory and use `applyVersionedUpdate` to reject stale writes (`hub/src/store/versionedUpdates.ts`).
+- Web state: TanStack Query cache keyed by `queryKeys` (`web/src/lib/query-keys.ts`); SSE events trigger `invalidateQueries`. Chat timeline kept in a reducer outside of Query (`web/src/chat/reducer.ts`).
+- CLI state: per-session in-memory state in `*/session.ts`; persisted user config in `~/.hapi/settings.json` via `cli/src/persistence.ts`.
+## Key Abstractions
+- Purpose: A single agent conversation owned by a CLI/machine, with `metadata`, `agentState`, `messages`, `mode` (local/remote), `permissionMode`, `model`.
+- Examples: `shared/src/types.ts`, persisted in `hub/src/store/sessionStore.ts`.
+- Pattern: Versioned dual-document (metadata + agent state) + activity timestamp.
+- Purpose: A host running the CLI runner; advertises agent flavors and workspace roots.
+- Examples: `hub/src/store/machineStore.ts`, `hub/src/sync/machineCache.ts`.
+- Purpose: Union of all server-side updates broadcast to clients.
+- Examples: `shared/src/socket.ts` (event names), `hub/src/sync/eventPublisher.ts`.
+- Purpose: Enum of supported agents (`claude`, `codex`, `cursor`, `gemini`, `opencode`).
+- File: `shared/src/flavors.ts`; per-flavor implementation in `cli/src/<flavor>/`.
+- Purpose: Typed request/response between hub and CLI tools (bash, git, ripgrep, file ops, slash commands, skills).
+- Files: `hub/src/sync/rpcGateway.ts`, `cli/src/modules/common/registerCommonHandlers.ts`, `cli/src/modules/common/handlers/`.
+- Purpose: User approval/denial of agent tool calls.
+- Files: `cli/src/modules/common/permission/BasePermissionHandler.ts`, `hub/src/web/routes/permissions.ts`.
+- Purpose: Optimistic concurrency for metadata/agent state.
+- Files: `cli/src/api/versionedUpdate.ts`, `hub/src/store/versionedUpdates.ts`.
+## Entry Points
+- Location: `cli/src/index.ts` → `cli/src/commands/runCli.ts` → `cli/src/commands/registry.ts`.
+- Triggers: User runs `hapi`, `hapi codex`, `hapi runner start`, etc.
+- Default subcommand: `claudeCommand` (when no subcommand matches).
+- Location: `hub/src/index.ts`.
+- Triggers: `hapi hub` (or alias `hapi server`), or directly via `bun run dev:hub`.
+- Responsibilities: Load config, init store + jwt + vapid, build socket/web servers, optionally start tunnel and telegram bot.
+- Location: `web/src/main.tsx` → `web/src/App.tsx` → `web/src/router.tsx`.
+- Triggers: Browser loads `/index.html` (served by hub or static host).
+- Location: `cli/local-client-launcher.ts` is the entry for the all-in-one build; the same `runCli` is invoked, with `hub`/`server` subcommands embedding the hub.
+## Architectural Constraints
+- **Threading:** Single-threaded JS event loop everywhere (Bun and browser). No worker threads in CLI/hub. PTYs run as child processes managed by `cli/src/terminal/TerminalManager.ts`.
+- **Global state:** Hub keeps module-level singletons in `hub/src/index.ts` (`syncEngine`, `webServer`, `sseManager`, `visibilityTracker`, `notificationHub`, `tunnelManager`, `happyBot`). Configuration accessor is module-singleton via `hub/src/configuration.ts` (`getConfiguration()`).
+- **Versioned writes:** Any update to session metadata or agent state MUST go through `applyVersionedUpdate` to avoid losing concurrent edits. Direct store mutation bypasses the gate.
+- **Namespace isolation:** Every store query must scope by `namespace`; the CLI auth handshake stores it on `socket.data.namespace` (`hub/src/socket/server.ts:109`), and `JWT` payloads carry `ns`.
+- **No backward compatibility (project rule):** Breaking protocol/schema changes are allowed; bump `shared/src/version.ts` and adjust all packages atomically.
+- **TypeScript strict:** All packages enforce strict mode via `tsconfig.base.json`.
+- **Path alias:** `@/*` → `./src/*` per package; cross-package imports use `@hapi/protocol`.
+## Anti-Patterns
+### Calling the Store directly from route handlers
+### Emitting events to all Socket.IO clients
+### Unversioned metadata writes
+### Reading CLI state from web via REST polling
+### Putting agent-specific logic into shared modules
+## Error Handling
+- Hono routes return `c.json({ error }, status)` and rely on the global Hono `logger()` middleware (`hub/src/web/server.ts:71`).
+- RPC errors propagate as `{ ok: false, error }` via `RpcGateway` and become thrown errors on the web side.
+- Versioned-update conflicts return `version_conflict` rather than throwing, so callers can decide whether to retry.
+- CLI catches bootstrap errors at top-level in `cli/src/commands/runCli.ts` callers; `cli/src/index.ts` uses `void runCli()` (errors surface via runtime UI/logger).
+## Cross-Cutting Concerns
+- Hub: `console.log` with `[Hub]` / `[Web]` / `[Tunnel]` prefixes; Hono `logger()` middleware for HTTP.
+- CLI: Structured logger in `cli/src/ui/logger.ts`; writes to `~/.hapi/logs/`.
+- Web: `console.log` in dev only; production gates behind `import.meta.env.DEV`.
+- Zod schemas in `shared/src/schemas.ts` reused across cli/hub/web.
+- Hub additionally validates JWT payloads and socket handshake payloads inline (e.g. `jwtPayloadSchema` in `hub/src/socket/server.ts`).
+- CLI ↔ Hub: `CLI_API_TOKEN[:namespace]` shared secret, verified with `parseAccessToken` + `constantTimeEquals` (`hub/src/utils/`).
+- Web ↔ Hub: JWT (HS256) issued by `/api/auth` with `{ uid, ns }`; verified by `createAuthMiddleware` (`hub/src/web/middleware/auth.ts`).
+- Telegram: initData verification in `hub/src/web/telegramInitData.ts`; bindings stored per namespace.
+- Layered: env vars → `~/.hapi/settings.json` → defaults. Hub uses `hub/src/configuration.ts::createConfiguration`; CLI uses `cli/src/configuration.ts` + `cli/src/persistence.ts`.
+- Per-config `source` ('env' | 'file' | 'default' | 'generated') reported at hub startup (`hub/src/index.ts:32`).
+<!-- GSD:architecture-end -->
+
+<!-- GSD:skills-start source:skills/ -->
+## Project Skills
+
+No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.github/skills/`, or `.codex/skills/` with a `SKILL.md` index file.
+<!-- GSD:skills-end -->
+
+<!-- GSD:workflow-start source:GSD defaults -->
+## GSD Workflow Enforcement
+
+Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+
+Use these entry points:
+- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
+- `/gsd-debug` for investigation and bug fixing
+- `/gsd-execute-phase` for planned phase work
+
+Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+<!-- GSD:workflow-end -->
+
+
+
+<!-- GSD:profile-start -->
+## Developer Profile
+
+> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
+> This section is managed by `generate-claude-profile` -- do not edit manually.
+<!-- GSD:profile-end -->

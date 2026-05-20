@@ -101,49 +101,63 @@ Milestone 2 — Cursor 移动端增量编码（路线图暂不覆盖；当前 mi
 
 ## Traceability
 
-Phase 映射在 `/gsd-new-project` 的 ROADMAP.md 创建阶段填充。
+Phase 映射在 ROADMAP.md 创建阶段填充。每个 v1 requirement 映射到唯一 phase。
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REFA-01 | TBD | Pending |
-| REFA-02 | TBD | Pending |
-| REFA-03 | TBD | Pending |
-| REFA-04 | TBD | Pending |
-| REFA-05 | TBD | Pending |
-| REFH-01 | TBD | Pending |
-| REFH-02 | TBD | Pending |
-| REFH-03 | TBD | Pending |
-| REFH-04 | TBD | Pending |
-| REFW-01 | TBD | Pending |
-| REFW-02 | TBD | Pending |
-| REFW-03 | TBD | Pending |
-| REFC-01 | TBD | Pending |
-| REFC-02 | TBD | Pending |
-| REFT-01 | TBD | Pending |
-| REFT-02 | TBD | Pending |
-| REFT-03 | TBD | Pending |
-| CUT-01 | TBD | Pending |
-| CUT-02 | TBD | Pending |
-| CUT-03 | TBD | Pending |
-| CUT-04 | TBD | Pending |
-| CUT-05 | TBD | Pending |
-| CUT-06 | TBD | Pending |
-| CUT-07 | TBD | Pending |
-| CUT-08 | TBD | Pending |
-| CUT-09 | TBD | Pending |
-| CUT-10 | TBD | Pending |
-| CUT-11 | TBD | Pending |
-| CUT-12 | TBD | Pending |
-| VRFY-01 | TBD | Pending |
-| VRFY-02 | TBD | Pending |
-| VRFY-03 | TBD | Pending |
-| VRFY-04 | TBD | Pending |
+| CUT-01 | Phase 1 (Cut non-Cursor agents) | Pending |
+| CUT-02 | Phase 1 (Cut non-Cursor agents) | Pending |
+| CUT-03 | Phase 1 (Cut non-Cursor agents) | Pending |
+| CUT-04 | Phase 1 (Cut non-Cursor agents) | Pending |
+| CUT-06 | Phase 2 (Cut external integration channels) | Pending |
+| CUT-07 | Phase 2 (Cut external integration channels) | Pending |
+| CUT-08 | Phase 2 (Cut external integration channels) | Pending |
+| CUT-09 | Phase 3 (Cut multi-user namespace isolation) | Pending |
+| CUT-10 | Phase 4 (Cut deployment infrastructure) | Pending |
+| CUT-11 | Phase 4 (Cut deployment infrastructure) | Pending |
+| CUT-05 | Phase 5 (Flavor consolidation + capability abstraction) | Pending |
+| REFA-01 | Phase 5 (Flavor consolidation + capability abstraction) | Pending |
+| REFA-02 | Phase 6 (Agent runtime shared kit + mode hardening) | Pending |
+| REFA-05 | Phase 6 (Agent runtime shared kit + mode hardening) | Pending |
+| REFA-03 | Phase 7 (Wire contracts unification & SSE patch contract) | Pending |
+| REFA-04 | Phase 7 (Wire contracts unification & SSE patch contract) | Pending |
+| REFH-01 | Phase 8 (Hub internal decoupling) | Pending |
+| REFH-02 | Phase 8 (Hub internal decoupling) | Pending |
+| REFH-03 | Phase 8 (Hub internal decoupling) | Pending |
+| REFH-04 | Phase 8 (Hub internal decoupling) | Pending |
+| REFW-01 | Phase 9 (Web internal decoupling) | Pending |
+| REFW-02 | Phase 9 (Web internal decoupling) | Pending |
+| REFW-03 | Phase 9 (Web internal decoupling) | Pending |
+| REFC-01 | Phase 10 (Config cleanup) | Pending |
+| REFC-02 | Phase 10 (Config cleanup) | Pending |
+| REFT-01 | Phase 11 (Test gap fill) | Pending |
+| REFT-02 | Phase 11 (Test gap fill) | Pending |
+| REFT-03 | Phase 11 (Test gap fill) | Pending |
+| CUT-12 | Phase 12 (Docs cleanup & milestone verification) | Pending |
+| VRFY-01 | Phase 12 (Docs cleanup & milestone verification) | Pending |
+| VRFY-02 | Phase 12 (Docs cleanup & milestone verification) | Pending |
+| VRFY-03 | Phase 12 (Docs cleanup & milestone verification) | Pending |
+| VRFY-04 | Phase 12 (Docs cleanup & milestone verification) | Pending |
 
 **Coverage:**
 - v1 requirements: 33 total
-- Mapped to phases: 0（ROADMAP 创建阶段填充）
-- Unmapped: 33 ⚠️（待映射）
+- Mapped to phases: 33 ✓
+- Unmapped: 0
+
+**Phase distribution:**
+- Phase 1 (Cut non-Cursor agents): 4 reqs — CUT-01, 02, 03, 04
+- Phase 2 (Cut external integration channels): 3 reqs — CUT-06, 07, 08
+- Phase 3 (Cut multi-user namespace isolation): 1 req — CUT-09
+- Phase 4 (Cut deployment infrastructure): 2 reqs — CUT-10, 11
+- Phase 5 (Flavor consolidation + capability abstraction): 2 reqs — CUT-05, REFA-01
+- Phase 6 (Agent runtime shared kit + mode hardening): 2 reqs — REFA-02, 05
+- Phase 7 (Wire contracts unification & SSE patch contract): 2 reqs — REFA-03, 04
+- Phase 8 (Hub internal decoupling): 4 reqs — REFH-01, 02, 03, 04
+- Phase 9 (Web internal decoupling): 3 reqs — REFW-01, 02, 03
+- Phase 10 (Config cleanup): 2 reqs — REFC-01, 02
+- Phase 11 (Test gap fill): 3 reqs — REFT-01, 02, 03
+- Phase 12 (Docs cleanup & milestone verification): 5 reqs — CUT-12, VRFY-01, 02, 03, 04
 
 ---
 *Requirements defined: 2026-05-20*
-*Last updated: 2026-05-20 after initial definition*
+*Last updated: 2026-05-20 after ROADMAP.md creation (traceability filled, 33/33 mapped)*
