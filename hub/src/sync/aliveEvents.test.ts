@@ -90,7 +90,7 @@ describe('alive incremental events', () => {
         try {
             const session = engine.getOrCreateSession(
                 'session-send-thinking',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
                 { requests: {}, completedRequests: {} },
                 'default'
             )
@@ -136,7 +136,7 @@ describe('alive incremental events', () => {
 
         const session = cache.getOrCreateSession(
             'session-queued-thinking-inactive',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             { requests: {}, completedRequests: {} },
             'default'
         )
@@ -165,7 +165,7 @@ describe('alive incremental events', () => {
 
         const session = cache.getOrCreateSession(
             'session-queued-thinking-grace',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             { requests: {}, completedRequests: {} },
             'default'
         )
@@ -194,7 +194,7 @@ describe('alive incremental events', () => {
 
         const session = cache.getOrCreateSession(
             'session-queued-thinking-expire',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             { requests: {}, completedRequests: {} },
             'default'
         )
@@ -222,7 +222,7 @@ describe('alive incremental events', () => {
 
         const session = cache.getOrCreateSession(
             'session-queued-thinking-clock-skew',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             { requests: {}, completedRequests: {} },
             'default'
         )

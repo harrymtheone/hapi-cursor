@@ -62,8 +62,8 @@ function createSession(): Session {
             path: '/tmp/project',
             host: 'localhost',
             machineId: 'machine-1',
-            flavor: 'codex',
-            codexSessionId: 'codex-thread-1'
+            flavor: 'cursor',
+            cursorSessionId: 'cursor-thread-1'
         },
         metadataVersion: 1,
         agentState: { controlledByUser: false },
@@ -100,7 +100,7 @@ describe('bootstrapExistingSession', () => {
 
         const result = await bootstrapExistingSession({
             sessionId: 'hapi-session-1',
-            flavor: 'codex',
+            flavor: 'cursor',
             workingDirectory: '/tmp/project'
         })
 
@@ -112,7 +112,7 @@ describe('bootstrapExistingSession', () => {
             'hapi-session-1',
             expect.objectContaining({
                 path: '/tmp/project',
-                flavor: 'codex',
+                flavor: 'cursor',
                 startedBy: 'terminal',
                 startedFromRunner: false,
                 machineId: 'machine-1'
@@ -127,7 +127,6 @@ describe('bootstrapExistingSession', () => {
 
         session.metadata = {
             ...existingMetadata,
-            codexSessionId: 'codex-thread-1',
             geminiSessionId: 'gemini-thread-1',
             opencodeSessionId: 'opencode-thread-1',
             cursorSessionId: 'cursor-thread-1',
@@ -148,12 +147,11 @@ describe('bootstrapExistingSession', () => {
 
         const result = await bootstrapExistingSession({
             sessionId: 'hapi-session-1',
-            flavor: 'codex',
+            flavor: 'cursor',
             workingDirectory: '/tmp/project'
         })
 
         expect(result.metadata).toEqual(expect.objectContaining({
-            codexSessionId: 'codex-thread-1',
             geminiSessionId: 'gemini-thread-1',
             opencodeSessionId: 'opencode-thread-1',
             cursorSessionId: 'cursor-thread-1',
@@ -167,19 +165,19 @@ describe('bootstrapExistingSession', () => {
         expect(sessionClient.updateMetadata).toHaveBeenCalledOnce()
         const updateHandler = sessionClient.updateMetadata.mock.calls[0][0]
         expect(updateHandler(session.metadata)).toEqual(expect.objectContaining({
-            codexSessionId: 'codex-thread-1'
+            cursorSessionId: 'cursor-thread-1'
         }))
         expect(notifyRunnerSessionStartedMock).toHaveBeenCalledWith(
             'hapi-session-1',
             expect.objectContaining({
-                codexSessionId: 'codex-thread-1'
+                cursorSessionId: 'cursor-thread-1'
             })
         )
     })
 
     it('advertises remote terminal capability in session metadata', () => {
         const metadata = buildSessionMetadata({
-            flavor: 'codex',
+            flavor: 'cursor',
             startedBy: 'terminal',
             workingDirectory: '/tmp/project',
             machineId: 'machine-1',

@@ -9,7 +9,7 @@ function createSession(overrides: Partial<Session> = {}): Session {
         namespace: 'default',
         name: 'Demo task',
         active: true,
-        metadata: { flavor: 'codex' },
+        metadata: { flavor: 'cursor' },
         ...overrides
     } as Session
 }

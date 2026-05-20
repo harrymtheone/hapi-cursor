@@ -1,5 +1,5 @@
 import { AgentStateSchema, MetadataSchema, TeamStateSchema } from '@hapi/protocol/schemas'
-import type { CodexCollaborationMode, PermissionMode, Session } from '@hapi/protocol/types'
+import type { PermissionMode, Session } from '@hapi/protocol/types'
 import type { Store } from '../store'
 import { clampAliveTime } from './aliveTime'
 import { EventPublisher } from './eventPublisher'
@@ -145,8 +145,7 @@ export class SessionCache {
             model: stored.model,
             modelReasoningEffort: stored.modelReasoningEffort,
             effort: stored.effort,
-            permissionMode: existing?.permissionMode,
-            collaborationMode: existing?.collaborationMode
+            permissionMode: existing?.permissionMode
         }
 
         this.sessions.set(sessionId, session)
@@ -170,7 +169,6 @@ export class SessionCache {
         model?: string | null
         modelReasoningEffort?: string | null
         effort?: string | null
-        collaborationMode?: CodexCollaborationMode
     }): void {
         const t = clampAliveTime(payload.time)
         if (!t) return
@@ -184,7 +182,6 @@ export class SessionCache {
         const previousModel = session.model
         const previousModelReasoningEffort = session.modelReasoningEffort
         const previousEffort = session.effort
-        const previousCollaborationMode = session.collaborationMode
         const pendingThinkingUntil = this.pendingThinkingUntilBySessionId.get(session.id) ?? 0
         const requestedThinking = Boolean(payload.thinking)
         const hubNow = Date.now()
@@ -224,9 +221,6 @@ export class SessionCache {
             }
             session.effort = payload.effort
         }
-        if (payload.collaborationMode !== undefined) {
-            session.collaborationMode = payload.collaborationMode
-        }
 
         const now = Date.now()
         const lastBroadcastAt = this.lastBroadcastAtBySessionId.get(session.id) ?? 0
@@ -234,7 +228,6 @@ export class SessionCache {
             || previousModel !== session.model
             || previousModelReasoningEffort !== session.modelReasoningEffort
             || previousEffort !== session.effort
-            || previousCollaborationMode !== session.collaborationMode
         const shouldBroadcast = (!wasActive && session.active)
             || (wasThinking !== session.thinking)
             || modeChanged
@@ -252,8 +245,7 @@ export class SessionCache {
                     permissionMode: session.permissionMode,
                     model: session.model,
                     modelReasoningEffort: session.modelReasoningEffort,
-                    effort: session.effort,
-                    collaborationMode: session.collaborationMode
+                    effort: session.effort
                 }
             })
         }
@@ -379,7 +371,6 @@ export class SessionCache {
             model?: string | null
             modelReasoningEffort?: string | null
             effort?: string | null
-            collaborationMode?: CodexCollaborationMode
         }
     ): void {
         const session = this.sessions.get(sessionId) ?? this.refreshSession(sessionId)
@@ -422,9 +413,6 @@ export class SessionCache {
                 }
             }
             session.effort = config.effort
-        }
-        if (config.collaborationMode !== undefined) {
-            session.collaborationMode = config.collaborationMode
         }
 
         this.publisher.emit({ type: 'session-updated', sessionId, data: session })
@@ -699,8 +687,7 @@ export class SessionCache {
 
     private extractAgentSessionId(
         metadata: NonNullable<Session['metadata']>
-    ): { field: 'codexSessionId' | 'geminiSessionId' | 'opencodeSessionId' | 'cursorSessionId'; value: string } | null {
-        if (metadata.codexSessionId) return { field: 'codexSessionId', value: metadata.codexSessionId }
+    ): { field: 'geminiSessionId' | 'opencodeSessionId' | 'cursorSessionId'; value: string } | null {
         if (metadata.geminiSessionId) return { field: 'geminiSessionId', value: metadata.geminiSessionId }
         if (metadata.opencodeSessionId) return { field: 'opencodeSessionId', value: metadata.opencodeSessionId }
         if (metadata.cursorSessionId) return { field: 'cursorSessionId', value: metadata.cursorSessionId }

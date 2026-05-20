@@ -33,8 +33,7 @@ export function toSessionSummary(session: Session): SessionSummary {
         summary: session.metadata.summary ? { text: session.metadata.summary.text } : undefined,
         flavor: session.metadata.flavor ?? null,
         worktree: session.metadata.worktree,
-        agentSessionId: session.metadata.codexSessionId
-            ?? session.metadata.geminiSessionId
+        agentSessionId: session.metadata.geminiSessionId
             ?? session.metadata.opencodeSessionId
             ?? session.metadata.cursorSessionId
             ?? undefined

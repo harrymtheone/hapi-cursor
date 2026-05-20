@@ -24,7 +24,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-summary',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default',
             'gpt-5.4'
@@ -60,7 +60,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-reasoning-effort',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default',
             'gpt-5.4',
@@ -79,14 +79,14 @@ describe('session model', () => {
 
         const oldSession = cache.getOrCreateSession(
             'session-model-old',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default',
             'gpt-5.4'
         )
         const newSession = cache.getOrCreateSession(
             'session-model-new',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default'
         )
@@ -173,7 +173,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-reasoning-config',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default',
             'gpt-5.4',
@@ -222,7 +222,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-reasoning-heartbeat',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default',
             'gpt-5.4',
@@ -241,31 +241,6 @@ describe('session model', () => {
         expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBeNull()
     })
 
-    it('tracks collaboration mode updates in memory from config and keepalive', () => {
-        const store = new Store(':memory:')
-        const events: SyncEvent[] = []
-        const cache = new SessionCache(store, createPublisher(events))
-
-        const session = cache.getOrCreateSession(
-            'session-collaboration-mode',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
-            null,
-            'default',
-            'gpt-5.4'
-        )
-
-        cache.applySessionConfig(session.id, { collaborationMode: 'plan' })
-        expect(cache.getSession(session.id)?.collaborationMode).toBe('plan')
-
-        cache.handleSessionAlive({
-            sid: session.id,
-            time: Date.now(),
-            thinking: false,
-            collaborationMode: 'default'
-        })
-        expect(cache.getSession(session.id)?.collaborationMode).toBe('default')
-    })
-
     it('touches session updatedAt when new message activity is recorded', () => {
         const store = new Store(':memory:')
         const events: SyncEvent[] = []
@@ -273,7 +248,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-message-activity',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default'
         )
@@ -303,7 +278,7 @@ describe('session model', () => {
         try {
             const session = engine.getOrCreateSession(
                 'session-web-message-activity',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
                 null,
                 'default'
             )
@@ -326,7 +301,7 @@ describe('session model', () => {
         const cache = new SessionCache(store, createPublisher(events))
         const session = cache.getOrCreateSession(
             'session-cli-message-activity',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default'
         )
@@ -372,7 +347,7 @@ describe('session model', () => {
         const cache = new SessionCache(store, createPublisher(events))
         const session = cache.getOrCreateSession(
             'session-cli-tool-activity',
-            { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+            { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
             null,
             'default'
         )
@@ -445,8 +420,8 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'codex',
-                    codexSessionId: 'codex-thread-1'
+                    flavor: 'gemini',
+                    geminiSessionId: 'gemini-thread-1'
                 },
                 null,
                 'default',
@@ -509,8 +484,8 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'codex',
-                    codexSessionId: 'codex-thread-1'
+                    flavor: 'gemini',
+                    geminiSessionId: 'gemini-thread-1'
                 },
                 null,
                 'default',
@@ -880,8 +855,8 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'codex',
-                    codexSessionId: 'codex-thread-1'
+                    flavor: 'gemini',
+                    geminiSessionId: 'gemini-thread-1'
                 },
                 { controlledByUser: false },
                 'default',
@@ -896,19 +871,18 @@ describe('session model', () => {
                 type: 'success',
                 target: {
                     sessionId: session.id,
-                    flavor: 'codex',
+                    flavor: 'gemini',
                     directory: '/tmp/project',
                     machineId: 'machine-1',
                     host: 'localhost',
                     active: session.active,
                     thinking: session.thinking,
                     controlledByUser: false,
-                    agentSessionId: 'codex-thread-1',
+                    agentSessionId: 'gemini-thread-1',
                     model: 'gpt-5.4',
                     effort: null,
                     modelReasoningEffort: 'xhigh',
-                    permissionMode: undefined,
-                    collaborationMode: undefined
+                    permissionMode: undefined
                 }
             })
         } finally {
@@ -975,7 +949,7 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'codex'
+                    flavor: 'gemini'
                 },
                 null,
                 'default'
@@ -1007,8 +981,8 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'codex',
-                    codexSessionId: 'codex-thread-1'
+                    flavor: 'gemini',
+                    geminiSessionId: 'gemini-thread-1'
                 },
                 { controlledByUser: false },
                 'default'
@@ -1039,8 +1013,8 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'codex',
-                    codexSessionId: 'codex-thread-1'
+                    flavor: 'gemini',
+                    geminiSessionId: 'gemini-thread-1'
                 },
                 { controlledByUser: true },
                 'default'
@@ -1058,14 +1032,14 @@ describe('session model', () => {
     })
 
     describe('session dedup by agent session ID', () => {
-        it('merges duplicate when codexSessionId collides', async () => {
+        it('merges duplicate when geminiSessionId collides', async () => {
             const store = new Store(':memory:')
             const events: SyncEvent[] = []
             const cache = new SessionCache(store, createPublisher(events))
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 null,
                 'default'
             )
@@ -1075,7 +1049,7 @@ describe('session model', () => {
 
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 null,
                 'default'
             )
@@ -1098,13 +1072,13 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 null,
                 'default'
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-Y' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-Y' },
                 null,
                 'default'
             )
@@ -1122,13 +1096,13 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 null,
                 'ns1'
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 null,
                 'ns2'
             )
@@ -1146,7 +1120,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
                 null,
                 'default'
             )
@@ -1163,7 +1137,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 {
                     requests: { 'req-from-active-duplicate': { tool: 'Bash', arguments: {} } },
                     completedRequests: {}
@@ -1176,7 +1150,7 @@ describe('session model', () => {
 
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 {
                     requests: { 'req-from-target': { tool: 'Read', arguments: {} } },
                     completedRequests: {}
@@ -1215,7 +1189,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
                 {
                     requests: { 'req-from-source': { tool: 'Bash', arguments: {} } },
                     completedRequests: {}
@@ -1224,7 +1198,7 @@ describe('session model', () => {
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini' },
                 {
                     requests: { 'req-from-target': { tool: 'Read', arguments: {} } },
                     completedRequests: {}
@@ -1264,13 +1238,13 @@ describe('session model', () => {
             try {
                 const s1 = engine.getOrCreateSession(
                     'tag-1',
-                    { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                    { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                     null,
                     'default'
                 )
                 const s2 = engine.getOrCreateSession(
                     'tag-2',
-                    { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                    { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                     null,
                     'default'
                 )
@@ -1306,13 +1280,13 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 null,
                 'default'
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 null,
                 'default'
             )
@@ -1350,7 +1324,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 {
                     requests: {
                         'req-1': { tool: 'Bash', arguments: {} },
@@ -1362,7 +1336,7 @@ describe('session model', () => {
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'codex', codexSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', flavor: 'gemini', geminiSessionId: 'thread-X' },
                 {
                     requests: {
                         'req-3': { tool: 'Bash', arguments: {} }

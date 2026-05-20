@@ -26,13 +26,13 @@ describe('cli resume routes', () => {
         const app = createApp({
             listLocalResumableSessions: () => [{
                 sessionId: 'session-1',
-                flavor: 'codex',
+                flavor: 'cursor',
                 directory: '/tmp/project',
                 machineId: 'machine-1',
                 active: false,
                 thinking: false,
                 controlledByUser: false,
-                agentSessionId: 'codex-thread-1',
+                agentSessionId: 'cursor-thread-1',
                 updatedAt: 123
             }]
         } as never)
@@ -45,13 +45,13 @@ describe('cli resume routes', () => {
         expect(await response.json()).toEqual({
             sessions: [{
                 sessionId: 'session-1',
-                flavor: 'codex',
+                flavor: 'cursor',
                 directory: '/tmp/project',
                 machineId: 'machine-1',
                 active: false,
                 thinking: false,
                 controlledByUser: false,
-                agentSessionId: 'codex-thread-1',
+                agentSessionId: 'cursor-thread-1',
                 updatedAt: 123
             }]
         })

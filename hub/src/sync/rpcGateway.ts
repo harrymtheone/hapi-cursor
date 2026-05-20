@@ -1,4 +1,4 @@
-import type { CodexCollaborationMode, PermissionMode } from '@hapi/protocol/types'
+import type { PermissionMode } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
 import type { RpcRegistry } from '../socket/rpcRegistry'
 
@@ -53,20 +53,6 @@ export type RpcListDirectoryResponse = {
 
 export type RpcPathExistsResponse = {
     exists: Record<string, boolean>
-}
-
-export type RpcCodexModel = {
-    id: string
-    displayName: string
-    isDefault: boolean
-    defaultReasoningEffort?: string | null
-    supportedReasoningEfforts?: string[]
-}
-
-export type RpcListCodexModelsResponse = {
-    success: boolean
-    models?: RpcCodexModel[]
-    error?: string
 }
 
 export type RpcOpencodeModel = {
@@ -133,7 +119,6 @@ export class RpcGateway {
             model?: string | null
             modelReasoningEffort?: string | null
             effort?: string | null
-            collaborationMode?: CodexCollaborationMode
         }
     ): Promise<unknown> {
         return await this.sessionRpc(sessionId, 'set-session-config', config)
@@ -150,7 +135,7 @@ export class RpcGateway {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent: 'claude' | 'codex' | 'cursor' | 'gemini' | 'opencode' = 'claude',
+        agent: 'claude' | 'cursor' | 'gemini' | 'opencode' = 'cursor',
         model?: string,
         modelReasoningEffort?: string,
         yolo?: boolean,
@@ -283,14 +268,6 @@ export class RpcGateway {
             skills?: Array<{ name: string; description?: string }>
             error?: string
         }
-    }
-
-    async listCodexModelsForSession(sessionId: string): Promise<RpcListCodexModelsResponse> {
-        return await this.sessionRpc(sessionId, 'listCodexModels', {}, MODEL_LIST_RPC_TIMEOUT_MS) as RpcListCodexModelsResponse
-    }
-
-    async listCodexModelsForMachine(machineId: string): Promise<RpcListCodexModelsResponse> {
-        return await this.machineRpc(machineId, 'listCodexModels', {}, MODEL_LIST_RPC_TIMEOUT_MS) as RpcListCodexModelsResponse
     }
 
     async listOpencodeModelsForSession(sessionId: string): Promise<RpcListOpencodeModelsResponse> {

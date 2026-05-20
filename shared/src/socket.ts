@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { CodexCollaborationMode, PermissionMode } from './modes'
+import type { PermissionMode } from './modes'
 import type { SessionEndReason } from './schemas'
 export { SessionEndReasonSchema, type SessionEndReason } from './schemas'
 
@@ -158,7 +158,6 @@ export interface ClientToServerEvents {
         model?: string | null
         modelReasoningEffort?: string | null
         effort?: string | null
-        collaborationMode?: CodexCollaborationMode
     }) => void
     'session-end': (data: { sid: string; time: number; reason?: SessionEndReason }) => void
     'messages-consumed': (data: { sid: string; localIds: string[] }) => void

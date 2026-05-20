@@ -4,17 +4,14 @@ import * as readline from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
 import type {
-    CodexPermissionMode,
     CursorPermissionMode,
     GeminiPermissionMode,
     OpencodePermissionMode
 } from '@hapi/protocol/types'
 import { ApiClient } from '@/api/api'
-import type { ReasoningEffort } from '@/codex/appServerTypes'
 import { authAndSetupMachineIfNeeded } from '@/ui/auth'
 import { initializeToken } from '@/ui/tokenInit'
 import { maybeAutoStartServer } from '@/utils/autoStartServer'
-import { assertCodexLocalSupported } from '@/codex/utils/codexVersion'
 import type { CommandDefinition } from './types'
 
 function formatSessionLine(session: ResumableSession, index: number): string {
@@ -68,22 +65,6 @@ async function dispatchLocalResume(target: LocalResumeTarget): Promise<void> {
         resumeSessionId: target.agentSessionId,
         startedBy: 'terminal' as const,
         permissionMode: target.permissionMode
-    }
-
-    if (target.flavor === 'codex') {
-        assertCodexLocalSupported()
-        const { runCodex } = await import('@/codex/runCodex')
-        await runCodex({
-            existingSessionId: base.existingSessionId,
-            workingDirectory: base.workingDirectory,
-            resumeSessionId: base.resumeSessionId,
-            startedBy: base.startedBy,
-            permissionMode: base.permissionMode as CodexPermissionMode | undefined,
-            model: target.model ?? undefined,
-            modelReasoningEffort: (target.modelReasoningEffort ?? undefined) as ReasoningEffort | undefined,
-            collaborationMode: target.collaborationMode
-        })
-        return
     }
 
     if (target.flavor === 'gemini') {

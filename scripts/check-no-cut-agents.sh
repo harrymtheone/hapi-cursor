@@ -33,14 +33,6 @@ WHITELIST=(
   --glob '!bun.lock'
   --glob '!.git/**'
   --glob '!scripts/check-no-cut-agents.sh'
-  # TEMP-CUT-02: drop after 01-02 commit
-  --glob '!cli/src/codex/**'
-  --glob '!cli/src/commands/codex.ts'
-  --glob '!cli/src/commands/codex.test.ts'
-  --glob '!.github/workflows/codex-pr-review.yml'
-  --glob '!.github/workflows/codex-mention-response.yml'
-  --glob '!scripts/dev/self-test-codex-web-env.sh'
-  --glob '!scripts/dev/seed-codex-web-fixture.ts'
   # TEMP-CUT-03: drop after 01-03 commit
   --glob '!cli/src/gemini/**'
   --glob '!cli/src/agent/backends/**'
@@ -60,16 +52,13 @@ WHITELIST=(
   --glob '!cli/src/utils/**'                          # TEMP-WIDE: owner=01-05-cleanup
   --glob '!cli/src/lib.ts'                            # TEMP-WIDE: owner=01-05-cleanup
   --glob '!hub/src/sync/**'                           # TEMP-WIDE: owner=01-05-cleanup
-  --glob '!hub/src/socket/handlers/cli/**'            # TEMP-WIDE: owner=CUT-02
   --glob '!hub/src/web/routes/**'                     # TEMP-WIDE: owner=01-05-cleanup
-  --glob '!hub/src/push/**'                           # TEMP-WIDE: owner=CUT-02
   --glob '!hub/README.md'                             # TEMP-WIDE: owner=01-05-cleanup
   --glob '!shared/src/schemas.ts'                     # TEMP-WIDE: owner=01-05-cleanup
   --glob '!shared/src/sessionSummary.ts'              # TEMP-WIDE: owner=01-05-cleanup
   --glob '!shared/src/models.ts'                      # TEMP-WIDE: owner=01-05-cleanup
   --glob '!shared/src/models.test.ts'                 # TEMP-WIDE: owner=01-05-cleanup
   --glob '!shared/src/types.ts'                       # TEMP-WIDE: owner=01-05-cleanup
-  --glob '!shared/src/socket.ts'                      # TEMP-WIDE: owner=CUT-02
   --glob '!shared/src/resume.test.ts'                 # TEMP-WIDE: owner=01-05-cleanup
   --glob '!web/src/lib/**'                            # TEMP-WIDE: owner=01-05-cleanup
   --glob '!web/src/api/**'                            # TEMP-WIDE: owner=01-05-cleanup
@@ -81,7 +70,6 @@ WHITELIST=(
   --glob '!web/src/types/**'                          # TEMP-WIDE: owner=01-05-cleanup
   --glob '!web/README.md'                             # TEMP-WIDE: owner=01-05-cleanup
   --glob '!.github/workflows/issue-auto-response.yml' # TEMP-WIDE: owner=01-05-cleanup
-  --glob '!.github/prompts/**'                        # TEMP-WIDE: owner=CUT-02
   --glob '!README.md'                                 # TEMP-WIDE: owner=01-05-cleanup
   --glob '!CONTRIBUTING.md'                           # TEMP-WIDE: owner=01-05-cleanup
   --glob '!AGENTS.md'                                 # TEMP-WIDE: owner=01-05-cleanup

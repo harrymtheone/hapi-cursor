@@ -8,7 +8,7 @@
  */
 
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
-import type { AgentFlavor, CodexCollaborationMode, DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
+import type { AgentFlavor, DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
 import type { Store, CancelQueuedMessageResult } from '../store'
 import type { RpcRegistry } from '../socket/rpcRegistry'
@@ -18,12 +18,10 @@ import { MachineCache, type Machine } from './machineCache'
 import { MessageService } from './messageService'
 import {
     RpcGateway,
-    type RpcCodexModel,
     type RpcCommandResponse,
     type RpcDeleteUploadResponse,
     type RpcGeneratedImageResponse,
     type RpcListDirectoryResponse,
-    type RpcListCodexModelsResponse,
     type RpcListOpencodeModelsResponse,
     type RpcOpencodeModel,
     type RpcPathExistsResponse,
@@ -36,12 +34,10 @@ export type { Session, SyncEvent } from '@hapi/protocol/types'
 export type { Machine } from './machineCache'
 export type { SyncEventListener } from './eventPublisher'
 export type {
-    RpcCodexModel,
     RpcCommandResponse,
     RpcDeleteUploadResponse,
     RpcGeneratedImageResponse,
     RpcListDirectoryResponse,
-    RpcListCodexModelsResponse,
     RpcListOpencodeModelsResponse,
     RpcOpencodeModel,
     RpcPathExistsResponse,
@@ -226,7 +222,6 @@ export class SyncEngine {
         model?: string | null
         modelReasoningEffort?: string | null
         effort?: string | null
-        collaborationMode?: CodexCollaborationMode
     }): void {
         this.sessionCache.handleSessionAlive(payload)
         this.triggerDedupIfNeeded(payload.sid)
@@ -373,7 +368,6 @@ export class SyncEngine {
             model?: string | null
             modelReasoningEffort?: string | null
             effort?: string | null
-            collaborationMode?: CodexCollaborationMode
         }
     ): Promise<void> {
         const session = this.sessionCache.getSession(sessionId)
@@ -395,7 +389,6 @@ export class SyncEngine {
                 model?: Session['model']
                 modelReasoningEffort?: Session['modelReasoningEffort']
                 effort?: Session['effort']
-                collaborationMode?: Session['collaborationMode']
             }
         }
         const applied = obj.applied
@@ -409,7 +402,7 @@ export class SyncEngine {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent: 'claude' | 'codex' | 'cursor' | 'gemini' | 'opencode' = 'claude',
+        agent: 'claude' | 'cursor' | 'gemini' | 'opencode' = 'claude',
         model?: string,
         modelReasoningEffort?: string,
         yolo?: boolean,
@@ -436,7 +429,7 @@ export class SyncEngine {
 
     private resolveFlavor(session: Session): AgentFlavor {
         const flavor = session.metadata?.flavor
-        return flavor === 'codex' || flavor === 'gemini' || flavor === 'opencode' || flavor === 'cursor'
+        return flavor === 'gemini' || flavor === 'opencode' || flavor === 'cursor'
             ? flavor
             : 'cursor'
     }
@@ -448,7 +441,6 @@ export class SyncEngine {
         }
 
         const flavor = this.resolveFlavor(session)
-        if (flavor === 'codex') return metadata.codexSessionId ?? null
         if (flavor === 'gemini') return metadata.geminiSessionId ?? null
         if (flavor === 'opencode') return metadata.opencodeSessionId ?? null
         if (flavor === 'cursor') return metadata.cursorSessionId ?? null
@@ -492,8 +484,7 @@ export class SyncEngine {
                 model: session.model ?? null,
                 effort: session.effort ?? null,
                 modelReasoningEffort: session.modelReasoningEffort ?? null,
-                permissionMode: session.permissionMode,
-                collaborationMode: session.collaborationMode
+                permissionMode: session.permissionMode
             }
         }
     }
@@ -518,7 +509,6 @@ export class SyncEngine {
                     effort: target.effort,
                     modelReasoningEffort: target.modelReasoningEffort,
                     permissionMode: target.permissionMode,
-                    collaborationMode: target.collaborationMode,
                     updatedAt: session?.updatedAt ?? 0,
                     name: session?.metadata?.name,
                     summary: session?.metadata?.summary?.text
@@ -551,6 +541,9 @@ export class SyncEngine {
         const target = targetResult.target
         const metadata = session.metadata!
         const flavor = target.flavor
+        if (flavor === 'codex') {
+            return { type: 'error', message: 'Codex sessions are no longer supported', code: 'resume_failed' }
+        }
         const resumeToken = target.agentSessionId
 
         const onlineMachines = this.machineCache.getOnlineMachinesByNamespace(namespace)
@@ -664,8 +657,7 @@ export class SyncEngine {
         prev: Session['metadata'] | null,
         next: NonNullable<Session['metadata']>
     ): boolean {
-        return (prev?.codexSessionId ?? null) === (next.codexSessionId ?? null)
-            && (prev?.geminiSessionId ?? null) === (next.geminiSessionId ?? null)
+        return (prev?.geminiSessionId ?? null) === (next.geminiSessionId ?? null)
             && (prev?.opencodeSessionId ?? null) === (next.opencodeSessionId ?? null)
             && (prev?.cursorSessionId ?? null) === (next.cursorSessionId ?? null)
     }
@@ -761,14 +753,6 @@ export class SyncEngine {
         error?: string
     }> {
         return await this.rpcGateway.listSkills(sessionId)
-    }
-
-    async listCodexModelsForSession(sessionId: string): Promise<RpcListCodexModelsResponse> {
-        return await this.rpcGateway.listCodexModelsForSession(sessionId)
-    }
-
-    async listCodexModelsForMachine(machineId: string): Promise<RpcListCodexModelsResponse> {
-        return await this.rpcGateway.listCodexModelsForMachine(machineId)
     }
 
     async listOpencodeModelsForSession(sessionId: string): Promise<RpcListOpencodeModelsResponse> {

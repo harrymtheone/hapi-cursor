@@ -5,7 +5,7 @@ import { ensureOpencodeHookPlugin } from './utils/hookPlugin';
 import { buildOpencodeEnv } from './utils/config';
 import { ensureOpencodeConfig } from './utils/opencodeConfig';
 import { TITLE_INSTRUCTION } from './utils/systemPrompt';
-import { buildHapiMcpBridge } from '@/codex/utils/buildHapiMcpBridge';
+import { buildHapiMcpBridge } from '@/agent/serverUtils/buildHapiMcpBridge';
 import type { OpencodeHookEvent } from './types';
 import type { OpencodeHookServer } from './utils/startOpencodeHookServer';
 import { createOpencodeStorageScanner, type OpencodeStorageScannerHandle } from './utils/opencodeStorageScanner';

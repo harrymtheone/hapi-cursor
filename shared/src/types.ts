@@ -25,7 +25,6 @@ export type {
     ClaudePermissionMode,
     CodexCollaborationMode,
     CodexCollaborationModeOption,
-    CodexPermissionMode,
     CursorPermissionMode,
     GeminiPermissionMode,
     OpencodePermissionMode,

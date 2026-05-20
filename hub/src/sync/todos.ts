@@ -1,4 +1,4 @@
-import { isObject } from '@hapi/protocol'
+import { AGENT_MESSAGE_PAYLOAD_TYPE, isObject } from '@hapi/protocol'
 import { unwrapRoleWrappedRecordEnvelope } from '@hapi/protocol/messages'
 import { TodoItemSchema, TodosSchema } from '@hapi/protocol/schemas'
 import type { TodoItem } from '@hapi/protocol/types'
@@ -35,8 +35,8 @@ function extractTodosFromClaudeOutput(content: Record<string, unknown>): TodoIte
     return null
 }
 
-function extractTodosFromCodexMessage(content: Record<string, unknown>): TodoItem[] | null {
-    if (content.type !== 'codex') return null
+function extractTodosFromAgentMessage(content: Record<string, unknown>): TodoItem[] | null {
+    if (content.type !== AGENT_MESSAGE_PAYLOAD_TYPE) return null
 
     const data = isObject(content.data) ? content.data : null
     if (!data || data.type !== 'tool-call') return null
@@ -53,7 +53,7 @@ function extractTodosFromCodexMessage(content: Record<string, unknown>): TodoIte
 }
 
 function extractTodosFromAcpMessage(content: Record<string, unknown>): TodoItem[] | null {
-    if (content.type !== 'codex') return null
+    if (content.type !== AGENT_MESSAGE_PAYLOAD_TYPE) return null
 
     const data = isObject(content.data) ? content.data : null
     if (!data || data.type !== 'plan') return null
@@ -94,6 +94,6 @@ export function extractTodoWriteTodosFromMessageContent(messageContent: unknown)
     if (!isObject(record.content) || typeof record.content.type !== 'string') return null
 
     return extractTodosFromClaudeOutput(record.content)
-        ?? extractTodosFromCodexMessage(record.content)
+        ?? extractTodosFromAgentMessage(record.content)
         ?? extractTodosFromAcpMessage(record.content)
 }

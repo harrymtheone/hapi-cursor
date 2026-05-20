@@ -6,7 +6,7 @@ import { requireMachine } from './guards'
 
 const spawnBodySchema = z.object({
     directory: z.string().min(1),
-    agent: z.enum(['claude', 'codex', 'cursor', 'gemini', 'opencode']).optional(),
+    agent: z.enum(['claude', 'cursor', 'gemini', 'opencode']).optional(),
     model: z.string().optional(),
     effort: z.string().optional(),
     modelReasoningEffort: z.string().optional(),
@@ -120,29 +120,6 @@ export function createMachinesRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return c.json({ exists })
         } catch (error) {
             return c.json({ error: error instanceof Error ? error.message : 'Failed to check paths' }, 500)
-        }
-    })
-
-    app.get('/machines/:id/codex-models', async (c) => {
-        const engine = getSyncEngine()
-        if (!engine) {
-            return c.json({ success: false, error: 'Not connected' }, 503)
-        }
-
-        const machineId = c.req.param('id')
-        const machine = requireMachine(c, engine, machineId)
-        if (machine instanceof Response) {
-            return machine
-        }
-
-        try {
-            const result = await engine.listCodexModelsForMachine(machineId)
-            return c.json(result)
-        } catch (error) {
-            return c.json({
-                success: false,
-                error: error instanceof Error ? error.message : 'Failed to list Codex models'
-            }, 500)
         }
     })
 

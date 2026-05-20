@@ -1,5 +1,4 @@
 import fs from 'fs/promises';
-import os from 'os';
 
 import { ApiClient } from '@/api/api';
 import { TrackedSession } from './types';
@@ -20,7 +19,6 @@ import { isRetryableConnectionError } from '@/utils/errorUtils';
 import { cleanupRunnerState, getInstalledCliMtimeMs, isRunnerRunningCurrentlyInstalledHappyVersion, stopRunner } from './controlClient';
 import { startRunnerControlServer } from './controlServer';
 import { createWorktree, removeWorktree, type WorktreeInfo } from './worktree';
-import { join } from 'path';
 import { buildMachineMetadata } from '@/agent/sessionFactory';
 import { resolveWorkspaceRoots } from '@/utils/workspaceRoot';
 import { hashRunnerCliApiToken } from './runnerIdentity';
@@ -348,19 +346,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
         // Resolve authentication token if provided
         let extraEnv: Record<string, string> = {};
         if (options.token) {
-          if (options.agent === 'codex') {
-
-            // Create a temporary directory for Codex
-            const codexHomeDir = await fs.mkdtemp(join(os.tmpdir(), 'hapi-codex-'));
-
-            // Write the token to the temporary directory
-            await fs.writeFile(join(codexHomeDir, 'auth.json'), options.token);
-
-            // Set the environment variable for Codex
-            extraEnv = {
-              CODEX_HOME: codexHomeDir
-            };
-          } else if (options.agent === 'claude' || !options.agent) {
+          if (options.agent === 'claude' || !options.agent) {
             extraEnv = {
               CLAUDE_CODE_OAUTH_TOKEN: options.token
             };
@@ -530,7 +516,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
             // Terminate the entire process tree (wrapper + agent
             // grandchildren).  Using killProcessByChildProcess instead of
             // a bare SIGTERM ensures that detached grandchild processes
-            // (the actual claude/codex agent) are also reaped, and that
+            // (the actual agent grandchild) are also reaped, and that
             // SIGTERM → SIGKILL escalation kicks in if needed.
             if (happyProcess) {
               void killProcessByChildProcess(happyProcess);
@@ -905,24 +891,16 @@ export function buildCliArgs(
   options: SpawnSessionOptions,
   yolo?: boolean
 ): string[] {
-  const agentCommand = agent === 'codex'
-    ? 'codex'
-    : agent === 'cursor'
-      ? 'cursor'
-      : agent === 'gemini'
-        ? 'gemini'
-        : agent === 'opencode'
-          ? 'opencode'
-          : 'claude';
+  const agentCommand = agent === 'cursor'
+    ? 'cursor'
+    : agent === 'gemini'
+      ? 'gemini'
+      : agent === 'opencode'
+        ? 'opencode'
+        : 'claude';
   const args = [agentCommand];
   if (options.resumeSessionId) {
-    if (agent === 'codex') {
-      args.push('resume', options.resumeSessionId);
-    } else if (agent === 'cursor') {
-      args.push('--resume', options.resumeSessionId);
-    } else {
-      args.push('--resume', options.resumeSessionId);
-    }
+    args.push('--resume', options.resumeSessionId);
   }
   args.push('--hapi-starting-mode', 'remote', '--started-by', 'runner');
   if (options.model) {
@@ -930,9 +908,6 @@ export function buildCliArgs(
   }
   if (options.effort && agent === 'claude') {
     args.push('--effort', options.effort);
-  }
-  if (options.modelReasoningEffort && agent === 'codex') {
-    args.push('--model-reasoning-effort', options.modelReasoningEffort);
   }
   if (options.permissionMode && (PERMISSION_MODES as readonly string[]).includes(options.permissionMode)) {
     args.push('--permission-mode', options.permissionMode);

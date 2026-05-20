@@ -35,7 +35,7 @@ vi.mock('./utils/geminiBackend', () => ({
     }))
 }));
 
-vi.mock('@/codex/utils/buildHapiMcpBridge', () => ({
+vi.mock('@/agent/serverUtils/buildHapiMcpBridge', () => ({
     buildHapiMcpBridge: async () => ({
         server: { stop: () => {} },
         mcpServers: {}

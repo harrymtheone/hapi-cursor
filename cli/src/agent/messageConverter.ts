@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { AgentMessage, PlanItem } from './types';
 
-export type CodexMessage =
+export type AgentWireMessage =
     | { type: 'message'; message: string }
     | { type: 'reasoning'; message: string; id: string }
     | {
@@ -20,14 +20,15 @@ export type CodexMessage =
     | { type: 'plan'; entries: PlanItem[] }
     | { type: 'error'; message: string };
 
-export function convertAgentMessage(message: AgentMessage): CodexMessage | null {
+export function convertAgentMessage(message: AgentMessage): AgentWireMessage | null {
     switch (message.type) {
         case 'text':
             return { type: 'message', message: message.text };
         case 'reasoning':
             // AgentMessage uses `text` (consistent with the `text` variant);
-            // the wire-level CodexMessage uses `message` to match the
-            // existing reasoning format emitted by the Codex path.
+            // the wire-level AgentWireMessage uses `message` to match the
+            // legacy reasoning payload format (wire `type` tag preserved via
+            // AGENT_MESSAGE_PAYLOAD_TYPE in shared/src/modes.ts).
             return { type: 'reasoning', message: message.text, id: randomUUID() };
         case 'tool_call':
             return {

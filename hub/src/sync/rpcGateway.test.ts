@@ -53,12 +53,5 @@ describe('RpcGateway RPC timeouts', () => {
         expect(timeouts).toEqual([30_000])
     })
 
-    it('uses an extended RPC timeout when listing Codex models', async () => {
-        const { gateway, timeouts } = createGateway()
-
-        await gateway.listCodexModelsForMachine('machine-1')
-
-        expect(timeouts).toEqual([120_000])
-    })
 })
 

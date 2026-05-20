@@ -8,7 +8,7 @@ function createSession(overrides?: Partial<Session>): Session {
     const baseMetadata = {
         path: '/tmp/project',
         host: 'localhost',
-        flavor: 'codex' as const
+        flavor: 'gemini' as const
     }
     const base: Session = {
         id: 'session-1',
@@ -28,11 +28,10 @@ function createSession(overrides?: Partial<Session>): Session {
         agentStateVersion: 1,
         thinking: false,
         thinkingAt: 1,
-        model: 'gpt-5.4',
+        model: 'gemini-2.5-pro',
         modelReasoningEffort: null,
         effort: null,
-        permissionMode: 'default',
-        collaborationMode: 'default'
+        permissionMode: 'default'
     }
 
     return {
@@ -58,12 +57,6 @@ function createApp(session: Session, opts?: {
     const applySessionConfig = async (sessionId: string, config: Record<string, unknown>) => {
         applySessionConfigCalls.push([sessionId, config])
     }
-    const listCodexModelsForSession = async () => ({
-        success: true,
-        models: [
-            { id: 'gpt-5.5', displayName: 'GPT-5.5', isDefault: true }
-        ]
-    })
     const listOpencodeModelsForSession = async () => ({
         success: true,
         availableModels: [
@@ -76,7 +69,6 @@ function createApp(session: Session, opts?: {
     const engine = {
         resolveSessionAccess: () => ({ ok: true, sessionId: session.id, session }),
         applySessionConfig,
-        listCodexModelsForSession,
         listOpencodeModelsForSession,
         resumeSession,
         listSlashCommands: opts?.listSlashCommands ?? (async () => ({
@@ -96,169 +88,6 @@ function createApp(session: Session, opts?: {
 }
 
 describe('sessions routes', () => {
-    it('rejects collaboration mode changes for local Codex sessions', async () => {
-        const session = createSession({
-            agentState: {
-                controlledByUser: true,
-                requests: {},
-                completedRequests: {}
-            }
-        })
-        const { app, applySessionConfigCalls } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/collaboration-mode', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ mode: 'plan' })
-        })
-
-        expect(response.status).toBe(409)
-        expect(await response.json()).toEqual({
-            error: 'Collaboration mode can only be changed for remote Codex sessions'
-        })
-        expect(applySessionConfigCalls).toEqual([])
-    })
-
-    it('rejects collaboration mode changes for non-Codex sessions', async () => {
-        const session = createSession({
-            metadata: {
-                path: '/tmp/project',
-                host: 'localhost',
-                flavor: 'claude'
-            }
-        })
-        const { app, applySessionConfigCalls } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/collaboration-mode', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ mode: 'plan' })
-        })
-
-        expect(response.status).toBe(400)
-        expect(await response.json()).toEqual({
-            error: 'Collaboration mode is only supported for Codex sessions'
-        })
-        expect(applySessionConfigCalls).toEqual([])
-    })
-
-    it('applies collaboration mode changes for remote Codex sessions', async () => {
-        const { app, applySessionConfigCalls } = createApp(createSession())
-
-        const response = await app.request('/api/sessions/session-1/collaboration-mode', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ mode: 'plan' })
-        })
-
-        expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({ ok: true })
-        expect(applySessionConfigCalls).toEqual([
-            ['session-1', { collaborationMode: 'plan' }]
-        ])
-    })
-
-    it('rejects model reasoning effort changes for non-Codex sessions', async () => {
-        const session = createSession({
-            metadata: {
-                path: '/tmp/project',
-                host: 'localhost',
-                flavor: 'claude'
-            }
-        })
-        const { app, applySessionConfigCalls } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/model-reasoning-effort', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ modelReasoningEffort: 'high' })
-        })
-
-        expect(response.status).toBe(400)
-        expect(await response.json()).toEqual({
-            error: 'Model reasoning effort is only supported for Codex sessions'
-        })
-        expect(applySessionConfigCalls).toEqual([])
-    })
-
-    it('rejects model reasoning effort changes for local Codex sessions', async () => {
-        const session = createSession({
-            agentState: {
-                controlledByUser: true,
-                requests: {},
-                completedRequests: {}
-            }
-        })
-        const { app, applySessionConfigCalls } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/model-reasoning-effort', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ modelReasoningEffort: 'high' })
-        })
-
-        expect(response.status).toBe(409)
-        expect(await response.json()).toEqual({
-            error: 'Model reasoning effort can only be changed for remote Codex sessions'
-        })
-        expect(applySessionConfigCalls).toEqual([])
-    })
-
-    it('applies model reasoning effort changes for remote Codex sessions', async () => {
-        const { app, applySessionConfigCalls } = createApp(createSession())
-
-        const response = await app.request('/api/sessions/session-1/model-reasoning-effort', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ modelReasoningEffort: 'xhigh' })
-        })
-
-        expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({ ok: true })
-        expect(applySessionConfigCalls).toEqual([
-            ['session-1', { modelReasoningEffort: 'xhigh' }]
-        ])
-    })
-
-    it('applies model changes for remote Codex sessions', async () => {
-        const { app, applySessionConfigCalls } = createApp(createSession())
-
-        const response = await app.request('/api/sessions/session-1/model', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ model: 'gpt-5.5' })
-        })
-
-        expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({ ok: true })
-        expect(applySessionConfigCalls).toEqual([
-            ['session-1', { model: 'gpt-5.5' }]
-        ])
-    })
-
-    it('rejects model changes for local Codex sessions', async () => {
-        const session = createSession({
-            agentState: {
-                controlledByUser: true,
-                requests: {},
-                completedRequests: {}
-            }
-        })
-        const { app, applySessionConfigCalls } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/model', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ model: 'gpt-5.5' })
-        })
-
-        expect(response.status).toBe(409)
-        expect(await response.json()).toEqual({
-            error: 'Model selection can only be changed for remote Codex sessions'
-        })
-        expect(applySessionConfigCalls).toEqual([])
-    })
-
     it('applies model changes for OpenCode sessions', async () => {
         const session = createSession({
             metadata: {
@@ -363,20 +192,6 @@ describe('sessions routes', () => {
         ])
     })
 
-    it('returns Codex models for active Codex sessions', async () => {
-        const { app } = createApp(createSession())
-
-        const response = await app.request('/api/sessions/session-1/codex-models')
-
-        expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({
-            success: true,
-            models: [
-                { id: 'gpt-5.5', displayName: 'GPT-5.5', isDefault: true }
-            ]
-        })
-    })
-
     it('returns OpenCode models for active OpenCode sessions', async () => {
         const session = createSession({
             metadata: { path: '/tmp/project', host: 'localhost', flavor: 'opencode' }
@@ -427,7 +242,7 @@ describe('sessions routes', () => {
     it('rejects unsupported permission mode for flavor via resume body', async () => {
         const session = createSession({
             active: false,
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'codex' }
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'gemini' }
         })
         const { app } = createApp(session)
 

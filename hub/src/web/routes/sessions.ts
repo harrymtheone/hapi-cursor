@@ -1,5 +1,5 @@
 import { getPermissionModesForFlavor, isPermissionModeAllowedForFlavor, supportsModelChange, toSessionSummary } from '@hapi/protocol'
-import { CodexCollaborationModeSchema, PermissionModeSchema } from '@hapi/protocol/schemas'
+import { PermissionModeSchema } from '@hapi/protocol/schemas'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { SyncEngine, Session } from '../../sync/syncEngine'
@@ -12,10 +12,6 @@ const permissionModeSchema = z.object({
 
 const resumeBodySchema = z.object({
     permissionMode: PermissionModeSchema.optional()
-})
-
-const collaborationModeSchema = z.object({
-    mode: CodexCollaborationModeSchema
 })
 
 const modelSchema = z.object({
@@ -323,40 +319,6 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
         }
     })
 
-    app.post('/sessions/:id/collaboration-mode', async (c) => {
-        const engine = requireSyncEngine(c, getSyncEngine)
-        if (engine instanceof Response) {
-            return engine
-        }
-
-        const sessionResult = requireSessionFromParam(c, engine, { requireActive: true })
-        if (sessionResult instanceof Response) {
-            return sessionResult
-        }
-
-        const flavor = sessionResult.session.metadata?.flavor ?? 'claude'
-        if (flavor !== 'codex') {
-            return c.json({ error: 'Collaboration mode is only supported for Codex sessions' }, 400)
-        }
-        if (sessionResult.session.agentState?.controlledByUser === true) {
-            return c.json({ error: 'Collaboration mode can only be changed for remote Codex sessions' }, 409)
-        }
-
-        const body = await c.req.json().catch(() => null)
-        const parsed = collaborationModeSchema.safeParse(body)
-        if (!parsed.success) {
-            return c.json({ error: 'Invalid body' }, 400)
-        }
-
-        try {
-            await engine.applySessionConfig(sessionResult.sessionId, { collaborationMode: parsed.data.mode })
-            return c.json({ ok: true })
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to apply collaboration mode'
-            return c.json({ error: message }, 409)
-        }
-    })
-
     app.post('/sessions/:id/model', async (c) => {
         const engine = requireSyncEngine(c, getSyncEngine)
         if (engine instanceof Response) {
@@ -378,51 +340,11 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
         if (!supportsModelChange(flavor)) {
             return c.json({ error: 'Model selection is not supported for this session' }, 400)
         }
-        if (flavor === 'codex' && sessionResult.session.agentState?.controlledByUser === true) {
-            return c.json({ error: 'Model selection can only be changed for remote Codex sessions' }, 409)
-        }
-
         try {
             await engine.applySessionConfig(sessionResult.sessionId, { model: parsed.data.model })
             return c.json({ ok: true })
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to apply model'
-            return c.json({ error: message }, 409)
-        }
-    })
-
-    app.post('/sessions/:id/model-reasoning-effort', async (c) => {
-        const engine = requireSyncEngine(c, getSyncEngine)
-        if (engine instanceof Response) {
-            return engine
-        }
-
-        const sessionResult = requireSessionFromParam(c, engine, { requireActive: true })
-        if (sessionResult instanceof Response) {
-            return sessionResult
-        }
-
-        const flavor = sessionResult.session.metadata?.flavor ?? 'claude'
-        if (flavor !== 'codex') {
-            return c.json({ error: 'Model reasoning effort is only supported for Codex sessions' }, 400)
-        }
-        if (sessionResult.session.agentState?.controlledByUser === true) {
-            return c.json({ error: 'Model reasoning effort can only be changed for remote Codex sessions' }, 409)
-        }
-
-        const body = await c.req.json().catch(() => null)
-        const parsed = modelReasoningEffortSchema.safeParse(body)
-        if (!parsed.success) {
-            return c.json({ error: 'Invalid body' }, 400)
-        }
-
-        try {
-            await engine.applySessionConfig(sessionResult.sessionId, {
-                modelReasoningEffort: parsed.data.modelReasoningEffort
-            })
-            return c.json({ ok: true })
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to apply model reasoning effort'
             return c.json({ error: message }, 409)
         }
     })
@@ -581,36 +503,6 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
                 success: false,
                 error: error instanceof Error ? error.message : 'Failed to list skills'
             })
-        }
-    })
-
-    app.get('/sessions/:id/codex-models', async (c) => {
-        const engine = requireSyncEngine(c, getSyncEngine)
-        if (engine instanceof Response) {
-            return engine
-        }
-
-        const sessionResult = requireSessionFromParam(c, engine, { requireActive: true })
-        if (sessionResult instanceof Response) {
-            return sessionResult
-        }
-
-        const flavor = sessionResult.session.metadata?.flavor ?? 'claude'
-        if (flavor !== 'codex') {
-            return c.json({
-                success: false,
-                error: 'Codex models are only available for Codex sessions'
-            }, 400)
-        }
-
-        try {
-            const result = await engine.listCodexModelsForSession(sessionResult.sessionId)
-            return c.json(result)
-        } catch (error) {
-            return c.json({
-                success: false,
-                error: error instanceof Error ? error.message : 'Failed to list Codex models'
-            }, 500)
         }
     })
 

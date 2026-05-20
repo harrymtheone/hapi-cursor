@@ -1,37 +1,29 @@
 /**
- * Unified MCP bridge setup for Codex local and remote modes.
+ * Unified MCP bridge setup. Spawns the hapi MCP stdio bridge and returns
+ * the MCP server config for downstream consumers.
  *
- * This module provides a single source of truth for starting the hapi MCP
- * bridge server and generating the MCP server configuration that Codex needs.
+ * NOTE: The legacy `hapi mcp` subcommand was removed alongside the Codex
+ * agent (Phase 1 / CUT-02 + SC#4). Callers in surviving non-Cursor agents
+ * that still reference this helper will fail at spawn-time until they are
+ * themselves removed (01-03 / 01-04).
  */
 
 import { startHappyServer } from '@/agent/serverUtils/startHappyServer';
 import { getHappyCliCommand } from '@/utils/spawnHappyCLI';
 import type { ApiSessionClient } from '@/api/apiSession';
 
-/**
- * MCP server entry configuration.
- */
 export interface McpServerEntry {
     command: string;
     args: string[];
 }
 
-/**
- * Map of MCP server names to their configurations.
- */
 export type McpServersConfig = Record<string, McpServerEntry>;
 
-/**
- * Result of starting the hapi MCP bridge.
- */
 export interface HapiMcpBridge {
-    /** The running server instance */
     server: {
         url: string;
         stop: () => void;
     };
-    /** MCP server config to pass to Codex (works for both CLI and SDK) */
     mcpServers: McpServersConfig;
 }
 
@@ -39,13 +31,6 @@ export interface HapiMcpBridgeOptions {
     emitTitleSummary?: boolean;
 }
 
-/**
- * Start the hapi MCP bridge server and return the configuration
- * needed to connect Codex to it.
- *
- * This is the single source of truth for MCP bridge setup,
- * used by both local and remote launchers.
- */
 export async function buildHapiMcpBridge(
     client: ApiSessionClient,
     options: HapiMcpBridgeOptions = {}

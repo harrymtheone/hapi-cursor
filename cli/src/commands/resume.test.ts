@@ -7,9 +7,7 @@ const {
     listResumableSessionsMock,
     getLocalResumeTargetMock,
     handoffSessionToLocalMock,
-    runCodexMock,
     runCursorMock,
-    assertCodexLocalSupportedMock,
     existsSyncMock
 } = vi.hoisted(() => ({
     initializeTokenMock: vi.fn(async () => {}),
@@ -18,9 +16,7 @@ const {
     listResumableSessionsMock: vi.fn(),
     getLocalResumeTargetMock: vi.fn(),
     handoffSessionToLocalMock: vi.fn(async () => {}),
-    runCodexMock: vi.fn(async () => {}),
     runCursorMock: vi.fn(async () => {}),
-    assertCodexLocalSupportedMock: vi.fn(),
     existsSyncMock: vi.fn(() => true)
 }))
 
@@ -36,9 +32,7 @@ vi.mock('@/api/api', () => ({
         })
     }
 }))
-vi.mock('@/codex/runCodex', () => ({ runCodex: runCodexMock }))
 vi.mock('@/cursor/runCursor', () => ({ runCursor: runCursorMock }))
-vi.mock('@/codex/utils/codexVersion', () => ({ assertCodexLocalSupported: assertCodexLocalSupportedMock }))
 vi.mock('node:fs', () => ({ existsSync: existsSyncMock }))
 
 import { resumeCommand } from './resume'
@@ -59,42 +53,8 @@ describe('resumeCommand', () => {
         listResumableSessionsMock.mockReset()
         getLocalResumeTargetMock.mockReset()
         handoffSessionToLocalMock.mockClear()
-        runCodexMock.mockClear()
         runCursorMock.mockClear()
-        assertCodexLocalSupportedMock.mockClear()
         existsSyncMock.mockReturnValue(true)
-    })
-
-    it('resumes a Codex target by HAPI session id', async () => {
-        getLocalResumeTargetMock.mockResolvedValue({
-            sessionId: 'hapi-session-1',
-            flavor: 'codex',
-            directory: '/tmp/project',
-            machineId: 'machine-1',
-            active: true,
-            thinking: false,
-            controlledByUser: false,
-            agentSessionId: 'codex-thread-1',
-            model: 'gpt-5.4',
-            modelReasoningEffort: 'xhigh',
-            permissionMode: 'default',
-            collaborationMode: 'default'
-        })
-
-        await resumeCommand.run(createContext(['hapi-session-1']))
-
-        expect(handoffSessionToLocalMock).toHaveBeenCalledWith('hapi-session-1')
-        expect(assertCodexLocalSupportedMock).toHaveBeenCalledOnce()
-        expect(runCodexMock).toHaveBeenCalledWith({
-            existingSessionId: 'hapi-session-1',
-            workingDirectory: '/tmp/project',
-            resumeSessionId: 'codex-thread-1',
-            startedBy: 'terminal',
-            permissionMode: 'default',
-            model: 'gpt-5.4',
-            modelReasoningEffort: 'xhigh',
-            collaborationMode: 'default'
-        })
     })
 
     it('resumes an inactive Cursor target without handoff', async () => {
@@ -132,18 +92,18 @@ describe('resumeCommand', () => {
 
         getLocalResumeTargetMock.mockResolvedValue({
             sessionId: 'hapi-session-3',
-            flavor: 'codex',
+            flavor: 'cursor',
             directory: '/tmp/project',
             machineId: 'machine-2',
             active: false,
             thinking: false,
             controlledByUser: false,
-            agentSessionId: 'codex-thread-1'
+            agentSessionId: '11111111-1111-4111-8111-111111111111'
         })
 
         try {
             await expect(resumeCommand.run(createContext(['hapi-session-3']))).rejects.toThrow('process.exit:1')
-            expect(runCodexMock).not.toHaveBeenCalled()
+            expect(runCursorMock).not.toHaveBeenCalled()
             expect(consoleErrorSpy).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('another machine'))
         } finally {
             consoleErrorSpy.mockRestore()
