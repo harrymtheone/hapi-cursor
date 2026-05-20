@@ -687,8 +687,7 @@ export class SessionCache {
 
     private extractAgentSessionId(
         metadata: NonNullable<Session['metadata']>
-    ): { field: 'geminiSessionId' | 'opencodeSessionId' | 'cursorSessionId'; value: string } | null {
-        if (metadata.geminiSessionId) return { field: 'geminiSessionId', value: metadata.geminiSessionId }
+    ): { field: 'opencodeSessionId' | 'cursorSessionId'; value: string } | null {
         if (metadata.opencodeSessionId) return { field: 'opencodeSessionId', value: metadata.opencodeSessionId }
         if (metadata.cursorSessionId) return { field: 'cursorSessionId', value: metadata.cursorSessionId }
         return null

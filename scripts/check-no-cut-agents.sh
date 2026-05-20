@@ -33,10 +33,6 @@ WHITELIST=(
   --glob '!bun.lock'
   --glob '!.git/**'
   --glob '!scripts/check-no-cut-agents.sh'
-  # TEMP-CUT-03: drop after 01-03 commit
-  --glob '!cli/src/gemini/**'
-  --glob '!cli/src/agent/backends/**'
-  --glob '!cli/src/commands/gemini.ts'
   # TEMP-CUT-04: drop after 01-04 commit
   --glob '!cli/src/opencode/**'
   --glob '!cli/src/commands/opencode.ts'

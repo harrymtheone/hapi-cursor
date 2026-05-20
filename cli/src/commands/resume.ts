@@ -5,7 +5,6 @@ import { stdin as input, stdout as output } from 'node:process'
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
 import type {
     CursorPermissionMode,
-    GeminiPermissionMode,
     OpencodePermissionMode
 } from '@hapi/protocol/types'
 import { ApiClient } from '@/api/api'
@@ -65,20 +64,6 @@ async function dispatchLocalResume(target: LocalResumeTarget): Promise<void> {
         resumeSessionId: target.agentSessionId,
         startedBy: 'terminal' as const,
         permissionMode: target.permissionMode
-    }
-
-    if (target.flavor === 'gemini') {
-        const { runGemini } = await import('@/gemini/runGemini')
-        await runGemini({
-            existingSessionId: base.existingSessionId,
-            workingDirectory: base.workingDirectory,
-            resumeSessionId: base.resumeSessionId,
-            startedBy: base.startedBy,
-            permissionMode: base.permissionMode as GeminiPermissionMode | undefined,
-            startingMode: 'local',
-            model: target.model ?? undefined
-        })
-        return
     }
 
     if (target.flavor === 'opencode') {

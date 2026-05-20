@@ -31,7 +31,7 @@ describe('buildCliArgs', () => {
     })
 
     it('prefers --permission-mode over --yolo when both present', () => {
-        const args = buildCliArgs('gemini', {
+        const args = buildCliArgs('cursor', {
             directory: '/tmp',
             permissionMode: 'yolo',
         }, true)

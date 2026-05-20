@@ -6,7 +6,7 @@ import { requireMachine } from './guards'
 
 const spawnBodySchema = z.object({
     directory: z.string().min(1),
-    agent: z.enum(['claude', 'cursor', 'gemini', 'opencode']).optional(),
+    agent: z.enum(['claude', 'cursor', 'opencode']).optional(),
     model: z.string().optional(),
     effort: z.string().optional(),
     modelReasoningEffort: z.string().optional(),

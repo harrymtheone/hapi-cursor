@@ -4,7 +4,6 @@ import { connectCommand } from './connect'
 import { runnerCommand } from './runner'
 import { resumeCommand } from './resume'
 import { doctorCommand } from './doctor'
-import { geminiCommand } from './gemini'
 import { opencodeCommand } from './opencode'
 import { notifyCommand } from './notify'
 import { hubCommand } from './hub'
@@ -14,7 +13,6 @@ const COMMANDS: CommandDefinition[] = [
     authCommand,
     connectCommand,
     cursorCommand,
-    geminiCommand,
     opencodeCommand,
     hubCommand,
     { ...hubCommand, name: 'server' },

@@ -135,7 +135,7 @@ export class RpcGateway {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent: 'claude' | 'cursor' | 'gemini' | 'opencode' = 'cursor',
+        agent: 'claude' | 'cursor' | 'opencode' = 'cursor',
         model?: string,
         modelReasoningEffort?: string,
         yolo?: boolean,

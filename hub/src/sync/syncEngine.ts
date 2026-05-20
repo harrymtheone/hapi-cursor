@@ -402,7 +402,7 @@ export class SyncEngine {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent: 'claude' | 'cursor' | 'gemini' | 'opencode' = 'claude',
+        agent: 'claude' | 'cursor' | 'opencode' = 'claude',
         model?: string,
         modelReasoningEffort?: string,
         yolo?: boolean,
@@ -429,7 +429,7 @@ export class SyncEngine {
 
     private resolveFlavor(session: Session): AgentFlavor {
         const flavor = session.metadata?.flavor
-        return flavor === 'gemini' || flavor === 'opencode' || flavor === 'cursor'
+        return flavor === 'opencode' || flavor === 'cursor'
             ? flavor
             : 'cursor'
     }
@@ -441,7 +441,6 @@ export class SyncEngine {
         }
 
         const flavor = this.resolveFlavor(session)
-        if (flavor === 'gemini') return metadata.geminiSessionId ?? null
         if (flavor === 'opencode') return metadata.opencodeSessionId ?? null
         if (flavor === 'cursor') return metadata.cursorSessionId ?? null
 
@@ -541,7 +540,7 @@ export class SyncEngine {
         const target = targetResult.target
         const metadata = session.metadata!
         const flavor = target.flavor
-        if (flavor !== 'claude' && flavor !== 'cursor' && flavor !== 'gemini' && flavor !== 'opencode') {
+        if (flavor !== 'claude' && flavor !== 'cursor' && flavor !== 'opencode') {
             return { type: 'error', message: `Sessions of flavor "${flavor}" are no longer supported`, code: 'resume_failed' }
         }
         const resumeToken = target.agentSessionId
@@ -657,8 +656,7 @@ export class SyncEngine {
         prev: Session['metadata'] | null,
         next: NonNullable<Session['metadata']>
     ): boolean {
-        return (prev?.geminiSessionId ?? null) === (next.geminiSessionId ?? null)
-            && (prev?.opencodeSessionId ?? null) === (next.opencodeSessionId ?? null)
+        return (prev?.opencodeSessionId ?? null) === (next.opencodeSessionId ?? null)
             && (prev?.cursorSessionId ?? null) === (next.cursorSessionId ?? null)
     }
 

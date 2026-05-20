@@ -8,7 +8,7 @@ function createSession(overrides?: Partial<Session>): Session {
     const baseMetadata = {
         path: '/tmp/project',
         host: 'localhost',
-        flavor: 'gemini' as const
+        flavor: 'opencode' as const
     }
     const base: Session = {
         id: 'session-1',
@@ -28,7 +28,7 @@ function createSession(overrides?: Partial<Session>): Session {
         agentStateVersion: 1,
         thinking: false,
         thinkingAt: 1,
-        model: 'gemini-2.5-pro',
+        model: 'ollama/exaone:4.5-33b-q8',
         modelReasoningEffort: null,
         effort: null,
         permissionMode: 'default'
@@ -111,28 +111,6 @@ describe('sessions routes', () => {
         ])
     })
 
-    it('applies model changes for Gemini sessions (regression: opencode addition does not break Gemini)', async () => {
-        const session = createSession({
-            metadata: {
-                path: '/tmp/project',
-                host: 'localhost',
-                flavor: 'gemini'
-            }
-        })
-        const { app, applySessionConfigCalls } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/model', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ model: 'gemini-2.5-pro' })
-        })
-
-        expect(response.status).toBe(200)
-        expect(applySessionConfigCalls).toEqual([
-            ['session-1', { model: 'gemini-2.5-pro' }]
-        ])
-    })
-
     it('rejects model changes for Cursor sessions', async () => {
         const session = createSession({
             metadata: {
@@ -212,7 +190,10 @@ describe('sessions routes', () => {
     })
 
     it('rejects opencode-models for non-OpenCode sessions', async () => {
-        const { app } = createApp(createSession())
+        const session = createSession({
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'cursor' }
+        })
+        const { app } = createApp(session)
 
         const response = await app.request('/api/sessions/session-1/opencode-models')
 
@@ -242,7 +223,7 @@ describe('sessions routes', () => {
     it('rejects unsupported permission mode for flavor via resume body', async () => {
         const session = createSession({
             active: false,
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'gemini' }
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'opencode' }
         })
         const { app } = createApp(session)
 

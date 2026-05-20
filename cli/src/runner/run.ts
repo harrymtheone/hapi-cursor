@@ -893,11 +893,9 @@ export function buildCliArgs(
 ): string[] {
   const agentCommand = agent === 'cursor'
     ? 'cursor'
-    : agent === 'gemini'
-      ? 'gemini'
-      : agent === 'opencode'
-        ? 'opencode'
-        : 'claude';
+    : agent === 'opencode'
+      ? 'opencode'
+      : 'claude';
   const args = [agentCommand];
   if (options.resumeSessionId) {
     args.push('--resume', options.resumeSessionId);
