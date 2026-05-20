@@ -1,23 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
-    findCodexCustomPromptExpansion,
-    findUnsupportedCodexBuiltinSlashCommand,
+    findAgentCustomPromptExpansion,
     getBuiltinSlashCommands,
     mergeSlashCommands
-} from './codexSlashCommands'
+} from './agentSlashCommands'
 
 describe('getBuiltinSlashCommands', () => {
-    it('exposes HAPI-supported codex built-ins in remote web mode', () => {
-        expect(getBuiltinSlashCommands('codex').map((command) => command.name)).toEqual(expect.arrayContaining([
-            'clear',
-            'compact',
-            'goal',
-            'plan',
-            'status',
-            'execute',
-            'effort',
-            'permission',
-        ]))
+    it('returns an empty list for cursor (no built-ins surfaced post Phase-1 cut)', () => {
+        expect(getBuiltinSlashCommands('cursor')).toEqual([])
+    })
+
+    it('returns an empty list for unknown agent types', () => {
+        expect(getBuiltinSlashCommands('unknown')).toEqual([])
     })
 })
 
@@ -51,12 +45,11 @@ describe('mergeSlashCommands', () => {
             { name: 'project-only', source: 'project', content: 'Project prompt' }
         ])
     })
-
 })
 
-describe('findCodexCustomPromptExpansion', () => {
-    it('expands exact custom codex prompt commands', () => {
-        expect(findCodexCustomPromptExpansion('  /clear  ', [
+describe('findAgentCustomPromptExpansion', () => {
+    it('expands exact custom prompt commands', () => {
+        expect(findAgentCustomPromptExpansion('  /clear  ', [
             { name: 'clear', source: 'builtin' },
             { name: 'clear', source: 'project', content: 'custom clear prompt' }
         ])).toBe('custom clear prompt')
@@ -67,26 +60,9 @@ describe('findCodexCustomPromptExpansion', () => {
             { name: 'compact', source: 'project', content: 'custom compact prompt' }
         ] as const
 
-        expect(findCodexCustomPromptExpansion('/compact now', commands)).toBeNull()
-        expect(findCodexCustomPromptExpansion('/clear', [
+        expect(findAgentCustomPromptExpansion('/compact now', commands)).toBeNull()
+        expect(findAgentCustomPromptExpansion('/clear', [
             { name: 'clear', source: 'builtin' }
-        ])).toBeNull()
-    })
-})
-
-describe('findUnsupportedCodexBuiltinSlashCommand', () => {
-    it('detects unsupported codex built-ins', () => {
-        expect(findUnsupportedCodexBuiltinSlashCommand('  /diff ', [])).toBe('diff')
-    })
-
-    it('ignores regular messages and unknown commands', () => {
-        expect(findUnsupportedCodexBuiltinSlashCommand('show me status', [])).toBeNull()
-        expect(findUnsupportedCodexBuiltinSlashCommand('/custom-status', [])).toBeNull()
-    })
-
-    it('does not block custom commands that override the same name', () => {
-        expect(findUnsupportedCodexBuiltinSlashCommand('/status', [
-            { name: 'status', source: 'project', content: 'project status prompt' }
         ])).toBeNull()
     })
 })

@@ -4,7 +4,7 @@ import type { ApiClient } from '@/api/client'
 import type { SlashCommand } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { queryKeys } from '@/lib/query-keys'
-import { getBuiltinSlashCommands, mergeSlashCommands } from '@/lib/codexSlashCommands'
+import { getBuiltinSlashCommands, mergeSlashCommands } from '@/lib/agentSlashCommands'
 
 function levenshteinDistance(a: string, b: string): number {
     if (a.length === 0) return b.length
@@ -25,7 +25,7 @@ function levenshteinDistance(a: string, b: string): number {
 export function useSlashCommands(
     api: ApiClient | null,
     sessionId: string | null,
-    agentType: string = 'claude'
+    agentType: string = 'cursor'
 ): {
     commands: SlashCommand[]
     isLoading: boolean
