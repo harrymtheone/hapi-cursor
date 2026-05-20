@@ -301,6 +301,8 @@ Because `runAgentSession.ts` imports from `@/claude/...` (deleted in CUT-01) AND
 
 ## Business-consumer rewrite map (per-file, non-deleted, with non-Cursor reference)
 
+**NOTE (added during planning revision r3):** The per-file rows below are the RESEARCH-time best estimate. The CANONICAL ownership ledger is `01-WAVE0-FINDINGS.md` §"HEAD inventory" — produced by 01-01 Task 0 sub-step W0.0 as the first action of Phase 1 execution. Final owner-commit assignments (CUT-01..04, 01-05-cleanup, or whitelist-permanent) are determined there from live `rg` output, not from this table. The W0.0 ledger may surface files not enumerated below; those rows still get an owner-commit and are processed by the corresponding plan's "Rewrite W0.0-inventory consumers assigned to CUT-XX" / "Rewrite W0.0-deferred multi-flavor consumers" tasks.
+
 Categories:
 - **(a) Delete-the-branch:** Strip `if (flavor === 'X')` arms / switch arms / registry entries for non-Cursor flavors
 - **(b) Delete-the-import:** Remove imports of deleted modules + their now-dead references
@@ -568,7 +570,9 @@ No new threats introduced. No mitigations need adding.
 | A6 | `web/src/realtime/realtimeClientTools.ts` hits (2) are inside the directory Phase 2 deletes | §"Business-consumer rewrite map" | Verify file path in plan; if outside `web/src/realtime/`, handle in Phase 1 |
 | A7 | `.github/workflows/issue-auto-response.yml`'s 2 hits are descriptive text (not active agent automation) | §"Business-consumer rewrite map" | If active automation, may need workflow logic edit — inspect in plan |
 
-## Open Questions
+## Open Questions (RESOLVED in Wave 0)
+
+> **Resolution:** Q1, Q2, and Q3 are all resolved by Wave 0 tasks inside `01-01-PLAN.md` Task 0. Findings are recorded in `.planning/phases/01-cut-non-cursor-agents/01-WAVE0-FINDINGS.md` with one row per inspected file (`path | category | hit count | action | belongs to commit`). The findings drive subsequent task decisions in 01-02..04 (notably: permissionAdapter keep-vs-delete in 01-03 Task 2; loopBase/sessionBase categorization across the appropriate CUT commits; per-flavor binary references in build-executable.ts handled in 01-01 if any). The questions below are kept for traceability — operative answers live in the findings file.
 
 1. **Does `cli/src/cursor/*` import from `cli/src/agent/permissionAdapter.ts`?**
    - What we know: only `runAgentSession.ts` (ACP-path) imports it via grep
