@@ -39,7 +39,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `cli/src/commands/registry.ts` no longer references `claudeCommand` / `codexCommand` / `geminiCommand` / `opencodeCommand`; default subcommand resolves to Cursor
   4. GitHub workflow files `codex-pr-review.yml` and `codex-mention-response.yml` are removed; Claude `hookForwarder` and `cli/src/codex/happyMcpStdioBridge.ts` are removed
   5. `package.json` files no longer declare `@anthropic-ai/*` or any non-Cursor agent SDK dependency; `bun.lock` regenerated
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 01-01-PLAN.md — Wave 0 (A1/A2/A4/Q3 + ripgrep guard scaffold) + CUT-01 Claude removal
+- [ ] 01-02-PLAN.md — CUT-02 Codex removal + GitHub workflows + wire-symbol renames
+- [ ] 01-03-PLAN.md — CUT-03 Gemini + ACP backend + dead shared abstractions
+- [ ] 01-04-PLAN.md — CUT-04 OpenCode removal
+- [ ] 01-05-PLAN.md — Final cleanup: registry.ts fallback, codexSlashCommands rename, tighten ripgrep whitelist, bun.lock regen
 
 ### Phase 2: Cut external integration channels
 **Goal**: Telegram bot, ElevenLabs voice route, and ServerChan push channel are fully removed from hub, web, and shared.
