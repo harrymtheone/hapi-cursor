@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Requirements**: CUT-01, CUT-02, CUT-03, CUT-04
 **Success Criteria** (what must be TRUE):
   1. `bun typecheck` and `bun run test` both pass after deleting `cli/src/claude/`, `cli/src/codex/`, `cli/src/gemini/`, `cli/src/opencode/`, and `cli/src/agent/backends/`
-  2. ripgrep across `cli/`, `hub/`, `web/`, `shared/` finds zero matches for `claude` / `codex` / `gemini` / `opencode` outside whitelisted history paths (`.planning/codebase/`, `CHANGELOG.md`)
+  2. ripgrep across `cli/`, `hub/`, `web/`, `shared/` finds zero matches for `claude` / `codex` / `gemini` / `opencode` outside whitelisted paths. **Whitelist for Phase 1:** `.planning/codebase/`, `CHANGELOG.md`, and `shared/src/flavors.ts` (the `AgentFlavor` union literal is Phase-5-owned territory — see Phase 5 SC#1 for the final narrowing to `'cursor'`). If research/planning surfaces additional `shared/` files whose flavor literals are structurally tied to the union type (e.g. `shared/src/modes.ts`, `shared/src/models.ts`), they may be added to this whitelist in the phase PLAN with an explicit Phase-5 hand-off note.
   3. `cli/src/commands/registry.ts` no longer references `claudeCommand` / `codexCommand` / `geminiCommand` / `opencodeCommand`; default subcommand resolves to Cursor
   4. GitHub workflow files `codex-pr-review.yml` and `codex-mention-response.yml` are removed; Claude `hookForwarder` and `cli/src/codex/happyMcpStdioBridge.ts` are removed
   5. `package.json` files no longer declare `@anthropic-ai/*` or any non-Cursor agent SDK dependency; `bun.lock` regenerated

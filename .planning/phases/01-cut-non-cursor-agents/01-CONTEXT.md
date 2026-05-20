@@ -3,6 +3,8 @@
 **Gathered:** 2026-05-20
 **Status:** Ready for planning
 
+> **ROADMAP cross-reference:** Phase 1 SC#2 ripgrep whitelist was clarified on 2026-05-20 to include `shared/src/flavors.ts` (Phase-5-owned territory). See `.planning/ROADMAP.md` §"Phase 1: Cut non-Cursor agents" → success criterion 2 for the authoritative wording. CONTEXT.md decisions D-11/D-12 are consistent with the updated SC.
+
 <domain>
 ## Phase Boundary
 
