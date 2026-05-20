@@ -22,8 +22,6 @@ import {
     type RpcDeleteUploadResponse,
     type RpcGeneratedImageResponse,
     type RpcListDirectoryResponse,
-    type RpcListOpencodeModelsResponse,
-    type RpcOpencodeModel,
     type RpcPathExistsResponse,
     type RpcReadFileResponse,
     type RpcUploadFileResponse
@@ -38,8 +36,6 @@ export type {
     RpcDeleteUploadResponse,
     RpcGeneratedImageResponse,
     RpcListDirectoryResponse,
-    RpcListOpencodeModelsResponse,
-    RpcOpencodeModel,
     RpcPathExistsResponse,
     RpcReadFileResponse,
     RpcUploadFileResponse
@@ -402,7 +398,7 @@ export class SyncEngine {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent: 'claude' | 'cursor' | 'opencode' = 'claude',
+        agent: 'claude' | 'cursor' = 'claude',
         model?: string,
         modelReasoningEffort?: string,
         yolo?: boolean,
@@ -429,9 +425,7 @@ export class SyncEngine {
 
     private resolveFlavor(session: Session): AgentFlavor {
         const flavor = session.metadata?.flavor
-        return flavor === 'opencode' || flavor === 'cursor'
-            ? flavor
-            : 'cursor'
+        return flavor === 'cursor' ? flavor : 'cursor'
     }
 
     private resolveAgentResumeId(session: Session, _namespace: string): string | null {
@@ -441,7 +435,6 @@ export class SyncEngine {
         }
 
         const flavor = this.resolveFlavor(session)
-        if (flavor === 'opencode') return metadata.opencodeSessionId ?? null
         if (flavor === 'cursor') return metadata.cursorSessionId ?? null
 
         return null
@@ -540,7 +533,7 @@ export class SyncEngine {
         const target = targetResult.target
         const metadata = session.metadata!
         const flavor = target.flavor
-        if (flavor !== 'claude' && flavor !== 'cursor' && flavor !== 'opencode') {
+        if (flavor !== 'claude' && flavor !== 'cursor') {
             return { type: 'error', message: `Sessions of flavor "${flavor}" are no longer supported`, code: 'resume_failed' }
         }
         const resumeToken = target.agentSessionId
@@ -656,8 +649,7 @@ export class SyncEngine {
         prev: Session['metadata'] | null,
         next: NonNullable<Session['metadata']>
     ): boolean {
-        return (prev?.opencodeSessionId ?? null) === (next.opencodeSessionId ?? null)
-            && (prev?.cursorSessionId ?? null) === (next.cursorSessionId ?? null)
+        return (prev?.cursorSessionId ?? null) === (next.cursorSessionId ?? null)
     }
 
     private triggerDedupIfNeeded(sessionId: string): void {
@@ -753,11 +745,4 @@ export class SyncEngine {
         return await this.rpcGateway.listSkills(sessionId)
     }
 
-    async listOpencodeModelsForSession(sessionId: string): Promise<RpcListOpencodeModelsResponse> {
-        return await this.rpcGateway.listOpencodeModelsForSession(sessionId)
-    }
-
-    async listOpencodeModelsForCwd(machineId: string, cwd: string): Promise<RpcListOpencodeModelsResponse> {
-        return await this.rpcGateway.listOpencodeModelsForCwd(machineId, cwd)
-    }
 }

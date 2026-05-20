@@ -33,9 +33,6 @@ WHITELIST=(
   --glob '!bun.lock'
   --glob '!.git/**'
   --glob '!scripts/check-no-cut-agents.sh'
-  # TEMP-CUT-04: drop after 01-04 commit
-  --glob '!cli/src/opencode/**'
-  --glob '!cli/src/commands/opencode.ts'
   # TEMP-WIDE: broad consumer-dir globs; owners per 01-WAVE0-FINDINGS.md §"HEAD inventory"
   --glob '!cli/src/commands/**'                       # TEMP-WIDE: owner=01-05-cleanup
   --glob '!cli/src/agent/**'                          # TEMP-WIDE: owner=01-05-cleanup

@@ -127,7 +127,6 @@ describe('bootstrapExistingSession', () => {
 
         session.metadata = {
             ...existingMetadata,
-            opencodeSessionId: 'opencode-thread-1',
             cursorSessionId: 'cursor-thread-1',
             summary: {
                 text: 'resume me',
@@ -151,7 +150,6 @@ describe('bootstrapExistingSession', () => {
         })
 
         expect(result.metadata).toEqual(expect.objectContaining({
-            opencodeSessionId: 'opencode-thread-1',
             cursorSessionId: 'cursor-thread-1',
             summary: {
                 text: 'resume me',

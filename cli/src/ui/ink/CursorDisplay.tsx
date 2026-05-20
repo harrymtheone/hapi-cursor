@@ -3,7 +3,7 @@ import { Box, Text, useStdout } from 'ink';
 import { MessageBuffer, type BufferedMessage } from './messageBuffer';
 import { useSwitchControls } from './useSwitchControls';
 
-interface OpencodeDisplayProps {
+interface CursorDisplayProps {
     messageBuffer: MessageBuffer;
     logPath?: string;
     onExit?: () => void;
@@ -28,7 +28,7 @@ function extractTag(messages: BufferedMessage[], tag: 'MODEL' | 'MODE'): string 
     return null;
 }
 
-export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
+export const CursorDisplay: React.FC<CursorDisplayProps> = ({
     messageBuffer,
     logPath,
     onExit,
@@ -112,7 +112,7 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                 overflow="hidden"
             >
                 <Box flexDirection="column" marginBottom={1}>
-                    <Text color="gray" bold>OpenCode Agent Messages</Text>
+                    <Text color="gray" bold>Cursor Agent Messages</Text>
                     <Text color="gray" dimColor>{'-'.repeat(Math.min(terminalWidth - 4, 60))}</Text>
                 </Box>
 
@@ -166,7 +166,7 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                         </Text>
                     ) : (
                         <Text color="green" bold>
-                            OpenCode running {onSwitchToLocal ? '(Space to switch to local, Ctrl-C to exit)' : '(Ctrl-C to exit)'}
+                            Cursor running {onSwitchToLocal ? '(Space to switch to local, Ctrl-C to exit)' : '(Ctrl-C to exit)'}
                         </Text>
                     )}
                     {(model || permissionMode) && (

@@ -4,7 +4,6 @@ import { connectCommand } from './connect'
 import { runnerCommand } from './runner'
 import { resumeCommand } from './resume'
 import { doctorCommand } from './doctor'
-import { opencodeCommand } from './opencode'
 import { notifyCommand } from './notify'
 import { hubCommand } from './hub'
 import type { CommandContext, CommandDefinition } from './types'
@@ -13,7 +12,6 @@ const COMMANDS: CommandDefinition[] = [
     authCommand,
     connectCommand,
     cursorCommand,
-    opencodeCommand,
     hubCommand,
     { ...hubCommand, name: 'server' },
     doctorCommand,

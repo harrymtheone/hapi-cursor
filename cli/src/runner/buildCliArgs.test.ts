@@ -51,13 +51,13 @@ describe('buildCliArgs', () => {
         expect(args).not.toContain('--permission-mode')
     })
 
-    it('passes --model through for opencode (mid-session model change support)', () => {
-        const args = buildCliArgs('opencode', {
+    it('passes --model through for cursor (mid-session model change support)', () => {
+        const args = buildCliArgs('cursor', {
             directory: '/tmp',
-            model: 'ollama/exaone:4.5-33b-q8',
+            model: 'sonnet',
         })
         expect(args).toContain('--model')
-        expect(args).toContain('ollama/exaone:4.5-33b-q8')
+        expect(args).toContain('sonnet')
     })
 
     it('validates all known permission modes', () => {

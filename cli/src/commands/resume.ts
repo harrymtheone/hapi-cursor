@@ -3,10 +3,7 @@ import { existsSync } from 'node:fs'
 import * as readline from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
-import type {
-    CursorPermissionMode,
-    OpencodePermissionMode
-} from '@hapi/protocol/types'
+import type { CursorPermissionMode } from '@hapi/protocol/types'
 import { ApiClient } from '@/api/api'
 import { authAndSetupMachineIfNeeded } from '@/ui/auth'
 import { initializeToken } from '@/ui/tokenInit'
@@ -64,20 +61,6 @@ async function dispatchLocalResume(target: LocalResumeTarget): Promise<void> {
         resumeSessionId: target.agentSessionId,
         startedBy: 'terminal' as const,
         permissionMode: target.permissionMode
-    }
-
-    if (target.flavor === 'opencode') {
-        const { runOpencode } = await import('@/opencode/runOpencode')
-        await runOpencode({
-            existingSessionId: base.existingSessionId,
-            workingDirectory: base.workingDirectory,
-            resumeSessionId: base.resumeSessionId,
-            startedBy: base.startedBy,
-            permissionMode: base.permissionMode as OpencodePermissionMode | undefined,
-            startingMode: 'local',
-            model: target.model ?? undefined
-        })
-        return
     }
 
     const { runCursor } = await import('@/cursor/runCursor')

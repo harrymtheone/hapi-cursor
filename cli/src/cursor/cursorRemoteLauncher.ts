@@ -4,7 +4,7 @@ import { createInterface } from 'node:readline';
 import { logger } from '@/ui/logger';
 import { killProcessByChildProcess } from '@/utils/process';
 import { convertAgentMessage } from '@/agent/messageConverter';
-import { OpencodeDisplay } from '@/ui/ink/OpencodeDisplay';
+import { CursorDisplay } from '@/ui/ink/CursorDisplay';
 import {
     RemoteLauncherBase,
     type RemoteLauncherDisplayContext,
@@ -65,7 +65,7 @@ class CursorRemoteLauncher extends RemoteLauncherBase {
     }
 
     protected createDisplay(context: RemoteLauncherDisplayContext): React.ReactElement {
-        return React.createElement(OpencodeDisplay, context);
+        return React.createElement(CursorDisplay, context);
     }
 
     protected async runMainLoop(): Promise<void> {

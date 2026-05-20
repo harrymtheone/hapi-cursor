@@ -26,7 +26,6 @@ export type {
     CodexCollaborationMode,
     CodexCollaborationModeOption,
     CursorPermissionMode,
-    OpencodePermissionMode,
     PermissionMode,
     PermissionModeOption,
     PermissionModeTone

@@ -891,11 +891,7 @@ export function buildCliArgs(
   options: SpawnSessionOptions,
   yolo?: boolean
 ): string[] {
-  const agentCommand = agent === 'cursor'
-    ? 'cursor'
-    : agent === 'opencode'
-      ? 'opencode'
-      : 'claude';
+  const agentCommand = agent === 'cursor' ? 'cursor' : 'claude';
   const args = [agentCommand];
   if (options.resumeSessionId) {
     args.push('--resume', options.resumeSessionId);

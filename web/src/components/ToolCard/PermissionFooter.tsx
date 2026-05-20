@@ -25,7 +25,6 @@ function isToolAllowedForSession(toolName: string, toolInput: unknown, allowedTo
 function isCodexSession(metadata: SessionMetadataSummary | null, toolName: string): boolean {
     return isCodexFamilyFlavor(metadata?.flavor)
         || toolName.startsWith('Codex')
-        || toolName.startsWith('OpenCode')
 }
 
 function formatPermissionSummary(permission: ToolPermission, toolName: string, toolInput: unknown, codex: boolean, t: (key: string) => string): string {

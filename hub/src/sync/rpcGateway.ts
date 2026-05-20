@@ -3,7 +3,6 @@ import type { Server } from 'socket.io'
 import type { RpcRegistry } from '../socket/rpcRegistry'
 
 const DEFAULT_RPC_TIMEOUT_MS = 30_000
-const MODEL_LIST_RPC_TIMEOUT_MS = 120_000
 
 export type RpcCommandResponse = {
     success: boolean
@@ -53,18 +52,6 @@ export type RpcListDirectoryResponse = {
 
 export type RpcPathExistsResponse = {
     exists: Record<string, boolean>
-}
-
-export type RpcOpencodeModel = {
-    modelId: string
-    name?: string
-}
-
-export type RpcListOpencodeModelsResponse = {
-    success: boolean
-    availableModels?: RpcOpencodeModel[]
-    currentModelId?: string | null
-    error?: string
 }
 
 export class RpcGateway {
@@ -135,7 +122,7 @@ export class RpcGateway {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent: 'claude' | 'cursor' | 'opencode' = 'cursor',
+        agent: 'claude' | 'cursor' = 'cursor',
         model?: string,
         modelReasoningEffort?: string,
         yolo?: boolean,
@@ -268,14 +255,6 @@ export class RpcGateway {
             skills?: Array<{ name: string; description?: string }>
             error?: string
         }
-    }
-
-    async listOpencodeModelsForSession(sessionId: string): Promise<RpcListOpencodeModelsResponse> {
-        return await this.sessionRpc(sessionId, 'listOpencodeModels', {}) as RpcListOpencodeModelsResponse
-    }
-
-    async listOpencodeModelsForCwd(machineId: string, cwd: string): Promise<RpcListOpencodeModelsResponse> {
-        return await this.machineRpc(machineId, 'listOpencodeModelsForCwd', { cwd }) as RpcListOpencodeModelsResponse
     }
 
     private async sessionRpc(

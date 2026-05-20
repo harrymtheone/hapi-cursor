@@ -8,7 +8,7 @@ function createSession(overrides?: Partial<Session>): Session {
     const baseMetadata = {
         path: '/tmp/project',
         host: 'localhost',
-        flavor: 'opencode' as const
+        flavor: 'cursor' as const
     }
     const base: Session = {
         id: 'session-1',
@@ -57,19 +57,10 @@ function createApp(session: Session, opts?: {
     const applySessionConfig = async (sessionId: string, config: Record<string, unknown>) => {
         applySessionConfigCalls.push([sessionId, config])
     }
-    const listOpencodeModelsForSession = async () => ({
-        success: true,
-        availableModels: [
-            { modelId: 'ollama/exaone:4.5-33b-q8', name: 'Ollama (SER8)/EXAONE 4.5 33B Q8' },
-            { modelId: 'mlx/qwen3:0.6b', name: 'MLX/Qwen3 0.6B' }
-        ],
-        currentModelId: 'ollama/exaone:4.5-33b-q8'
-    })
     const resumeSession = opts?.resumeSession ?? (async (sessionId: string) => ({ type: 'success', sessionId }))
     const engine = {
         resolveSessionAccess: () => ({ ok: true, sessionId: session.id, session }),
         applySessionConfig,
-        listOpencodeModelsForSession,
         resumeSession,
         listSlashCommands: opts?.listSlashCommands ?? (async () => ({
             success: true,
@@ -88,29 +79,6 @@ function createApp(session: Session, opts?: {
 }
 
 describe('sessions routes', () => {
-    it('applies model changes for OpenCode sessions', async () => {
-        const session = createSession({
-            metadata: {
-                path: '/tmp/project',
-                host: 'localhost',
-                flavor: 'opencode'
-            }
-        })
-        const { app, applySessionConfigCalls } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/model', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ model: 'ollama/exaone:4.5-33b-q8' })
-        })
-
-        expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({ ok: true })
-        expect(applySessionConfigCalls).toEqual([
-            ['session-1', { model: 'ollama/exaone:4.5-33b-q8' }]
-        ])
-    })
-
     it('rejects model changes for Cursor sessions', async () => {
         const session = createSession({
             metadata: {
@@ -170,36 +138,6 @@ describe('sessions routes', () => {
         ])
     })
 
-    it('returns OpenCode models for active OpenCode sessions', async () => {
-        const session = createSession({
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'opencode' }
-        })
-        const { app } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/opencode-models')
-
-        expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({
-            success: true,
-            availableModels: [
-                { modelId: 'ollama/exaone:4.5-33b-q8', name: 'Ollama (SER8)/EXAONE 4.5 33B Q8' },
-                { modelId: 'mlx/qwen3:0.6b', name: 'MLX/Qwen3 0.6B' }
-            ],
-            currentModelId: 'ollama/exaone:4.5-33b-q8'
-        })
-    })
-
-    it('rejects opencode-models for non-OpenCode sessions', async () => {
-        const session = createSession({
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'cursor' }
-        })
-        const { app } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/opencode-models')
-
-        expect(response.status).toBe(400)
-    })
-
     it('applies permission mode changes for inactive sessions', async () => {
         const session = createSession({
             active: false,
@@ -218,22 +156,6 @@ describe('sessions routes', () => {
         expect(applySessionConfigCalls).toEqual([
             ['session-1', { permissionMode: 'bypassPermissions' }]
         ])
-    })
-
-    it('rejects unsupported permission mode for flavor via resume body', async () => {
-        const session = createSession({
-            active: false,
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'opencode' }
-        })
-        const { app } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/resume', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ permissionMode: 'bypassPermissions' })
-        })
-
-        expect(response.status).toBe(400)
     })
 
     it('passes permissionMode from resume body to resumeSession', async () => {
