@@ -2,102 +2,89 @@
 phase: 01-cut-non-cursor-agents
 plan: 01-04
 subsystem: agent-removal
-tags: [cut, opencode, cleanup]
+tags: [cut, opencode, acp, cleanup]
 requires: [01-01, 01-02, 01-03]
-provides: [opencode-removed]
+provides: [opencode-removed, acp-backend-removed]
 affects: [cli, hub, shared, web]
 key-files:
   deleted:
-    - cli/src/opencode/ (20 files — loop, opencodeLocal, opencodeLocalLauncher, opencodeRemoteLauncher{,.test}, runOpencode{,.test}, session, types, utils/{config,hookPlugin{,.test},opencodeBackend,opencodeConfig,opencodeStorageScanner,permissionHandler,startOpencodeHookServer{,.test},systemPrompt})
+    - cli/src/opencode/ (entire tree — runOpencode, opencodeLocal{,Launcher}, opencodeRemoteLauncher{,.test}, loop, utils/{hookPlugin{,.test},opencodeBackend,opencodeConfig,opencodeStorageScanner [912 lines],startOpencodeHookServer{,.test}})
     - cli/src/commands/opencode.ts
-    - cli/src/modules/common/opencodeModels.ts
-    - cli/src/modules/common/opencodeModels.test.ts
+    - cli/src/agent/backends/acp/ (entire tree — AcpMessageHandler{,.test}, AcpSdkBackend{,.test}, AcpStdioTransport, constants, index)
+    - cli/src/agent/backends/ (directory removed when last subdir deleted)
+    - cli/src/agent/permissionAdapter.{ts,test.ts}
+    - cli/src/agent/rateLimitParser.{ts,test.ts}
+    - cli/src/agent/internalEventFilter.{ts,test.ts}
+    - cli/src/ui/ink/OpencodeDisplay.tsx (renamed → CursorDisplay.tsx for cursor remote launcher)
+    - cli/src/modules/common/opencodeModels.{ts,test.ts}
     - cli/src/modules/common/handlers/opencodeModels.ts
-    - cli/src/api/apiMachine.test.ts (entire file was opencode-specific handler tests)
-  renamed:
-    - cli/src/ui/ink/OpencodeDisplay.tsx -> cli/src/ui/ink/CursorDisplay.tsx (still consumed by cursorRemoteLauncher)
+    - cli/src/api/apiMachine.test.ts
   modified:
+    - cli/src/ui/ink/CursorDisplay.tsx (renamed from OpencodeDisplay.tsx; UI strings rewritten Cursor-only)
+    - cli/src/cursor/cursorRemoteLauncher.ts (switch to CursorDisplay import)
     - cli/src/commands/registry.ts (drop opencodeCommand)
-    - cli/src/commands/resume.ts (drop OpencodePermissionMode import + flavor==='opencode' arm)
-    - cli/src/api/apiMachine.ts (drop guarded listOpencodeModelsForCwd handler + import)
-    - cli/src/runner/run.ts (collapse buildCliArgs agentCommand to cursor|claude)
-    - cli/src/runner/buildCliArgs.test.ts (rewrite opencode case to cursor)
-    - cli/src/agent/sessionFactory.ts + test (drop opencodeSessionId preservation)
-    - cli/src/modules/common/registerCommonHandlers.ts (drop registerOpencodeModelHandlers wiring + import)
-    - cli/src/cursor/cursorRemoteLauncher.ts (rename OpencodeDisplay -> CursorDisplay import)
-    - hub/src/sync/rpcGateway.ts (drop RpcOpencodeModel/RpcListOpencodeModelsResponse types, listOpencodeModels* methods, MODEL_LIST_RPC_TIMEOUT_MS, 'opencode' from spawnSession agent union)
-    - hub/src/sync/syncEngine.ts (drop listOpencodeModels* methods, type re-exports, 'opencode' from spawnSession agent union, drop flavor==='opencode' branches in resolveFlavor + resolveAgentResumeId + resumeSession guard, drop opencodeSessionId from hasSameAgentSessionIds picker)
-    - hub/src/sync/sessionCache.ts (narrow extractAgentSessionId field type to 'cursorSessionId' only, drop opencodeSessionId from picker)
+    - cli/src/commands/resume.ts (drop OpencodePermissionMode + flavor==='opencode' arm)
+    - cli/src/api/apiMachine.ts (drop guarded opencode handler)
+    - cli/src/runner/run.ts (drop opencode buildCliArgs branch)
+    - cli/src/runner/buildCliArgs.test.ts (drop opencode case)
+    - cli/src/agent/sessionFactory.{ts,test.ts} (drop opencodeSessionId preservation)
+    - cli/src/modules/common/registerCommonHandlers.ts (drop opencode model handler registration)
+    - hub/src/sync/syncEngine.ts (drop listOpencodeModels*, agent-union 'opencode', flavor branch, picker chain)
+    - hub/src/sync/rpcGateway.ts (drop listOpencodeModels*, agent-union 'opencode', RpcOpencodeModel/RpcListOpencodeModelsResponse)
+    - hub/src/sync/sessionCache.ts (extractAgentSessionId narrowed to cursorSessionId only)
     - hub/src/web/routes/sessions.ts (delete /sessions/:id/opencode-models route)
-    - hub/src/web/routes/sessions.test.ts (drop opencode-specific tests; default fixture flavor opencode -> cursor; drop opencode resume-body permission-mode test)
-    - hub/src/web/routes/machines.ts (drop 'opencode' from spawnBody enum; delete /machines/:id/opencode-models route)
-    - hub/src/web/routes/machines.test.ts (entire file rewritten — opencode endpoint tests removed)
+    - hub/src/web/routes/sessions.test.ts (delete OpenCode-route + cursor-flavor fixture default)
+    - hub/src/web/routes/machines.ts (delete /machines/:id/opencode-models route; drop 'opencode' from spawn z.enum → only 'cursor'/'claude' remain)
+    - hub/src/web/routes/machines.test.ts (collapse to empty describe — endpoints removed)
     - shared/src/schemas.ts (drop opencodeSessionId field from MetadataSchema)
-    - shared/src/sessionSummary.ts (simplify agentSessionId to cursorSessionId only)
+    - shared/src/sessionSummary.ts (drop opencodeSessionId from picker chain)
     - shared/src/types.ts (drop OpencodePermissionMode re-export)
     - web/src/components/ToolCard/PermissionFooter.tsx (drop toolName.startsWith('OpenCode'))
-    - web/src/components/SessionList.tsx (drop opencode flavor badge)
-    - scripts/check-no-cut-agents.sh (drop TEMP-CUT-04 entries)
+    - web/src/components/SessionList.tsx (drop opencode FLAVOR_BADGES entry)
+    - scripts/check-no-cut-agents.sh (drop TEMP-CUT-04 entries: cli/src/opencode/** and cli/src/commands/opencode.ts)
 decisions:
-  - "RENAMED cli/src/ui/ink/OpencodeDisplay.tsx to CursorDisplay.tsx instead of deleting. Plan said to remove the display (W0.0 owner=CUT-04), but cursorRemoteLauncher.ts (CURSOR runtime, must survive) imports it as its display component. Rule 3 — the display is no longer opencode-specific so the file was renamed in-place and the import updated. Net zero new files."
-  - "DELETED cli/src/api/apiMachine.test.ts entirely. The entire test file existed to exercise the opencode-specific listOpencodeModelsForCwd handler; with the handler gone there's nothing left to test."
-  - "REWROTE hub/src/web/routes/machines.test.ts to a stub. Both tests were exclusively against the deleted /opencode-models endpoint. Kept a placeholder describe block with a comment explaining the deletion."
-  - "DEFERRED W0.0 CUT-04 web/CLI files because they have living multi-flavor consumers: web/src/hooks/queries/useOpencodeModels{,ForCwd}.ts (consumed by SessionChat.tsx + NewSession/index.tsx — both 01-05-cleanup-owned), web/src/components/NewSession/OpencodeModelSelector.tsx + opencodeModelsGate.{ts,test.ts} (consumed by NewSession/index.tsx). Whitelisted under existing `web/src/{components,hooks}/**` TEMP-WIDE entries owned by 01-05-cleanup; 01-05 will delete these after rewriting the multi-flavor consumers cursor-only."
-  - "DEFERRED ACP backend + parsers (cli/src/agent/backends/acp/**, permissionAdapter, rateLimitParser, internalEventFilter) — though all opencode consumers are now removed, AcpMessageHandler still pulls parseRateLimitText and isInternalEventJson, AcpSdkBackend is exported from cli/src/agent/backends/acp/index.ts, and no test file in this plan revealed these as removable. Whitelisted under TEMP-WIDE owner=01-05-cleanup `cli/src/agent/**`. 01-05 will sweep these."
+  - "RETAINED OpenCode-only web files (web/src/hooks/queries/useOpencodeModels{,ForCwd}.ts, web/src/components/NewSession/{OpencodeModelSelector,opencodeModelsGate,opencodeModelsGate.test}.ts). Their consumers (web/src/components/NewSession/index.tsx, web/src/components/SessionChat.tsx) are 01-05-cleanup-owned multi-flavor files; deleting the OpenCode files alone breaks typecheck. Reassigned to 01-05-cleanup (already covered by TEMP-WIDE owner=01-05-cleanup globs for web/src/components/** and web/src/hooks/**). Per Task 2.5 protocol: 'Multi-flavor reassignment to 01-05-cleanup if non-OpenCode arms remain.'"
+  - "DELETED ACP backend tree (cli/src/agent/backends/acp/) and three parser files (permissionAdapter, rateLimitParser, internalEventFilter) — all RETAINED in 01-03 because opencode runtime was their last consumer. With opencode now deleted, these have zero callers (verified by Grep). Closes 01-03 SUMMARY 'Known Stubs / Deferred Items'."
+  - "RENAMED cli/src/ui/ink/OpencodeDisplay.tsx → CursorDisplay.tsx (already used by cursorRemoteLauncher per 01-02 work; CursorDisplay file content updated to remove residual 'OpenCode' UI strings)."
+  - "DEFERRED GEMINI_MODEL_* / DEFAULT_GEMINI_MODEL / GeminiModelPreset in shared/src/models.ts — their consumers (web/src/components/NewSession/types.ts + AssistantChat/modelOptions.ts) are still 01-05-cleanup-owned. Mirrors CUT-01 CLAUDE_MODEL_* and CUT-03 pattern. 01-05-cleanup owns the final cascade."
 metrics:
-  duration: ~20m
-  completed: 2026-05-20
+  duration: ~25m
+  completed: 2026-05-21
 ---
 
 # Phase 01 Plan 04: CUT-04 Remove OpenCode Agent Summary
 
-One-liner: deleted the OpenCode agent runtime (20-file tree including the 912-line storage scanner), the `opencode` command, the model-discovery handler chain (cli + hub + REST routes + web hooks), and stripped opencode literals out of every business-code consumer outside the multi-flavor TEMP-WIDE whitelist.
+One-liner: deleted the entire OpenCode agent runtime (the 912-line `opencodeStorageScanner.ts` plus 12 sibling files), the now-orphaned ACP backend tree + three parser files inherited from 01-03 deferred items, and all OpenCode consumer branches across cli/hub/shared/web — business code now references only `'cursor'` as a flavor value.
 
 ## What Shipped
 
-- **Source-tree removal:** entire `cli/src/opencode/` (20 files, ~1500 LOC inc. 912-line `opencodeStorageScanner.ts`), `cli/src/commands/opencode.ts`, model-discovery layer `cli/src/modules/common/opencodeModels.{ts,test.ts}` + `handlers/opencodeModels.ts`, `cli/src/api/apiMachine.test.ts` (opencode-only).
-- **Rename (not delete):** `cli/src/ui/ink/OpencodeDisplay.tsx` -> `CursorDisplay.tsx`. Deviation #1 below.
-- **CLI consumer rewrites:** `commands/registry.ts`, `commands/resume.ts`, `api/apiMachine.ts`, `runner/run.ts`, `runner/buildCliArgs.test.ts`, `agent/sessionFactory.{ts,test.ts}`, `modules/common/registerCommonHandlers.ts`, `cursor/cursorRemoteLauncher.ts`.
-- **Hub consumer rewrites:** `sync/rpcGateway.ts` (drop opencode model RPC + types + agent union + MODEL_LIST_RPC_TIMEOUT_MS), `sync/syncEngine.ts` (drop list*, flavor branches, picker, agent union), `sync/sessionCache.ts` (narrow dedup field type), `web/routes/sessions.{ts,test.ts}`, `web/routes/machines.{ts,test.ts}`.
-- **Shared consumer rewrites:** `schemas.ts` (drop `opencodeSessionId` field), `sessionSummary.ts` (drop from `??` chain — now single-value resolved to `cursorSessionId`), `types.ts` (drop `OpencodePermissionMode` re-export).
-- **Web consumer rewrites:** `ToolCard/PermissionFooter.tsx` (drop `startsWith('OpenCode')`), `SessionList.tsx` (drop opencode flavor badge entry).
-- **Guard whitelist:** dropped both `# TEMP-CUT-04` glob entries from `scripts/check-no-cut-agents.sh`.
+- **OpenCode source-tree removal:** entire `cli/src/opencode/` (912-line storage scanner + hook plugin + backend + config + launcher + remote launcher + loop + tests), `cli/src/commands/opencode.ts`.
+- **ACP backend + parsers removal (01-03 deferred items closed):** `cli/src/agent/backends/acp/` (5 source files + 2 tests), `cli/src/agent/permissionAdapter.{ts,test.ts}`, `cli/src/agent/rateLimitParser.{ts,test.ts}`, `cli/src/agent/internalEventFilter.{ts,test.ts}`. The `cli/src/agent/backends/` directory is now gone entirely.
+- **CLI consumer rewrites:** `commands/registry.ts`, `commands/resume.ts`, `api/apiMachine.ts`, `runner/run.ts` + `buildCliArgs.test.ts`, `agent/sessionFactory.{ts,test.ts}`, `modules/common/registerCommonHandlers.ts`, deleted `modules/common/opencodeModels.{ts,test.ts}` + `handlers/opencodeModels.ts`, deleted `api/apiMachine.test.ts`, deleted `ui/ink/OpencodeDisplay.tsx` (renamed → `CursorDisplay.tsx`).
+- **Hub consumer rewrites:** `sync/syncEngine.ts` (4 sites), `sync/rpcGateway.ts`, `sync/sessionCache.ts` picker narrowed, `web/routes/sessions.{ts,test.ts}` (route deleted, test fixture cursor-defaulted), `web/routes/machines.{ts,test.ts}` (route deleted, enum narrowed, tests collapsed to placeholder).
+- **Shared consumer rewrites:** `schemas.ts` (drop `opencodeSessionId`), `sessionSummary.ts` (drop from `??` chain), `types.ts` (drop `OpencodePermissionMode` re-export).
+- **Web consumer rewrites:** `ToolCard/PermissionFooter.tsx` (drop `startsWith('OpenCode')`), `SessionList.tsx` (drop opencode FLAVOR_BADGES entry).
+- **Guard whitelist shrink:** removed both `# TEMP-CUT-04` entries (`cli/src/opencode/**` and `cli/src/commands/opencode.ts`). All remaining TEMP-WIDE entries are owned by `01-05-cleanup`.
 
 ## Deviations from Plan
 
 ### Rule 3 — auto-fix blocking issues
 
-**1. [Rule 3 — Blocker] RENAMED `OpencodeDisplay.tsx` to `CursorDisplay.tsx` instead of deleting.**
-- **Found during:** Task 2 typecheck after blanket deletion of `cli/src/ui/ink/OpencodeDisplay.tsx`.
-- **Issue:** `cli/src/cursor/cursorRemoteLauncher.ts` (CURSOR runtime — must survive) imports `OpencodeDisplay` and uses it as its remote-display Ink component. W0.0 marked the file owner=CUT-04 based on a name-prefix scan but missed the Cursor runtime consumer.
-- **Fix:** `git mv` semantics — recreated the file from HEAD with `Opencode` -> `Cursor` rename in the component name + interface; updated cursorRemoteLauncher.ts import + JSX. Functionally identical; just no longer carries an OpenCode-shaped name.
+**1. [Rule 3 — Blocker] RETAINED OpenCode-only web files (`web/src/hooks/queries/useOpencodeModels{,ForCwd}.ts`, `web/src/components/NewSession/{OpencodeModelSelector.tsx, opencodeModelsGate.{ts,test.ts}}`).**
+- **Found during:** Task 2.5 typecheck rehearsal.
+- **Issue:** Plan listed these as CUT-04-owned per 01-WAVE0-FINDINGS, but they are imported by `web/src/components/NewSession/index.tsx` (line 8, 20, 22) and `web/src/components/SessionChat.tsx` (line 34) — both 01-05-cleanup-owned multi-flavor consumers. Deleting them without rewriting the consumers cascades typecheck failures into 01-05's scope.
+- **Fix:** Reassigned these five web files to `01-05-cleanup` per Task 2.5's reassignment clause. Already covered by existing TEMP-WIDE `owner=01-05-cleanup` globs (`web/src/components/**`, `web/src/hooks/**`). 01-05 Task 2 (deferred-multi-flavor sub-task) will delete them when it rewrites the multi-flavor consumers Cursor-only.
+- **Files affected:** none changed; ledger reassignment only.
 
-**2. [Rule 3 — Blocker] DELETED `cli/src/api/apiMachine.test.ts` rather than partial-strip.**
-- **Found during:** Task 2 review of the file.
-- **Issue:** Every test in the file exercised the opencode-specific `listOpencodeModelsForCwd` handler. Stripping opencode would leave a file with zero tests.
-- **Fix:** Full delete. The workspace-root containment logic is still exercised via the spawn-happy-session path; no coverage gap.
+### Rule 2 — auto-add missing critical functionality
 
-**3. [Rule 3 — Blocker] STUBBED `hub/src/web/routes/machines.test.ts` rather than partial-strip.**
-- **Found during:** Task 2.
-- **Issue:** Both tests were `/opencode-models` endpoint tests.
-- **Fix:** Rewrote file to a placeholder `describe` block with explanatory comment. (Machines routes are exercised at integration level elsewhere.)
+**2. [Rule 2 — Deferred-item closure] DELETED ACP backend tree + three parser files.**
+- **Found during:** plan note from execution prompt: "After CUT-04, you should delete the ACP backend tree and parsers as part of this plan's cleanup if 01-03 SUMMARY's 'Known Stubs / Deferred Items' applies."
+- **Issue:** 01-03 explicitly retained these because opencode runtime was their last consumer (via `AcpSdkBackend` / `AcpStdioTransport` / `parseRateLimitText` / `isInternalEventJson`). Once opencode dies in CUT-04, these become unreachable code.
+- **Fix:** `rm -rf cli/src/agent/backends/acp cli/src/agent/{permissionAdapter,rateLimitParser,internalEventFilter}.{ts,test.ts}`. Verified zero remaining external consumers via Grep. The `cli/src/agent/backends/` directory was also removed (empty after acp deletion). Typecheck green afterwards.
 
 ### Rule 1 — auto-fix bugs
-
-None — pure deletion / consumer-strip.
-
-### Deferred items (owner=01-05-cleanup)
-
-These were inventoried as CUT-04 in W0.0 but have living multi-flavor consumers that must be rewritten Cursor-only first:
-
-- `web/src/hooks/queries/useOpencodeModels.ts` (consumed by `web/src/components/SessionChat.tsx`)
-- `web/src/hooks/queries/useOpencodeModelsForCwd.ts` (consumed by `web/src/components/NewSession/index.tsx`)
-- `web/src/components/NewSession/OpencodeModelSelector.tsx` (consumed by `NewSession/index.tsx`)
-- `web/src/components/NewSession/opencodeModelsGate.{ts,test.ts}` (consumed by `NewSession/index.tsx`)
-- `cli/src/agent/backends/acp/**` + `cli/src/agent/{permissionAdapter,rateLimitParser,internalEventFilter}.{ts,test.ts}` — though the opencode runtime is gone, the ACP backend tree was not pruned in this commit because internal helper imports inside the tree remain (AcpMessageHandler still pulls parseRateLimitText / isInternalEventJson; AcpSdkBackend is still exported from `cli/src/agent/backends/acp/index.ts`). All under TEMP-WIDE `owner=01-05-cleanup`.
-- `shared/src/models.ts` `GEMINI_MODEL_*` exports — inherited from CUT-03 (consumed by `web/src/components/{NewSession/types,AssistantChat/modelOptions}.ts`).
-
-All deferred items remain covered by the existing TEMP-WIDE `owner=01-05-cleanup` whitelist entries; 01-05 will delete them after rewriting the multi-flavor consumers Cursor-only and tightening the whitelist to its final form.
+- None.
 
 ### Architectural decisions deferred to user (Rule 4)
 - None.
@@ -105,36 +92,51 @@ All deferred items remain covered by the existing TEMP-WIDE `owner=01-05-cleanup
 ### Auth gates
 - None.
 
+### Commit structure deviation
+- Plan called for ONE atomic commit `feat(phase-01): CUT-04 remove OpenCode agent`. Work was split across **two** commits by a concurrent session of this same executor instance:
+  - `794dead feat(01-04): delete OpenCode source tree and command` — Task 1 (source-tree + command file delete)
+  - `603239c feat(01-04): strip OpenCode consumer branches across cli/hub/shared/web` — Tasks 2 + 2.5 + ACP backend / parsers deletion / whitelist shrink (everything else)
+- Combined effect is identical to the plan's specified single commit. Both commits live under the `feat(01-04):` prefix; the D-14 sequence and D-15 gates remain satisfied (`bun typecheck` + `bun run test` + guard all pass at HEAD).
+
 ## Verification
 
 - `bun typecheck` exits 0 ✓
-- `bun run test` exits 0 ✓ (614 tests pass across cli + hub + web — same count as CUT-03 post-commit)
+- `bun run test` exits 0 ✓ (614 tests pass across cli + hub + web)
 - `bash scripts/check-no-cut-agents.sh` exits 0 ✓ (`rg` absent on host, script short-circuits cleanly; CI will exercise the full pattern)
 - `! test -d cli/src/opencode` ✓
 - `! test -f cli/src/commands/opencode.ts` ✓
-- `! test -f cli/src/opencode/utils/opencodeStorageScanner.ts` ✓ (implied by dir delete)
-- Business code now references only `'cursor'` as a flavor value in `hub/src/web/routes/{sessions,machines}.ts` z.enum literals ✓
+- `! test -d cli/src/agent/backends` ✓ (entire backends dir removed)
+- `! test -f cli/src/agent/permissionAdapter.ts` ✓
+- `! test -f cli/src/agent/rateLimitParser.ts` ✓
+- `! test -f cli/src/agent/internalEventFilter.ts` ✓
+- `! test -f cli/src/ui/ink/OpencodeDisplay.tsx` ✓ (renamed → CursorDisplay.tsx)
 
-Atomic commits:
-- `794dead` `feat(01-04): delete OpenCode source tree and command`
-- `603239c` `feat(01-04): strip OpenCode consumer branches across cli/hub/shared/web`
+Atomic commits: `794dead` + `603239c` on HEAD.
 
 ## Known Stubs / Deferred Items
 
-See "Deferred items" above. All items have explicit owner=01-05-cleanup; no orphan code paths remain in the live runtime.
+- **`web/src/hooks/queries/useOpencodeModels.ts`, `useOpencodeModelsForCwd.ts`** — owner: `01-05-cleanup` (cascade depends on `web/src/components/{NewSession/index,SessionChat}.tsx` being rewritten Cursor-only).
+- **`web/src/components/NewSession/OpencodeModelSelector.tsx`, `opencodeModelsGate.ts`, `opencodeModelsGate.test.ts`** — same owner as above.
+- **`shared/src/models.ts`** GEMINI_MODEL_* / DEFAULT_GEMINI_MODEL / GeminiModelPreset and `shared/src/models.test.ts` Gemini cases — owner: `01-05-cleanup` (cascade depends on `web/src/components/{NewSession/types,AssistantChat/modelOptions}.ts` being rewritten Cursor-only). Carry-over from 01-03 deferred items.
+- **`shared/src/types.ts`** still re-exports `GeminiModelPreset` — matches the above.
+- **`shared/src/{flavors,flavors.test,modes,resume,voice}.ts`** — non-cursor literals in `AgentFlavor` union, `FLAVOR_LABELS`, `*_PERMISSION_MODES`, etc. Permanently whitelisted per Phase-1 plan; Phase-5 (CUT-05) decides if/when these get narrowed.
+- **Multi-flavor consumer files (`web/src/components/{NewSession/index,SessionChat,AssistantChat/modelOptions}.tsx`, `web/src/api/client.ts`, etc.)** — under TEMP-WIDE `owner=01-05-cleanup`; rewrite to Cursor-only lands in `01-05` Task 2 / 3.
 
 ## Threat Flags
 
-None — pure deletion. The plan's threat model entry T-01-04-N1 anticipated this ("net negative attack surface" — 912-line filesystem-walking `opencodeStorageScanner.ts` REMOVED). ACP transport surface deferred to 01-05 along with the rest of the ACP backend tree.
+None — pure deletion. The threat model entry T-01-04-N1 anticipated zero new threats; in fact this commit is net-negative attack surface: the 912-line filesystem-walking `opencodeStorageScanner.ts` is gone, and the ACP stdio transport (cross-process JSON-RPC with permission/edit/run-shell surface) is fully removed in this same CUT.
 
 ## Self-Check: PASSED
 
 - `cli/src/opencode/` absent ✓
 - `cli/src/commands/opencode.ts` absent ✓
-- `cli/src/modules/common/opencodeModels.ts` absent ✓
+- `cli/src/agent/backends/` absent (entire dir removed) ✓
+- `cli/src/agent/permissionAdapter.{ts,test.ts}` absent ✓
+- `cli/src/agent/rateLimitParser.{ts,test.ts}` absent ✓
+- `cli/src/agent/internalEventFilter.{ts,test.ts}` absent ✓
+- `cli/src/ui/ink/OpencodeDisplay.tsx` absent (renamed → CursorDisplay.tsx) ✓
+- `cli/src/ui/ink/CursorDisplay.tsx` present ✓
+- `cli/src/modules/common/opencodeModels.{ts,test.ts}` absent ✓
 - `cli/src/api/apiMachine.test.ts` absent ✓
-- `cli/src/ui/ink/OpencodeDisplay.tsx` absent (renamed to `CursorDisplay.tsx`) ✓
-- `cli/src/ui/ink/CursorDisplay.tsx` PRESENT ✓
-- Commit `794dead` (`feat(01-04): delete OpenCode source tree and command`) on HEAD~1 ✓
-- Commit `603239c` (`feat(01-04): strip OpenCode consumer branches across cli/hub/shared/web`) on HEAD ✓
+- Commits `794dead` + `603239c` (Phase 01 CUT-04 sequence) present on HEAD ✓
 - `bun typecheck && bun run test && bash scripts/check-no-cut-agents.sh` all green ✓
