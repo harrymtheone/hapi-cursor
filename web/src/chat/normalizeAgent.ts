@@ -1,6 +1,6 @@
 import type { AgentEvent, CodexReview, CodexReviewFinding, NormalizedAgentContent, NormalizedMessage, ToolResultPermission } from '@/chat/types'
 import { AGENT_MESSAGE_PAYLOAD_TYPE, asNumber, asString, isObject } from '@hapi/protocol'
-import { isClaudeChatVisibleMessage } from '@hapi/protocol/messages'
+import { isAgentChatVisibleMessage } from '@hapi/protocol/messages'
 
 function normalizeToolResultPermissions(value: unknown): ToolResultPermission | undefined {
     if (!isObject(value)) return undefined
@@ -406,7 +406,7 @@ export function isSkippableAgentContent(content: unknown): boolean {
     const data = isObject(content.data) ? content.data : null
     if (!data) return false
     if (Boolean(data.isMeta) || Boolean(data.isCompactSummary)) return true
-    return !isClaudeChatVisibleMessage({ type: data.type, subtype: data.subtype })
+    return !isAgentChatVisibleMessage({ type: data.type, subtype: data.subtype })
 }
 
 export function isCodexContent(content: unknown): boolean {
@@ -429,7 +429,7 @@ export function normalizeAgentRecord(
         // Skip meta/compact-summary messages (parity with hapi-app)
         if (data.isMeta) return null
         if (data.isCompactSummary) return null
-        if (!isClaudeChatVisibleMessage({ type: data.type, subtype: data.subtype })) return null
+        if (!isAgentChatVisibleMessage({ type: data.type, subtype: data.subtype })) return null
 
         if (data.type === 'assistant') {
             return normalizeAssistantOutput(messageId, localId, createdAt, data, meta)

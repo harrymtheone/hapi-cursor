@@ -34,7 +34,6 @@ export function toSessionSummary(session: Session): SessionSummary {
         flavor: session.metadata.flavor ?? null,
         worktree: session.metadata.worktree,
         agentSessionId: session.metadata.codexSessionId
-            ?? session.metadata.claudeSessionId
             ?? session.metadata.geminiSessionId
             ?? session.metadata.opencodeSessionId
             ?? session.metadata.cursorSessionId

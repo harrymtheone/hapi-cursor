@@ -127,7 +127,6 @@ describe('bootstrapExistingSession', () => {
 
         session.metadata = {
             ...existingMetadata,
-            claudeSessionId: 'claude-thread-1',
             codexSessionId: 'codex-thread-1',
             geminiSessionId: 'gemini-thread-1',
             opencodeSessionId: 'opencode-thread-1',
@@ -154,7 +153,6 @@ describe('bootstrapExistingSession', () => {
         })
 
         expect(result.metadata).toEqual(expect.objectContaining({
-            claudeSessionId: 'claude-thread-1',
             codexSessionId: 'codex-thread-1',
             geminiSessionId: 'gemini-thread-1',
             opencodeSessionId: 'opencode-thread-1',

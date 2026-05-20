@@ -2,7 +2,7 @@ import { logger } from '@/ui/logger';
 import { opencodeLoop } from './loop';
 import { MessageQueue2 } from '@/utils/MessageQueue2';
 import { hashObject } from '@/utils/deterministicJson';
-import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
+import { registerKillSessionHandler } from '@/agent/registerKillSessionHandler';
 import type { AgentState } from '@/api/types';
 import type { OpencodeSession } from './session';
 import type { OpencodeMode, PermissionMode } from './types';

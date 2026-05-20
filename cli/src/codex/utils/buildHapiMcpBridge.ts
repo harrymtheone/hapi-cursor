@@ -5,7 +5,7 @@
  * bridge server and generating the MCP server configuration that Codex needs.
  */
 
-import { startHappyServer } from '@/claude/utils/startHappyServer';
+import { startHappyServer } from '@/agent/serverUtils/startHappyServer';
 import { getHappyCliCommand } from '@/utils/spawnHappyCLI';
 import type { ApiSessionClient } from '@/api/apiSession';
 

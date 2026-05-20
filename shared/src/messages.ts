@@ -6,7 +6,7 @@ type RoleWrappedRecord = {
     meta?: unknown
 }
 
-const VISIBLE_CLAUDE_SYSTEM_SUBTYPES = new Set([
+const VISIBLE_AGENT_SYSTEM_SUBTYPES = new Set([
     'api_error',
     'turn_duration',
     'microcompact_boundary',
@@ -34,11 +34,11 @@ export function unwrapRoleWrappedRecordEnvelope(value: unknown): RoleWrappedReco
     return null
 }
 
-export function isClaudeChatVisibleSystemSubtype(subtype: unknown): subtype is string {
-    return typeof subtype === 'string' && VISIBLE_CLAUDE_SYSTEM_SUBTYPES.has(subtype)
+export function isAgentChatVisibleSystemSubtype(subtype: unknown): subtype is string {
+    return typeof subtype === 'string' && VISIBLE_AGENT_SYSTEM_SUBTYPES.has(subtype)
 }
 
-export function isClaudeChatVisibleMessage(message: { type: unknown; subtype?: unknown }): boolean {
+export function isAgentChatVisibleMessage(message: { type: unknown; subtype?: unknown }): boolean {
     if (message.type === 'rate_limit_event') {
         return false
     }
@@ -47,7 +47,7 @@ export function isClaudeChatVisibleMessage(message: { type: unknown; subtype?: u
         return true
     }
 
-    return isClaudeChatVisibleSystemSubtype(message.subtype)
+    return isAgentChatVisibleSystemSubtype(message.subtype)
 }
 
 export function isRedundantGoalStatusMessageText(value: unknown): boolean {

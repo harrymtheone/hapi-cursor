@@ -4,7 +4,6 @@ import * as readline from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
 import type {
-    ClaudePermissionMode,
     CodexPermissionMode,
     CursorPermissionMode,
     GeminiPermissionMode,
@@ -69,21 +68,6 @@ async function dispatchLocalResume(target: LocalResumeTarget): Promise<void> {
         resumeSessionId: target.agentSessionId,
         startedBy: 'terminal' as const,
         permissionMode: target.permissionMode
-    }
-
-    if (target.flavor === 'claude') {
-        const { runClaude } = await import('@/claude/runClaude')
-        await runClaude({
-            existingSessionId: base.existingSessionId,
-            workingDirectory: base.workingDirectory,
-            resumeSessionId: base.resumeSessionId,
-            startedBy: base.startedBy,
-            permissionMode: base.permissionMode as ClaudePermissionMode | undefined,
-            startingMode: 'local',
-            model: target.model ?? undefined,
-            effort: target.effort ?? undefined
-        })
-        return
     }
 
     if (target.flavor === 'codex') {

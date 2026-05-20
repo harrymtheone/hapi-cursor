@@ -8,7 +8,7 @@ const {
     getLocalResumeTargetMock,
     handoffSessionToLocalMock,
     runCodexMock,
-    runClaudeMock,
+    runCursorMock,
     assertCodexLocalSupportedMock,
     existsSyncMock
 } = vi.hoisted(() => ({
@@ -19,7 +19,7 @@ const {
     getLocalResumeTargetMock: vi.fn(),
     handoffSessionToLocalMock: vi.fn(async () => {}),
     runCodexMock: vi.fn(async () => {}),
-    runClaudeMock: vi.fn(async () => {}),
+    runCursorMock: vi.fn(async () => {}),
     assertCodexLocalSupportedMock: vi.fn(),
     existsSyncMock: vi.fn(() => true)
 }))
@@ -37,7 +37,7 @@ vi.mock('@/api/api', () => ({
     }
 }))
 vi.mock('@/codex/runCodex', () => ({ runCodex: runCodexMock }))
-vi.mock('@/claude/runClaude', () => ({ runClaude: runClaudeMock }))
+vi.mock('@/cursor/runCursor', () => ({ runCursor: runCursorMock }))
 vi.mock('@/codex/utils/codexVersion', () => ({ assertCodexLocalSupported: assertCodexLocalSupportedMock }))
 vi.mock('node:fs', () => ({ existsSync: existsSyncMock }))
 
@@ -60,7 +60,7 @@ describe('resumeCommand', () => {
         getLocalResumeTargetMock.mockReset()
         handoffSessionToLocalMock.mockClear()
         runCodexMock.mockClear()
-        runClaudeMock.mockClear()
+        runCursorMock.mockClear()
         assertCodexLocalSupportedMock.mockClear()
         existsSyncMock.mockReturnValue(true)
     })
@@ -97,10 +97,10 @@ describe('resumeCommand', () => {
         })
     })
 
-    it('resumes an inactive Claude target without handoff', async () => {
+    it('resumes an inactive Cursor target without handoff', async () => {
         getLocalResumeTargetMock.mockResolvedValue({
             sessionId: 'hapi-session-2',
-            flavor: 'claude',
+            flavor: 'cursor',
             directory: '/tmp/project',
             machineId: 'machine-1',
             active: false,
@@ -108,22 +108,19 @@ describe('resumeCommand', () => {
             controlledByUser: false,
             agentSessionId: '11111111-1111-4111-8111-111111111111',
             model: 'sonnet',
-            effort: 'high',
             permissionMode: 'default'
         })
 
         await resumeCommand.run(createContext(['hapi-session-2']))
 
         expect(handoffSessionToLocalMock).not.toHaveBeenCalled()
-        expect(runClaudeMock).toHaveBeenCalledWith({
+        expect(runCursorMock).toHaveBeenCalledWith({
             existingSessionId: 'hapi-session-2',
             workingDirectory: '/tmp/project',
             resumeSessionId: '11111111-1111-4111-8111-111111111111',
             startedBy: 'terminal',
-            startingMode: 'local',
             permissionMode: 'default',
-            model: 'sonnet',
-            effort: 'high'
+            model: 'sonnet'
         })
     })
 
@@ -162,7 +159,7 @@ describe('resumeCommand', () => {
 
         getLocalResumeTargetMock.mockResolvedValue({
             sessionId: 'hapi-session-4',
-            flavor: 'claude',
+            flavor: 'cursor',
             directory: '/tmp/project',
             machineId: 'machine-1',
             active: false,
@@ -178,7 +175,7 @@ describe('resumeCommand', () => {
             expect(exitSpy).not.toHaveBeenCalled()
             expect(consoleErrorSpy).not.toHaveBeenCalled()
             expect(handoffSessionToLocalMock).not.toHaveBeenCalled()
-            expect(runClaudeMock).toHaveBeenCalledWith(expect.objectContaining({
+            expect(runCursorMock).toHaveBeenCalledWith(expect.objectContaining({
                 existingSessionId: 'hapi-session-4',
                 resumeSessionId: '11111111-1111-4111-8111-111111111111'
             }))

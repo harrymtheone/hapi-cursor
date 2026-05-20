@@ -7,7 +7,7 @@ import { logger } from '@/ui/logger'
 import { backoff } from '@/utils/time'
 import { apiValidationError } from '@/utils/errorUtils'
 import { AsyncLock } from '@/utils/lock'
-import type { RawJSONLines } from '@/claude/types'
+import type { RawJSONLines } from '@/agent/agentLogSchema'
 import { configuration } from '@/configuration'
 import { AGENT_MESSAGE_PAYLOAD_TYPE } from "@hapi/protocol"
 import type { SessionEndReason } from '@hapi/protocol'

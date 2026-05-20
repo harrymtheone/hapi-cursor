@@ -26,7 +26,7 @@ vi.mock('./utils/buildHapiMcpBridge', () => ({
     })
 }));
 
-vi.mock('@/claude/utils/startHookServer', () => ({
+vi.mock('@/agent/serverUtils/startHookServer', () => ({
     startHookServer: async (opts: { onSessionHook: (sessionId: string, data: Record<string, unknown>) => void }) => {
         harness.sessionHookHandlers.push(opts.onSessionHook);
         return {

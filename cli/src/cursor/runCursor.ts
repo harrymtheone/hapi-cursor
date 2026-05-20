@@ -2,7 +2,7 @@ import { logger } from '@/ui/logger';
 import { loop, type EnhancedMode, type PermissionMode } from './loop';
 import { MessageQueue2 } from '@/utils/MessageQueue2';
 import { hashObject } from '@/utils/deterministicJson';
-import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
+import { registerKillSessionHandler } from '@/agent/registerKillSessionHandler';
 import type { AgentState } from '@/api/types';
 import type { CursorSession } from './session';
 import { bootstrapExistingSession, bootstrapSession } from '@/agent/sessionFactory';
