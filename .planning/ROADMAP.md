@@ -40,7 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. GitHub workflow files `codex-pr-review.yml` and `codex-mention-response.yml` are removed; Claude `hookForwarder` and `cli/src/codex/happyMcpStdioBridge.ts` are removed
   5. `package.json` files no longer declare `@anthropic-ai/*` or any non-Cursor agent SDK dependency; `bun.lock` regenerated
 **Plans**: 5 plans
-- [ ] 01-01-PLAN.md — Wave 0 (A1/A2/A4/Q3 + ripgrep guard scaffold) + CUT-01 Claude removal
+- [x] 01-01-PLAN.md — Wave 0 (A1/A2/A4/Q3 + ripgrep guard scaffold) + CUT-01 Claude removal
 - [ ] 01-02-PLAN.md — CUT-02 Codex removal + GitHub workflows + wire-symbol renames
 - [ ] 01-03-PLAN.md — CUT-03 Gemini + ACP backend + dead shared abstractions
 - [ ] 01-04-PLAN.md — CUT-04 OpenCode removal
@@ -181,7 +181,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cut non-Cursor agents | 0/TBD | Not started | - |
+| 1. Cut non-Cursor agents | 1/5 | In Progress|  |
 | 2. Cut external integration channels | 0/TBD | Not started | - |
 | 3. Cut multi-user namespace isolation | 0/TBD | Not started | - |
 | 4. Cut deployment infrastructure | 0/TBD | Not started | - |
