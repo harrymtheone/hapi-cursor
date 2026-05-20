@@ -14,7 +14,7 @@ Phases execute sequentially. Big deletions go first so every downstream refactor
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Cut non-Cursor agents** — Delete Claude / Codex / Gemini+ACP / OpenCode runtimes, hooks, commands, and CI
+- [x] **Phase 1: Cut non-Cursor agents** — Delete Claude / Codex / Gemini+ACP / OpenCode runtimes, hooks, commands, and CI (completed 2026-05-20)
 - [ ] **Phase 2: Cut external integration channels** — Delete Telegram bot, ElevenLabs voice route, ServerChan push channel
 - [ ] **Phase 3: Cut multi-user namespace isolation** — Remove `CLI_API_TOKEN:<namespace>` suffix, user platform field, namespace-aware cache keys
 - [ ] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream
@@ -44,7 +44,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 01-02-PLAN.md — CUT-02 Codex removal + GitHub workflows + wire-symbol renames
 - [x] 01-03-PLAN.md — CUT-03 Gemini + ACP backend + dead shared abstractions
 - [x] 01-04-PLAN.md — CUT-04 OpenCode removal
-- [ ] 01-05-PLAN.md — Final cleanup: registry.ts fallback, codexSlashCommands rename, tighten ripgrep whitelist, bun.lock regen
+- [x] 01-05-PLAN.md — Final cleanup: registry.ts fallback, codexSlashCommands rename, tighten ripgrep whitelist, bun.lock regen
 
 ### Phase 2: Cut external integration channels
 **Goal**: Telegram bot, ElevenLabs voice route, and ServerChan push channel are fully removed from hub, web, and shared.
@@ -181,7 +181,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cut non-Cursor agents | 4/5 | In Progress|  |
+| 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
 | 2. Cut external integration channels | 0/TBD | Not started | - |
 | 3. Cut multi-user namespace isolation | 0/TBD | Not started | - |
 | 4. Cut deployment infrastructure | 0/TBD | Not started | - |
