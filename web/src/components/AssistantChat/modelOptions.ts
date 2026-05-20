@@ -1,4 +1,3 @@
-import { MODEL_OPTIONS } from '@/components/NewSession/types'
 import { getClaudeComposerModelOptions, getNextClaudeComposerModel } from './claudeModelOptions'
 import type { ClaudeComposerModelOption } from './claudeModelOptions'
 
@@ -28,23 +27,6 @@ function withCurrentModelOption(options: ModelOption[], currentModel?: string | 
     return nextOptions
 }
 
-function getGeminiModelOptions(currentModel?: string | null): ModelOption[] {
-    const options = MODEL_OPTIONS.gemini.map((m) => ({
-        value: m.value === 'auto' ? null : m.value,
-        label: m.label
-    }))
-    return withCurrentModelOption(options, currentModel)
-}
-
-function getNextGeminiModel(currentModel?: string | null): string | null {
-    const options = getGeminiModelOptions(currentModel)
-    const currentIndex = options.findIndex((o) => o.value === (currentModel ?? null))
-    if (currentIndex === -1) {
-        return options[0]?.value ?? null
-    }
-    return options[(currentIndex + 1) % options.length]?.value ?? null
-}
-
 export function getModelOptionsForFlavor(
     flavor: string | undefined | null,
     currentModel?: string | null,
@@ -52,15 +34,6 @@ export function getModelOptionsForFlavor(
 ): ModelOption[] {
     if (customOptions && customOptions.length > 0) {
         return withCurrentModelOption(customOptions, currentModel)
-    }
-    if (flavor === 'gemini') {
-        return getGeminiModelOptions(currentModel)
-    }
-    // OpenCode discovers models dynamically via the listOpencodeModels RPC. Until
-    // those options arrive, render an empty list rather than the Claude fallback —
-    // the latter would surface unrelated Claude models in an OpenCode session.
-    if (flavor === 'opencode') {
-        return []
     }
     return getClaudeComposerModelOptions(currentModel)
 }
@@ -77,17 +50,6 @@ export function getNextModelForFlavor(
             return options.find((option) => option.value !== null)?.value ?? null
         }
         return options[(currentIndex + 1) % options.length]?.value ?? null
-    }
-    if (flavor === 'gemini') {
-        return getNextGeminiModel(currentModel)
-    }
-    // OpenCode discovers models dynamically via the listOpencodeModels RPC. Until
-    // those options arrive, pressing the Ctrl/Cmd+M shortcut must not fall through
-    // to the Claude preset cycler — that would post `sonnet`/`opus` into an
-    // OpenCode session and the next turn would attempt `session/set_model` with a
-    // Claude id. Keep the current model unchanged instead.
-    if (flavor === 'opencode') {
-        return normalizeCurrentModel(currentModel)
     }
     return getNextClaudeComposerModel(currentModel)
 }

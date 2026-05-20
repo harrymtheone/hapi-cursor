@@ -2,9 +2,6 @@ import { describe, expect, test } from 'bun:test'
 import {
     CLAUDE_MODEL_PRESETS,
     CLAUDE_MODEL_LABELS,
-    DEFAULT_GEMINI_MODEL,
-    GEMINI_MODEL_LABELS,
-    GEMINI_MODEL_PRESETS,
     getClaudeModelLabel,
     isClaudeModelPreset,
 } from './models'
@@ -52,15 +49,5 @@ describe('model constants consistency', () => {
         for (const preset of CLAUDE_MODEL_PRESETS) {
             expect(CLAUDE_MODEL_LABELS[preset]).toBeDefined()
         }
-    })
-
-    test('every GEMINI_MODEL_PRESET has a label', () => {
-        for (const preset of GEMINI_MODEL_PRESETS) {
-            expect(GEMINI_MODEL_LABELS[preset]).toBeDefined()
-        }
-    })
-
-    test('DEFAULT_GEMINI_MODEL is a valid preset', () => {
-        expect(GEMINI_MODEL_PRESETS).toContain(DEFAULT_GEMINI_MODEL)
     })
 })
