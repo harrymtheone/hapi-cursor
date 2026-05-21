@@ -1,7 +1,48 @@
 import { describe, expect, it } from 'bun:test'
+import { Database } from 'bun:sqlite'
 import { Store } from './index'
 
-describe('Store owner-only facades', () => {
+function getTableNames(db: Database): string[] {
+    return db.query<{ name: string }, []>(`
+        SELECT name
+        FROM sqlite_master
+        WHERE type = 'table'
+          AND name NOT LIKE 'sqlite_%'
+        ORDER BY name
+    `).all().map((row) => row.name)
+}
+
+function getColumnNames(db: Database, table: string): string[] {
+    return db.query<{ name: string }, []>(`PRAGMA table_info(${table})`).all().map((row) => row.name)
+}
+
+function getIndexSql(db: Database, table: string): string[] {
+    return db.query<{ sql: string | null }, [string]>(`
+        SELECT sql
+        FROM sqlite_master
+        WHERE type = 'index'
+          AND tbl_name = ?
+          AND sql IS NOT NULL
+        ORDER BY name
+    `).all(table).map((row) => row.sql ?? '')
+}
+
+describe('Store namespace-free schema', () => {
+    it('creates schema version 10 without users or namespace columns', () => {
+        const store = new Store(':memory:')
+        const rawDb = (store as unknown as { db: Database }).db
+
+        expect(rawDb.query<{ user_version: number }, []>('PRAGMA user_version').get()?.user_version).toBe(10)
+        expect(getTableNames(rawDb)).toEqual(['machines', 'messages', 'push_subscriptions', 'sessions'])
+        expect(getColumnNames(rawDb, 'sessions')).not.toContain('namespace')
+        expect(getColumnNames(rawDb, 'machines')).not.toContain('namespace')
+        expect(getColumnNames(rawDb, 'push_subscriptions')).not.toContain('namespace')
+        expect(getIndexSql(rawDb, 'sessions').join('\n')).not.toContain('namespace')
+        expect(getIndexSql(rawDb, 'machines').join('\n')).not.toContain('namespace')
+        expect(getIndexSql(rawDb, 'push_subscriptions').join('\n')).toContain('UNIQUE(endpoint)')
+        store.close()
+    })
+
     it('creates and updates sessions without namespace arguments', () => {
         const store = new Store(':memory:')
         const session = store.sessions.getOrCreateSession('tag', { path: '/alpha' }, null)
