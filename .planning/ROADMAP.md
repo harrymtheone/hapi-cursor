@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Cut non-Cursor agents** — Delete Claude / Codex / Gemini+ACP / OpenCode runtimes, hooks, commands, and CI (completed 2026-05-20)
 - [x] **Phase 2: Cut external integration channels** — Delete Telegram bot, ElevenLabs voice route, ServerChan push channel (completed 2026-05-21)
-- [ ] **Phase 3: Cut multi-user namespace isolation** — Remove `CLI_API_TOKEN:<namespace>` suffix, user platform field, namespace-aware cache keys
+- [x] **Phase 3: Cut multi-user namespace isolation** — Remove `CLI_API_TOKEN:<namespace>` suffix, user platform field, namespace-aware cache keys (completed 2026-05-21)
 - [ ] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream
 - [ ] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches
 - [ ] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode
@@ -81,7 +81,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 03-04-PLAN.md — Atomic Socket.IO server/data/CLI handler cleanup plus visibility and push delivery
 - [x] 03-05-PLAN.md — Shared Session/SyncEvent/socket contracts plus CLI/web mirrors without namespace
 - [x] 03-06-PLAN.md — Runtime schema v10, user-store deletion, namespace-free store SQL, and offline v9-to-v10 migration
-- [ ] 03-07-PLAN.md — Final `namespace|:ns` source guard and full validation gate
+- [x] 03-07-PLAN.md — Final `namespace|:ns` source guard and full validation gate
 
 ### Phase 4: Cut deployment infrastructure
 **Goal**: Hub no longer ships a built-in WireGuard/TLS tunnel binary or an upstream remote-log upload channel.
@@ -196,7 +196,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
-| 3. Cut multi-user namespace isolation | 6/7 | In Progress|  |
+| 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
 | 4. Cut deployment infrastructure | 0/TBD | Not started | - |
 | 5. Flavor consolidation + capability abstraction | 0/TBD | Not started | - |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
