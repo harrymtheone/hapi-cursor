@@ -147,7 +147,7 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
     // listenPort: env > file > default
     let listenPort = 3006
     if (process.env.HAPI_LISTEN_PORT) {
-        const parsed = parseInt(process.env.HAPI_LISTEN_PORT, 10)
+        const parsed = Number(process.env.HAPI_LISTEN_PORT)
         if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
             throw new Error('HAPI_LISTEN_PORT must be a valid port number')
         }

@@ -105,6 +105,15 @@ describe('loadServerSettings', () => {
         )
     })
 
+    it('rejects malformed environment listenPort values', async () => {
+        dir = makeTempDir()
+        process.env.HAPI_LISTEN_PORT = '3006abc'
+
+        await expect(loadServerSettings(dir)).rejects.toThrow(
+            'HAPI_LISTEN_PORT must be a valid port number'
+        )
+    })
+
     it('rejects invalid file-sourced corsOrigins values', async () => {
         dir = makeTempDir()
         writeFileSync(join(dir, 'settings.json'), JSON.stringify({
