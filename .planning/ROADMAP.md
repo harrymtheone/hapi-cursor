@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Cut non-Cursor agents** — Delete Claude / Codex / Gemini+ACP / OpenCode runtimes, hooks, commands, and CI (completed 2026-05-20)
 - [x] **Phase 2: Cut external integration channels** — Delete Telegram bot, ElevenLabs voice route, ServerChan push channel (completed 2026-05-21)
 - [x] **Phase 3: Cut multi-user namespace isolation** — Remove `CLI_API_TOKEN:<namespace>` suffix, user platform field, namespace-aware cache keys (completed 2026-05-21)
-- [ ] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream
+- [x] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream (completed 2026-05-21)
 - [ ] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches
 - [ ] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode
 - [ ] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection
@@ -97,7 +97,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 04-01-PLAN.md — Tunnel and hosted relay-web runtime deletion
 - [x] 04-02-PLAN.md — Relay config/settings/env convergence
 - [x] 04-03-PLAN.md — Remote logging and doctor cleanup
-- [ ] 04-04-PLAN.md — Build/runtime assets, lockfile, guard, and final gate
+- [x] 04-04-PLAN.md — Build/runtime assets, lockfile, guard, and final gate
 
 ### Phase 5: Flavor consolidation + capability abstraction
 **Goal**: `shared/src/flavors.ts` describes Cursor as the only flavor with an extensible, populated capability set; every capability check reads from this table.
@@ -201,7 +201,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
 | 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
-| 4. Cut deployment infrastructure | 3/4 | In Progress|  |
+| 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
 | 5. Flavor consolidation + capability abstraction | 0/TBD | Not started | - |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
 | 7. Wire contracts unification & SSE patch contract | 0/TBD | Not started | - |
