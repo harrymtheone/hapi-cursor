@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 02 context gathered
-last_updated: "2026-05-21T00:48:59.110Z"
-last_activity: 2026-05-21 -- Phase 02 planning complete
+last_updated: "2026-05-21T01:16:10.787Z"
+last_activity: 2026-05-21
 progress:
   total_phases: 12
   completed_phases: 1
   total_plans: 10
-  completed_plans: 5
+  completed_plans: 6
   percent: 8
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 2 — cut external integration channels
+**Current focus:** Phase 02 — cut-external-integration-channels
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (cut-external-integration-channels) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-05-21 -- Phase 02 planning complete
+Last activity: 2026-05-21
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 02 P01 | 5min | 4 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,7 @@ Recent decisions affecting current work:
 - Big deletions go first (Phases 1–4) so every downstream refactor touches less surface area
 - Flavor capability abstraction (REFA-01) folded into Phase 5 alongside CUT-05 — both edit `shared/src/flavors.ts`
 - Documentation cleanup (CUT-12) is folded into the final verification phase since the VRFY-03 ripgrep check depends on docs being clean
+- [Phase ?]: D-30 commit #1: hub-side Telegram bot removed, /api/auth collapsed to access-token-only
 
 ### Pending Todos
 
@@ -85,6 +87,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-21T00:22:04.297Z
+Last session: 2026-05-21T01:16:02.080Z
 Stopped at: Phase 02 context gathered
-Resume file: .planning/phases/02-cut-external-integration-channels/02-CONTEXT.md
+Resume file: None
