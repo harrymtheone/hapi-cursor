@@ -3,58 +3,65 @@ import { SSEManager } from './sseManager'
 import type { SyncEvent } from '../sync/syncEngine'
 import { VisibilityTracker } from '../visibility/visibilityTracker'
 
-describe('SSEManager namespace filtering', () => {
-    it('routes events to matching namespace', () => {
+describe('SSEManager relevance filtering', () => {
+    it('routes session events by subscription relevance', () => {
         const manager = new SSEManager(0, new VisibilityTracker())
-        const receivedAlpha: SyncEvent[] = []
-        const receivedBeta: SyncEvent[] = []
+        const receivedAll: SyncEvent[] = []
+        const receivedSession: SyncEvent[] = []
+        const receivedOther: SyncEvent[] = []
 
         manager.subscribe({
-            id: 'alpha',
-            namespace: 'alpha',
+            id: 'all',
             all: true,
             send: (event) => {
-                receivedAlpha.push(event)
+                receivedAll.push(event)
             },
             sendHeartbeat: () => {}
         })
 
         manager.subscribe({
-            id: 'beta',
-            namespace: 'beta',
-            all: true,
+            id: 'session',
+            sessionId: 's1',
             send: (event) => {
-                receivedBeta.push(event)
+                receivedSession.push(event)
             },
             sendHeartbeat: () => {}
         })
 
-        manager.broadcast({ type: 'session-updated', sessionId: 's1', namespace: 'alpha' })
+        manager.subscribe({
+            id: 'other',
+            sessionId: 's2',
+            send: (event) => {
+                receivedOther.push(event)
+            },
+            sendHeartbeat: () => {}
+        })
 
-        expect(receivedAlpha).toHaveLength(1)
-        expect(receivedBeta).toHaveLength(0)
+        manager.broadcast({ type: 'session-updated', sessionId: 's1' })
+
+        expect(receivedAll).toHaveLength(1)
+        expect(receivedSession).toHaveLength(1)
+        expect(receivedOther).toHaveLength(0)
     })
 
-    it('broadcasts connection-changed to all namespaces', () => {
+    it('broadcasts connection-changed globally', () => {
         const manager = new SSEManager(0, new VisibilityTracker())
         const received: Array<{ id: string; event: SyncEvent }> = []
 
         manager.subscribe({
-            id: 'alpha',
-            namespace: 'alpha',
+            id: 'first',
             all: true,
             send: (event) => {
-                received.push({ id: 'alpha', event })
+                received.push({ id: 'first', event })
             },
             sendHeartbeat: () => {}
         })
 
         manager.subscribe({
-            id: 'beta',
-            namespace: 'beta',
+            id: 'second',
             all: true,
             send: (event) => {
-                received.push({ id: 'beta', event })
+                received.push({ id: 'second', event })
             },
             sendHeartbeat: () => {}
         })
@@ -62,16 +69,15 @@ describe('SSEManager namespace filtering', () => {
         manager.broadcast({ type: 'connection-changed', data: { status: 'connected' } })
 
         expect(received).toHaveLength(2)
-        expect(received.map((entry) => entry.id).sort()).toEqual(['alpha', 'beta'])
+        expect(received.map((entry) => entry.id).sort()).toEqual(['first', 'second'])
     })
 
-    it('sends toast only to visible connections in a namespace', async () => {
+    it('sends toast only to visible connections', async () => {
         const manager = new SSEManager(0, new VisibilityTracker())
         const received: Array<{ id: string; event: SyncEvent }> = []
 
         manager.subscribe({
             id: 'visible',
-            namespace: 'alpha',
             all: true,
             visibility: 'visible',
             send: (event) => {
@@ -82,7 +88,6 @@ describe('SSEManager namespace filtering', () => {
 
         manager.subscribe({
             id: 'hidden',
-            namespace: 'alpha',
             all: true,
             visibility: 'hidden',
             send: (event) => {
@@ -93,7 +98,6 @@ describe('SSEManager namespace filtering', () => {
 
         manager.subscribe({
             id: 'other',
-            namespace: 'beta',
             all: true,
             visibility: 'visible',
             send: (event) => {
@@ -112,10 +116,9 @@ describe('SSEManager namespace filtering', () => {
             }
         }
 
-        const delivered = await manager.sendToast('alpha', toastEvent)
+        const delivered = await manager.sendToast('ignored-legacy-scope', toastEvent)
 
-        expect(delivered).toBe(1)
-        expect(received).toHaveLength(1)
-        expect(received[0]?.id).toBe('visible')
+        expect(delivered).toBe(2)
+        expect(received.map((entry) => entry.id).sort()).toEqual(['other', 'visible'])
     })
 })
