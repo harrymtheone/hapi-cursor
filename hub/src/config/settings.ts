@@ -12,8 +12,6 @@ export interface Settings {
         privateKey: string
     }
     // Server configuration (persisted from environment variables)
-    serverChanSendKey?: string
-    serverChanNotification?: boolean
     listenHost?: string
     listenPort?: number
     publicUrl?: string

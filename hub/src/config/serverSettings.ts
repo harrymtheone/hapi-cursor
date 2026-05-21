@@ -13,8 +13,6 @@ import { getSettingsFile, readSettings, writeSettings } from './settings'
 const OLD_SETTINGS_FIELDS = ['webappHost', 'webappPort', 'webappUrl'] as const
 
 export interface ServerSettings {
-    serverChanSendKey: string | null
-    serverChanNotification: boolean
     listenHost: string
     listenPort: number
     publicUrl: string
@@ -24,8 +22,6 @@ export interface ServerSettings {
 export interface ServerSettingsResult {
     settings: ServerSettings
     sources: {
-        serverChanSendKey: 'env' | 'file' | 'default'
-        serverChanNotification: 'env' | 'file' | 'default'
         listenHost: 'env' | 'file' | 'default'
         listenPort: 'env' | 'file' | 'default'
         publicUrl: 'env' | 'file' | 'default'
@@ -99,39 +95,10 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
 
     let needsSave = false
     const sources: ServerSettingsResult['sources'] = {
-        serverChanSendKey: 'default',
-        serverChanNotification: 'default',
         listenHost: 'default',
         listenPort: 'default',
         publicUrl: 'default',
         corsOrigins: 'default',
-    }
-    // serverChanSendKey: env > file > null
-    let serverChanSendKey: string | null = null
-    if (process.env.SERVERCHAN_SENDKEY) {
-        serverChanSendKey = process.env.SERVERCHAN_SENDKEY
-        sources.serverChanSendKey = 'env'
-        if (settings.serverChanSendKey === undefined) {
-            settings.serverChanSendKey = serverChanSendKey
-            needsSave = true
-        }
-    } else if (settings.serverChanSendKey !== undefined) {
-        serverChanSendKey = settings.serverChanSendKey
-        sources.serverChanSendKey = 'file'
-    }
-
-    // serverChanNotification: env > file > true
-    let serverChanNotification = true
-    if (process.env.SERVERCHAN_NOTIFICATION !== undefined) {
-        serverChanNotification = process.env.SERVERCHAN_NOTIFICATION === 'true'
-        sources.serverChanNotification = 'env'
-        if (settings.serverChanNotification === undefined) {
-            settings.serverChanNotification = serverChanNotification
-            needsSave = true
-        }
-    } else if (settings.serverChanNotification !== undefined) {
-        serverChanNotification = settings.serverChanNotification
-        sources.serverChanNotification = 'file'
     }
 
     // listenHost: env > file > default
@@ -203,8 +170,6 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
 
     return {
         settings: {
-            serverChanSendKey,
-            serverChanNotification,
             listenHost,
             listenPort,
             publicUrl,

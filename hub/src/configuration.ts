@@ -7,8 +7,6 @@
  *
  * Optional environment variables:
  * - CLI_API_TOKEN: Shared secret for hapi CLI authentication (auto-generated if not set)
- * - SERVERCHAN_SENDKEY: Server酱 SendKey/AppKey for push notifications
- * - SERVERCHAN_NOTIFICATION: Enable/disable Server酱 notifications (default: true)
  * - HAPI_LISTEN_HOST: Host/IP to bind the HTTP service (default: 127.0.0.1)
  * - HAPI_LISTEN_PORT: Port for HTTP service (default: 3006)
  * - HAPI_PUBLIC_URL: Public URL for external access to the web PWA
@@ -31,8 +29,6 @@ import { loadServerSettings, type ServerSettings, type ServerSettingsResult } fr
 export type ConfigSource = 'env' | 'file' | 'default'
 
 export interface ConfigSources {
-    serverChanSendKey: ConfigSource
-    serverChanNotification: ConfigSource
     listenHost: ConfigSource
     listenPort: ConfigSource
     publicUrl: ConfigSource
@@ -41,12 +37,6 @@ export interface ConfigSources {
 }
 
 class Configuration {
-    /** Server酱 SendKey/AppKey */
-    public readonly serverChanSendKey: string | null
-
-    /** Server酱 notifications enabled */
-    public readonly serverChanNotification: boolean
-
     /** CLI auth token (shared secret) */
     public cliApiToken: string
 
@@ -92,8 +82,6 @@ class Configuration {
         this.settingsFile = getSettingsFile(dataDir)
 
         // Apply server settings
-        this.serverChanSendKey = serverSettings.serverChanSendKey
-        this.serverChanNotification = serverSettings.serverChanNotification
         this.listenHost = serverSettings.listenHost
         this.listenPort = serverSettings.listenPort
         this.publicUrl = serverSettings.publicUrl
