@@ -50,7 +50,7 @@ function createSession(overrides?: Partial<Session>): Session {
 }
 
 function createApp(session: Session, opts?: {
-    resumeSession?: (sessionId: string, namespace: string, resumeOpts?: { permissionMode?: string }) => Promise<{ type: string; sessionId?: string; message?: string; code?: string }>
+    resumeSession?: (sessionId: string, resumeOpts?: { permissionMode?: string }) => Promise<{ type: string; sessionId?: string; message?: string; code?: string }>
     listSlashCommands?: SyncEngine['listSlashCommands']
 }) {
     const applySessionConfigCalls: Array<[string, Record<string, unknown>]> = []
@@ -69,10 +69,6 @@ function createApp(session: Session, opts?: {
     } as Partial<SyncEngine>
 
     const app = new Hono<WebAppEnv>()
-    app.use('*', async (c, next) => {
-        c.set('namespace', 'default')
-        await next()
-    })
     app.route('/api', createSessionsRoutes(() => engine as SyncEngine))
 
     return { app, applySessionConfigCalls }
@@ -165,7 +161,7 @@ describe('sessions routes', () => {
         })
         let capturedResumeOpts: { permissionMode?: string } | undefined
         const { app } = createApp(session, {
-            resumeSession: async (sessionId, _namespace, resumeOpts) => {
+            resumeSession: async (sessionId, resumeOpts) => {
                 capturedResumeOpts = resumeOpts
                 return { type: 'success', sessionId }
             }
