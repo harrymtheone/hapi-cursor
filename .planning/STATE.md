@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-05-PLAN.md
-last_updated: "2026-05-21T04:33:43.768Z"
-last_activity: 2026-05-21 -- Phase 03 Plan 05 complete
+stopped_at: Completed 03-06-PLAN.md
+last_updated: "2026-05-21T04:46:09.162Z"
+last_activity: 2026-05-21 -- Phase 03 Plan 06 complete
 progress:
   total_phases: 12
   completed_phases: 2
   total_plans: 18
-  completed_plans: 16
-  percent: 89
+  completed_plans: 17
+  percent: 94
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 3
-Plan: 06
+Plan: 07
 Status: In Progress
-Last activity: 2026-05-21 -- Phase 03 Plan 05 complete
+Last activity: 2026-05-21 -- Phase 03 Plan 06 complete
 
-Progress: [█████████░] 89%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 89%
 | Phase 03 P03 | 5min 25s | 2 tasks | 15 files |
 | Phase 03 P04 | 5min 31s | 2 tasks | 16 files |
 | Phase 03 P05 | 5min 13s | 2 tasks | 10 files |
+| Phase 03 P06 | 2min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Plan 04 removes SocketData namespace writes/reads; CLI and terminal sockets now authorize by opaque token/JWT uid plus session or machine existence.
 - [Phase 03]: Plan 04 collapses visibility and push fallback to global owner-only delivery over all current push subscriptions.
 - [Phase 03]: Plan 05 deletes namespace from shared Session/SyncEvent/socket contracts and CLI mirrors; store namespace columns remain internal until Plan 03-06.
+- [Phase 03]: Plan 06 cuts runtime SQLite store to schema v10 with no namespace columns/indexes or users table; old v9 namespace-shaped DBs require the offline migration script.
+- [Phase 03]: Plan 06 adds `hub/scripts/migrate-namespace-isolation.ts` for explicit-path v9-to-v10 migration, preserving sessions/machines/messages and deduping push subscriptions by endpoint.
 
 ### Pending Todos
 
@@ -110,6 +113,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-21T04:33:43.762Z
-Stopped at: Completed 03-05-PLAN.md
+Last session: 2026-05-21T04:46:09.156Z
+Stopped at: Completed 03-06-PLAN.md
 Resume file: None
