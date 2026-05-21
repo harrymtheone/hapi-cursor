@@ -2,7 +2,7 @@
 phase: 2
 slug: cut-external-integration-channels
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-05-21
 ---
@@ -43,7 +43,7 @@ created: 2026-05-21
 | 02-02-* | 02 (CUT-06 web) | 2 | CUT-06 | — | N/A | typecheck + build | `bun typecheck && cd web && bun run build` | ✅ existing | ⬜ pending |
 | 02-03-* | 03 (CUT-07) | 3 | CUT-07 | — | N/A | typecheck + build | `bun typecheck && bun run test && cd web && bun run build` | ✅ existing | ⬜ pending |
 | 02-04-* | 04 (CUT-08) | 4 | CUT-08 | — | N/A | unit + typecheck | `bun typecheck && cd hub && bun run test` | ✅ existing | ⬜ pending |
-| 02-05-* | 05 (final cleanup + guard) | 5 | CUT-06/07/08 | — | N/A | guard script + lockfile | `bun typecheck && bun run test && bash scripts/ripgrep-guard.sh` | ✅ existing (Phase 1) | ⬜ pending |
+| 02-05-* | 05 (final cleanup + guard) | 5 | CUT-06/07/08 | — | N/A | guard script + lockfile | `bun typecheck && bun run test && bash scripts/check-no-cut-agents.sh` | ✅ existing (Phase 1) | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -59,8 +59,8 @@ Phase 2 SC mapping:
 ## Wave 0 Requirements
 
 - [x] Existing Vitest infrastructure covers all phase requirements (per Phase 1 — no new test framework needed)
-- [x] Ripgrep guard script from Phase 1 exists at `scripts/ripgrep-guard.sh` (or equivalent — confirm in research) — extension only, no new infrastructure
-- [ ] Confirm location of Phase 1 guard script in commit #5 task `read_first`
+- [x] Ripgrep guard script from Phase 1 exists at `scripts/check-no-cut-agents.sh` (verified against `.planning/phases/01-cut-non-cursor-agents/01-VERIFICATION.md` + `01-05-PLAN.md`) — extension only, no new infrastructure
+- [x] Phase 1 guard script location confirmed in 02-05-PLAN.md `<read_first>` and `<files>` (= `scripts/check-no-cut-agents.sh`)
 
 *No new test infrastructure. Wave 0 is verification-only.*
 
@@ -85,6 +85,6 @@ Phase 2 SC mapping:
 - [ ] Wave 0 covers all MISSING references (none — re-uses Phase 1 infra)
 - [ ] No watch-mode flags
 - [ ] Feedback latency < 60s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
