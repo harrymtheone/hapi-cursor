@@ -74,13 +74,12 @@ function createHarness(options?: {
 }): Harness {
     const io = new FakeServer()
     const terminalSocket = new FakeSocket('terminal-socket')
-    terminalSocket.data.namespace = 'default'
     const terminalRegistry = new TerminalRegistry({ idleTimeoutMs: 0 })
     const cliNamespace = io.of('/cli')
 
     registerTerminalHandlers(terminalSocket as unknown as SocketWithData, {
         io: io as unknown as SocketServer,
-        getSession: () => ({ active: options?.sessionActive ?? true, namespace: 'default' }),
+        getSession: () => ({ active: options?.sessionActive ?? true }),
         terminalRegistry,
         maxTerminalsPerSocket: options?.maxTerminalsPerSocket ?? 4,
         maxTerminalsPerSession: options?.maxTerminalsPerSession ?? 4
@@ -90,7 +89,6 @@ function createHarness(options?: {
 }
 
 function connectCliSocket(cliNamespace: FakeNamespace, cliSocket: FakeSocket, sessionId: string): void {
-    cliSocket.data.namespace = 'default'
     cliNamespace.sockets.set(cliSocket.id, cliSocket)
     const roomId = `session:${sessionId}`
     const room = cliNamespace.adapter.rooms.get(roomId) ?? new Set<string>()
