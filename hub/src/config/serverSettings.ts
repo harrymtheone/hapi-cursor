@@ -10,7 +10,15 @@
 
 import { getSettingsFile, readSettings, writeSettings } from './settings'
 
-const OLD_SETTINGS_FIELDS = ['webappHost', 'webappPort', 'webappUrl'] as const
+const OLD_SETTINGS_FIELDS = [
+    'webappHost',
+    'webappPort',
+    'webappUrl',
+    'relayApi',
+    'relayAuth',
+    'relayForceTcp',
+    'relayEnabled',
+] as const
 
 export interface ServerSettings {
     listenHost: string
