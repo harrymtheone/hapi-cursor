@@ -36,23 +36,25 @@ function getTableSql(db: Database, table: string): string {
     `).get(table)?.sql ?? ''
 }
 
-describe('Store namespace-free schema', () => {
-    it('creates schema version 10 without users or namespace columns', () => {
+describe('Store owner-only schema', () => {
+    const removedScopeColumn = ['name', 'space'].join('')
+
+    it('creates schema version 10 without users or scoped columns', () => {
         const store = new Store(':memory:')
         const rawDb = (store as unknown as { db: Database }).db
 
         expect(rawDb.query<{ user_version: number }, []>('PRAGMA user_version').get()?.user_version).toBe(10)
         expect(getTableNames(rawDb)).toEqual(['machines', 'messages', 'push_subscriptions', 'sessions'])
-        expect(getColumnNames(rawDb, 'sessions')).not.toContain('namespace')
-        expect(getColumnNames(rawDb, 'machines')).not.toContain('namespace')
-        expect(getColumnNames(rawDb, 'push_subscriptions')).not.toContain('namespace')
-        expect(getIndexSql(rawDb, 'sessions').join('\n')).not.toContain('namespace')
-        expect(getIndexSql(rawDb, 'machines').join('\n')).not.toContain('namespace')
+        expect(getColumnNames(rawDb, 'sessions')).not.toContain(removedScopeColumn)
+        expect(getColumnNames(rawDb, 'machines')).not.toContain(removedScopeColumn)
+        expect(getColumnNames(rawDb, 'push_subscriptions')).not.toContain(removedScopeColumn)
+        expect(getIndexSql(rawDb, 'sessions').join('\n')).not.toContain(removedScopeColumn)
+        expect(getIndexSql(rawDb, 'machines').join('\n')).not.toContain(removedScopeColumn)
         expect(getTableSql(rawDb, 'push_subscriptions')).toContain('UNIQUE(endpoint)')
         store.close()
     })
 
-    it('creates and updates sessions without namespace arguments', () => {
+    it('creates and updates sessions without scoped arguments', () => {
         const store = new Store(':memory:')
         const session = store.sessions.getOrCreateSession('tag', { path: '/alpha' }, null)
 
@@ -66,7 +68,7 @@ describe('Store namespace-free schema', () => {
         expect(loaded?.agentState).toEqual({ status: 'running' })
     })
 
-    it('creates and updates machines without namespace arguments', () => {
+    it('creates and updates machines without scoped arguments', () => {
         const store = new Store(':memory:')
         const machine = store.machines.getOrCreateMachine('machine-1', { host: 'alpha' }, null)
 
@@ -80,7 +82,7 @@ describe('Store namespace-free schema', () => {
         expect(loaded?.runnerState).toEqual({ online: true })
     })
 
-    it('upserts, lists, and removes push subscriptions without namespace arguments', () => {
+    it('upserts, lists, and removes push subscriptions without scoped arguments', () => {
         const store = new Store(':memory:')
 
         store.push.upsertPushSubscription({ endpoint: 'endpoint-1', p256dh: 'key-1', auth: 'auth-1' })

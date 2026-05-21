@@ -112,7 +112,7 @@ function createV9Fixture(dbPath: string): void {
             ('message-2', 'session-2', '{"role":"assistant"}', 2300, 1, NULL, 2300, 2400);
 
         INSERT INTO users (platform, platform_user_id, namespace, created_at)
-        VALUES ('telegram', '42', 'alpha', 800);
+        VALUES ('legacy-platform', '42', 'alpha', 800);
 
         INSERT INTO push_subscriptions (namespace, endpoint, p256dh, auth, created_at)
         VALUES

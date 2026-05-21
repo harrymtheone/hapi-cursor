@@ -47,16 +47,16 @@ class FakeNamespace {
 }
 
 class FakeServer {
-    private readonly namespaces = new Map<string, FakeNamespace>()
+    private readonly socketNamespaces = new Map<string, FakeNamespace>()
 
     of(name: string): FakeNamespace {
-        const existing = this.namespaces.get(name)
+        const existing = this.socketNamespaces.get(name)
         if (existing) {
             return existing
         }
-        const namespace = new FakeNamespace()
-        this.namespaces.set(name, namespace)
-        return namespace
+        const socketNamespace = new FakeNamespace()
+        this.socketNamespaces.set(name, socketNamespace)
+        return socketNamespace
     }
 }
 

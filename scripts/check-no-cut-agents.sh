@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # scripts/check-no-cut-agents.sh
 #
-# Phase-1 + Phase-2 ripgrep guard. Fails the build if any business-code
+# Phase-1 + Phase-2 + Phase-3 ripgrep guard. Fails the build if any business-code
 # reference to a forbidden keyword leaks outside the whitelist below.
 #
 # Categories:
 #   * Phase-1 cut-agents     — claude / codex / gemini / opencode
 #   * Phase-2 integration    — telegram / serverchan / elevenlabs / grammy
+#   * Phase-3 owner-only cut  — namespace / :ns in runtime source trees
 #
 # Whitelist categories:
 #   * Permanent (Phase-5 territory) — files whose hits are structurally tied to
@@ -17,7 +18,18 @@
 #     by the Phase-12 polish pass.
 #   * Infra — files that can never be agent code (lockfile, gitignore, node_modules…).
 set -euo pipefail
+if command -v rg >/dev/null 2>&1; then
+  RG_BIN="rg"
+elif [ -x "/usr/share/cursor/resources/app/node_modules/@vscode/ripgrep/bin/rg" ]; then
+  RG_BIN="/usr/share/cursor/resources/app/node_modules/@vscode/ripgrep/bin/rg"
+else
+  echo "❌ ripgrep (rg) is required for source guards." >&2
+  exit 1
+fi
+
 PATTERN='\b(claude|codex|gemini|opencode|telegram|serverchan|elevenlabs|grammy)\b'
+PHASE3_PATTERN='namespace|:ns'
+PHASE3_SOURCE_DIRS=(cli/src hub/src web/src shared/src)
 WHITELIST=(
   # === Infra (never agent code)
   --glob '!.planning/**'
@@ -110,10 +122,11 @@ WHITELIST=(
   --glob '!README.md'
   --glob '!CONTRIBUTING.md'
   --glob '!AGENTS.md'
+  --glob '!CLAUDE.md'
   --glob '!refactor.md'
   --glob '!.cursor/rules/**'
 )
-if rg -i "${WHITELIST[@]}" "$PATTERN" .; then
+if "$RG_BIN" -i "${WHITELIST[@]}" "$PATTERN" .; then
   echo ""
   echo "❌ Non-Cursor / external-channel literals found outside whitelist."
   echo "   Either rewrite the hit, or — if the hit is structurally tied to"
@@ -123,3 +136,11 @@ if rg -i "${WHITELIST[@]}" "$PATTERN" .; then
   exit 1
 fi
 echo "✅ No non-Cursor agent literals outside whitelist."
+
+if "$RG_BIN" -n "$PHASE3_PATTERN" "${PHASE3_SOURCE_DIRS[@]}"; then
+  echo ""
+  echo "❌ Phase-3 namespace residue found in runtime source scope."
+  echo "   Rewrite the hit; do not add broad source whitelists for CUT-09."
+  exit 1
+fi
+echo "✅ No Phase-3 namespace residue in source scope."

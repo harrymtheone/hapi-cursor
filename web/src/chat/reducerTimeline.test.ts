@@ -646,7 +646,7 @@ describe('reduceTimeline', () => {
         ])
     })
 
-    it('namespaces Codex child trace tool ids away from parent tool ids', () => {
+    it('scopes Codex child trace tool ids away from parent tool ids', () => {
         const messages: TracedMessage[] = [
             {
                 id: 'parent-tool',

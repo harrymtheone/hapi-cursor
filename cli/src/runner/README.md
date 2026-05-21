@@ -449,7 +449,7 @@ socket.emit('machine-update-metadata', {
 ## 5. Mini App RPC Calls (via hapi-hub)
 
 The Telegram Mini App calls REST endpoints on `hapi-hub` (for example `POST /api/machines/:id/spawn`).
-`hapi-hub` then relays those requests to the runner via Socket.IO `rpc-request` on the `/cli` namespace.
+`hapi-hub` then relays those requests to the runner via Socket.IO `rpc-request` on the `/cli` socket channel.
 
 RPC method naming (machine-scoped) uses a `${machineId}:` prefix, for example:
 - `${machineId}:spawn-happy-session`
