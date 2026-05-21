@@ -45,10 +45,17 @@ export class SessionCache {
     resolveSessionAccess(
         sessionId: string,
         namespace: string
+    ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' | 'access-denied' }
+    resolveSessionAccess(
+        sessionId: string
+    ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' }
+    resolveSessionAccess(
+        sessionId: string,
+        namespace?: string
     ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' | 'access-denied' } {
         const session = this.sessions.get(sessionId) ?? this.refreshSession(sessionId)
         if (session) {
-            if (session.namespace !== namespace) {
+            if (namespace !== undefined && session.namespace !== namespace) {
                 return { ok: false, reason: 'access-denied' }
             }
             return { ok: true, sessionId, session }
@@ -69,8 +76,25 @@ export class SessionCache {
         model?: string,
         effort?: string,
         modelReasoningEffort?: string
+    ): Session
+    getOrCreateSession(
+        tag: string,
+        metadata: unknown,
+        agentState: unknown,
+        options?: { model?: string; effort?: string; modelReasoningEffort?: string }
+    ): Session
+    getOrCreateSession(
+        tag: string,
+        metadata: unknown,
+        agentState: unknown,
+        namespaceOrOptions?: string | { model?: string; effort?: string; modelReasoningEffort?: string },
+        model?: string,
+        effort?: string,
+        modelReasoningEffort?: string
     ): Session {
-        const stored = this.store.sessions.getOrCreateSession(tag, metadata, agentState, namespace, model, effort, modelReasoningEffort)
+        const stored = typeof namespaceOrOptions === 'string'
+            ? this.store.sessions.getOrCreateSession(tag, metadata, agentState, namespaceOrOptions, model, effort, modelReasoningEffort)
+            : this.store.sessions.getOrCreateSession(tag, metadata, agentState, namespaceOrOptions)
         return this.refreshSession(stored.id) ?? (() => { throw new Error('Failed to load session') })()
     }
 

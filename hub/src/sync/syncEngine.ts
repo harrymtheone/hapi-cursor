@@ -129,7 +129,17 @@ export class SyncEngine {
     resolveSessionAccess(
         sessionId: string,
         namespace: string
+    ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' | 'access-denied' }
+    resolveSessionAccess(
+        sessionId: string
+    ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' }
+    resolveSessionAccess(
+        sessionId: string,
+        namespace?: string
     ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' | 'access-denied' } {
+        if (namespace === undefined) {
+            return this.sessionCache.resolveSessionAccess(sessionId)
+        }
         return this.sessionCache.resolveSessionAccess(sessionId, namespace)
     }
 
@@ -277,11 +287,34 @@ export class SyncEngine {
         model?: string,
         effort?: string,
         modelReasoningEffort?: string
+    ): Session
+    getOrCreateSession(
+        tag: string,
+        metadata: unknown,
+        agentState: unknown,
+        options?: { model?: string; effort?: string; modelReasoningEffort?: string }
+    ): Session
+    getOrCreateSession(
+        tag: string,
+        metadata: unknown,
+        agentState: unknown,
+        namespaceOrOptions?: string | { model?: string; effort?: string; modelReasoningEffort?: string },
+        model?: string,
+        effort?: string,
+        modelReasoningEffort?: string
     ): Session {
-        return this.sessionCache.getOrCreateSession(tag, metadata, agentState, namespace, model, effort, modelReasoningEffort)
+        if (typeof namespaceOrOptions === 'string') {
+            return this.sessionCache.getOrCreateSession(tag, metadata, agentState, namespaceOrOptions, model, effort, modelReasoningEffort)
+        }
+        return this.sessionCache.getOrCreateSession(tag, metadata, agentState, namespaceOrOptions)
     }
 
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, namespace: string): Machine {
+    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, namespace: string): Machine
+    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown): Machine
+    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, namespace?: string): Machine {
+        if (namespace === undefined) {
+            return this.machineCache.getOrCreateMachine(id, metadata, runnerState)
+        }
         return this.machineCache.getOrCreateMachine(id, metadata, runnerState, namespace)
     }
 
