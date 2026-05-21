@@ -76,6 +76,7 @@ export class Logger {
   ): void {
     if (!process.env.DEBUG) {
       this.debug(`In production, skipping message inspection`)
+      return
     }
 
     // Some of our messages are huge, but we still want to show them in the logs

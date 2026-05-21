@@ -7,6 +7,7 @@ import { Logger } from './logger'
 const removedRemoteLogEnv = ['DANGEROUSLY', 'LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING'].join('_')
 const originalApiUrl = process.env.HAPI_API_URL
 const originalRemovedRemoteLogging = process.env[removedRemoteLogEnv]
+const originalDebug = process.env.DEBUG
 const originalFetch = globalThis.fetch
 
 describe('Logger local-only logging', () => {
@@ -37,6 +38,12 @@ describe('Logger local-only logging', () => {
       process.env[removedRemoteLogEnv] = originalRemovedRemoteLogging
     }
 
+    if (originalDebug === undefined) {
+      delete process.env.DEBUG
+    } else {
+      process.env.DEBUG = originalDebug
+    }
+
     vi.restoreAllMocks()
   })
 
@@ -59,5 +66,18 @@ describe('Logger local-only logging', () => {
     expect(logContent).toContain('warn entry')
     expect(logContent.trim().length).toBeGreaterThan(0)
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('does not inspect large payloads outside DEBUG mode', () => {
+    delete process.env.DEBUG
+    const logPath = join(tempDir, 'session.log')
+    const logger = new Logger(logPath)
+
+    logger.debugLargeJson('payload', { secret: 'do-not-write' })
+
+    const logContent = readFileSync(logPath, 'utf8')
+    expect(logContent).toContain('In production, skipping message inspection')
+    expect(logContent).not.toContain('payload')
+    expect(logContent).not.toContain('do-not-write')
   })
 })

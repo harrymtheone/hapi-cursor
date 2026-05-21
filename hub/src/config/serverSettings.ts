@@ -85,6 +85,27 @@ function rejectOldSettingsFields(settings: object, settingsFile: string): void {
     )
 }
 
+function parseListenPort(value: unknown, source: string): number {
+    if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 65535) {
+        throw new Error(`${source} must be an integer port between 1 and 65535`)
+    }
+    return value
+}
+
+function parseStringSetting(value: unknown, source: string): string {
+    if (typeof value !== 'string') {
+        throw new Error(`${source} must be a string`)
+    }
+    return value
+}
+
+function parseCorsOriginsSetting(value: unknown, source: string): string[] {
+    if (!Array.isArray(value) || value.some((origin) => typeof origin !== 'string')) {
+        throw new Error(`${source} must be an array of origins`)
+    }
+    return value
+}
+
 /**
  * Load hub settings with priority: env > file > default
  * Saves new env values to file when not already present
@@ -119,7 +140,7 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
             needsSave = true
         }
     } else if (settings.listenHost !== undefined) {
-        listenHost = settings.listenHost
+        listenHost = parseStringSetting(settings.listenHost, 'listenHost')
         sources.listenHost = 'file'
     }
 
@@ -127,7 +148,7 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
     let listenPort = 3006
     if (process.env.HAPI_LISTEN_PORT) {
         const parsed = parseInt(process.env.HAPI_LISTEN_PORT, 10)
-        if (!Number.isFinite(parsed) || parsed <= 0) {
+        if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
             throw new Error('HAPI_LISTEN_PORT must be a valid port number')
         }
         listenPort = parsed
@@ -137,7 +158,7 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
             needsSave = true
         }
     } else if (settings.listenPort !== undefined) {
-        listenPort = settings.listenPort
+        listenPort = parseListenPort(settings.listenPort, 'listenPort')
         sources.listenPort = 'file'
     }
 
@@ -151,7 +172,7 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
             needsSave = true
         }
     } else if (settings.publicUrl !== undefined) {
-        publicUrl = settings.publicUrl
+        publicUrl = parseStringSetting(settings.publicUrl, 'publicUrl')
         sources.publicUrl = 'file'
     }
 
@@ -165,7 +186,7 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
             needsSave = true
         }
     } else if (settings.corsOrigins !== undefined) {
-        corsOrigins = settings.corsOrigins
+        corsOrigins = parseCorsOriginsSetting(settings.corsOrigins, 'corsOrigins')
         sources.corsOrigins = 'file'
     } else {
         corsOrigins = deriveCorsOrigins(publicUrl)
