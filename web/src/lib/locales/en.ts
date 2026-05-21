@@ -12,11 +12,8 @@ export default {
   // Login / Auth
   'login.title': 'HAPI',
   'login.subtitle': 'Vibe Coding Anytime, Anywhere',
-  'login.bind.title': 'Bind Telegram',
   'login.submit': 'Sign In',
-  'login.bind.submit': 'Bind',
   'login.submitting': 'Signing in…',
-  'login.bind.submitting': 'Binding…',
   'login.placeholder': 'Access token',
   'login.error.enterToken': 'Please enter an access token',
   'login.error.bindingUnavailable': 'Binding is unavailable.',

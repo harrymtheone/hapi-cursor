@@ -82,7 +82,7 @@
 }
 
 [data-theme="dark"] {
-    /* Primary colors - override fallbacks for non-Telegram browsers */
+    /* Primary colors - dark mode fallbacks */
     --app-bg: var(--tg-theme-bg-color, #1c1c1e);
     --app-fg: var(--tg-theme-text-color, #ffffff);
     --app-hint: var(--tg-theme-hint-color, #8e8e93);
@@ -204,19 +204,9 @@ body {
     height: 100vh;
     height: 100dvh;
     height: var(--app-viewport-height, 100dvh);
-    height: var(--tg-viewport-stable-height, var(--app-viewport-height, 100dvh));
     touch-action: pan-x pan-y;
     overscroll-behavior: none;
     -webkit-text-size-adjust: 100%;
-}
-
-html[data-telegram-app="true"],
-html[data-telegram-app="true"] body {
-    overflow: hidden;
-}
-
-html:not([data-telegram-app="true"]),
-html:not([data-telegram-app="true"]) body {
     overflow-x: hidden;
     overflow-y: auto;
 }

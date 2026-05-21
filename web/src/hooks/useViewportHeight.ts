@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { isTelegramApp } from '@/hooks/useTelegram'
 
 /**
  * Sets a CSS custom property `--app-viewport-height` on <html> that tracks the
@@ -9,16 +8,10 @@ import { isTelegramApp } from '@/hooks/useTelegram'
  * composer input is hidden behind the keyboard.
  *
  * The hook listens to `window.visualViewport.resize` and writes the viewport
- * height into the CSS variable. The CSS height chain is:
- *   var(--tg-viewport-stable-height, var(--app-viewport-height, 100dvh))
- *
- * Skipped in Telegram Mini Apps (Telegram SDK provides its own height variable).
+ * height into the CSS variable.
  */
 export function useViewportHeight(): void {
     useEffect(() => {
-        // Telegram Mini App has its own viewport management via --tg-viewport-stable-height
-        if (isTelegramApp()) return
-
         const viewport = window.visualViewport
         if (!viewport) return
 

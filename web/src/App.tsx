@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useLocation, useMatchRoute, useRouter } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { getTelegramWebApp, isTelegramApp } from '@/hooks/useTelegram'
 import { initializeChatSurfaceColors } from '@/hooks/useChatSurfaceColors'
 import { initializeTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/hooks/useAuth'
@@ -46,7 +45,7 @@ function AppInner() {
     const { t } = useTranslation()
     const { serverUrl, baseUrl, setServerUrl, clearServerUrl } = useServerUrl()
     const { authSource, isLoading: isAuthSourceLoading, setAccessToken } = useAuthSource(baseUrl)
-    const { token, api, isLoading: isAuthLoading, error: authError, needsBinding, bind } = useAuth(authSource, baseUrl)
+    const { token, api, isLoading: isAuthLoading, error: authError } = useAuth(authSource, baseUrl)
     const goBack = useAppGoBack()
     const pathname = useLocation({ select: (location) => location.pathname })
     const matchRoute = useMatchRoute()
@@ -54,9 +53,6 @@ function AppInner() {
     const { addToast } = useToast()
 
     useEffect(() => {
-        const tg = getTelegramWebApp()
-        tg?.ready()
-        tg?.expand()
         initializeTheme()
         initializeChatSurfaceColors()
     }, [])
@@ -100,24 +96,6 @@ function AppInner() {
         }
     }, [])
 
-    useEffect(() => {
-        const tg = getTelegramWebApp()
-        const backButton = tg?.BackButton
-        if (!backButton) return
-
-        if (pathname === '/' || pathname === '/sessions') {
-            backButton.offClick(goBack)
-            backButton.hide()
-            return
-        }
-
-        backButton.show()
-        backButton.onClick(goBack)
-        return () => {
-            backButton.offClick(goBack)
-            backButton.hide()
-        }
-    }, [goBack, pathname])
     const queryClient = useQueryClient()
     const sessionMatch = matchRoute({ to: '/sessions/$sessionId' })
     const selectedSessionId = sessionMatch && sessionMatch.sessionId !== 'new' ? sessionMatch.sessionId : null
@@ -161,7 +139,7 @@ function AppInner() {
             pushPromptedRef.current = false
             return
         }
-        if (isTelegramApp() || !isPushSupported) {
+        if (!isPushSupported) {
             return
         }
         if (pushPromptedRef.current) {
@@ -342,21 +320,6 @@ function AppInner() {
         )
     }
 
-    if (needsBinding) {
-        return (
-            <LoginPrompt
-                mode="bind"
-                onBind={bind}
-                baseUrl={baseUrl}
-                serverUrl={serverUrl}
-                setServerUrl={setServerUrl}
-                clearServerUrl={clearServerUrl}
-                requireServerUrl={REQUIRE_SERVER_URL}
-                error={authError ?? undefined}
-            />
-        )
-    }
-
     // Authenticating (also covers the gap before useAuth effect starts)
     if (isAuthLoading || (authSource && !token && !authError)) {
         return (
@@ -366,34 +329,18 @@ function AppInner() {
         )
     }
 
-    // Auth error
+    // Auth error — show login again
     if (authError || !token || !api) {
-        // If using access token and auth failed, show login again
-        if (authSource.type === 'accessToken') {
-            return (
-                <LoginPrompt
-                    onLogin={setAccessToken}
-                    baseUrl={baseUrl}
-                    serverUrl={serverUrl}
-                    setServerUrl={setServerUrl}
-                    clearServerUrl={clearServerUrl}
-                    requireServerUrl={REQUIRE_SERVER_URL}
-                    error={authError ?? t('login.error.authFailed')}
-                />
-            )
-        }
-
-        // Telegram auth failed
         return (
-            <div className="p-4 space-y-3">
-                <div className="text-base font-semibold">{t('login.title')}</div>
-                <div className="text-sm text-red-600">
-                    {authError ?? t('login.error.authFailed')}
-                </div>
-                <div className="text-xs text-[var(--app-hint)]">
-                    Open this page from Telegram using the bot's "Open App" button (not "Open in browser").
-                </div>
-            </div>
+            <LoginPrompt
+                onLogin={setAccessToken}
+                baseUrl={baseUrl}
+                serverUrl={serverUrl}
+                setServerUrl={setServerUrl}
+                clearServerUrl={clearServerUrl}
+                requireServerUrl={REQUIRE_SERVER_URL}
+                error={authError ?? t('login.error.authFailed')}
+            />
         )
     }
 

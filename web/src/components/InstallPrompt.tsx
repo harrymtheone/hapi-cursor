@@ -7,9 +7,9 @@ import { useTranslation } from '@/lib/use-translation'
 export function InstallPrompt() {
     const { t } = useTranslation()
     const { canInstall, canInstallIOS, promptInstall, dismissInstall, isStandalone } = usePWAInstall()
-    const { isTelegram, haptic } = usePlatform()
+    const { haptic } = usePlatform()
     const [showIOSGuide, setShowIOSGuide] = useState(false)
-    const showFloatingPrompt = !isTelegram && !isStandalone && ((canInstallIOS && !showIOSGuide) || canInstall)
+    const showFloatingPrompt = !isStandalone && ((canInstallIOS && !showIOSGuide) || canInstall)
 
     useEffect(() => {
         const root = document.documentElement
@@ -26,7 +26,7 @@ export function InstallPrompt() {
         }
     }, [showFloatingPrompt])
 
-    if (isTelegram || isStandalone) {
+    if (isStandalone) {
         return null
     }
 

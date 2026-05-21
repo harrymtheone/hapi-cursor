@@ -8,9 +8,7 @@ import { useTranslation } from '@/lib/use-translation'
 import type { ServerUrlResult } from '@/hooks/useServerUrl'
 
 type LoginPromptProps = {
-    mode?: 'login' | 'bind'
     onLogin?: (token: string) => void
-    onBind?: (token: string) => Promise<void>
     baseUrl: string
     serverUrl: string | null
     setServerUrl: (input: string) => ServerUrlResult
@@ -21,7 +19,6 @@ type LoginPromptProps = {
 
 export function LoginPrompt(props: LoginPromptProps) {
     const { t } = useTranslation()
-    const isBindMode = props.mode === 'bind'
     const [accessToken, setAccessToken] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -38,7 +35,7 @@ export function LoginPrompt(props: LoginPromptProps) {
             return
         }
 
-        if (!isBindMode && props.requireServerUrl && !props.serverUrl) {
+        if (props.requireServerUrl && !props.serverUrl) {
             setServerError(t('login.server.required'))
             setIsServerDialogOpen(true)
             return
@@ -48,30 +45,21 @@ export function LoginPrompt(props: LoginPromptProps) {
         setError(null)
 
         try {
-            if (isBindMode) {
-                if (!props.onBind) {
-                    setError(t('login.error.bindingUnavailable'))
-                    return
-                }
-                await props.onBind(trimmedToken)
-            } else {
-                // Validate token by attempting to authenticate
-                const client = new ApiClient('', { baseUrl: props.baseUrl })
-                await client.authenticate({ accessToken: trimmedToken })
-                // If successful, pass token to parent
-                if (!props.onLogin) {
-                    setError(t('login.error.loginUnavailable'))
-                    return
-                }
-                props.onLogin(trimmedToken)
+            // Validate token by attempting to authenticate
+            const client = new ApiClient('', { baseUrl: props.baseUrl })
+            await client.authenticate({ accessToken: trimmedToken })
+            // If successful, pass token to parent
+            if (!props.onLogin) {
+                setError(t('login.error.loginUnavailable'))
+                return
             }
+            props.onLogin(trimmedToken)
         } catch (e) {
-            const fallbackMessage = isBindMode ? t('login.error.bindFailed') : t('login.error.authFailed')
-            setError(e instanceof Error ? e.message : fallbackMessage)
+            setError(e instanceof Error ? e.message : t('login.error.authFailed'))
         } finally {
             setIsLoading(false)
         }
-    }, [accessToken, props, t, isBindMode])
+    }, [accessToken, props, t])
 
     useEffect(() => {
         if (!isServerDialogOpen) {
@@ -108,9 +96,9 @@ export function LoginPrompt(props: LoginPromptProps) {
 
     const displayError = error || props.error
     const serverSummary = props.serverUrl ?? `${props.baseUrl} ${t('login.server.default')}`
-    const title = isBindMode ? t('login.bind.title') : t('login.title')
+    const title = t('login.title')
     const subtitle = t('login.subtitle')
-    const submitLabel = isBindMode ? t('login.bind.submit') : t('login.submit')
+    const submitLabel = t('login.submit')
 
     return (
         <div className="relative h-full flex items-center justify-center p-4">
@@ -157,7 +145,7 @@ export function LoginPrompt(props: LoginPromptProps) {
                         {isLoading ? (
                             <>
                                 <Spinner size="sm" label={null} className="text-[var(--app-button-text)]" />
-                                {isBindMode ? t('login.bind.submitting') : t('login.submitting')}
+                                {t('login.submitting')}
                             </>
                         ) : (
                             submitLabel
@@ -166,66 +154,64 @@ export function LoginPrompt(props: LoginPromptProps) {
                 </form>
 
                 {/* Help links */}
-                {!isBindMode && (
-                    <div className="flex items-center justify-between text-xs text-[var(--app-hint)]">
-                        <a href="https://hapi.run/docs" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--app-fg)]">
-                            {t('login.help')}
-                        </a>
-                        <Dialog open={isServerDialogOpen} onOpenChange={handleServerDialogOpenChange}>
-                            <DialogTrigger asChild>
-                                <button type="button" className="underline hover:text-[var(--app-fg)]">
-                                    Hub {props.serverUrl ? `${t('login.server.custom')}` : `${t('login.server.default')}`}
-                                </button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>{t('login.server.title')}</DialogTitle>
-                                    <DialogDescription>
-                                        {t('login.server.description')}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <form onSubmit={handleSaveServer} className="space-y-4">
-                                    <div className="text-xs text-[var(--app-hint)]">
-                                        {t('login.server.current')} {serverSummary}
+                <div className="flex items-center justify-between text-xs text-[var(--app-hint)]">
+                    <a href="https://hapi.run/docs" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--app-fg)]">
+                        {t('login.help')}
+                    </a>
+                    <Dialog open={isServerDialogOpen} onOpenChange={handleServerDialogOpenChange}>
+                        <DialogTrigger asChild>
+                            <button type="button" className="underline hover:text-[var(--app-fg)]">
+                                Hub {props.serverUrl ? `${t('login.server.custom')}` : `${t('login.server.default')}`}
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>{t('login.server.title')}</DialogTitle>
+                                <DialogDescription>
+                                    {t('login.server.description')}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleSaveServer} className="space-y-4">
+                                <div className="text-xs text-[var(--app-hint)]">
+                                    {t('login.server.current')} {serverSummary}
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium">{t('login.server.origin')}</label>
+                                    <input
+                                        type="url"
+                                        value={serverInput}
+                                        onChange={(e) => {
+                                            setServerInput(e.target.value)
+                                            setServerError(null)
+                                        }}
+                                        placeholder={t('login.server.placeholder')}
+                                        className="w-full px-3 py-2.5 rounded-lg border border-[var(--app-border)] bg-[var(--app-bg)] text-[var(--app-fg)] placeholder:text-[var(--app-hint)] focus:outline-none focus:ring-2 focus:ring-[var(--app-button)] focus:border-transparent"
+                                    />
+                                    <div className="text-[11px] text-[var(--app-hint)]">
+                                        {t('login.server.hint')}
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-medium">{t('login.server.origin')}</label>
-                                        <input
-                                            type="url"
-                                            value={serverInput}
-                                            onChange={(e) => {
-                                                setServerInput(e.target.value)
-                                                setServerError(null)
-                                            }}
-                                            placeholder={t('login.server.placeholder')}
-                                            className="w-full px-3 py-2.5 rounded-lg border border-[var(--app-border)] bg-[var(--app-bg)] text-[var(--app-fg)] placeholder:text-[var(--app-hint)] focus:outline-none focus:ring-2 focus:ring-[var(--app-button)] focus:border-transparent"
-                                        />
-                                        <div className="text-[11px] text-[var(--app-hint)]">
-                                            {t('login.server.hint')}
-                                        </div>
+                                </div>
+
+                                {serverError && (
+                                    <div className="text-sm text-red-500">
+                                        {serverError}
                                     </div>
+                                )}
 
-                                    {serverError && (
-                                        <div className="text-sm text-red-500">
-                                            {serverError}
-                                        </div>
-                                    )}
-
-                                    <div className="flex items-center justify-end gap-2">
-                                        {props.serverUrl && (
-                                            <Button type="button" variant="outline" onClick={handleClearServer}>
-                                                {t('login.server.useSameOrigin')}
-                                            </Button>
-                                        )}
-                                        <Button type="submit">
-                                            {t('login.server.save')}
+                                <div className="flex items-center justify-end gap-2">
+                                    {props.serverUrl && (
+                                        <Button type="button" variant="outline" onClick={handleClearServer}>
+                                            {t('login.server.useSameOrigin')}
                                         </Button>
-                                    </div>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                )}
+                                    )}
+                                    <Button type="submit">
+                                        {t('login.server.save')}
+                                    </Button>
+                                </div>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
 
             {/* Footer */}
