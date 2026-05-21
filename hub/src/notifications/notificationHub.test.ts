@@ -56,7 +56,6 @@ class StubChannel implements NotificationChannel {
 function createSession(overrides: Partial<Session> = {}): Session {
     return {
         id: 'session-1',
-        namespace: 'default',
         seq: 1,
         createdAt: 0,
         updatedAt: 0,
@@ -72,7 +71,7 @@ function createSession(overrides: Partial<Session> = {}): Session {
         modelReasoningEffort: null,
         effort: null,
         ...overrides
-    }
+    } as Session
 }
 
 describe('NotificationHub', () => {
@@ -105,7 +104,6 @@ describe('NotificationHub', () => {
 
         const secondSession = createSession({
             id: firstSession.id,
-            namespace: firstSession.namespace,
             agentState: {
                 requests: {
                     req2: { tool: 'Read', arguments: {}, createdAt: 2 }

@@ -6,7 +6,6 @@ import type { PushPayload } from './pushService'
 function createSession(overrides: Partial<Session> = {}): Session {
     return {
         id: 'session-task-toast',
-        namespace: 'default',
         name: 'Demo task',
         active: true,
         metadata: { flavor: 'cursor' },
@@ -16,16 +15,16 @@ function createSession(overrides: Partial<Session> = {}): Session {
 
 describe('PushNotificationChannel', () => {
     it('sends task notifications to visible web clients before falling back to push', async () => {
-        const pushed: Array<{ namespace: string; payload: PushPayload }> = []
+        const pushed: PushPayload[] = []
         const toasts: unknown[] = []
         const channel = new PushNotificationChannel(
             {
-                sendToNamespace: async (namespace: string, payload: PushPayload) => {
-                    pushed.push({ namespace, payload })
+                send: async (payload: PushPayload) => {
+                    pushed.push(payload)
                 }
             } as never,
             {
-                sendToast: async (_namespace: string, event: unknown) => {
+                sendToast: async (event: unknown) => {
                     toasts.push(event)
                     return 1
                 }
@@ -42,15 +41,24 @@ describe('PushNotificationChannel', () => {
         })
 
         expect(toasts).toHaveLength(1)
+        expect(toasts[0]).toEqual({
+            type: 'toast',
+            data: {
+                title: 'Task completed',
+                body: 'Cursor · Demo task · Background work finished',
+                sessionId: 'session-task-toast',
+                url: '/sessions/session-task-toast'
+            }
+        })
         expect(pushed).toHaveLength(0)
     })
 
     it('does not reuse one replacement tag for all task notifications in a session', async () => {
-        const pushed: Array<{ namespace: string; payload: PushPayload }> = []
+        const pushed: PushPayload[] = []
         const channel = new PushNotificationChannel(
             {
-                sendToNamespace: async (namespace: string, payload: PushPayload) => {
-                    pushed.push({ namespace, payload })
+                send: async (payload: PushPayload) => {
+                    pushed.push(payload)
                 }
             } as never,
             {
@@ -72,7 +80,7 @@ describe('PushNotificationChannel', () => {
         })
 
         expect(pushed).toHaveLength(2)
-        expect(pushed[0].payload.tag).toBeUndefined()
-        expect(pushed[1].payload.tag).toBeUndefined()
+        expect(pushed[0].tag).toBeUndefined()
+        expect(pushed[1].tag).toBeUndefined()
     })
 })
