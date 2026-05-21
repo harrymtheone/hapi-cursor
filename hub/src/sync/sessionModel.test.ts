@@ -91,7 +91,7 @@ describe('session model', () => {
             'default'
         )
 
-        await cache.mergeSessions(oldSession.id, newSession.id, 'default')
+        await cache.mergeSessions(oldSession.id, newSession.id)
 
         const merged = cache.getSession(newSession.id)
         expect(merged?.model).toBe('gpt-5.4')
@@ -261,7 +261,6 @@ describe('session model', () => {
         expect(events).toContainEqual({
             type: 'session-updated',
             sessionId: session.id,
-            namespace: 'default',
             data: { updatedAt: activityAt }
         })
     })
@@ -316,7 +315,7 @@ describe('session model', () => {
         } as never, {
             store,
             resolveSessionAccess: (sessionId) => {
-                const stored = store.sessions.getSessionByNamespace(sessionId, 'default')
+                const stored = store.sessions.getSession(sessionId)
                 return stored ? { ok: true, value: stored } : { ok: false, reason: 'not-found' }
             },
             emitAccessError: () => {},
@@ -362,7 +361,7 @@ describe('session model', () => {
         } as never, {
             store,
             resolveSessionAccess: (sessionId) => {
-                const stored = store.sessions.getSessionByNamespace(sessionId, 'default')
+                const stored = store.sessions.getSession(sessionId)
                 return stored ? { ok: true, value: stored } : { ok: false, reason: 'not-found' }
             },
             emitAccessError: () => {},
@@ -1089,30 +1088,6 @@ describe('session model', () => {
             expect(cache.getSession(s2.id)).toBeDefined()
         })
 
-        it('does not merge across namespaces', async () => {
-            const store = new Store(':memory:')
-            const events: SyncEvent[] = []
-            const cache = new SessionCache(store, createPublisher(events))
-
-            const s1 = cache.getOrCreateSession(
-                'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                null,
-                'ns1'
-            )
-            const s2 = cache.getOrCreateSession(
-                'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                null,
-                'ns2'
-            )
-
-            await cache.deduplicateByAgentSessionId(s2.id)
-
-            expect(cache.getSession(s1.id)).toBeDefined()
-            expect(cache.getSession(s2.id)).toBeDefined()
-        })
-
         it('no-op when session has no agent session ID', async () => {
             const store = new Store(':memory:')
             const events: SyncEvent[] = []
@@ -1209,15 +1184,15 @@ describe('session model', () => {
             store.messages.addMessage(s1.id, { type: 'text', text: 'history from s1' }, 'local-s1')
             store.messages.addMessage(s2.id, { type: 'text', text: 'history from s2' }, 'local-s2')
 
-            await cache.mergeSessionHistory(s1.id, s2.id, 'default', { mergeAgentState: false })
+            await cache.mergeSessionHistory(s1.id, s2.id, { mergeAgentState: false })
 
             expect(store.messages.getMessages(s1.id, 100)).toHaveLength(0)
             expect(store.messages.getMessages(s2.id, 100).map((message) => (message.content as { text?: string }).text)).toEqual([
                 'history from s1',
                 'history from s2'
             ])
-            expect(events).toContainEqual({ type: 'messages-invalidated', sessionId: s1.id, namespace: 'default' })
-            expect(events).toContainEqual({ type: 'messages-invalidated', sessionId: s2.id, namespace: 'default' })
+            expect(events).toContainEqual({ type: 'messages-invalidated', sessionId: s1.id })
+            expect(events).toContainEqual({ type: 'messages-invalidated', sessionId: s2.id })
 
             const sourceRequests = cache.getSession(s1.id)?.agentState?.requests ?? {}
             const targetRequests = cache.getSession(s2.id)?.agentState?.requests ?? {}

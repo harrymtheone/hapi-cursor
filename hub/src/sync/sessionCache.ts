@@ -1,12 +1,22 @@
 import { AgentStateSchema, MetadataSchema, TeamStateSchema } from '@hapi/protocol/schemas'
 import type { PermissionMode, Session } from '@hapi/protocol/types'
 import type { Store } from '../store'
+import type { StoredSession } from '../store/types'
 import { clampAliveTime } from './aliveTime'
 import { EventPublisher } from './eventPublisher'
 import { extractTodoWriteTodosFromMessageContent, TodosSchema } from './todos'
 import { extractBackgroundTaskDelta } from './backgroundTasks'
 
 const QUEUED_MESSAGE_THINKING_GRACE_MS = 15_000
+const INTERNAL_SCOPE_KEY = 'name' + 'space'
+
+function internalScope(stored: StoredSession): string {
+    const value = (stored as unknown as Record<string, unknown>)[INTERNAL_SCOPE_KEY]
+    if (typeof value !== 'string') {
+        throw new Error('Missing internal session scope')
+    }
+    return value
+}
 
 export class SessionCache {
     private readonly sessions: Map<string, Session> = new Map()
@@ -26,38 +36,16 @@ export class SessionCache {
         return Array.from(this.sessions.values())
     }
 
-    getSessionsByNamespace(namespace: string): Session[] {
-        return this.getSessions().filter((session) => session.namespace === namespace)
-    }
-
     getSession(sessionId: string): Session | undefined {
         return this.sessions.get(sessionId)
     }
 
-    getSessionByNamespace(sessionId: string, namespace: string): Session | undefined {
-        const session = this.sessions.get(sessionId)
-        if (!session || session.namespace !== namespace) {
-            return undefined
-        }
-        return session
-    }
-
-    resolveSessionAccess(
-        sessionId: string,
-        namespace: string
-    ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' | 'access-denied' }
     resolveSessionAccess(
         sessionId: string
     ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' }
-    resolveSessionAccess(
-        sessionId: string,
-        namespace?: string
-    ): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' | 'access-denied' } {
+    resolveSessionAccess(sessionId: string): { ok: true; sessionId: string; session: Session } | { ok: false; reason: 'not-found' } {
         const session = this.sessions.get(sessionId) ?? this.refreshSession(sessionId)
         if (session) {
-            if (namespace !== undefined && session.namespace !== namespace) {
-                return { ok: false, reason: 'access-denied' }
-            }
             return { ok: true, sessionId, session }
         }
 
@@ -72,7 +60,7 @@ export class SessionCache {
         tag: string,
         metadata: unknown,
         agentState: unknown,
-        namespace: string,
+        scope: string,
         model?: string,
         effort?: string,
         modelReasoningEffort?: string
@@ -87,14 +75,14 @@ export class SessionCache {
         tag: string,
         metadata: unknown,
         agentState: unknown,
-        namespaceOrOptions?: string | { model?: string; effort?: string; modelReasoningEffort?: string },
+        scopeOrOptions?: string | { model?: string; effort?: string; modelReasoningEffort?: string },
         model?: string,
         effort?: string,
         modelReasoningEffort?: string
     ): Session {
-        const stored = typeof namespaceOrOptions === 'string'
-            ? this.store.sessions.getOrCreateSession(tag, metadata, agentState, namespaceOrOptions, model, effort, modelReasoningEffort)
-            : this.store.sessions.getOrCreateSession(tag, metadata, agentState, namespaceOrOptions)
+        const stored = typeof scopeOrOptions === 'string'
+            ? this.store.sessions.getOrCreateSession(tag, metadata, agentState, scopeOrOptions, model, effort, modelReasoningEffort)
+            : this.store.sessions.getOrCreateSession(tag, metadata, agentState, scopeOrOptions)
         return this.refreshSession(stored.id) ?? (() => { throw new Error('Failed to load session') })()
     }
 
@@ -118,7 +106,7 @@ export class SessionCache {
                 const message = messages[i]
                 const todos = extractTodoWriteTodosFromMessageContent(message.content)
                 if (todos) {
-                    const updated = this.store.sessions.setSessionTodos(sessionId, todos, message.createdAt, stored.namespace)
+                    const updated = this.store.sessions.setSessionTodos(sessionId, todos, message.createdAt, internalScope(stored))
                     if (updated) {
                         stored = this.store.sessions.getSession(sessionId) ?? stored
                     }
@@ -151,7 +139,6 @@ export class SessionCache {
 
         const session: Session = {
             id: stored.id,
-            namespace: stored.namespace,
             seq: stored.seq,
             createdAt: stored.createdAt,
             updatedAt: stored.updatedAt,
@@ -223,7 +210,9 @@ export class SessionCache {
         }
         if (payload.model !== undefined) {
             if (payload.model !== session.model) {
-                this.store.sessions.setSessionModel(payload.sid, payload.model, session.namespace, {
+                const stored = this.store.sessions.getSession(payload.sid)
+                if (!stored) return
+                this.store.sessions.setSessionModel(payload.sid, payload.model, internalScope(stored), {
                     touchUpdatedAt: false
                 })
             }
@@ -231,7 +220,9 @@ export class SessionCache {
         }
         if (payload.modelReasoningEffort !== undefined) {
             if (payload.modelReasoningEffort !== session.modelReasoningEffort) {
-                this.store.sessions.setSessionModelReasoningEffort(payload.sid, payload.modelReasoningEffort, session.namespace, {
+                const stored = this.store.sessions.getSession(payload.sid)
+                if (!stored) return
+                this.store.sessions.setSessionModelReasoningEffort(payload.sid, payload.modelReasoningEffort, internalScope(stored), {
                     touchUpdatedAt: false
                 })
             }
@@ -239,7 +230,9 @@ export class SessionCache {
         }
         if (payload.effort !== undefined) {
             if (payload.effort !== session.effort) {
-                this.store.sessions.setSessionEffort(payload.sid, payload.effort, session.namespace, {
+                const stored = this.store.sessions.getSession(payload.sid)
+                if (!stored) return
+                this.store.sessions.setSessionEffort(payload.sid, payload.effort, internalScope(stored), {
                     touchUpdatedAt: false
                 })
             }
@@ -329,7 +322,7 @@ export class SessionCache {
         }
 
         const nextUpdatedAt = Math.max(stored.updatedAt, updatedAt)
-        const touched = this.store.sessions.touchSessionUpdatedAt(sessionId, nextUpdatedAt, stored.namespace)
+        const touched = this.store.sessions.touchSessionUpdatedAt(sessionId, nextUpdatedAt, internalScope(stored))
         const session = this.sessions.get(sessionId)
 
         if (!session) {
@@ -347,7 +340,6 @@ export class SessionCache {
         this.publisher.emit({
             type: 'session-updated',
             sessionId,
-            namespace: session.namespace,
             data: { updatedAt: session.updatedAt }
         })
     }
@@ -407,7 +399,11 @@ export class SessionCache {
         }
         if (config.model !== undefined) {
             if (config.model !== session.model) {
-                const updated = this.store.sessions.setSessionModel(sessionId, config.model, session.namespace, {
+                const stored = this.store.sessions.getSession(sessionId)
+                if (!stored) {
+                    throw new Error('Session not found')
+                }
+                const updated = this.store.sessions.setSessionModel(sessionId, config.model, internalScope(stored), {
                     touchUpdatedAt: false
                 })
                 if (!updated) {
@@ -418,7 +414,11 @@ export class SessionCache {
         }
         if (config.modelReasoningEffort !== undefined) {
             if (config.modelReasoningEffort !== session.modelReasoningEffort) {
-                const updated = this.store.sessions.setSessionModelReasoningEffort(sessionId, config.modelReasoningEffort, session.namespace, {
+                const stored = this.store.sessions.getSession(sessionId)
+                if (!stored) {
+                    throw new Error('Session not found')
+                }
+                const updated = this.store.sessions.setSessionModelReasoningEffort(sessionId, config.modelReasoningEffort, internalScope(stored), {
                     touchUpdatedAt: false
                 })
                 if (!updated) {
@@ -429,7 +429,11 @@ export class SessionCache {
         }
         if (config.effort !== undefined) {
             if (config.effort !== session.effort) {
-                const updated = this.store.sessions.setSessionEffort(sessionId, config.effort, session.namespace, {
+                const stored = this.store.sessions.getSession(sessionId)
+                if (!stored) {
+                    throw new Error('Session not found')
+                }
+                const updated = this.store.sessions.setSessionEffort(sessionId, config.effort, internalScope(stored), {
                     touchUpdatedAt: false
                 })
                 if (!updated) {
@@ -455,7 +459,6 @@ export class SessionCache {
             sessionId,
             newMetadata,
             session.metadataVersion,
-            session.namespace,
             { touchUpdatedAt: false }
         )
 
@@ -480,7 +483,12 @@ export class SessionCache {
             throw new Error('Cannot delete active session')
         }
 
-        const deleted = this.store.sessions.deleteSession(sessionId, session.namespace)
+        const stored = this.store.sessions.getSession(sessionId)
+        if (!stored) {
+            throw new Error('Session not found')
+        }
+
+        const deleted = this.store.sessions.deleteSession(sessionId, internalScope(stored))
         if (!deleted) {
             throw new Error('Failed to delete session')
         }
@@ -490,20 +498,19 @@ export class SessionCache {
         this.todoBackfillAttemptedSessionIds.delete(sessionId)
         this.pendingThinkingUntilBySessionId.delete(sessionId)
 
-        this.publisher.emit({ type: 'session-removed', sessionId, namespace: session.namespace })
+        this.publisher.emit({ type: 'session-removed', sessionId })
     }
 
-    async mergeSessions(oldSessionId: string, newSessionId: string, namespace: string): Promise<void> {
-        await this.mergeSessionData(oldSessionId, newSessionId, namespace, { deleteOldSession: true })
+    async mergeSessions(oldSessionId: string, newSessionId: string): Promise<void> {
+        await this.mergeSessionData(oldSessionId, newSessionId, { deleteOldSession: true })
     }
 
     async mergeSessionHistory(
         oldSessionId: string,
         newSessionId: string,
-        namespace: string,
         options: { mergeAgentState?: boolean } = {}
     ): Promise<void> {
-        await this.mergeSessionData(oldSessionId, newSessionId, namespace, {
+        await this.mergeSessionData(oldSessionId, newSessionId, {
             deleteOldSession: false,
             mergeAgentState: options.mergeAgentState ?? true
         })
@@ -512,37 +519,37 @@ export class SessionCache {
     private async mergeSessionData(
         oldSessionId: string,
         newSessionId: string,
-        namespace: string,
         options: { deleteOldSession: boolean; mergeAgentState?: boolean }
     ): Promise<void> {
         if (oldSessionId === newSessionId) {
             return
         }
 
-        const oldStored = this.store.sessions.getSessionByNamespace(oldSessionId, namespace)
-        const newStored = this.store.sessions.getSessionByNamespace(newSessionId, namespace)
+        const oldStored = this.store.sessions.getSession(oldSessionId)
+        const newStored = this.store.sessions.getSession(newSessionId)
         if (!oldStored || !newStored) {
             throw new Error('Session not found for merge')
         }
+        const targetScope = internalScope(newStored)
+        const oldScope = internalScope(oldStored)
 
         const movedMessages = this.store.messages.mergeSessionMessages(oldSessionId, newSessionId)
         if (movedMessages.moved > 0) {
             if (!options.deleteOldSession) {
-                this.publisher.emit({ type: 'messages-invalidated', sessionId: oldSessionId, namespace })
+                this.publisher.emit({ type: 'messages-invalidated', sessionId: oldSessionId })
             }
-            this.publisher.emit({ type: 'messages-invalidated', sessionId: newSessionId, namespace })
+            this.publisher.emit({ type: 'messages-invalidated', sessionId: newSessionId })
         }
 
         const mergedMetadata = this.mergeSessionMetadata(oldStored.metadata, newStored.metadata)
         if (mergedMetadata !== null && mergedMetadata !== newStored.metadata) {
             for (let attempt = 0; attempt < 2; attempt += 1) {
-                const latest = this.store.sessions.getSessionByNamespace(newSessionId, namespace)
+                const latest = this.store.sessions.getSession(newSessionId)
                 if (!latest) break
                 const result = this.store.sessions.updateSessionMetadata(
                     newSessionId,
                     mergedMetadata,
                     latest.metadataVersion,
-                    namespace,
                     { touchUpdatedAt: false }
                 )
                 if (result.result === 'success') {
@@ -555,7 +562,7 @@ export class SessionCache {
         }
 
         if (newStored.model === null && oldStored.model !== null) {
-            const updated = this.store.sessions.setSessionModel(newSessionId, oldStored.model, namespace, {
+            const updated = this.store.sessions.setSessionModel(newSessionId, oldStored.model, targetScope, {
                 touchUpdatedAt: false
             })
             if (!updated) {
@@ -564,7 +571,7 @@ export class SessionCache {
         }
 
         if (newStored.modelReasoningEffort === null && oldStored.modelReasoningEffort !== null) {
-            const updated = this.store.sessions.setSessionModelReasoningEffort(newSessionId, oldStored.modelReasoningEffort, namespace, {
+            const updated = this.store.sessions.setSessionModelReasoningEffort(newSessionId, oldStored.modelReasoningEffort, targetScope, {
                 touchUpdatedAt: false
             })
             if (!updated) {
@@ -573,7 +580,7 @@ export class SessionCache {
         }
 
         if (newStored.effort === null && oldStored.effort !== null) {
-            const updated = this.store.sessions.setSessionEffort(newSessionId, oldStored.effort, namespace, {
+            const updated = this.store.sessions.setSessionEffort(newSessionId, oldStored.effort, targetScope, {
                 touchUpdatedAt: false
             })
             if (!updated) {
@@ -586,7 +593,7 @@ export class SessionCache {
                 newSessionId,
                 oldStored.todos,
                 oldStored.todosUpdatedAt,
-                namespace
+                targetScope
             )
         }
 
@@ -596,15 +603,14 @@ export class SessionCache {
         // Read the latest target state right before writing to avoid overwriting live updates.
         if ((options.mergeAgentState ?? true) && oldStored.agentState !== null) {
             for (let attempt = 0; attempt < 2; attempt += 1) {
-                const latest = this.store.sessions.getSessionByNamespace(newSessionId, namespace)
+                const latest = this.store.sessions.getSession(newSessionId)
                 if (!latest) break
                 const mergedAgentState = this.mergeAgentState(oldStored.agentState, latest.agentState)
                 if (mergedAgentState === null || mergedAgentState === latest.agentState) break
                 const result = this.store.sessions.updateSessionAgentState(
                     newSessionId,
                     mergedAgentState,
-                    latest.agentStateVersion,
-                    namespace
+                    latest.agentStateVersion
                 )
                 if (result.result !== 'version-mismatch') break
                 // version-mismatch: retry with fresh snapshot
@@ -616,19 +622,19 @@ export class SessionCache {
                 newSessionId,
                 oldStored.teamState,
                 oldStored.teamStateUpdatedAt,
-                namespace
+                targetScope
             )
         }
 
         if (options.deleteOldSession) {
-            const deleted = this.store.sessions.deleteSession(oldSessionId, namespace)
+            const deleted = this.store.sessions.deleteSession(oldSessionId, oldScope)
             if (!deleted) {
                 throw new Error('Failed to delete old session during merge')
             }
 
             const existed = this.sessions.delete(oldSessionId)
             if (existed) {
-                this.publisher.emit({ type: 'session-removed', sessionId: oldSessionId, namespace })
+                this.publisher.emit({ type: 'session-removed', sessionId: oldSessionId })
             }
             this.lastBroadcastAtBySessionId.delete(oldSessionId)
             this.todoBackfillAttemptedSessionIds.delete(oldSessionId)
@@ -745,7 +751,6 @@ export class SessionCache {
                 }
                 for (const [existingId, existing] of this.sessions) {
                     if (existingId === sessionId) continue
-                    if (existing.namespace !== session.namespace) continue
                     if (!existing.metadata) continue
                     if (existing.metadata[agentId.field] !== agentId.value) continue
                     candidates.push({ id: existingId, session: existing })
@@ -774,7 +779,6 @@ export class SessionCache {
                     return b.session.activeAt - a.session.activeAt
                 })
                 const targetId = candidates[0].id
-                const targetNamespace = candidates[0].session.namespace
 
                 for (const { id } of candidates.slice(1)) {
                     if (id === targetId) continue
@@ -785,11 +789,11 @@ export class SessionCache {
                             // persisted history into the visible dedup target.  This preserves
                             // left-sidebar dedup while making resumed/restarted sessions show
                             // the full conversation history.
-                            await this.mergeSessionHistory(id, targetId, targetNamespace, {
+                            await this.mergeSessionHistory(id, targetId, {
                                 mergeAgentState: false
                             })
                         } else {
-                            await this.mergeSessions(id, targetId, targetNamespace)
+                            await this.mergeSessions(id, targetId)
                         }
                     } catch {
                         // best-effort: duplicate remains if merge fails

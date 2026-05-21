@@ -3,7 +3,7 @@ import type { PermissionMode } from './modes'
 import type { SessionEndReason } from './schemas'
 export { SessionEndReasonSchema, type SessionEndReason } from './schemas'
 
-export type SocketErrorReason = 'namespace-missing' | 'access-denied' | 'not-found'
+export type SocketErrorReason = 'access-denied' | 'not-found'
 
 export const TerminalOpenPayloadSchema = z.object({
     sessionId: z.string().min(1),

@@ -52,7 +52,6 @@ import { bootstrapExistingSession, buildSessionMetadata } from './sessionFactory
 function createSession(): Session {
     return {
         id: 'hapi-session-1',
-        namespace: 'default',
         seq: 1,
         createdAt: 1,
         updatedAt: 1,

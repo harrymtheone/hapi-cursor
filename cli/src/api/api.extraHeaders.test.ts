@@ -61,7 +61,6 @@ describe('API extra headers integration', () => {
             data: {
                 session: {
                     id: 'session-1',
-                    namespace: 'default',
                     seq: 1,
                     createdAt: now,
                     updatedAt: now,
@@ -121,7 +120,6 @@ describe('API extra headers integration', () => {
 
         new ApiSessionClient('cli-token', {
             id: 'session-1',
-            namespace: 'default',
             seq: 1,
             createdAt: now,
             updatedAt: now,

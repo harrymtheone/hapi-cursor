@@ -17,7 +17,6 @@ const machineMetadataSchema = z.object({
 
 export interface Machine {
     id: string
-    namespace: string
     seq: number
     createdAt: number
     updatedAt: number
@@ -52,36 +51,20 @@ export class MachineCache {
         return Array.from(this.machines.values())
     }
 
-    getMachinesByNamespace(namespace: string): Machine[] {
-        return this.getMachines().filter((machine) => machine.namespace === namespace)
-    }
-
     getMachine(machineId: string): Machine | undefined {
         return this.machines.get(machineId)
-    }
-
-    getMachineByNamespace(machineId: string, namespace: string): Machine | undefined {
-        const machine = this.machines.get(machineId)
-        if (!machine || machine.namespace !== namespace) {
-            return undefined
-        }
-        return machine
     }
 
     getOnlineMachines(): Machine[] {
         return this.getMachines().filter((machine) => machine.active)
     }
 
-    getOnlineMachinesByNamespace(namespace: string): Machine[] {
-        return this.getMachinesByNamespace(namespace).filter((machine) => machine.active)
-    }
-
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, namespace: string): Machine
+    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, scope: string): Machine
     getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown): Machine
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, namespace?: string): Machine {
-        const stored = namespace === undefined
+    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, scope?: string): Machine {
+        const stored = scope === undefined
             ? this.store.machines.getOrCreateMachine(id, metadata, runnerState)
-            : this.store.machines.getOrCreateMachine(id, metadata, runnerState, namespace)
+            : this.store.machines.getOrCreateMachine(id, metadata, runnerState, scope)
         return this.refreshMachine(stored.id) ?? (() => { throw new Error('Failed to load machine') })()
     }
 
@@ -133,7 +116,6 @@ export class MachineCache {
 
         const machine: Machine = {
             id: stored.id,
-            namespace: stored.namespace,
             seq: stored.seq,
             createdAt: stored.createdAt,
             updatedAt: stored.updatedAt,

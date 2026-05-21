@@ -182,7 +182,6 @@ export type DecryptedMessage = z.infer<typeof DecryptedMessageSchema>
 
 export const SessionSchema = z.object({
     id: z.string(),
-    namespace: z.string(),
     seq: z.number(),
     createdAt: z.number(),
     updatedAt: z.number(),
@@ -206,15 +205,11 @@ export const SessionSchema = z.object({
 
 export type Session = z.infer<typeof SessionSchema>
 
-const SessionEventBaseSchema = z.object({
-    namespace: z.string().optional()
-})
-
-const SessionChangedSchema = SessionEventBaseSchema.extend({
+const SessionChangedSchema = z.object({
     sessionId: z.string()
 })
 
-const MachineChangedSchema = SessionEventBaseSchema.extend({
+const MachineChangedSchema = z.object({
     machineId: z.string()
 })
 
@@ -227,7 +222,7 @@ export const SyncEventSchema = z.discriminatedUnion('type', [
         type: z.literal('session-updated'),
         data: z.unknown().optional()
     }),
-    SessionEventBaseSchema.extend({
+    z.object({
         type: z.literal('session-removed'),
         sessionId: z.string()
     }),
@@ -246,7 +241,7 @@ export const SyncEventSchema = z.discriminatedUnion('type', [
         type: z.literal('machine-updated'),
         data: z.unknown().optional()
     }),
-    SessionEventBaseSchema.extend({
+    z.object({
         type: z.literal('toast'),
         data: z.object({
             title: z.string(),
@@ -265,13 +260,13 @@ export const SyncEventSchema = z.discriminatedUnion('type', [
         messageId: z.string(),
         localId: z.string().optional()
     }),
-    SessionEventBaseSchema.extend({
+    z.object({
         type: z.literal('heartbeat'),
         data: z.object({
             timestamp: z.number()
         }).optional()
     }),
-    SessionEventBaseSchema.extend({
+    z.object({
         type: z.literal('connection-changed'),
         data: z.object({
             status: z.string(),
