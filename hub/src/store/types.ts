@@ -1,7 +1,6 @@
 export type StoredSession = {
     id: string
     tag: string | null
-    namespace: string
     machineId: string | null
     createdAt: number
     updatedAt: number
@@ -23,7 +22,6 @@ export type StoredSession = {
 
 export type StoredMachine = {
     id: string
-    namespace: string
     createdAt: number
     updatedAt: number
     metadata: unknown | null
@@ -46,17 +44,8 @@ export type StoredMessage = {
     scheduledAt: number | null
 }
 
-export type StoredUser = {
-    id: number
-    platform: string
-    platformUserId: string
-    namespace: string
-    createdAt: number
-}
-
 export type StoredPushSubscription = {
     id: number
-    namespace: string
     endpoint: string
     p256dh: string
     auth: string

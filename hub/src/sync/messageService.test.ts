@@ -25,7 +25,7 @@ function makeStore(): Store {
 }
 
 function makeSession(store: Store, tag: string) {
-    return store.sessions.getOrCreateSession(tag, { path: `/tmp/${tag}` }, null, 'default')
+    return store.sessions.getOrCreateSession(tag, { path: `/tmp/${tag}` }, null)
 }
 
 type AckCallback = (err: Error | null, responses: Array<{ removed: boolean }>) => void
@@ -920,7 +920,7 @@ describe('MessageService.releaseMatureScheduledMessages', () => {
         try {
             // First "run": write a mature scheduled message to disk
             store1 = new Store(dbPath)
-            const session = store1.sessions.getOrCreateSession('restart-test', { path: '/tmp/restart' }, null, 'default')
+            const session = store1.sessions.getOrCreateSession('restart-test', { path: '/tmp/restart' }, null)
             const sessionId = session.id
             const now = Date.now()
             const past = now - 2000

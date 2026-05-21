@@ -6,7 +6,7 @@ function makeStore(): Store {
 }
 
 function makeSession(store: Store, tag: string) {
-    return store.sessions.getOrCreateSession(tag, { path: `/tmp/${tag}` }, null, 'default')
+    return store.sessions.getOrCreateSession(tag, { path: `/tmp/${tag}` }, null)
 }
 
 describe('cancelQueuedMessage', () => {

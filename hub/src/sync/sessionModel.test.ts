@@ -26,8 +26,7 @@ describe('session model', () => {
             'session-model-summary',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             null,
-            'default',
-            'gpt-5.4'
+            { model: 'gpt-5.4' }
         )
 
         expect(session.model).toBe('gpt-5.4')
@@ -44,9 +43,7 @@ describe('session model', () => {
             'session-effort-summary',
             { path: '/tmp/project', host: 'localhost', flavor: 'claude' },
             null,
-            'default',
-            'sonnet',
-            'high'
+            { model: 'sonnet', effort: 'high' }
         )
 
         expect(session.effort).toBe('high')
@@ -62,10 +59,7 @@ describe('session model', () => {
             'session-model-reasoning-effort',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             null,
-            'default',
-            'gpt-5.4',
-            undefined,
-            'xhigh'
+            { model: 'gpt-5.4', modelReasoningEffort: 'xhigh' }
         )
 
         expect(session.modelReasoningEffort).toBe('xhigh')
@@ -81,14 +75,12 @@ describe('session model', () => {
             'session-model-old',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             null,
-            'default',
-            'gpt-5.4'
+            { model: 'gpt-5.4' }
         )
         const newSession = cache.getOrCreateSession(
             'session-model-new',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-            null,
-            'default'
+            null
         )
 
         await cache.mergeSessions(oldSession.id, newSession.id)
@@ -106,8 +98,7 @@ describe('session model', () => {
             'session-model-config',
             { path: '/tmp/project', host: 'localhost', flavor: 'claude' },
             null,
-            'default',
-            'sonnet'
+            { model: 'sonnet' }
         )
 
         cache.applySessionConfig(session.id, { model: 'opus[1m]' })
@@ -128,8 +119,7 @@ describe('session model', () => {
             'session-model-heartbeat',
             { path: '/tmp/project', host: 'localhost', flavor: 'claude' },
             null,
-            'default',
-            'sonnet'
+            { model: 'sonnet' }
         )
 
         cache.handleSessionAlive({
@@ -152,9 +142,7 @@ describe('session model', () => {
             'session-effort-config',
             { path: '/tmp/project', host: 'localhost', flavor: 'claude' },
             null,
-            'default',
-            'sonnet',
-            'medium'
+            { model: 'sonnet', effort: 'medium' }
         )
 
         cache.applySessionConfig(session.id, { effort: 'max' })
@@ -175,10 +163,7 @@ describe('session model', () => {
             'session-model-reasoning-config',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             null,
-            'default',
-            'gpt-5.4',
-            undefined,
-            'high'
+            { model: 'gpt-5.4', modelReasoningEffort: 'high' }
         )
 
         cache.applySessionConfig(session.id, { modelReasoningEffort: 'xhigh' })
@@ -199,9 +184,7 @@ describe('session model', () => {
             'session-effort-heartbeat',
             { path: '/tmp/project', host: 'localhost', flavor: 'claude' },
             null,
-            'default',
-            'sonnet',
-            'high'
+            { model: 'sonnet', effort: 'high' }
         )
 
         cache.handleSessionAlive({
@@ -224,10 +207,7 @@ describe('session model', () => {
             'session-model-reasoning-heartbeat',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
             null,
-            'default',
-            'gpt-5.4',
-            undefined,
-            'high'
+            { model: 'gpt-5.4', modelReasoningEffort: 'high' }
         )
 
         cache.handleSessionAlive({
@@ -249,8 +229,7 @@ describe('session model', () => {
         const session = cache.getOrCreateSession(
             'session-message-activity',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-            null,
-            'default'
+            null
         )
         const activityAt = session.updatedAt + 60_000
 
@@ -278,8 +257,7 @@ describe('session model', () => {
             const session = engine.getOrCreateSession(
                 'session-web-message-activity',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-                null,
-                'default'
+                null
             )
             const before = store.sessions.getSession(session.id)?.updatedAt ?? 0
 
@@ -301,8 +279,7 @@ describe('session model', () => {
         const session = cache.getOrCreateSession(
             'session-cli-message-activity',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-            null,
-            'default'
+            null
         )
         const handlers = new Map<string, (payload: unknown) => void>()
         const activity: Array<{ sessionId: string; updatedAt: number }> = []
@@ -347,8 +324,7 @@ describe('session model', () => {
         const session = cache.getOrCreateSession(
             'session-cli-tool-activity',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-            null,
-            'default'
+            null
         )
         const handlers = new Map<string, (payload: unknown) => void>()
         const activity: Array<{ sessionId: string; updatedAt: number }> = []
@@ -423,14 +399,12 @@ describe('session model', () => {
                     cursorSessionId: 'cursor-thread-1'
                 },
                 null,
-                'default',
-                'gpt-5.4'
+                { model: 'gpt-5.4' }
             )
             engine.getOrCreateMachine(
                 'machine-1',
                 { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
-                null,
-                'default'
+                null
             )
             engine.handleMachineAlive({ machineId: 'machine-1', time: Date.now() })
 
@@ -456,7 +430,7 @@ describe('session model', () => {
             }
             ;(engine as any).waitForSessionActive = async () => true
 
-            const result = await engine.resumeSession(session.id, 'default')
+            const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedModel).toBe('gpt-5.4')
@@ -487,16 +461,12 @@ describe('session model', () => {
                     cursorSessionId: 'cursor-thread-1'
                 },
                 null,
-                'default',
-                'gpt-5.4',
-                undefined,
-                'xhigh'
+                { model: 'gpt-5.4', modelReasoningEffort: 'xhigh' }
             )
             engine.getOrCreateMachine(
                 'machine-1',
                 { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
-                null,
-                'default'
+                null
             )
             engine.handleMachineAlive({ machineId: 'machine-1', time: Date.now() })
 
@@ -513,7 +483,7 @@ describe('session model', () => {
             }
             ;(engine as any).waitForSessionActive = async () => true
 
-            const result = await engine.resumeSession(session.id, 'default')
+            const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedModelReasoningEffort).toBe('xhigh')
@@ -542,14 +512,12 @@ describe('session model', () => {
                     claudeSessionId: 'claude-session-1'
                 },
                 null,
-                'default',
-                'sonnet'
+                { model: 'sonnet' }
             )
             engine.getOrCreateMachine(
                 'machine-1',
                 { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
-                null,
-                'default'
+                null
             )
             engine.handleMachineAlive({ machineId: 'machine-1', time: Date.now() })
 
@@ -570,7 +538,7 @@ describe('session model', () => {
             }
             ;(engine as any).waitForSessionActive = async () => true
 
-            const result = await engine.resumeSession(session.id, 'default')
+            const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedResumeSessionId).toBe('claude-session-1')
@@ -598,8 +566,7 @@ describe('session model', () => {
                     flavor: 'claude'
                 },
                 null,
-                'default',
-                'sonnet'
+                { model: 'sonnet' }
             )
             store.messages.addMessage(session.id, {
                 role: 'agent',
@@ -614,8 +581,7 @@ describe('session model', () => {
             engine.getOrCreateMachine(
                 'machine-1',
                 { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
-                null,
-                'default'
+                null
             )
             engine.handleMachineAlive({ machineId: 'machine-1', time: Date.now() })
 
@@ -636,7 +602,7 @@ describe('session model', () => {
             }
             ;(engine as any).waitForSessionActive = async () => true
 
-            const result = await engine.resumeSession(session.id, 'default')
+            const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedResumeSessionId).toBe('7f5cd4ee-3a76-4601-a7b4-f9eb976bf515')
@@ -668,8 +634,7 @@ describe('session model', () => {
                     flavor: 'claude'
                 },
                 null,
-                'default',
-                'sonnet'
+                { model: 'sonnet' }
             )
             store.messages.addMessage(session.id, {
                 role: 'agent',
@@ -694,8 +659,7 @@ describe('session model', () => {
             engine.getOrCreateMachine(
                 'machine-1',
                 { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
-                null,
-                'default'
+                null
             )
             engine.handleMachineAlive({ machineId: 'machine-1', time: Date.now() })
 
@@ -716,7 +680,7 @@ describe('session model', () => {
             }
             ;(engine as any).waitForSessionActive = async () => true
 
-            const result = await engine.resumeSession(session.id, 'default')
+            const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedResumeSessionId).toBe('22222222-2222-4222-8222-222222222222')
@@ -747,8 +711,7 @@ describe('session model', () => {
                     flavor: 'claude'
                 },
                 null,
-                'default',
-                'sonnet'
+                { model: 'sonnet' }
             )
             store.messages.addMessage(session.id, {
                 role: 'agent',
@@ -760,7 +723,7 @@ describe('session model', () => {
                 }
             })
 
-            const result = await engine.resumeSession(session.id, 'default')
+            const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({
                 type: 'error',
@@ -792,14 +755,12 @@ describe('session model', () => {
                     cursorSessionId: 'cursor-session-perm'
                 },
                 null,
-                'default',
-                'sonnet'
+                { model: 'sonnet' }
             )
             engine.getOrCreateMachine(
                 'machine-1',
                 { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
-                null,
-                'default'
+                null
             )
             engine.handleMachineAlive({ machineId: 'machine-1', time: Date.now() })
 
@@ -829,7 +790,7 @@ describe('session model', () => {
             }
             ;(engine as any).waitForSessionActive = async () => true
 
-            const result = await engine.resumeSession(session.id, 'default')
+            const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedPermissionMode).toBe('bypassPermissions')
@@ -858,13 +819,10 @@ describe('session model', () => {
                     cursorSessionId: 'cursor-thread-1'
                 },
                 { controlledByUser: false },
-                'default',
-                'gpt-5.4',
-                undefined,
-                'xhigh'
+                { model: 'gpt-5.4', modelReasoningEffort: 'xhigh' }
             )
 
-            const result = engine.resolveLocalResumeTarget(session.id, 'default')
+            const result = engine.resolveLocalResumeTarget(session.id)
 
             expect(result).toEqual({
                 type: 'success',
@@ -907,8 +865,7 @@ describe('session model', () => {
                     machineId: 'machine-1',
                     flavor: 'claude'
                 },
-                null,
-                'default'
+                null
             )
             store.messages.addMessage(session.id, {
                 role: 'agent',
@@ -920,7 +877,7 @@ describe('session model', () => {
                 }
             })
 
-            const result = engine.resolveLocalResumeTarget(session.id, 'default')
+            const result = engine.resolveLocalResumeTarget(session.id)
 
             expect(result.type).toBe('success')
             if (result.type === 'success') {
@@ -950,11 +907,10 @@ describe('session model', () => {
                     machineId: 'machine-1',
                     flavor: 'cursor'
                 },
-                null,
-                'default'
+                null
             )
 
-            expect(engine.resolveLocalResumeTarget(session.id, 'default')).toEqual({
+            expect(engine.resolveLocalResumeTarget(session.id)).toEqual({
                 type: 'error',
                 message: 'Resume session ID unavailable',
                 code: 'resume_unavailable'
@@ -983,12 +939,11 @@ describe('session model', () => {
                     flavor: 'cursor',
                     cursorSessionId: 'cursor-thread-1'
                 },
-                { controlledByUser: false },
-                'default'
+                { controlledByUser: false }
             )
             engine.handleSessionEnd({ sid: session.id, time: Date.now() })
 
-            await expect(engine.handoffSessionToLocal(session.id, 'default')).resolves.toEqual({
+            await expect(engine.handoffSessionToLocal(session.id)).resolves.toEqual({
                 type: 'success'
             })
         } finally {
@@ -1015,12 +970,11 @@ describe('session model', () => {
                     flavor: 'cursor',
                     cursorSessionId: 'cursor-thread-1'
                 },
-                { controlledByUser: true },
-                'default'
+                { controlledByUser: true }
             )
             engine.handleSessionAlive({ sid: session.id, time: Date.now(), mode: 'local' })
 
-            await expect(engine.handoffSessionToLocal(session.id, 'default')).resolves.toEqual({
+            await expect(engine.handoffSessionToLocal(session.id)).resolves.toEqual({
                 type: 'error',
                 message: 'Session is already controlled by a local terminal',
                 code: 'already_local'
@@ -1039,8 +993,7 @@ describe('session model', () => {
             const s1 = cache.getOrCreateSession(
                 'tag-1',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                null,
-                'default'
+                null
             )
 
             // Add a message to s1
@@ -1049,8 +1002,7 @@ describe('session model', () => {
             const s2 = cache.getOrCreateSession(
                 'tag-2',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                null,
-                'default'
+                null
             )
 
             expect(s1.id).not.toBe(s2.id)
@@ -1072,14 +1024,12 @@ describe('session model', () => {
             const s1 = cache.getOrCreateSession(
                 'tag-1',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                null,
-                'default'
+                null
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-Y' },
-                null,
-                'default'
+                null
             )
 
             await cache.deduplicateByAgentSessionId(s2.id)
@@ -1096,8 +1046,7 @@ describe('session model', () => {
             const s1 = cache.getOrCreateSession(
                 'tag-1',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-                null,
-                'default'
+                null
             )
 
             await cache.deduplicateByAgentSessionId(s1.id)
@@ -1116,8 +1065,7 @@ describe('session model', () => {
                 {
                     requests: { 'req-from-active-duplicate': { tool: 'Bash', arguments: {} } },
                     completedRequests: {}
-                },
-                'default'
+                }
             )
 
             store.messages.addMessage(s1.id, { type: 'text', text: 'history from s1' }, 'local-s1')
@@ -1129,8 +1077,7 @@ describe('session model', () => {
                 {
                     requests: { 'req-from-target': { tool: 'Read', arguments: {} } },
                     completedRequests: {}
-                },
-                'default'
+                }
             )
             store.messages.addMessage(s2.id, { type: 'text', text: 'history from s2' }, 'local-s2')
             cache.handleSessionAlive({ sid: s2.id, time: Date.now() + 1000, thinking: false })
@@ -1168,8 +1115,7 @@ describe('session model', () => {
                 {
                     requests: { 'req-from-source': { tool: 'Bash', arguments: {} } },
                     completedRequests: {}
-                },
-                'default'
+                }
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
@@ -1177,8 +1123,7 @@ describe('session model', () => {
                 {
                     requests: { 'req-from-target': { tool: 'Read', arguments: {} } },
                     completedRequests: {}
-                },
-                'default'
+                }
             )
 
             store.messages.addMessage(s1.id, { type: 'text', text: 'history from s1' }, 'local-s1')
@@ -1214,14 +1159,12 @@ describe('session model', () => {
                 const s1 = engine.getOrCreateSession(
                     'tag-1',
                     { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                    null,
-                    'default'
+                    null
                 )
                 const s2 = engine.getOrCreateSession(
                     'tag-2',
                     { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                    null,
-                    'default'
+                    null
                 )
 
                 // Mark s1 as active
@@ -1256,14 +1199,12 @@ describe('session model', () => {
             const s1 = cache.getOrCreateSession(
                 'tag-1',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                null,
-                'default'
+                null
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
-                null,
-                'default'
+                null
             )
 
             // Mark both duplicates active. The older live record should keep
@@ -1306,8 +1247,7 @@ describe('session model', () => {
                         'req-2': { tool: 'Bash', arguments: {} }
                     },
                     completedRequests: {}
-                },
-                'default'
+                }
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
@@ -1319,8 +1259,7 @@ describe('session model', () => {
                     completedRequests: {
                         'req-1': { tool: 'Bash', arguments: {}, status: 'approved' }
                     }
-                },
-                'default'
+                }
             )
 
             await cache.deduplicateByAgentSessionId(s2.id)

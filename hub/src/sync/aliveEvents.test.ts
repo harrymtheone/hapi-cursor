@@ -80,8 +80,7 @@ describe('alive incremental events', () => {
         const session = cache.getOrCreateSession(
             'session-alive-test',
             { path: '/tmp/project', host: 'localhost' },
-            { requests: {}, completedRequests: {} },
-            'default'
+            { requests: {}, completedRequests: {} }
         )
 
         events.length = 0
@@ -104,8 +103,7 @@ describe('alive incremental events', () => {
         const machine = cache.getOrCreateMachine(
             'machine-alive-test',
             { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
-            null,
-            'default'
+            null
         )
 
         events.length = 0
@@ -147,8 +145,7 @@ describe('alive incremental events', () => {
             const session = engine.getOrCreateSession(
                 'session-send-thinking',
                 { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-                { requests: {}, completedRequests: {} },
-                'default'
+                { requests: {}, completedRequests: {} }
             )
 
             engine.handleSessionAlive({ sid: session.id, time: Date.now(), thinking: false })
@@ -193,8 +190,7 @@ describe('alive incremental events', () => {
         const session = cache.getOrCreateSession(
             'session-queued-thinking-inactive',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-            { requests: {}, completedRequests: {} },
-            'default'
+            { requests: {}, completedRequests: {} }
         )
 
         cache.handleSessionAlive({ sid: session.id, time: now, thinking: false })
@@ -222,8 +218,7 @@ describe('alive incremental events', () => {
         const session = cache.getOrCreateSession(
             'session-queued-thinking-grace',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-            { requests: {}, completedRequests: {} },
-            'default'
+            { requests: {}, completedRequests: {} }
         )
 
         cache.handleSessionAlive({ sid: session.id, time: now, thinking: false })
@@ -251,8 +246,7 @@ describe('alive incremental events', () => {
         const session = cache.getOrCreateSession(
             'session-queued-thinking-expire',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-            { requests: {}, completedRequests: {} },
-            'default'
+            { requests: {}, completedRequests: {} }
         )
 
         cache.handleSessionAlive({ sid: session.id, time: now, thinking: false })
@@ -279,8 +273,7 @@ describe('alive incremental events', () => {
         const session = cache.getOrCreateSession(
             'session-queued-thinking-clock-skew',
             { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
-            { requests: {}, completedRequests: {} },
-            'default'
+            { requests: {}, completedRequests: {} }
         )
 
         cache.handleSessionAlive({ sid: session.id, time: now, thinking: false })

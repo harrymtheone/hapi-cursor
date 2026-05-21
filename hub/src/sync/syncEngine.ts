@@ -235,38 +235,19 @@ export class SyncEngine {
         tag: string,
         metadata: unknown,
         agentState: unknown,
-        scope: string,
-        model?: string,
-        effort?: string,
-        modelReasoningEffort?: string
-    ): Session
-    getOrCreateSession(
-        tag: string,
-        metadata: unknown,
-        agentState: unknown,
         options?: { model?: string; effort?: string; modelReasoningEffort?: string }
     ): Session
     getOrCreateSession(
         tag: string,
         metadata: unknown,
         agentState: unknown,
-        scopeOrOptions?: string | { model?: string; effort?: string; modelReasoningEffort?: string },
-        model?: string,
-        effort?: string,
-        modelReasoningEffort?: string
+        options?: { model?: string; effort?: string; modelReasoningEffort?: string }
     ): Session {
-        if (typeof scopeOrOptions === 'string') {
-            return this.sessionCache.getOrCreateSession(tag, metadata, agentState, scopeOrOptions, model, effort, modelReasoningEffort)
-        }
-        return this.sessionCache.getOrCreateSession(tag, metadata, agentState, scopeOrOptions)
+        return this.sessionCache.getOrCreateSession(tag, metadata, agentState, options)
     }
 
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, scope: string): Machine
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown): Machine
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, scope?: string): Machine {
-        return scope === undefined
-            ? this.machineCache.getOrCreateMachine(id, metadata, runnerState)
-            : this.machineCache.getOrCreateMachine(id, metadata, runnerState, scope)
+    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown): Machine {
+        return this.machineCache.getOrCreateMachine(id, metadata, runnerState)
     }
 
     async sendMessage(

@@ -6,7 +6,6 @@ import { updateVersionedField } from './versionedUpdates'
 
 type DbMachineRow = {
     id: string
-    namespace: string
     created_at: number
     updated_at: number
     metadata: string | null
@@ -21,7 +20,6 @@ type DbMachineRow = {
 function toStoredMachine(row: DbMachineRow): StoredMachine {
     return {
         id: row.id,
-        namespace: row.namespace,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         metadata: safeJsonParse(row.metadata),
@@ -38,37 +36,24 @@ export function getOrCreateMachine(
     db: Database,
     id: string,
     metadata: unknown,
-    runnerState: unknown,
-    namespace: string
-): StoredMachine
-export function getOrCreateMachine(
-    db: Database,
-    id: string,
-    metadata: unknown,
     runnerState: unknown
 ): StoredMachine
 export function getOrCreateMachine(
     db: Database,
     id: string,
     metadata: unknown,
-    runnerState: unknown,
-    namespace?: string
+    runnerState: unknown
 ): StoredMachine {
     const existing = db.prepare('SELECT * FROM machines WHERE id = ?').get(id) as DbMachineRow | undefined
     if (existing) {
-        const stored = toStoredMachine(existing)
-        if (namespace !== undefined && stored.namespace !== namespace) {
-            throw new Error('Machine namespace mismatch')
-        }
-        return stored
+        return toStoredMachine(existing)
     }
 
     const now = Date.now()
     const metadataJson = JSON.stringify(metadata)
     const runnerStateJson = runnerState === null || runnerState === undefined ? null : JSON.stringify(runnerState)
 
-    const insertSql = namespace === undefined
-        ? `
+    db.prepare(`
         INSERT INTO machines (
             id, created_at, updated_at,
             metadata, metadata_version,
@@ -80,24 +65,8 @@ export function getOrCreateMachine(
             @runner_state, 1,
             0, NULL, 0
         )
-    `
-        : `
-        INSERT INTO machines (
-            id, namespace, created_at, updated_at,
-            metadata, metadata_version,
-            runner_state, runner_state_version,
-            active, active_at, seq
-        ) VALUES (
-            @id, @namespace, @created_at, @updated_at,
-            @metadata, 1,
-            @runner_state, 1,
-            0, NULL, 0
-        )
-    `
-
-    db.prepare(insertSql).run({
+    `).run({
         id,
-        ...(namespace === undefined ? {} : { namespace }),
         created_at: now,
         updated_at: now,
         metadata: metadataJson,
@@ -115,21 +84,13 @@ export function updateMachineMetadata(
     db: Database,
     id: string,
     metadata: unknown,
-    expectedVersion: number,
-    namespace: string
-): VersionedUpdateResult<unknown | null>
-export function updateMachineMetadata(
-    db: Database,
-    id: string,
-    metadata: unknown,
     expectedVersion: number
 ): VersionedUpdateResult<unknown | null>
 export function updateMachineMetadata(
     db: Database,
     id: string,
     metadata: unknown,
-    expectedVersion: number,
-    namespace?: string
+    expectedVersion: number
 ): VersionedUpdateResult<unknown | null> {
     const now = Date.now()
 
@@ -137,7 +98,6 @@ export function updateMachineMetadata(
         db,
         table: 'machines',
         id,
-        ...(namespace === undefined ? {} : { namespace }),
         field: 'metadata',
         versionField: 'metadata_version',
         expectedVersion,
@@ -156,21 +116,13 @@ export function updateMachineRunnerState(
     db: Database,
     id: string,
     runnerState: unknown,
-    expectedVersion: number,
-    namespace: string
-): VersionedUpdateResult<unknown | null>
-export function updateMachineRunnerState(
-    db: Database,
-    id: string,
-    runnerState: unknown,
     expectedVersion: number
 ): VersionedUpdateResult<unknown | null>
 export function updateMachineRunnerState(
     db: Database,
     id: string,
     runnerState: unknown,
-    expectedVersion: number,
-    namespace?: string
+    expectedVersion: number
 ): VersionedUpdateResult<unknown | null> {
     const now = Date.now()
     const normalized = runnerState ?? null
@@ -179,7 +131,6 @@ export function updateMachineRunnerState(
         db,
         table: 'machines',
         id,
-        ...(namespace === undefined ? {} : { namespace }),
         field: 'runner_state',
         versionField: 'runner_state_version',
         expectedVersion,
@@ -201,21 +152,7 @@ export function getMachine(db: Database, id: string): StoredMachine | null {
     return row ? toStoredMachine(row) : null
 }
 
-export function getMachineByNamespace(db: Database, id: string, namespace: string): StoredMachine | null {
-    const row = db.prepare(
-        'SELECT * FROM machines WHERE id = ? AND namespace = ?'
-    ).get(id, namespace) as DbMachineRow | undefined
-    return row ? toStoredMachine(row) : null
-}
-
 export function getMachines(db: Database): StoredMachine[] {
     const rows = db.prepare('SELECT * FROM machines ORDER BY updated_at DESC').all() as DbMachineRow[]
-    return rows.map(toStoredMachine)
-}
-
-export function getMachinesByNamespace(db: Database, namespace: string): StoredMachine[] {
-    const rows = db.prepare(
-        'SELECT * FROM machines WHERE namespace = ? ORDER BY updated_at DESC'
-    ).all(namespace) as DbMachineRow[]
     return rows.map(toStoredMachine)
 }

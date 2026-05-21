@@ -1,22 +1,12 @@
 import { AgentStateSchema, MetadataSchema, TeamStateSchema } from '@hapi/protocol/schemas'
 import type { PermissionMode, Session } from '@hapi/protocol/types'
 import type { Store } from '../store'
-import type { StoredSession } from '../store/types'
 import { clampAliveTime } from './aliveTime'
 import { EventPublisher } from './eventPublisher'
 import { extractTodoWriteTodosFromMessageContent, TodosSchema } from './todos'
 import { extractBackgroundTaskDelta } from './backgroundTasks'
 
 const QUEUED_MESSAGE_THINKING_GRACE_MS = 15_000
-const INTERNAL_SCOPE_KEY = 'name' + 'space'
-
-function internalScope(stored: StoredSession): string {
-    const value = (stored as unknown as Record<string, unknown>)[INTERNAL_SCOPE_KEY]
-    if (typeof value !== 'string') {
-        throw new Error('Missing internal session scope')
-    }
-    return value
-}
 
 export class SessionCache {
     private readonly sessions: Map<string, Session> = new Map()
@@ -60,29 +50,15 @@ export class SessionCache {
         tag: string,
         metadata: unknown,
         agentState: unknown,
-        scope: string,
-        model?: string,
-        effort?: string,
-        modelReasoningEffort?: string
-    ): Session
-    getOrCreateSession(
-        tag: string,
-        metadata: unknown,
-        agentState: unknown,
         options?: { model?: string; effort?: string; modelReasoningEffort?: string }
     ): Session
     getOrCreateSession(
         tag: string,
         metadata: unknown,
         agentState: unknown,
-        scopeOrOptions?: string | { model?: string; effort?: string; modelReasoningEffort?: string },
-        model?: string,
-        effort?: string,
-        modelReasoningEffort?: string
+        options?: { model?: string; effort?: string; modelReasoningEffort?: string }
     ): Session {
-        const stored = typeof scopeOrOptions === 'string'
-            ? this.store.sessions.getOrCreateSession(tag, metadata, agentState, scopeOrOptions, model, effort, modelReasoningEffort)
-            : this.store.sessions.getOrCreateSession(tag, metadata, agentState, scopeOrOptions)
+        const stored = this.store.sessions.getOrCreateSession(tag, metadata, agentState, options)
         return this.refreshSession(stored.id) ?? (() => { throw new Error('Failed to load session') })()
     }
 
@@ -106,7 +82,7 @@ export class SessionCache {
                 const message = messages[i]
                 const todos = extractTodoWriteTodosFromMessageContent(message.content)
                 if (todos) {
-                    const updated = this.store.sessions.setSessionTodos(sessionId, todos, message.createdAt, internalScope(stored))
+                    const updated = this.store.sessions.setSessionTodos(sessionId, todos, message.createdAt)
                     if (updated) {
                         stored = this.store.sessions.getSession(sessionId) ?? stored
                     }
@@ -212,7 +188,7 @@ export class SessionCache {
             if (payload.model !== session.model) {
                 const stored = this.store.sessions.getSession(payload.sid)
                 if (!stored) return
-                this.store.sessions.setSessionModel(payload.sid, payload.model, internalScope(stored), {
+                this.store.sessions.setSessionModel(payload.sid, payload.model, {
                     touchUpdatedAt: false
                 })
             }
@@ -222,7 +198,7 @@ export class SessionCache {
             if (payload.modelReasoningEffort !== session.modelReasoningEffort) {
                 const stored = this.store.sessions.getSession(payload.sid)
                 if (!stored) return
-                this.store.sessions.setSessionModelReasoningEffort(payload.sid, payload.modelReasoningEffort, internalScope(stored), {
+                this.store.sessions.setSessionModelReasoningEffort(payload.sid, payload.modelReasoningEffort, {
                     touchUpdatedAt: false
                 })
             }
@@ -232,7 +208,7 @@ export class SessionCache {
             if (payload.effort !== session.effort) {
                 const stored = this.store.sessions.getSession(payload.sid)
                 if (!stored) return
-                this.store.sessions.setSessionEffort(payload.sid, payload.effort, internalScope(stored), {
+                this.store.sessions.setSessionEffort(payload.sid, payload.effort, {
                     touchUpdatedAt: false
                 })
             }
@@ -322,7 +298,7 @@ export class SessionCache {
         }
 
         const nextUpdatedAt = Math.max(stored.updatedAt, updatedAt)
-        const touched = this.store.sessions.touchSessionUpdatedAt(sessionId, nextUpdatedAt, internalScope(stored))
+        const touched = this.store.sessions.touchSessionUpdatedAt(sessionId, nextUpdatedAt)
         const session = this.sessions.get(sessionId)
 
         if (!session) {
@@ -403,7 +379,7 @@ export class SessionCache {
                 if (!stored) {
                     throw new Error('Session not found')
                 }
-                const updated = this.store.sessions.setSessionModel(sessionId, config.model, internalScope(stored), {
+                const updated = this.store.sessions.setSessionModel(sessionId, config.model, {
                     touchUpdatedAt: false
                 })
                 if (!updated) {
@@ -418,7 +394,7 @@ export class SessionCache {
                 if (!stored) {
                     throw new Error('Session not found')
                 }
-                const updated = this.store.sessions.setSessionModelReasoningEffort(sessionId, config.modelReasoningEffort, internalScope(stored), {
+                const updated = this.store.sessions.setSessionModelReasoningEffort(sessionId, config.modelReasoningEffort, {
                     touchUpdatedAt: false
                 })
                 if (!updated) {
@@ -433,7 +409,7 @@ export class SessionCache {
                 if (!stored) {
                     throw new Error('Session not found')
                 }
-                const updated = this.store.sessions.setSessionEffort(sessionId, config.effort, internalScope(stored), {
+                const updated = this.store.sessions.setSessionEffort(sessionId, config.effort, {
                     touchUpdatedAt: false
                 })
                 if (!updated) {
@@ -483,12 +459,7 @@ export class SessionCache {
             throw new Error('Cannot delete active session')
         }
 
-        const stored = this.store.sessions.getSession(sessionId)
-        if (!stored) {
-            throw new Error('Session not found')
-        }
-
-        const deleted = this.store.sessions.deleteSession(sessionId, internalScope(stored))
+        const deleted = this.store.sessions.deleteSession(sessionId)
         if (!deleted) {
             throw new Error('Failed to delete session')
         }
@@ -530,9 +501,6 @@ export class SessionCache {
         if (!oldStored || !newStored) {
             throw new Error('Session not found for merge')
         }
-        const targetScope = internalScope(newStored)
-        const oldScope = internalScope(oldStored)
-
         const movedMessages = this.store.messages.mergeSessionMessages(oldSessionId, newSessionId)
         if (movedMessages.moved > 0) {
             if (!options.deleteOldSession) {
@@ -562,7 +530,7 @@ export class SessionCache {
         }
 
         if (newStored.model === null && oldStored.model !== null) {
-            const updated = this.store.sessions.setSessionModel(newSessionId, oldStored.model, targetScope, {
+            const updated = this.store.sessions.setSessionModel(newSessionId, oldStored.model, {
                 touchUpdatedAt: false
             })
             if (!updated) {
@@ -571,7 +539,7 @@ export class SessionCache {
         }
 
         if (newStored.modelReasoningEffort === null && oldStored.modelReasoningEffort !== null) {
-            const updated = this.store.sessions.setSessionModelReasoningEffort(newSessionId, oldStored.modelReasoningEffort, targetScope, {
+            const updated = this.store.sessions.setSessionModelReasoningEffort(newSessionId, oldStored.modelReasoningEffort, {
                 touchUpdatedAt: false
             })
             if (!updated) {
@@ -580,7 +548,7 @@ export class SessionCache {
         }
 
         if (newStored.effort === null && oldStored.effort !== null) {
-            const updated = this.store.sessions.setSessionEffort(newSessionId, oldStored.effort, targetScope, {
+            const updated = this.store.sessions.setSessionEffort(newSessionId, oldStored.effort, {
                 touchUpdatedAt: false
             })
             if (!updated) {
@@ -592,8 +560,7 @@ export class SessionCache {
             this.store.sessions.setSessionTodos(
                 newSessionId,
                 oldStored.todos,
-                oldStored.todosUpdatedAt,
-                targetScope
+                oldStored.todosUpdatedAt
             )
         }
 
@@ -621,13 +588,12 @@ export class SessionCache {
             this.store.sessions.setSessionTeamState(
                 newSessionId,
                 oldStored.teamState,
-                oldStored.teamStateUpdatedAt,
-                targetScope
+                oldStored.teamStateUpdatedAt
             )
         }
 
         if (options.deleteOldSession) {
-            const deleted = this.store.sessions.deleteSession(oldSessionId, oldScope)
+            const deleted = this.store.sessions.deleteSession(oldSessionId)
             if (!deleted) {
                 throw new Error('Failed to delete old session during merge')
             }

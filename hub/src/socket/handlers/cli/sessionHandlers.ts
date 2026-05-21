@@ -108,7 +108,7 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
 
         const todos = extractTodoWriteTodosFromMessageContent(content)
         if (todos) {
-            const updated = store.sessions.setSessionTodos(sid, todos, msg.createdAt, session['namespace'])
+            const updated = store.sessions.setSessionTodos(sid, todos, msg.createdAt)
             if (updated) {
                 onWebappEvent?.({ type: 'session-updated', sessionId: sid, data: { sid } })
             }
@@ -119,7 +119,7 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
             const existingSession = store.sessions.getSession(sid)
             const existingTeamState = existingSession?.teamState as import('@hapi/protocol/types').TeamState | null | undefined
             const newTeamState = applyTeamStateDelta(existingTeamState ?? null, teamDelta)
-            const updated = store.sessions.setSessionTeamState(sid, newTeamState, msg.createdAt, session['namespace'])
+            const updated = store.sessions.setSessionTeamState(sid, newTeamState, msg.createdAt)
             if (updated) {
                 onWebappEvent?.({ type: 'session-updated', sessionId: sid, data: { sid } })
             }

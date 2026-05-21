@@ -59,12 +59,8 @@ export class MachineCache {
         return this.getMachines().filter((machine) => machine.active)
     }
 
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, scope: string): Machine
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown): Machine
-    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, scope?: string): Machine {
-        const stored = scope === undefined
-            ? this.store.machines.getOrCreateMachine(id, metadata, runnerState)
-            : this.store.machines.getOrCreateMachine(id, metadata, runnerState, scope)
+    getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown): Machine {
+        const stored = this.store.machines.getOrCreateMachine(id, metadata, runnerState)
         return this.refreshMachine(stored.id) ?? (() => { throw new Error('Failed to load machine') })()
     }
 

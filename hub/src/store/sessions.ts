@@ -14,7 +14,6 @@ type OwnerSessionCreateOptions = {
 type DbSessionRow = {
     id: string
     tag: string | null
-    namespace: string
     machine_id: string | null
     created_at: number
     updated_at: number
@@ -38,7 +37,6 @@ function toStoredSession(row: DbSessionRow): StoredSession {
     return {
         id: row.id,
         tag: row.tag,
-        namespace: row.namespace,
         machineId: row.machine_id,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
@@ -64,16 +62,6 @@ export function getOrCreateSession(
     tag: string,
     metadata: unknown,
     agentState: unknown,
-    namespace: string,
-    model?: string,
-    effort?: string,
-    modelReasoningEffort?: string
-): StoredSession
-export function getOrCreateSession(
-    db: Database,
-    tag: string,
-    metadata: unknown,
-    agentState: unknown,
     options?: OwnerSessionCreateOptions
 ): StoredSession
 export function getOrCreateSession(
@@ -81,24 +69,15 @@ export function getOrCreateSession(
     tag: string,
     metadata: unknown,
     agentState: unknown,
-    namespaceOrOptions?: string | OwnerSessionCreateOptions,
-    model?: string,
-    effort?: string,
-    modelReasoningEffort?: string
+    options?: OwnerSessionCreateOptions
 ): StoredSession {
-    const namespace = typeof namespaceOrOptions === 'string' ? namespaceOrOptions : undefined
-    const ownerOptions = typeof namespaceOrOptions === 'object' ? namespaceOrOptions : undefined
-    const sessionModel = ownerOptions?.model ?? model
-    const sessionEffort = ownerOptions?.effort ?? effort
-    const sessionModelReasoningEffort = ownerOptions?.modelReasoningEffort ?? modelReasoningEffort
+    const sessionModel = options?.model
+    const sessionEffort = options?.effort
+    const sessionModelReasoningEffort = options?.modelReasoningEffort
 
-    const existing = namespace === undefined
-        ? db.prepare('SELECT * FROM sessions WHERE tag = ? ORDER BY created_at DESC LIMIT 1').get(tag) as
-            | DbSessionRow
-            | undefined
-        : db.prepare(
-            'SELECT * FROM sessions WHERE tag = ? AND namespace = ? ORDER BY created_at DESC LIMIT 1'
-        ).get(tag, namespace) as DbSessionRow | undefined
+    const existing = db.prepare('SELECT * FROM sessions WHERE tag = ? ORDER BY created_at DESC LIMIT 1').get(tag) as
+        | DbSessionRow
+        | undefined
 
     if (existing) {
         return toStoredSession(existing)
@@ -110,8 +89,7 @@ export function getOrCreateSession(
     const metadataJson = JSON.stringify(metadata)
     const agentStateJson = agentState === null || agentState === undefined ? null : JSON.stringify(agentState)
 
-    const insertSql = namespace === undefined
-        ? `
+    db.prepare(`
         INSERT INTO sessions (
             id, tag, machine_id, created_at, updated_at,
             metadata, metadata_version,
@@ -131,33 +109,9 @@ export function getOrCreateSession(
             NULL, NULL,
             0, NULL, 0
         )
-    `
-        : `
-        INSERT INTO sessions (
-            id, tag, namespace, machine_id, created_at, updated_at,
-            metadata, metadata_version,
-            agent_state, agent_state_version,
-            model,
-            model_reasoning_effort,
-            effort,
-            todos, todos_updated_at,
-            active, active_at, seq
-        ) VALUES (
-            @id, @tag, @namespace, NULL, @created_at, @updated_at,
-            @metadata, 1,
-            @agent_state, 1,
-            @model,
-            @model_reasoning_effort,
-            @effort,
-            NULL, NULL,
-            0, NULL, 0
-        )
-    `
-
-    db.prepare(insertSql).run({
+    `).run({
         id,
         tag,
-        ...(namespace === undefined ? {} : { namespace }),
         created_at: now,
         updated_at: now,
         metadata: metadataJson,
@@ -179,7 +133,6 @@ export function updateSessionMetadata(
     id: string,
     metadata: unknown,
     expectedVersion: number,
-    namespace: string,
     options?: { touchUpdatedAt?: boolean }
 ): VersionedUpdateResult<unknown | null>
 export function updateSessionMetadata(
@@ -188,25 +141,14 @@ export function updateSessionMetadata(
     metadata: unknown,
     expectedVersion: number,
     options?: { touchUpdatedAt?: boolean }
-): VersionedUpdateResult<unknown | null>
-export function updateSessionMetadata(
-    db: Database,
-    id: string,
-    metadata: unknown,
-    expectedVersion: number,
-    namespaceOrOptions?: string | { touchUpdatedAt?: boolean },
-    legacyOptions?: { touchUpdatedAt?: boolean }
 ): VersionedUpdateResult<unknown | null> {
     const now = Date.now()
-    const namespace = typeof namespaceOrOptions === 'string' ? namespaceOrOptions : undefined
-    const options = typeof namespaceOrOptions === 'string' ? legacyOptions : namespaceOrOptions
     const touchUpdatedAt = options?.touchUpdatedAt !== false
 
     return updateVersionedField({
         db,
         table: 'sessions',
         id,
-        ...(namespace === undefined ? {} : { namespace }),
         field: 'metadata',
         versionField: 'metadata_version',
         expectedVersion,
@@ -231,21 +173,13 @@ export function updateSessionAgentState(
     db: Database,
     id: string,
     agentState: unknown,
-    expectedVersion: number,
-    namespace: string
-): VersionedUpdateResult<unknown | null>
-export function updateSessionAgentState(
-    db: Database,
-    id: string,
-    agentState: unknown,
     expectedVersion: number
 ): VersionedUpdateResult<unknown | null>
 export function updateSessionAgentState(
     db: Database,
     id: string,
     agentState: unknown,
-    expectedVersion: number,
-    namespace?: string
+    expectedVersion: number
 ): VersionedUpdateResult<unknown | null> {
     const now = Date.now()
     const normalized = agentState ?? null
@@ -254,7 +188,6 @@ export function updateSessionAgentState(
         db,
         table: 'sessions',
         id,
-        ...(namespace === undefined ? {} : { namespace }),
         field: 'agent_state',
         versionField: 'agent_state_version',
         expectedVersion,
@@ -270,8 +203,7 @@ export function setSessionTodos(
     db: Database,
     id: string,
     todos: unknown,
-    todosUpdatedAt: number,
-    namespace: string
+    todosUpdatedAt: number
 ): boolean {
     try {
         const json = todos === null || todos === undefined ? null : JSON.stringify(todos)
@@ -282,14 +214,12 @@ export function setSessionTodos(
                 updated_at = CASE WHEN updated_at > @updated_at THEN updated_at ELSE @updated_at END,
                 seq = seq + 1
             WHERE id = @id
-              AND namespace = @namespace
               AND (todos_updated_at IS NULL OR todos_updated_at < @todos_updated_at)
         `).run({
             id,
             todos: json,
             todos_updated_at: todosUpdatedAt,
-            updated_at: todosUpdatedAt,
-            namespace
+            updated_at: todosUpdatedAt
         })
 
         return result.changes === 1
@@ -302,8 +232,7 @@ export function setSessionTeamState(
     db: Database,
     id: string,
     teamState: unknown,
-    updatedAt: number,
-    namespace: string
+    updatedAt: number
 ): boolean {
     try {
         const json = teamState === null || teamState === undefined ? null : JSON.stringify(teamState)
@@ -314,14 +243,12 @@ export function setSessionTeamState(
                 updated_at = CASE WHEN updated_at > @updated_at THEN updated_at ELSE @updated_at END,
                 seq = seq + 1
             WHERE id = @id
-              AND namespace = @namespace
               AND (team_state_updated_at IS NULL OR team_state_updated_at < @team_state_updated_at)
         `).run({
             id,
             team_state: json,
             team_state_updated_at: updatedAt,
-            updated_at: updatedAt,
-            namespace
+            updated_at: updatedAt
         })
 
         return result.changes === 1
@@ -334,7 +261,6 @@ export function setSessionModel(
     db: Database,
     id: string,
     model: string | null,
-    namespace: string,
     options?: { touchUpdatedAt?: boolean }
 ): boolean {
     const now = Date.now()
@@ -347,11 +273,9 @@ export function setSessionModel(
                 updated_at = CASE WHEN @touch_updated_at = 1 THEN @updated_at ELSE updated_at END,
                 seq = seq + 1
             WHERE id = @id
-              AND namespace = @namespace
               AND model IS NOT @model
         `).run({
             id,
-            namespace,
             model,
             updated_at: now,
             touch_updated_at: touchUpdatedAt ? 1 : 0
@@ -367,7 +291,6 @@ export function setSessionModelReasoningEffort(
     db: Database,
     id: string,
     modelReasoningEffort: string | null,
-    namespace: string,
     options?: { touchUpdatedAt?: boolean }
 ): boolean {
     const now = Date.now()
@@ -380,11 +303,9 @@ export function setSessionModelReasoningEffort(
                 updated_at = CASE WHEN @touch_updated_at = 1 THEN @updated_at ELSE updated_at END,
                 seq = seq + 1
             WHERE id = @id
-              AND namespace = @namespace
               AND model_reasoning_effort IS NOT @model_reasoning_effort
         `).run({
             id,
-            namespace,
             model_reasoning_effort: modelReasoningEffort,
             updated_at: now,
             touch_updated_at: touchUpdatedAt ? 1 : 0
@@ -400,7 +321,6 @@ export function setSessionEffort(
     db: Database,
     id: string,
     effort: string | null,
-    namespace: string,
     options?: { touchUpdatedAt?: boolean }
 ): boolean {
     const now = Date.now()
@@ -413,11 +333,9 @@ export function setSessionEffort(
                 updated_at = CASE WHEN @touch_updated_at = 1 THEN @updated_at ELSE updated_at END,
                 seq = seq + 1
             WHERE id = @id
-              AND namespace = @namespace
               AND effort IS NOT @effort
         `).run({
             id,
-            namespace,
             effort,
             updated_at: now,
             touch_updated_at: touchUpdatedAt ? 1 : 0
@@ -432,8 +350,7 @@ export function setSessionEffort(
 export function touchSessionUpdatedAt(
     db: Database,
     id: string,
-    updatedAt: number,
-    namespace: string
+    updatedAt: number
 ): boolean {
     try {
         const result = db.prepare(`
@@ -441,11 +358,9 @@ export function touchSessionUpdatedAt(
             SET updated_at = @updated_at,
                 seq = seq + 1
             WHERE id = @id
-              AND namespace = @namespace
               AND updated_at < @updated_at
         `).run({
             id,
-            namespace,
             updated_at: updatedAt
         })
 
@@ -460,28 +375,12 @@ export function getSession(db: Database, id: string): StoredSession | null {
     return row ? toStoredSession(row) : null
 }
 
-export function getSessionByNamespace(db: Database, id: string, namespace: string): StoredSession | null {
-    const row = db.prepare(
-        'SELECT * FROM sessions WHERE id = ? AND namespace = ?'
-    ).get(id, namespace) as DbSessionRow | undefined
-    return row ? toStoredSession(row) : null
-}
-
 export function getSessions(db: Database): StoredSession[] {
     const rows = db.prepare('SELECT * FROM sessions ORDER BY updated_at DESC').all() as DbSessionRow[]
     return rows.map(toStoredSession)
 }
 
-export function getSessionsByNamespace(db: Database, namespace: string): StoredSession[] {
-    const rows = db.prepare(
-        'SELECT * FROM sessions WHERE namespace = ? ORDER BY updated_at DESC'
-    ).all(namespace) as DbSessionRow[]
-    return rows.map(toStoredSession)
-}
-
-export function deleteSession(db: Database, id: string, namespace: string): boolean {
-    const result = db.prepare(
-        'DELETE FROM sessions WHERE id = ? AND namespace = ?'
-    ).run(id, namespace)
+export function deleteSession(db: Database, id: string): boolean {
+    const result = db.prepare('DELETE FROM sessions WHERE id = ?').run(id)
     return result.changes > 0
 }

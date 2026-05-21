@@ -5,9 +5,7 @@ import {
     deleteSession,
     getOrCreateSession,
     getSession,
-    getSessionByNamespace,
     getSessions,
-    getSessionsByNamespace,
     setSessionEffort,
     setSessionModel,
     setSessionModelReasoningEffort,
@@ -29,56 +27,30 @@ export class SessionStore {
         tag: string,
         metadata: unknown,
         agentState: unknown,
-        namespace: string,
-        model?: string,
-        effort?: string,
-        modelReasoningEffort?: string
-    ): StoredSession
-    getOrCreateSession(
-        tag: string,
-        metadata: unknown,
-        agentState: unknown,
         options?: { model?: string; effort?: string; modelReasoningEffort?: string }
     ): StoredSession
     getOrCreateSession(
         tag: string,
         metadata: unknown,
         agentState: unknown,
-        namespace?: string | { model?: string; effort?: string; modelReasoningEffort?: string },
-        model?: string,
-        effort?: string,
-        modelReasoningEffort?: string
+        options?: { model?: string; effort?: string; modelReasoningEffort?: string }
     ): StoredSession {
-        if (typeof namespace === 'string') {
-            return getOrCreateSession(this.db, tag, metadata, agentState, namespace, model, effort, modelReasoningEffort)
-        }
-        return getOrCreateSession(this.db, tag, metadata, agentState, namespace)
+        return getOrCreateSession(this.db, tag, metadata, agentState, options)
     }
 
     updateSessionMetadata(
         id: string,
         metadata: unknown,
         expectedVersion: number,
-        namespace: string,
         options?: { touchUpdatedAt?: boolean }
     ): VersionedUpdateResult<unknown | null>
     updateSessionMetadata(
         id: string,
         metadata: unknown,
         expectedVersion: number,
-        options?: { touchUpdatedAt?: boolean }
-    ): VersionedUpdateResult<unknown | null>
-    updateSessionMetadata(
-        id: string,
-        metadata: unknown,
-        expectedVersion: number,
-        namespace?: string | { touchUpdatedAt?: boolean },
         options?: { touchUpdatedAt?: boolean }
     ): VersionedUpdateResult<unknown | null> {
-        if (typeof namespace === 'string') {
-            return updateSessionMetadata(this.db, id, metadata, expectedVersion, namespace, options)
-        }
-        return updateSessionMetadata(this.db, id, metadata, expectedVersion, namespace)
+        return updateSessionMetadata(this.db, id, metadata, expectedVersion, options)
     }
 
     updateSessionAgentState(
@@ -90,66 +62,47 @@ export class SessionStore {
         id: string,
         agentState: unknown,
         expectedVersion: number,
-        namespace: string
-    ): VersionedUpdateResult<unknown | null>
-    updateSessionAgentState(
-        id: string,
-        agentState: unknown,
-        expectedVersion: number,
-        namespace?: string
     ): VersionedUpdateResult<unknown | null> {
-        if (namespace === undefined) {
-            return updateSessionAgentState(this.db, id, agentState, expectedVersion)
-        }
-        return updateSessionAgentState(this.db, id, agentState, expectedVersion, namespace)
+        return updateSessionAgentState(this.db, id, agentState, expectedVersion)
     }
 
-    setSessionTodos(id: string, todos: unknown, todosUpdatedAt: number, namespace: string): boolean {
-        return setSessionTodos(this.db, id, todos, todosUpdatedAt, namespace)
+    setSessionTodos(id: string, todos: unknown, todosUpdatedAt: number): boolean {
+        return setSessionTodos(this.db, id, todos, todosUpdatedAt)
     }
 
-    setSessionTeamState(id: string, teamState: unknown, updatedAt: number, namespace: string): boolean {
-        return setSessionTeamState(this.db, id, teamState, updatedAt, namespace)
+    setSessionTeamState(id: string, teamState: unknown, updatedAt: number): boolean {
+        return setSessionTeamState(this.db, id, teamState, updatedAt)
     }
 
-    setSessionModel(id: string, model: string | null, namespace: string, options?: { touchUpdatedAt?: boolean }): boolean {
-        return setSessionModel(this.db, id, model, namespace, options)
+    setSessionModel(id: string, model: string | null, options?: { touchUpdatedAt?: boolean }): boolean {
+        return setSessionModel(this.db, id, model, options)
     }
 
     setSessionModelReasoningEffort(
         id: string,
         modelReasoningEffort: string | null,
-        namespace: string,
         options?: { touchUpdatedAt?: boolean }
     ): boolean {
-        return setSessionModelReasoningEffort(this.db, id, modelReasoningEffort, namespace, options)
+        return setSessionModelReasoningEffort(this.db, id, modelReasoningEffort, options)
     }
 
-    setSessionEffort(id: string, effort: string | null, namespace: string, options?: { touchUpdatedAt?: boolean }): boolean {
-        return setSessionEffort(this.db, id, effort, namespace, options)
+    setSessionEffort(id: string, effort: string | null, options?: { touchUpdatedAt?: boolean }): boolean {
+        return setSessionEffort(this.db, id, effort, options)
     }
 
-    touchSessionUpdatedAt(id: string, updatedAt: number, namespace: string): boolean {
-        return touchSessionUpdatedAt(this.db, id, updatedAt, namespace)
+    touchSessionUpdatedAt(id: string, updatedAt: number): boolean {
+        return touchSessionUpdatedAt(this.db, id, updatedAt)
     }
 
     getSession(id: string): StoredSession | null {
         return getSession(this.db, id)
     }
 
-    getSessionByNamespace(id: string, namespace: string): StoredSession | null {
-        return getSessionByNamespace(this.db, id, namespace)
-    }
-
     getSessions(): StoredSession[] {
         return getSessions(this.db)
     }
 
-    getSessionsByNamespace(namespace: string): StoredSession[] {
-        return getSessionsByNamespace(this.db, namespace)
-    }
-
-    deleteSession(id: string, namespace: string): boolean {
-        return deleteSession(this.db, id, namespace)
+    deleteSession(id: string): boolean {
+        return deleteSession(this.db, id)
     }
 }

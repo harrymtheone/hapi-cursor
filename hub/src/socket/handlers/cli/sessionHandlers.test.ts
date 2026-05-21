@@ -40,7 +40,7 @@ function redundantGoalStatusContent(message: string): unknown {
 describe('cli session handlers', () => {
     it('drops redundant goal status events before persistence and broadcast', () => {
         const store = new Store(':memory:')
-        const session = store.sessions.getOrCreateSession('goal-status-session', {}, null, 'default')
+        const session = store.sessions.getOrCreateSession('goal-status-session', {}, null)
         const socket = new FakeSocket()
         const webEvents: SyncEvent[] = []
 

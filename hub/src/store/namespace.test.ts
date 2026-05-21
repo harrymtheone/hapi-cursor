@@ -27,6 +27,15 @@ function getIndexSql(db: Database, table: string): string[] {
     `).all(table).map((row) => row.sql ?? '')
 }
 
+function getTableSql(db: Database, table: string): string {
+    return db.query<{ sql: string }, [string]>(`
+        SELECT sql
+        FROM sqlite_master
+        WHERE type = 'table'
+          AND name = ?
+    `).get(table)?.sql ?? ''
+}
+
 describe('Store namespace-free schema', () => {
     it('creates schema version 10 without users or namespace columns', () => {
         const store = new Store(':memory:')
@@ -39,7 +48,7 @@ describe('Store namespace-free schema', () => {
         expect(getColumnNames(rawDb, 'push_subscriptions')).not.toContain('namespace')
         expect(getIndexSql(rawDb, 'sessions').join('\n')).not.toContain('namespace')
         expect(getIndexSql(rawDb, 'machines').join('\n')).not.toContain('namespace')
-        expect(getIndexSql(rawDb, 'push_subscriptions').join('\n')).toContain('UNIQUE(endpoint)')
+        expect(getTableSql(rawDb, 'push_subscriptions')).toContain('UNIQUE(endpoint)')
         store.close()
     })
 
