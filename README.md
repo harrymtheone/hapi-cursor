@@ -21,17 +21,15 @@ https://github.com/user-attachments/assets/38230353-94c6-4dbe-9c29-b2a2cc457546
 ## Getting Started
 
 ```bash
-npx @twsxtd/hapi hub --relay     # start hub with E2E encrypted relay
+npx @twsxtd/hapi hub             # start local hub
 npx @twsxtd/hapi                 # run claude code
 ```
 
 `hapi server` remains supported as an alias.
 
-The terminal will display a URL and QR code. Scan the QR code with your phone or open the URL to access.
+The terminal will display the local hub URL. Use Tailscale or another network path you control for phone access.
 
-> The relay uses WireGuard + TLS for end-to-end encryption. Your data is encrypted from your device to your machine.
-
-For self-hosted options (Cloudflare Tunnel, Tailscale), see [Installation](docs/guide/installation.md)
+For Tailscale and self-hosted options, see [Installation](docs/guide/installation.md)
 
 ## Docs
 

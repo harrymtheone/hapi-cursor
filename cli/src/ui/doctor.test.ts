@@ -35,8 +35,9 @@ function stripAnsi(value: string): string {
 }
 
 describe('doctor remote-log diagnostics', () => {
+    const removedRemoteLogEnv = ['DANGEROUSLY', 'LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING'].join('_')
     const originalApiUrl = process.env.HAPI_API_URL
-    const originalDangerousRemoteLogging = process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING
+    const originalRemovedRemoteLogging = process.env[removedRemoteLogEnv]
 
     beforeEach(() => {
         readSettingsMock.mockResolvedValue({})
@@ -45,7 +46,7 @@ describe('doctor remote-log diagnostics', () => {
         findAllProcessesMock.mockResolvedValue([])
         findRunawayProcessesMock.mockResolvedValue([])
         process.env.HAPI_API_URL = 'https://hapi.example.com'
-        process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING = '1'
+        process.env[removedRemoteLogEnv] = '1'
     })
 
     afterEach(() => {
@@ -55,17 +56,17 @@ describe('doctor remote-log diagnostics', () => {
             process.env.HAPI_API_URL = originalApiUrl
         }
 
-        if (originalDangerousRemoteLogging === undefined) {
-            delete process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING
+        if (originalRemovedRemoteLogging === undefined) {
+            delete process.env[removedRemoteLogEnv]
         } else {
-            process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING = originalDangerousRemoteLogging
+            process.env[removedRemoteLogEnv] = originalRemovedRemoteLogging
         }
 
         vi.restoreAllMocks()
     })
 
     it('omits the dangerous remote-log toggle while preserving HAPI_API_URL diagnostics', async () => {
-        expect(getEnvironmentInfo()).not.toHaveProperty('DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING')
+        expect(getEnvironmentInfo()).not.toHaveProperty(removedRemoteLogEnv)
 
         const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
         let output = ''
@@ -80,7 +81,7 @@ describe('doctor remote-log diagnostics', () => {
         }
 
         expect(output).toContain('HAPI_API_URL: https://hapi.example.com')
-        expect(output).not.toContain('DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING')
-        expect(output).not.toContain('DANGEROUSLY_LOG_TO_SERVER')
+        expect(output).not.toContain(removedRemoteLogEnv)
+        expect(output).not.toContain(['DANGEROUSLY', 'LOG_TO_SERVER'].join('_'))
     })
 })

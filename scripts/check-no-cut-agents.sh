@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # scripts/check-no-cut-agents.sh
 #
-# Phase-1 + Phase-2 + Phase-3 ripgrep guard. Fails the build if any business-code
+# Phase-1 + Phase-2 + Phase-3 + Phase-4 ripgrep guard. Fails the build if any business-code
 # reference to a forbidden keyword leaks outside the whitelist below.
 #
 # Categories:
 #   * Phase-1 cut-agents     — claude / codex / gemini / opencode
 #   * Phase-2 integration    — telegram / serverchan / elevenlabs / grammy
 #   * Phase-3 owner-only cut  — namespace / :ns in runtime source trees
+#   * Phase-4 deploy cut      — tunwg / HAPI_RELAY_ / dangerous remote-log
+#                                flags plus relay hosted-web sweep terms
 #
 # Whitelist categories:
 #   * Permanent (Phase-5 territory) — files whose hits are structurally tied to
@@ -30,6 +32,8 @@ fi
 PATTERN='\b(claude|codex|gemini|opencode|telegram|serverchan|elevenlabs|grammy)\b'
 PHASE3_PATTERN='namespace|:ns'
 PHASE3_SOURCE_DIRS=(cli/src hub/src web/src shared/src)
+PHASE4_HARD_PATTERN='tunwg|HAPI_RELAY_|DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING'
+PHASE4_SWEEP_PATTERN='relay-mode|relayMode|officialWebUrl|app\.hapi\.run|download-tunwg|--relay|--no-relay'
 WHITELIST=(
   # === Infra (never agent code)
   --glob '!.planning/**'
@@ -126,6 +130,21 @@ WHITELIST=(
   --glob '!refactor.md'
   --glob '!.cursor/rules/**'
 )
+
+PHASE4_WHITELIST=(
+  # === Phase-04 default history whitelist
+  --glob '!.planning/codebase/**'
+  --glob '!CHANGELOG.md'
+
+  # === Phase-04 source-of-truth planning artifacts
+  --glob '!.planning/PROJECT.md'
+  --glob '!.planning/ROADMAP.md'
+  --glob '!.planning/REQUIREMENTS.md'
+  --glob '!.planning/phases/04-cut-deployment-infrastructure/**'
+
+  # === Phase-04 guard self-reference
+  --glob '!scripts/check-no-cut-agents.sh'
+)
 if "$RG_BIN" -i "${WHITELIST[@]}" "$PATTERN" .; then
   echo ""
   echo "❌ Non-Cursor / external-channel literals found outside whitelist."
@@ -144,3 +163,21 @@ if "$RG_BIN" -n "$PHASE3_PATTERN" "${PHASE3_SOURCE_DIRS[@]}"; then
   exit 1
 fi
 echo "✅ No Phase-3 namespace residue in source scope."
+
+if "$RG_BIN" -n "${PHASE4_WHITELIST[@]}" "$PHASE4_HARD_PATTERN" .; then
+  echo ""
+  echo "❌ Phase-4 deployment-infrastructure / remote-log residue found outside whitelist."
+  echo "   Rewrite the hit; only planning source-of-truth artifacts, CHANGELOG.md,"
+  echo "   .planning/codebase snapshots, and this guard may retain Phase-04 hard terms."
+  exit 1
+fi
+
+if "$RG_BIN" -n "${PHASE4_WHITELIST[@]}" "$PHASE4_SWEEP_PATTERN" .; then
+  echo ""
+  echo "❌ Phase-4 relay hosted-web or CLI relay residue found outside whitelist."
+  echo "   Rewrite the hit; do not whitelist docs, website, README, or runtime source"
+  echo "   for deployment-infrastructure sweep terms."
+  exit 1
+fi
+
+echo "✅ No Phase-4 deployment-infrastructure / remote-log residue outside whitelist."

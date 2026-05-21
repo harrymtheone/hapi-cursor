@@ -27,16 +27,16 @@ Other install options: [Installation](./installation.md)
 ## Start the hub
 
 ```bash
-hapi hub --relay
+hapi hub
 ```
 
 On first run, HAPI prints an access token and saves it to `~/.hapi/settings.json`.
 
 `hapi server` remains supported as an alias.
 
-The terminal will display a URL and QR code for remote access.
+The terminal will display the local hub URL. Use Tailscale or another network path you control for remote access.
 
-> End-to-end encrypted with WireGuard + TLS.
+> For phone access, configure `HAPI_PUBLIC_URL` with your Tailscale or HTTPS URL.
 
 ## Start a coding session
 

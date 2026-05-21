@@ -54,10 +54,9 @@ The server stores encrypted data — it never sees plaintext, but it does hold y
 
 ### HAPI: Decentralized
 
-Each user runs their own hub. HAPI offers two modes of remote access:
+Each user runs their own hub. This fork is optimized for one remote access path:
 
-- **Self-hosted** (own server / Cloudflare Tunnel / Tailscale) — You control the full network path, no E2EE needed
-- **Public relay** (`hapi hub --relay`) — E2E encrypted via tunwg (WireGuard + TLS); the relay only forwards opaque packets
+- **User-managed private networking** (Tailscale, own server, or another path you control) — Your hub stays local and you control the full network path
 - **Single embedded database** — SQLite, no external services
 - **One-command deployment** — Single binary, zero config
 
@@ -91,9 +90,9 @@ You control the entire path. No encryption beyond standard HTTPS is needed.
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Mode 2: Public Relay (E2E encrypted)
+#### Mode 2: Private Network Access
 
-The relay server only forwards encrypted packets — it cannot read your data.
+For phone or tablet access, run the hub locally and reach it through your own private network.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -113,15 +112,9 @@ The relay server only forwards encrypted packets — it cannot read your data.
 │   │              └────────────────┘                                │   │
 │   └────────────────────────────────────────────────────────────────┘   │
 │                            │                                           │
-│                            ▼ tunwg (WireGuard + TLS)                   │
+│                            ▼ Private network / HTTPS                   │
 └────────────────────────────┼───────────────────────────────────────────┘
-                             │ E2E encrypted
-                    ┌────────▼────────┐
-                    │  Relay Server   │
-                    │  (forwards only,│
-                    │  cannot read)   │
-                    └────────┬────────┘
-                             │ E2E encrypted
+                             │
                     ┌────────▼────────┐
                     │  Your Phone /   │
                     │  Browser        │
@@ -137,7 +130,7 @@ The relay server only forwards encrypted packets — it cannot read your data.
 | **Where data lives** | Cloud server (encrypted blobs) | Your own machine |
 | **Who stores it** | Central server holds encrypted data | Only your hub, locally |
 | **Data at rest** | Encrypted (server cannot read) | Plaintext (protected by OS) |
-| **Server's role** | Stores encrypted data + syncs devices | Relay only forwards (or no server at all if self-hosted) |
+| **Server's role** | Stores encrypted data + syncs devices | No shared server; your own hub serves the app |
 
 ### Deployment Model
 
@@ -172,12 +165,12 @@ The relay server only forwards encrypted packets — it cannot read your data.
 
 ### Security Approach
 
-| Aspect | Happy | HAPI (self-hosted) | HAPI (relay) |
-|--------|-------|-------------------|--------------|
-| **Problem** | Data on untrusted server | Remote access to local hub | Remote access via third-party relay |
-| **Solution** | Application-layer E2EE | HTTPS (you control the path) | WireGuard + TLS (tunwg) |
-| **Key management** | Client holds keys; server never sees plaintext | Not needed | Handled by tunwg automatically |
-| **Data at rest** | Encrypted on server | Plaintext on your machine | Plaintext on your machine |
+| Aspect | Happy | HAPI |
+|--------|-------|------|
+| **Problem** | Data on untrusted server | Remote access to your local hub |
+| **Solution** | Application-layer E2EE | User-managed private networking or HTTPS |
+| **Key management** | Client holds keys; server never sees plaintext | Not needed for the single-user local hub model |
+| **Data at rest** | Encrypted on server | Plaintext on your machine |
 
 ## Why Different Architectures?
 
@@ -209,11 +202,8 @@ Goal: Self-hosted tool — each user runs their own hub
          ├──► Each user has their own hub
          │         └──► No horizontal scaling needed; unlimited users in aggregate
          │
-         ├──► Self-hosted access (own server/tunnel)
+        ├──► Private network access (Tailscale / own server)
          │         └──► You control the full path — HTTPS sufficient
-         │
-         └──► Public relay access
-                   └──► WireGuard + TLS (tunwg) — relay forwards only
 ```
 
 **Result**: Simple, portable, one-command deployment
@@ -223,10 +213,10 @@ Goal: Self-hosted tool — each user runs their own hub
 | Dimension | Happy | HAPI |
 |-----------|-------|------|
 | **Architecture** | Centralized cloud server | Decentralized (each user runs own hub) |
-| **Server's role** | Stores encrypted data | Relay only forwards (or none if self-hosted) |
+| **Server's role** | Stores encrypted data | Your local hub serves your own devices |
 | **Data location** | Server (encrypted, zero-knowledge) | Local (plaintext, your machine) |
 | **Deployment** | Multiple services (PostgreSQL, Redis, Node.js) | Single binary (embedded SQLite) |
-| **Encryption** | Application-layer E2EE (client-side) | WireGuard + TLS (relay) or HTTPS (self-hosted) |
+| **Encryption** | Application-layer E2EE (client-side) | Your private network or HTTPS |
 | **Scaling** | Horizontal (multi-user on shared server) | Per-user (each runs own hub) |
 | **Target user** | Managed cloud service users | Self-hosters who want data sovereignty |
 
@@ -236,6 +226,6 @@ The architectural differences stem from a centralized vs decentralized design:
 
 - **Happy**: Centralized cloud server that stores your encrypted data. The server never sees plaintext (zero-knowledge), but it does hold your data. This requires application-layer E2EE, key management, and distributed infrastructure (PostgreSQL, Redis, scaling).
 
-- **HAPI**: Decentralized — each user runs their own hub. Your data stays on your machine. For remote access, you can self-host (own server or tunnel — no E2EE needed since you control the path) or use the public relay (WireGuard + TLS via tunwg — the relay only forwards encrypted packets it cannot read). This achieves one-command deployment with zero external dependencies.
+- **HAPI**: Decentralized — each user runs their own hub. Your data stays on your machine. For remote access, use a network path you control, such as Tailscale or your own HTTPS endpoint. This keeps deployment simple without a bundled public tunnel.
 
 The core tradeoff: Happy solves the "untrusted server" problem with sophisticated encryption. HAPI avoids the problem entirely by keeping your data on your own machine.

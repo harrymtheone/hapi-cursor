@@ -68,7 +68,7 @@ HAPI has three components:
 
 **Local only**: `hapi hub` → `hapi` → work in terminal
 
-**Remote access**: `hapi hub --relay` → `hapi runner start` → control from phone/web
+**Remote access**: `hapi hub` with `HAPI_PUBLIC_URL` set to your Tailscale or HTTPS URL → `hapi runner start` → control from phone/web
 
 ## Install the CLI
 
@@ -126,28 +126,24 @@ The hub can be deployed on:
 - **Local desktop** (default) - Run on your development machine
 - **Remote host** - Deploy the hub on a VPS, cloud host, or any machine with network access
 
-### Default: Public Relay (recommended)
+### Default: Local Hub
 
 ```bash
-hapi hub --relay
+hapi hub
 ```
 
-The terminal displays a URL and QR code. Scan to access from anywhere.
+The terminal displays the local hub URL. For phone or tablet access, expose that local URL through your own network path such as Tailscale and set `HAPI_PUBLIC_URL` if you want the hub to print that address at startup.
 
 `hapi server` remains supported as an alias.
 
-- **End-to-end encrypted** with WireGuard + TLS
-- No configuration needed
-- Works behind NAT, firewalls, and any network
-
-> **Tip:** The relay uses UDP by default. If you experience connectivity issues, set `HAPI_RELAY_FORCE_TCP=true` to force TCP mode.
+- Local-first by default
+- Works well with user-managed Tailscale
+- No bundled public tunnel or hosted web entry
 
 ### Local Only
 
 ```bash
 hapi hub
-# or
-hapi hub --no-relay
 ```
 
 The hub listens on `http://localhost:3006` by default.
@@ -184,7 +180,6 @@ On first run, HAPI:
 | `CORS_ORIGINS` | - | `corsOrigins` | Allowed CORS origins (comma-separated) |
 | `TELEGRAM_BOT_TOKEN` | - | `telegramBotToken` | Telegram Bot API token |
 | `TELEGRAM_NOTIFICATION` | `true` | `telegramNotification` | Enable Telegram notifications |
-| `HAPI_RELAY_FORCE_TCP` | `false` | - | Force TCP mode for relay |
 | `VAPID_SUBJECT` | `mailto:admin@hapi.run` | - | Web Push contact info |
 | `HAPI_HOME` | `~/.hapi` | - | Config directory path |
 | `DB_PATH` | `~/.hapi/hapi.db` | - | Database file path |
@@ -382,7 +377,7 @@ Simple one-liner for quick background runs:
 
 ```bash
 # Hub
-nohup hapi hub --relay > ~/.hapi/logs/hub.log 2>&1 &
+nohup hapi hub > ~/.hapi/logs/hub.log 2>&1 &
 
 # Runner
 nohup hapi runner start --foreground > ~/.hapi/logs/runner.log 2>&1 &
@@ -413,7 +408,7 @@ pm2 provides process management with auto-restart on crashes and system reboot.
 npm install -g pm2
 
 # Start hub and runner
-pm2 start "hapi hub --relay" --name hapi-hub
+pm2 start "hapi hub" --name hapi-hub
 pm2 start "hapi runner start --foreground" --name hapi-runner
 
 # View status and logs
@@ -445,7 +440,6 @@ Create plist files for automatic startup on macOS.
     <array>
         <string>/usr/local/bin/hapi</string>
         <string>hub</string>
-        <string>--relay</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -501,7 +495,7 @@ launchctl unload ~/Library/LaunchAgents/com.hapi.runner.plist
 
 > **macOS sleep note:** macOS may suspend background processes when the display sleeps. Use `caffeinate` to prevent this:
 > ```bash
-> caffeinate -dimsu hapi hub --relay
+> caffeinate -dimsu hapi hub
 > ```
 > Or run `caffeinate -dimsu` in a separate terminal while HAPI is running.
 </details>
@@ -520,7 +514,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/hapi hub --relay
+ExecStart=/usr/local/bin/hapi hub
 Restart=always
 RestartSec=5
 
@@ -579,7 +573,7 @@ Enable voice control:
 
 ```bash
 export ELEVENLABS_API_KEY="your-api-key"
-hapi hub --relay
+hapi hub
 ```
 
 See [Voice Assistant](./voice-assistant.md) for usage details.

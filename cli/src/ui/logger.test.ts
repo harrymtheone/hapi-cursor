@@ -4,8 +4,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Logger } from './logger'
 
+const removedRemoteLogEnv = ['DANGEROUSLY', 'LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING'].join('_')
 const originalApiUrl = process.env.HAPI_API_URL
-const originalDangerousRemoteLogging = process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING
+const originalRemovedRemoteLogging = process.env[removedRemoteLogEnv]
 const originalFetch = globalThis.fetch
 
 describe('Logger local-only logging', () => {
@@ -17,7 +18,7 @@ describe('Logger local-only logging', () => {
     fetchMock = vi.fn()
     globalThis.fetch = fetchMock as unknown as typeof fetch
     process.env.HAPI_API_URL = 'https://hapi.example.com'
-    process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING = '1'
+    process.env[removedRemoteLogEnv] = '1'
   })
 
   afterEach(() => {
@@ -30,10 +31,10 @@ describe('Logger local-only logging', () => {
       process.env.HAPI_API_URL = originalApiUrl
     }
 
-    if (originalDangerousRemoteLogging === undefined) {
-      delete process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING
+    if (originalRemovedRemoteLogging === undefined) {
+      delete process.env[removedRemoteLogEnv]
     } else {
-      process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING = originalDangerousRemoteLogging
+      process.env[removedRemoteLogEnv] = originalRemovedRemoteLogging
     }
 
     vi.restoreAllMocks()

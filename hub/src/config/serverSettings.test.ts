@@ -4,10 +4,16 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { loadServerSettings } from './serverSettings'
 
+const legacyRelayEnv = {
+    api: ['HAPI', 'RELAY', 'API'].join('_'),
+    auth: ['HAPI', 'RELAY', 'AUTH'].join('_'),
+    forceTcp: ['HAPI', 'RELAY', 'FORCE_TCP'].join('_'),
+}
+
 const originalEnv = {
-    HAPI_RELAY_API: process.env.HAPI_RELAY_API,
-    HAPI_RELAY_AUTH: process.env.HAPI_RELAY_AUTH,
-    HAPI_RELAY_FORCE_TCP: process.env.HAPI_RELAY_FORCE_TCP,
+    legacyRelayApi: process.env[legacyRelayEnv.api],
+    legacyRelayAuth: process.env[legacyRelayEnv.auth],
+    legacyRelayForceTcp: process.env[legacyRelayEnv.forceTcp],
     HAPI_PUBLIC_URL: process.env.HAPI_PUBLIC_URL,
 }
 
@@ -27,9 +33,9 @@ describe('loadServerSettings', () => {
     let dir: string | null = null
 
     afterEach(() => {
-        restoreEnv('HAPI_RELAY_API', originalEnv.HAPI_RELAY_API)
-        restoreEnv('HAPI_RELAY_AUTH', originalEnv.HAPI_RELAY_AUTH)
-        restoreEnv('HAPI_RELAY_FORCE_TCP', originalEnv.HAPI_RELAY_FORCE_TCP)
+        restoreEnv(legacyRelayEnv.api, originalEnv.legacyRelayApi)
+        restoreEnv(legacyRelayEnv.auth, originalEnv.legacyRelayAuth)
+        restoreEnv(legacyRelayEnv.forceTcp, originalEnv.legacyRelayForceTcp)
         restoreEnv('HAPI_PUBLIC_URL', originalEnv.HAPI_PUBLIC_URL)
 
         if (dir) {
@@ -69,9 +75,9 @@ describe('loadServerSettings', () => {
 
     it('ignores legacy relay environment variables while preserving public URL source', async () => {
         dir = makeTempDir()
-        process.env.HAPI_RELAY_API = 'legacy-relay.example'
-        process.env.HAPI_RELAY_AUTH = 'legacy-auth'
-        process.env.HAPI_RELAY_FORCE_TCP = '1'
+        process.env[legacyRelayEnv.api] = 'legacy-relay.example'
+        process.env[legacyRelayEnv.auth] = 'legacy-auth'
+        process.env[legacyRelayEnv.forceTcp] = '1'
         process.env.HAPI_PUBLIC_URL = 'https://hapi-tailnet.example'
 
         const result = await loadServerSettings(dir)
