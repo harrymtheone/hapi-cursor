@@ -1,26 +1,25 @@
 import { describe, expect, it } from 'bun:test'
-import { DEFAULT_NAMESPACE, parseAccessToken } from './accessToken'
+import { parseAccessToken } from './accessToken'
 
 describe('parseAccessToken', () => {
-    it('defaults namespace when missing', () => {
-        const parsed = parseAccessToken('token')
-        expect(parsed).toEqual({ baseToken: 'token', namespace: DEFAULT_NAMESPACE })
+    it('returns trimmed opaque tokens', () => {
+        expect(parseAccessToken(' token ')).toBe('token')
     })
 
-    it('parses namespace suffix', () => {
-        const parsed = parseAccessToken('token:alice')
-        expect(parsed).toEqual({ baseToken: 'token', namespace: 'alice' })
+    it('preserves colon-bearing tokens as one secret', () => {
+        expect(parseAccessToken('token:alice')).toBe('token:alice')
     })
 
-    it('rejects empty namespace', () => {
-        expect(parseAccessToken('token:')).toBeNull()
+    it('preserves empty suffixes inside opaque tokens', () => {
+        expect(parseAccessToken('token:')).toBe('token:')
     })
 
-    it('rejects missing base token', () => {
-        expect(parseAccessToken(':alice')).toBeNull()
+    it('preserves empty prefixes inside opaque tokens', () => {
+        expect(parseAccessToken(':alice')).toBe(':alice')
     })
 
-    it('rejects whitespace inside namespace', () => {
-        expect(parseAccessToken('token: alice')).toBeNull()
+    it('rejects empty and whitespace-only tokens', () => {
+        expect(parseAccessToken('')).toBeNull()
+        expect(parseAccessToken('   ')).toBeNull()
     })
 })

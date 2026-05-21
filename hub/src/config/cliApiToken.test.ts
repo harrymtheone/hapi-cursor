@@ -24,18 +24,24 @@ describe('getOrCreateCliApiToken', () => {
         }
     })
 
-    it('rejects namespace-suffixed env tokens', async () => {
+    it('accepts colon-bearing env tokens as opaque secrets', async () => {
         dir = makeTempDir()
         process.env.CLI_API_TOKEN = 'base-token:default'
 
-        await expect(getOrCreateCliApiToken(dir)).rejects.toThrow('namespace suffixes are not accepted')
+        const result = await getOrCreateCliApiToken(dir)
+
+        expect(result.token).toBe('base-token:default')
+        expect(result.source).toBe('env')
     })
 
-    it('rejects namespace-suffixed file tokens', async () => {
+    it('accepts colon-bearing file tokens as opaque secrets', async () => {
         dir = makeTempDir()
         delete process.env.CLI_API_TOKEN
         writeFileSync(join(dir, 'settings.json'), JSON.stringify({ cliApiToken: 'base-token:default' }))
 
-        await expect(getOrCreateCliApiToken(dir)).rejects.toThrow('namespace suffixes are not accepted')
+        const result = await getOrCreateCliApiToken(dir)
+
+        expect(result.token).toBe('base-token:default')
+        expect(result.source).toBe('file')
     })
 })
