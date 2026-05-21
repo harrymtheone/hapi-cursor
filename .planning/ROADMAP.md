@@ -60,7 +60,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 02-01-PLAN.md — CUT-06 hub-side: delete hub/src/telegram/, telegramInitData, bind, auth schema collapse, grammy dep, settings TELEGRAM_* fields
 - [x] 02-02-PLAN.md — CUT-06 web-side: delete useTelegram, collapse useAuthSource/useAuth/usePlatform, strip Telegram WebApp from main/router/sw/App + components + i18n + CSS
 - [x] 02-03-PLAN.md — CUT-07: delete hub voice route, web/src/realtime/, voice-context, shared/src/voice.ts, @elevenlabs/react dep, settings Voice Assistant section, voice i18n keys
-- [ ] 02-04-PLAN.md — CUT-08: delete hub/src/serverchan/, ServerChan channel registration, settings serverChan* fields
+- [x] 02-04-PLAN.md — CUT-08: delete hub/src/serverchan/, ServerChan channel registration, settings serverChan* fields
 - [ ] 02-05-PLAN.md — Final cleanup: CLI residuals (TerminalManager + notify), hub banner scrub, extend ripgrep guard PATTERN with telegram|serverchan|elevenlabs|grammy, bun.lock regen
 
 ### Phase 3: Cut multi-user namespace isolation

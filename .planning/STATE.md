@@ -10,8 +10,8 @@ progress:
   total_phases: 12
   completed_phases: 1
   total_plans: 10
-  completed_plans: 8
-  percent: 8
+  completed_plans: 9
+  percent: 9
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 02 (cut-external-integration-channels) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [████████░░] 80%
 | Phase 02 P01 | 5min | 4 tasks | 19 files |
 | Phase 02 P02 | 6min | 2 tasks | 17 files |
 | Phase 02 P03 | 7min | 3 tasks | 28 files |
+| Phase 02 P04 | 5min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@ Recent decisions affecting current work:
 - Documentation cleanup (CUT-12) is folded into the final verification phase since the VRFY-03 ripgrep check depends on docs being clean
 - [Phase ?]: D-30 commit #1: hub-side Telegram bot removed, /api/auth collapsed to access-token-only
 - [Phase ?]: Phase 02 commit #2 (D-30): web-side Telegram WebApp platform removed; web /api/auth client now strictly { accessToken }.
+- [Phase 02]: D-30 commit #4 (CUT-08): ServerChan push channel deleted; notificationChannels reduced to [PushNotificationChannel] length 1 (D-22 confirmed); SERVERCHAN_* env reads gone.
 
 ### Pending Todos
 
@@ -90,6 +92,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-21T01:31:34.124Z
-Stopped at: Phase 02 context gathered
+Last session: 2026-05-21T01:34:00.000Z
+Stopped at: Completed 02-04-PLAN.md (CUT-08 ServerChan removal)
 Resume file: None
