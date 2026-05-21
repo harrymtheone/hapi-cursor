@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # scripts/check-no-cut-agents.sh
 #
-# Phase-1 ripgrep guard. Fails the build if any business-code reference to a
-# non-Cursor agent flavor (claude / codex / gemini / opencode) leaks outside
-# the whitelist below.
+# Phase-1 + Phase-2 ripgrep guard. Fails the build if any business-code
+# reference to a forbidden keyword leaks outside the whitelist below.
+#
+# Categories:
+#   * Phase-1 cut-agents     — claude / codex / gemini / opencode
+#   * Phase-2 integration    — telegram / serverchan / elevenlabs / grammy
 #
 # Whitelist categories:
 #   * Permanent (Phase-5 territory) — files whose hits are structurally tied to
@@ -14,7 +17,7 @@
 #     by the Phase-12 polish pass.
 #   * Infra — files that can never be agent code (lockfile, gitignore, node_modules…).
 set -euo pipefail
-PATTERN='\b(claude|codex|gemini|opencode)\b'
+PATTERN='\b(claude|codex|gemini|opencode|telegram|serverchan|elevenlabs|grammy)\b'
 WHITELIST=(
   # === Infra (never agent code)
   --glob '!.planning/**'
@@ -32,7 +35,6 @@ WHITELIST=(
   --glob '!shared/src/modes.ts'                       # AGENT_MESSAGE_PAYLOAD_TYPE='codex' wire constant
   --glob '!shared/src/resume.ts'                      # session-resume types reference flavors
   --glob '!shared/src/resume.test.ts'                 # flavor fixtures
-  --glob '!shared/src/voice.ts'                       # flavor-coupled voice prefs
   --glob '!shared/src/schemas.ts'                     # *SessionId metadata fields (wire schema)
   --glob '!shared/src/sessionSummary.ts'              # *SessionId picker chain
   --glob '!shared/src/models.ts'                      # claude model presets (cursor inherits)
@@ -113,10 +115,11 @@ WHITELIST=(
 )
 if rg -i "${WHITELIST[@]}" "$PATTERN" .; then
   echo ""
-  echo "❌ Non-Cursor agent literals found outside whitelist."
-  echo "   Either rewrite the hit Cursor-only, or — if the hit is structurally"
-  echo "   tied to the AgentFlavor union — add an explicit Phase-5-territory"
-  echo "   whitelist entry above (owner: CUT-05)."
+  echo "❌ Non-Cursor / external-channel literals found outside whitelist."
+  echo "   Either rewrite the hit, or — if the hit is structurally tied to"
+  echo "   the AgentFlavor union (Phase-5) — add an explicit whitelist entry"
+  echo "   above (owner: CUT-05). Phase-12 docs/marketing surfaces are deferred"
+  echo "   to the polish pass and already covered by the docs/website globs."
   exit 1
 fi
 echo "✅ No non-Cursor agent literals outside whitelist."
