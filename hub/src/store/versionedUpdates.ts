@@ -6,7 +6,7 @@ type VersionedUpdateArgs<T> = {
     db: Database
     table: string
     id: string
-    namespace: string
+    namespace?: string
     field: string
     versionField: string
     expectedVersion: number
@@ -19,6 +19,27 @@ type VersionedUpdateArgs<T> = {
 
 export function updateVersionedField<T>(args: VersionedUpdateArgs<T>): VersionedUpdateResult<T> {
     try {
+        const namespacePredicate = args.namespace === undefined ? '' : ' AND namespace = @namespace'
+        const params: Record<string, string | number | bigint | boolean | Uint8Array | null> = {
+            id: args.id,
+            expectedVersion: args.expectedVersion,
+            field_value: args.encode(args.value)
+        }
+        if (args.namespace !== undefined) {
+            params.namespace = args.namespace
+        }
+        for (const [key, value] of Object.entries(args.params ?? {})) {
+            if (
+                typeof value === 'string' ||
+                typeof value === 'number' ||
+                typeof value === 'bigint' ||
+                typeof value === 'boolean' ||
+                value === null ||
+                value instanceof Uint8Array
+            ) {
+                params[key] = value
+            }
+        }
         const setClauses = [
             `${args.field} = @field_value`,
             `${args.versionField} = ${args.versionField} + 1`,
@@ -28,14 +49,8 @@ export function updateVersionedField<T>(args: VersionedUpdateArgs<T>): Versioned
         const result = args.db.prepare(
             `UPDATE ${args.table}
              SET ${setClauses.join(', ')}
-             WHERE id = @id AND namespace = @namespace AND ${args.versionField} = @expectedVersion`
-        ).run({
-            id: args.id,
-            namespace: args.namespace,
-            expectedVersion: args.expectedVersion,
-            field_value: args.encode(args.value),
-            ...(args.params ?? {})
-        })
+             WHERE id = @id${namespacePredicate} AND ${args.versionField} = @expectedVersion`
+        ).run(params)
 
         if (result.changes === 1) {
             return { result: 'success', version: args.expectedVersion + 1, value: args.value }
@@ -44,8 +59,10 @@ export function updateVersionedField<T>(args: VersionedUpdateArgs<T>): Versioned
         const current = args.db.prepare(
             `SELECT ${args.field} AS field_value, ${args.versionField} AS version
              FROM ${args.table}
-             WHERE id = ? AND namespace = ?`
-        ).get(args.id, args.namespace) as { field_value: string | null; version: number } | undefined
+             WHERE id = ?${args.namespace === undefined ? '' : ' AND namespace = ?'}`
+        ).get(...(args.namespace === undefined ? [args.id] : [args.id, args.namespace])) as
+            | { field_value: string | null; version: number }
+            | undefined
 
         if (!current) {
             return { result: 'error' }

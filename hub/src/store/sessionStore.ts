@@ -33,8 +33,26 @@ export class SessionStore {
         model?: string,
         effort?: string,
         modelReasoningEffort?: string
+    ): StoredSession
+    getOrCreateSession(
+        tag: string,
+        metadata: unknown,
+        agentState: unknown,
+        options?: { model?: string; effort?: string; modelReasoningEffort?: string }
+    ): StoredSession
+    getOrCreateSession(
+        tag: string,
+        metadata: unknown,
+        agentState: unknown,
+        namespace?: string | { model?: string; effort?: string; modelReasoningEffort?: string },
+        model?: string,
+        effort?: string,
+        modelReasoningEffort?: string
     ): StoredSession {
-        return getOrCreateSession(this.db, tag, metadata, agentState, namespace, model, effort, modelReasoningEffort)
+        if (typeof namespace === 'string') {
+            return getOrCreateSession(this.db, tag, metadata, agentState, namespace, model, effort, modelReasoningEffort)
+        }
+        return getOrCreateSession(this.db, tag, metadata, agentState, namespace)
     }
 
     updateSessionMetadata(
@@ -43,16 +61,46 @@ export class SessionStore {
         expectedVersion: number,
         namespace: string,
         options?: { touchUpdatedAt?: boolean }
+    ): VersionedUpdateResult<unknown | null>
+    updateSessionMetadata(
+        id: string,
+        metadata: unknown,
+        expectedVersion: number,
+        options?: { touchUpdatedAt?: boolean }
+    ): VersionedUpdateResult<unknown | null>
+    updateSessionMetadata(
+        id: string,
+        metadata: unknown,
+        expectedVersion: number,
+        namespace?: string | { touchUpdatedAt?: boolean },
+        options?: { touchUpdatedAt?: boolean }
     ): VersionedUpdateResult<unknown | null> {
-        return updateSessionMetadata(this.db, id, metadata, expectedVersion, namespace, options)
+        if (typeof namespace === 'string') {
+            return updateSessionMetadata(this.db, id, metadata, expectedVersion, namespace, options)
+        }
+        return updateSessionMetadata(this.db, id, metadata, expectedVersion, namespace)
     }
 
     updateSessionAgentState(
         id: string,
         agentState: unknown,
+        expectedVersion: number
+    ): VersionedUpdateResult<unknown | null>
+    updateSessionAgentState(
+        id: string,
+        agentState: unknown,
         expectedVersion: number,
         namespace: string
+    ): VersionedUpdateResult<unknown | null>
+    updateSessionAgentState(
+        id: string,
+        agentState: unknown,
+        expectedVersion: number,
+        namespace?: string
     ): VersionedUpdateResult<unknown | null> {
+        if (namespace === undefined) {
+            return updateSessionAgentState(this.db, id, agentState, expectedVersion)
+        }
         return updateSessionAgentState(this.db, id, agentState, expectedVersion, namespace)
     }
 

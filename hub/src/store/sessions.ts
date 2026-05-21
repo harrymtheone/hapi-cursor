@@ -5,6 +5,12 @@ import type { StoredSession, VersionedUpdateResult } from './types'
 import { safeJsonParse } from './json'
 import { updateVersionedField } from './versionedUpdates'
 
+type OwnerSessionCreateOptions = {
+    model?: string
+    effort?: string
+    modelReasoningEffort?: string
+}
+
 type DbSessionRow = {
     id: string
     tag: string | null
@@ -62,10 +68,37 @@ export function getOrCreateSession(
     model?: string,
     effort?: string,
     modelReasoningEffort?: string
+): StoredSession
+export function getOrCreateSession(
+    db: Database,
+    tag: string,
+    metadata: unknown,
+    agentState: unknown,
+    options?: OwnerSessionCreateOptions
+): StoredSession
+export function getOrCreateSession(
+    db: Database,
+    tag: string,
+    metadata: unknown,
+    agentState: unknown,
+    namespaceOrOptions?: string | OwnerSessionCreateOptions,
+    model?: string,
+    effort?: string,
+    modelReasoningEffort?: string
 ): StoredSession {
-    const existing = db.prepare(
-        'SELECT * FROM sessions WHERE tag = ? AND namespace = ? ORDER BY created_at DESC LIMIT 1'
-    ).get(tag, namespace) as DbSessionRow | undefined
+    const namespace = typeof namespaceOrOptions === 'string' ? namespaceOrOptions : undefined
+    const ownerOptions = typeof namespaceOrOptions === 'object' ? namespaceOrOptions : undefined
+    const sessionModel = ownerOptions?.model ?? model
+    const sessionEffort = ownerOptions?.effort ?? effort
+    const sessionModelReasoningEffort = ownerOptions?.modelReasoningEffort ?? modelReasoningEffort
+
+    const existing = namespace === undefined
+        ? db.prepare('SELECT * FROM sessions WHERE tag = ? ORDER BY created_at DESC LIMIT 1').get(tag) as
+            | DbSessionRow
+            | undefined
+        : db.prepare(
+            'SELECT * FROM sessions WHERE tag = ? AND namespace = ? ORDER BY created_at DESC LIMIT 1'
+        ).get(tag, namespace) as DbSessionRow | undefined
 
     if (existing) {
         return toStoredSession(existing)
@@ -77,7 +110,29 @@ export function getOrCreateSession(
     const metadataJson = JSON.stringify(metadata)
     const agentStateJson = agentState === null || agentState === undefined ? null : JSON.stringify(agentState)
 
-    db.prepare(`
+    const insertSql = namespace === undefined
+        ? `
+        INSERT INTO sessions (
+            id, tag, machine_id, created_at, updated_at,
+            metadata, metadata_version,
+            agent_state, agent_state_version,
+            model,
+            model_reasoning_effort,
+            effort,
+            todos, todos_updated_at,
+            active, active_at, seq
+        ) VALUES (
+            @id, @tag, NULL, @created_at, @updated_at,
+            @metadata, 1,
+            @agent_state, 1,
+            @model,
+            @model_reasoning_effort,
+            @effort,
+            NULL, NULL,
+            0, NULL, 0
+        )
+    `
+        : `
         INSERT INTO sessions (
             id, tag, namespace, machine_id, created_at, updated_at,
             metadata, metadata_version,
@@ -97,17 +152,19 @@ export function getOrCreateSession(
             NULL, NULL,
             0, NULL, 0
         )
-    `).run({
+    `
+
+    db.prepare(insertSql).run({
         id,
         tag,
-        namespace,
+        ...(namespace === undefined ? {} : { namespace }),
         created_at: now,
         updated_at: now,
         metadata: metadataJson,
         agent_state: agentStateJson,
-        model: model ?? null,
-        model_reasoning_effort: modelReasoningEffort ?? null,
-        effort: effort ?? null
+        model: sessionModel ?? null,
+        model_reasoning_effort: sessionModelReasoningEffort ?? null,
+        effort: sessionEffort ?? null
     })
 
     const row = getSession(db, id)
@@ -124,15 +181,32 @@ export function updateSessionMetadata(
     expectedVersion: number,
     namespace: string,
     options?: { touchUpdatedAt?: boolean }
+): VersionedUpdateResult<unknown | null>
+export function updateSessionMetadata(
+    db: Database,
+    id: string,
+    metadata: unknown,
+    expectedVersion: number,
+    options?: { touchUpdatedAt?: boolean }
+): VersionedUpdateResult<unknown | null>
+export function updateSessionMetadata(
+    db: Database,
+    id: string,
+    metadata: unknown,
+    expectedVersion: number,
+    namespaceOrOptions?: string | { touchUpdatedAt?: boolean },
+    legacyOptions?: { touchUpdatedAt?: boolean }
 ): VersionedUpdateResult<unknown | null> {
     const now = Date.now()
+    const namespace = typeof namespaceOrOptions === 'string' ? namespaceOrOptions : undefined
+    const options = typeof namespaceOrOptions === 'string' ? legacyOptions : namespaceOrOptions
     const touchUpdatedAt = options?.touchUpdatedAt !== false
 
     return updateVersionedField({
         db,
         table: 'sessions',
         id,
-        namespace,
+        ...(namespace === undefined ? {} : { namespace }),
         field: 'metadata',
         versionField: 'metadata_version',
         expectedVersion,
@@ -159,6 +233,19 @@ export function updateSessionAgentState(
     agentState: unknown,
     expectedVersion: number,
     namespace: string
+): VersionedUpdateResult<unknown | null>
+export function updateSessionAgentState(
+    db: Database,
+    id: string,
+    agentState: unknown,
+    expectedVersion: number
+): VersionedUpdateResult<unknown | null>
+export function updateSessionAgentState(
+    db: Database,
+    id: string,
+    agentState: unknown,
+    expectedVersion: number,
+    namespace?: string
 ): VersionedUpdateResult<unknown | null> {
     const now = Date.now()
     const normalized = agentState ?? null
@@ -167,7 +254,7 @@ export function updateSessionAgentState(
         db,
         table: 'sessions',
         id,
-        namespace,
+        ...(namespace === undefined ? {} : { namespace }),
         field: 'agent_state',
         versionField: 'agent_state_version',
         expectedVersion,

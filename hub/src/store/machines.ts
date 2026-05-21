@@ -40,11 +40,24 @@ export function getOrCreateMachine(
     metadata: unknown,
     runnerState: unknown,
     namespace: string
+): StoredMachine
+export function getOrCreateMachine(
+    db: Database,
+    id: string,
+    metadata: unknown,
+    runnerState: unknown
+): StoredMachine
+export function getOrCreateMachine(
+    db: Database,
+    id: string,
+    metadata: unknown,
+    runnerState: unknown,
+    namespace?: string
 ): StoredMachine {
     const existing = db.prepare('SELECT * FROM machines WHERE id = ?').get(id) as DbMachineRow | undefined
     if (existing) {
         const stored = toStoredMachine(existing)
-        if (stored.namespace !== namespace) {
+        if (namespace !== undefined && stored.namespace !== namespace) {
             throw new Error('Machine namespace mismatch')
         }
         return stored
@@ -54,7 +67,21 @@ export function getOrCreateMachine(
     const metadataJson = JSON.stringify(metadata)
     const runnerStateJson = runnerState === null || runnerState === undefined ? null : JSON.stringify(runnerState)
 
-    db.prepare(`
+    const insertSql = namespace === undefined
+        ? `
+        INSERT INTO machines (
+            id, created_at, updated_at,
+            metadata, metadata_version,
+            runner_state, runner_state_version,
+            active, active_at, seq
+        ) VALUES (
+            @id, @created_at, @updated_at,
+            @metadata, 1,
+            @runner_state, 1,
+            0, NULL, 0
+        )
+    `
+        : `
         INSERT INTO machines (
             id, namespace, created_at, updated_at,
             metadata, metadata_version,
@@ -66,9 +93,11 @@ export function getOrCreateMachine(
             @runner_state, 1,
             0, NULL, 0
         )
-    `).run({
+    `
+
+    db.prepare(insertSql).run({
         id,
-        namespace,
+        ...(namespace === undefined ? {} : { namespace }),
         created_at: now,
         updated_at: now,
         metadata: metadataJson,
@@ -88,6 +117,19 @@ export function updateMachineMetadata(
     metadata: unknown,
     expectedVersion: number,
     namespace: string
+): VersionedUpdateResult<unknown | null>
+export function updateMachineMetadata(
+    db: Database,
+    id: string,
+    metadata: unknown,
+    expectedVersion: number
+): VersionedUpdateResult<unknown | null>
+export function updateMachineMetadata(
+    db: Database,
+    id: string,
+    metadata: unknown,
+    expectedVersion: number,
+    namespace?: string
 ): VersionedUpdateResult<unknown | null> {
     const now = Date.now()
 
@@ -95,7 +137,7 @@ export function updateMachineMetadata(
         db,
         table: 'machines',
         id,
-        namespace,
+        ...(namespace === undefined ? {} : { namespace }),
         field: 'metadata',
         versionField: 'metadata_version',
         expectedVersion,
@@ -116,6 +158,19 @@ export function updateMachineRunnerState(
     runnerState: unknown,
     expectedVersion: number,
     namespace: string
+): VersionedUpdateResult<unknown | null>
+export function updateMachineRunnerState(
+    db: Database,
+    id: string,
+    runnerState: unknown,
+    expectedVersion: number
+): VersionedUpdateResult<unknown | null>
+export function updateMachineRunnerState(
+    db: Database,
+    id: string,
+    runnerState: unknown,
+    expectedVersion: number,
+    namespace?: string
 ): VersionedUpdateResult<unknown | null> {
     const now = Date.now()
     const normalized = runnerState ?? null
@@ -124,7 +179,7 @@ export function updateMachineRunnerState(
         db,
         table: 'machines',
         id,
-        namespace,
+        ...(namespace === undefined ? {} : { namespace }),
         field: 'runner_state',
         versionField: 'runner_state_version',
         expectedVersion,
