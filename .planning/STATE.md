@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-05-21T09:08:41.643Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-05-21T09:14:03.939Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 12
   completed_phases: 3
   total_plans: 22
-  completed_plans: 19
+  completed_plans: 20
   percent: 25
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 04 (cut-deployment-infrastructure) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [█████████░] 86%
+Progress: [█████████░] 91%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [█████████░] 86%
 | Phase 03 P06 | 2min | 3 tasks | 12 files |
 | Phase 03 P07 | 2min 49s | 1 tasks | 6 files |
 | Phase 04 P01 | 2min | 2 tasks | 5 files |
+| Phase 04 P02 | 2 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Plan 07 adds a fail-closed namespace source guard over `cli/src`, `hub/src`, `web/src`, and `shared/src`; explicit source scan and full suite pass.
 - [Phase 04]: Plan 01 removed hub built-in tunnel startup, TLS gate, relay CLI/env reads, token-bearing QR/direct URL output, and hosted relay-web serving.
 - [Phase 04]: `HAPI_PUBLIC_URL` remains the neutral Tailscale/public URL output path; remaining CUT-10 work continues in Plans 04-02 through 04-04.
+- [Phase 04]: Kept HAPI_PUBLIC_URL as the only public URL config path while legacy relay settings fail through old-field validation. — Plan 04-02 converged relay config/settings without compatibility shims.
+
 ### Pending Todos
 
 None yet.
@@ -117,6 +120,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-21T09:08:41.637Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-05-21T09:13:56.651Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
