@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-05-21T04:09:33.962Z"
-last_activity: 2026-05-21 -- Phase 03 Plan 02 complete
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-05-21T04:17:30.479Z"
+last_activity: 2026-05-21 -- Phase 03 Plan 03 complete
 progress:
   total_phases: 12
   completed_phases: 2
   total_plans: 18
-  completed_plans: 13
-  percent: 72
+  completed_plans: 14
+  percent: 78
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 3
-Plan: 03
+Plan: 04
 Status: In Progress
-Last activity: 2026-05-21 -- Phase 03 Plan 02 complete
+Last activity: 2026-05-21 -- Phase 03 Plan 03 complete
 
-Progress: [███████░░░] 72%
+Progress: [████████░░] 78%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 13
+- Total plans completed: 14
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -61,6 +61,7 @@ Progress: [███████░░░] 72%
 | Phase 02 P06 | 3min | 3 tasks | 3 files |
 | Phase 03 P01 | 3min 20s | 2 tasks | 8 files |
 | Phase 03 P02 | 6min 24s | 3 tasks | 12 files |
+| Phase 03 P03 | 5min 25s | 2 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Plan 01 leaves explicit transitional default namespace constants only at deferred JWT/socket/store consumers until Plans 03-03 and 03-04 cut those contracts atomically.
 - [Phase 03]: Plan 02 adds owner-only store/cache/SyncEngine facade overloads while legacy namespace overloads remain temporarily for Plans 03-03 through 03-06.
 - [Phase 03]: Plan 02 push owner-only facade writes through the current physical namespace column as a temporary storage detail until Plan 03-06 removes the column and endpoint-only uniqueness lands.
+- [Phase 03]: Plan 03 narrows web JWTs and WebAppEnv to owner-only { uid } identity; Hono routes and guards no longer read namespace.
+- [Phase 03]: Plan 03 removes namespace enrichment/filtering from EventPublisher and SSE subscriptions while keeping all/sessionId/machineId relevance filters.
+- [Phase 03]: Plan 03 keeps a temporary owner visibility scope until Plan 03-04 removes remaining visibility/push namespace APIs.
 
 ### Pending Todos
 
@@ -101,6 +105,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-21T04:09:33.956Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-05-21T04:17:30.473Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
