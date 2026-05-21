@@ -238,9 +238,9 @@ Each machine gets a unique ID stored in `~/.hapi/settings.json`. This allows:
 
 ## Operations
 
-### Self-hosted tunnels
+### User-managed network access
 
-If you prefer not to use the public relay (e.g., for lower latency or self-managed infrastructure), you can use these alternatives:
+For phone access outside your local network, expose the local hub through a network path you control, such as Tailscale, Cloudflare Tunnel, or your own reverse proxy:
 
 <details>
 <summary>Cloudflare Tunnel</summary>

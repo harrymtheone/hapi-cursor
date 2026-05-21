@@ -2,7 +2,7 @@
 
 [Happy](https://github.com/slopus/happy) is an excellent project. So why build HAPI?
 
-**The short answer**: Happy uses a centralized server that stores your encrypted data. HAPI is decentralized — each user runs their own hub, and the relay server only forwards encrypted traffic without storing anything. These different goals lead to fundamentally different architectures.
+**The short answer**: Happy uses a centralized server that stores your encrypted data. HAPI is decentralized — each user runs their own hub and exposes it only through a network path they control. These different goals lead to fundamentally different architectures.
 
 ## TL;DR
 
@@ -11,7 +11,7 @@
 | **Architecture** | Centralized (cloud server stores encrypted data) | Decentralized (each user runs own hub) |
 | **Users** | Multi-user on shared server | Any number (each runs own hub) |
 | **Data** | Encrypted on server (server cannot read) | Stays on your machine |
-| **Encryption** | Application-layer E2EE (client encrypts before sending) | WireGuard + TLS via relay; or none needed if self-hosted |
+| **Encryption** | Application-layer E2EE (client encrypts before sending) | User-managed private network or HTTPS |
 | **Deployment** | Multiple services (PostgreSQL, Redis, app server) | Single binary |
 | **Complexity** | High (E2EE, key management, scaling) | Low (one command) |
 

@@ -104,7 +104,7 @@ Recent decisions affecting current work:
 - [Phase 04]: `HAPI_PUBLIC_URL` remains the neutral Tailscale/public URL output path; remaining CUT-10 work continues in Plans 04-02 through 04-04.
 - [Phase 04]: Kept HAPI_PUBLIC_URL as the only public URL config path while legacy relay settings fail through old-field validation. — Plan 04-02 converged relay config/settings without compatibility shims.
 - [Phase 04]: Plan 03 removed the dangerous remote-log upload path outright while preserving local logger output and legitimate HAPI_API_URL direct-connect diagnostics. — CUT-11 and D-57 through D-60 require deleting remote uploads without breaking direct CLI-to-hub configuration.
-- [Phase 04]: Removed tunwg from the single-exe and embedded runtime asset pipeline while preserving ripgrep and difftastic archive extraction. — Task 04-04-01 required deleting only tunwg-specific runtime asset code; shared runtime extraction stayed intact.
+- [Phase 04]: Removed the legacy tunnel binary from the single-exe and embedded runtime asset pipeline while preserving ripgrep and difftastic archive extraction. — Task 04-04-01 required deleting only the tunnel-specific runtime asset code; shared runtime extraction stayed intact.
 - [Phase 04]: Phase 04 guard exclusions are planning-only for deployment-infrastructure residue; docs, website, README, and runtime source are not whitelisted. — The plan required fail-closed zero-tolerance scans and explicitly prohibited broad docs or source whitelists.
 
 ### Pending Todos
