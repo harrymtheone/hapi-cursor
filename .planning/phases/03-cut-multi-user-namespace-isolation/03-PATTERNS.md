@@ -53,6 +53,8 @@
 | `shared/src/socket.ts` | shared socket types | event-driven validation | `shared/src/socket.ts` | exact |
 | `cli/src/api/types.ts` | client schema mirror | runtime validation | `cli/src/api/types.ts` | exact |
 | `cli/src/api/api.ts` | API client | request-response | `cli/src/api/api.ts` | exact |
+| `web/src/types/api.ts` | web API type mirror | runtime DTO typing | `web/src/types/api.ts` | exact |
+| `web/src/hooks/useSSE.ts` | web SSE hook | streaming + cache updates | `web/src/hooks/useSSE.ts` | exact |
 | `scripts/check-no-cut-agents.sh` | guard script | batch validation | `scripts/check-no-cut-agents.sh` | role-match |
 
 ## Pattern Assignments
@@ -1037,6 +1039,18 @@ return {
 ```
 
 **Target pattern:** remove `namespace` from local schema and returned `Session` mapping. Keep response validation and `apiValidationError` behavior.
+
+---
+
+### `web/src/types/api.ts` and `web/src/hooks/useSSE.ts` (web API mirror + streaming hook)
+
+**Analogs:** `web/src/types/api.ts`, `web/src/hooks/useSSE.ts`
+
+**API type mirror pattern:** keep existing exported DTO names and import shape; remove only `namespace` properties from Session-like response types. Do not move canonical contracts into `shared/` in this phase because Phase 7 owns wire-contract unification.
+
+**SSE hook pattern:** keep current EventSource setup, token/query handling, TanStack Query cache updates, and reconnect behavior. Remove namespace reads/writes from event payload assumptions only; do not redesign patch fallback or unknown-key handling because Phase 7 owns the SSE patch contract.
+
+**Target pattern:** `web/src/types/api.ts` mirrors the namespace-free server responses, and `web/src/hooks/useSSE.ts` continues handling all/sessionId/machineId event relevance without any namespace field or `:ns` token assumption.
 
 ---
 

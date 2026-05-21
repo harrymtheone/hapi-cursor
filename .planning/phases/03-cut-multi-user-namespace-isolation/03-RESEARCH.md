@@ -338,19 +338,19 @@ private shouldSend(connection: SSEConnection, event: SyncEvent): boolean {
 
 | # | Claim | Section | Risk if Wrong |
 |---|-------|---------|---------------|
-| A1 | Offline migration entry can live under `hub/scripts/` or `hub/src/store/` as planner chooses. [ASSUMED] | Recommended Project Structure | If project has a preferred migration-tool location not discovered, planner may place the script inconsistently. |
+| A1 | Offline migration entrypoint is fixed as `hub/scripts/migrate-namespace-isolation.ts`. [RESOLVED] | Recommended Project Structure | Low; no existing offline migration convention was found, and the phase now names the script explicitly. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Offline migration exact entrypoint name**
-   - What we know: Phase requires an offline migration entry and forbids runtime compatibility migration. [VERIFIED: CONTEXT D-41]
-   - What's unclear: There is no existing offline migration script; only runtime migrations/tests exist. [VERIFIED: Glob + rg]
-   - Recommendation: planner should create a narrow script name explicitly tied to CUT-09, e.g. `hub/scripts/migrate-namespace-isolation.ts`, and include a focused test or dry-run instructions. [ASSUMED]
+1. **Offline migration exact entrypoint name — RESOLVED**
+   - Decision: create `hub/scripts/migrate-namespace-isolation.ts` as the narrow CUT-09 offline migration entrypoint. [RESOLVED]
+   - Rationale: Phase requires an offline migration entry and forbids runtime compatibility migration; no existing offline migration script convention exists. [VERIFIED: CONTEXT D-41, Glob + rg]
+   - Planner impact: Plan 03-02 owns this file and verifies `Store.initSchema()` does not import or invoke it.
 
-2. **Schema version bump target**
-   - What we know: current `SCHEMA_VERSION` is 9. [VERIFIED: `hub/src/store/index.ts`]
-   - What's unclear: whether Phase 03 should bump to 10 now or reserve schema versioning cleanup for Phase 10. [VERIFIED: CONTEXT D-41/Phase 10 boundary]
-   - Recommendation: bump to 10 for new schema if `Store` must reject old v9 DBs, but keep runtime migration ladder out; offline script migrates v9 to v10. [ASSUMED]
+2. **Schema version bump target — RESOLVED**
+   - Decision: bump store schema version from 9 to 10 in Phase 03. [RESOLVED]
+   - Rationale: namespace-free physical schema should reject old v9 DBs at runtime while the offline script migrates v9 data to v10; Phase 10 still owns general runtime migration ladder cleanup. [VERIFIED: CONTEXT D-41/Phase 10 boundary]
+   - Planner impact: Plan 03-02 owns `SCHEMA_VERSION = 10`, `PRAGMA user_version = 10` in the offline script, and synthetic v9-to-v10 migration coverage.
 
 ## Environment Availability
 

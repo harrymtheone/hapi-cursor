@@ -27,10 +27,10 @@ created: 2026-05-21
 
 ## Sampling Rate
 
-- **After every task commit:** Run `bun typecheck && bun run test`
-- **After every plan wave:** Run `bun typecheck && bun run test`, then the Phase 03 ripgrep guard for `namespace|:ns`
+- **After every plan commit:** Run `bun typecheck && bun run test`
+- **After every plan wave:** Run `bun typecheck && bun run test`; after Plan 03-07, also run the Phase 03 ripgrep guard for `namespace|:ns`
 - **Before `/gsd:verify-work`:** Full suite and zero-keyword guard must be green
-- **Max feedback latency:** one task commit; do not batch multiple namespace-surface rewrites behind a red build
+- **Max feedback latency:** one plan commit; plans are dependency-ordered green slices so old namespace-bearing internals may coexist temporarily only until their later deletion plan
 
 ---
 
@@ -38,23 +38,34 @@ created: 2026-05-21
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 03-01-01 | 01 | 1 | CUT-09 | T-03-01 | `CLI_API_TOKEN` is compared as one opaque secret, including colon-bearing values | unit | `bun test hub/src/utils/accessToken.test.ts` | yes | pending |
-| 03-01-02 | 01 | 1 | CUT-09 | T-03-02 | JWT payload contains `uid` only; web/terminal middleware do not require `ns` | unit/integration | `bun test hub/src/socket/handlers/terminal.test.ts hub/src/web/routes/sessions.test.ts` | yes | pending |
-| 03-02-01 | 02 | 1 | CUT-09 | T-03-03 | Store schema and methods do not scope sessions/machines/push by namespace | unit | `bun test hub/src/store/*.test.ts hub/src/sync/sessionModel.test.ts` | yes | pending |
-| 03-02-02 | 02 | 1 | CUT-09 | T-03-04 | `users`/`UserStore` multi-platform binding storage is removed or proven unused | source/assertion | `bun typecheck && bun run test` | yes | pending |
-| 03-03-01 | 03 | 2 | CUT-09 | T-03-05 | SSE keeps session/machine relevance filters without tenant filtering | unit | `bun test hub/src/sse/sseManager.test.ts` | yes | pending |
-| 03-03-02 | 03 | 2 | CUT-09 | T-03-06 | Socket handlers and terminal access no longer emit namespace-specific errors | unit/integration | `bun test hub/src/socket/handlers/terminal.test.ts` | yes | pending |
-| 03-04-01 | 04 | 3 | CUT-09 | — | Source guard rejects namespace residue in `cli/src`, `hub/src`, `web/src`, `shared/src` outside whitelist | guard | `bun run test` plus explicit `rg -n "namespace|:ns" cli/src hub/src web/src shared/src` check in plan verification | yes | pending |
+| 03-01-01 | 01 | 1 | CUT-09 | T-03-01 | Access token parser/config accepts colon-bearing opaque secrets and deletes parser namespace symbols | unit/source | `bun test hub/src/utils/accessToken.test.ts hub/src/config/cliApiToken.test.ts` plus focused auth token `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-01-02 | 01 | 1 | CUT-09 | T-03-02 | `/api/cli/*` bearer auth compares the whole opaque token and does not set namespace route state | source | focused CLI route `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-02-01 | 02 | 2 | CUT-09 | T-03-04 | Session/machine store facades expose namespace-free id/version APIs while old internals temporarily coexist | unit/source | `bun test hub/src/store/*.test.ts` plus store facade `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-02-02 | 02 | 2 | CUT-09 | T-03-04 | Push store exposes namespace-free subscription facades for later push service migration | unit/source | `bun test hub/src/store/*.test.ts` plus push store facade `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-02-03 | 02 | 2 | CUT-09 | T-03-05 | SessionCache, MachineCache, and SyncEngine expose owner-only access/list/create/update APIs | unit/source | `bun test hub/src/sync/sessionModel.test.ts hub/src/sync/aliveEvents.test.ts` plus sync facade `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-03-01 | 03 | 3 | CUT-09 | T-03-06..T-03-07 | Web auth signs/verifies `{ uid }`; WebAppEnv narrowing and every Hono route/guard `c.get('namespace')` cleanup happen in the same green slice | unit/integration/source | `bun test hub/src/web/routes/sessions.test.ts` plus focused web auth/route `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-03-02 | 03 | 3 | CUT-09 | T-03-08 | Events route, SSEManager subscription shape, EventPublisher constructor, and SyncEngine constructor/callsite cleanup happen together while preserving relevance filters | unit/source | `bun test hub/src/sse/sseManager.test.ts` plus focused realtime `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-04-01 | 04 | 4 | CUT-09 | T-03-08 | `/cli` Socket.IO auth compares the whole opaque token; SocketData deletion, server writes, terminal access, and CLI handler reads are cleaned up atomically | unit/source | `bun test hub/src/socket/handlers/terminal.test.ts` plus focused socket/server/socketTypes/handler `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-04-02 | 04 | 4 | CUT-09 | T-03-09 | Visibility and push delivery collapse to single-owner global behavior without namespace | unit/source | `bun test hub/src/push/pushNotificationChannel.test.ts hub/src/notifications/notificationHub.test.ts` plus focused push `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-05-01 | 05 | 5 | CUT-09 | T-03-10 | Shared Session/SyncEvent/socket contracts and hub sync DTOs contain no namespace fields/reasons | unit/source | `bun test hub/src/sync/sessionModel.test.ts hub/src/sync/aliveEvents.test.ts` plus shared/sync `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-05-02 | 05 | 5 | CUT-09 | T-03-11 | CLI and web mirrors no longer expect `Session.namespace` or token `:ns` assumptions | unit/source | `bun test cli/src/api/api.extraHeaders.test.ts cli/src/agent/sessionFactory.test.ts` plus CLI/web mirror `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-06-01 | 06 | 6 | CUT-09 | T-03-12 | Runtime schema v10 deletes namespace columns/indexes and the users store/table | unit/source | `bun test hub/src/store/*.test.ts` plus runtime schema `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-06-02 | 06 | 6 | CUT-09 | T-03-12 | Store SQL helpers and wrappers delete old namespace methods and params | unit/source | `bun test hub/src/store/*.test.ts` plus store source `rg`, then `bun typecheck && bun run test` | yes | pending |
+| 03-06-03 | 06 | 6 | CUT-09 | T-03-13..T-03-14 | Offline migration entry migrates v9 namespace-shaped data to schema version 10 and is not invoked at runtime | unit/source | `bun test hub/scripts/migrate-namespace-isolation.test.ts hub/src/store/*.test.ts` plus migration non-invocation `rg`, then `bun typecheck && bun run test` | planned | pending |
+| 03-07-01 | 07 | 7 | CUT-09 | T-03-15..T-03-16 | Source guard rejects `namespace|:ns` in `cli/src`, `hub/src`, `web/src`, `shared/src`; full phase gate is green | guard/source | `bash scripts/check-no-cut-agents.sh && ! rg -n "namespace|:ns" cli/src hub/src web/src shared/src && bun typecheck && bun run test` | yes | pending |
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] Rewrite `hub/src/utils/accessToken.test.ts` for opaque token semantics, including colon-bearing exact token behavior.
-- [ ] Update or add auth/JWT tests so `{ uid }` is the only required claim.
-- [ ] Rewrite or delete `hub/src/store/namespace.test.ts` into single-owner store/schema tests.
-- [ ] Update `scripts/check-no-cut-agents.sh` or equivalent guard path with Phase 03 `namespace|:ns` rules and explicit whitelist.
-- [ ] Decide offline migration entry path/name before store schema implementation starts.
+- [ ] Plan 03-01 rewrites opaque token/config and `/api/cli/*` bearer token comparison only; WebAppEnv and SocketData cuts are deferred to their atomic consumer plans.
+- [ ] Plan 03-02 adds namespace-free store/cache/SyncEngine facades before route/socket consumers migrate.
+- [ ] Plan 03-03 migrates web auth, all Hono route/guard callsites, events route, SSEManager, EventPublisher, and SyncEngine event construction together.
+- [ ] Plan 03-04 migrates SocketData, Socket.IO server writes, terminal access, CLI Socket.IO handlers, visibility, and push delivery together.
+- [ ] Plan 03-05 deletes namespace from shared contracts and CLI/web mirrors after callsites are ready.
+- [ ] Plan 03-06 deletes physical runtime namespace state and adds the offline v9-to-v10 migration fixture.
+- [ ] Plan 03-07 updates `scripts/check-no-cut-agents.sh` with Phase 03 `namespace|:ns` rules and explicit source-scope scan.
+- [x] Decide offline migration entry path/name before store schema implementation starts: `hub/scripts/migrate-namespace-isolation.ts`.
 
 ---
 
@@ -72,7 +83,7 @@ created: 2026-05-21
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verify
 - [ ] Wave 0 covers all missing references
 - [ ] No watch-mode flags
-- [ ] Feedback latency is one task commit
+- [ ] Feedback latency is one plan commit
 - [ ] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending

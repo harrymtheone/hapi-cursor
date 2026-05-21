@@ -74,7 +74,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `CLI_API_TOKEN` parsing no longer splits on `:`; the token is treated as a single opaque secret
   4. SQLite store queries no longer scope rows by `namespace`; the `users` table `platform` column is removed via an offline migration tool entry; in-memory cache keys no longer include namespace
   5. `bun run test` exercises auth + session + machine flows without any namespace test fixture
-**Plans**: TBD
+**Plans**: 7 plans
+- [ ] 03-01-PLAN.md — Opaque token parsing/config and `/api/cli/*` bearer token comparison
+- [ ] 03-02-PLAN.md — Namespace-free store/cache/SyncEngine facades while old internals temporarily coexist
+- [ ] 03-03-PLAN.md — Atomic web auth/routes plus EventPublisher/SSE/SyncEngine namespace contract cleanup
+- [ ] 03-04-PLAN.md — Atomic Socket.IO server/data/CLI handler cleanup plus visibility and push delivery
+- [ ] 03-05-PLAN.md — Shared Session/SyncEvent/socket contracts plus CLI/web mirrors without namespace
+- [ ] 03-06-PLAN.md — Runtime schema v10, user-store deletion, namespace-free store SQL, and offline v9-to-v10 migration
+- [ ] 03-07-PLAN.md — Final `namespace|:ns` source guard and full validation gate
 
 ### Phase 4: Cut deployment infrastructure
 **Goal**: Hub no longer ships a built-in WireGuard/TLS tunnel binary or an upstream remote-log upload channel.
@@ -189,7 +196,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
-| 3. Cut multi-user namespace isolation | 0/TBD | Not started | - |
+| 3. Cut multi-user namespace isolation | 0/7 | Not started | - |
 | 4. Cut deployment infrastructure | 0/TBD | Not started | - |
 | 5. Flavor consolidation + capability abstraction | 0/TBD | Not started | - |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
