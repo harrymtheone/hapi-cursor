@@ -78,7 +78,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 03-01-PLAN.md — Opaque token parsing/config and `/api/cli/*` bearer token comparison
 - [x] 03-02-PLAN.md — Namespace-free store/cache/SyncEngine facades while old internals temporarily coexist
 - [x] 03-03-PLAN.md — Atomic web auth/routes plus EventPublisher/SSE/SyncEngine namespace contract cleanup
-- [ ] 03-04-PLAN.md — Atomic Socket.IO server/data/CLI handler cleanup plus visibility and push delivery
+- [x] 03-04-PLAN.md — Atomic Socket.IO server/data/CLI handler cleanup plus visibility and push delivery
 - [ ] 03-05-PLAN.md — Shared Session/SyncEvent/socket contracts plus CLI/web mirrors without namespace
 - [ ] 03-06-PLAN.md — Runtime schema v10, user-store deletion, namespace-free store SQL, and offline v9-to-v10 migration
 - [ ] 03-07-PLAN.md — Final `namespace|:ns` source guard and full validation gate
@@ -196,7 +196,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
-| 3. Cut multi-user namespace isolation | 3/7 | In Progress|  |
+| 3. Cut multi-user namespace isolation | 4/7 | In Progress|  |
 | 4. Cut deployment infrastructure | 0/TBD | Not started | - |
 | 5. Flavor consolidation + capability abstraction | 0/TBD | Not started | - |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
