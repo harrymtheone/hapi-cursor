@@ -40,12 +40,7 @@ function isWeakToken(token: string): boolean {
     return weakPatterns.some(p => p.test(token))
 }
 
-function validateCliApiToken(rawToken: string, source: 'env' | 'file'): string {
-    if (rawToken.includes(':')) {
-        throw new Error(
-            `CLI API token from ${source} must be the base token only; namespace suffixes are not accepted.`
-        )
-    }
+function validateCliApiToken(rawToken: string): string {
     return rawToken
 }
 
@@ -63,7 +58,7 @@ export async function getOrCreateCliApiToken(dataDir: string): Promise<CliApiTok
     // 1. Environment variable has highest priority
     const envToken = process.env.CLI_API_TOKEN
     if (envToken) {
-        const token = validateCliApiToken(envToken, 'env')
+        const token = validateCliApiToken(envToken)
         if (isWeakToken(token)) {
             console.warn('[WARN] CLI_API_TOKEN appears to be weak. Consider using a stronger secret.')
         }
@@ -84,7 +79,7 @@ export async function getOrCreateCliApiToken(dataDir: string): Promise<CliApiTok
             if (!settings.cliApiToken) {
                 return null
             }
-            return { value: validateCliApiToken(settings.cliApiToken, 'file') }
+            return { value: validateCliApiToken(settings.cliApiToken) }
         },
         writeValue: (settings, value) => {
             settings.cliApiToken = value

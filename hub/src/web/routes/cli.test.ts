@@ -10,15 +10,51 @@ function createApp(engine: Partial<SyncEngine>) {
     return app
 }
 
-function authHeaders() {
+function authHeaders(token = 'test-token') {
     return {
-        authorization: 'Bearer test-token'
+        authorization: `Bearer ${token}`
     }
 }
 
 beforeAll(async () => {
     const config = await createConfiguration()
     config._setCliApiToken('test-token', 'env', false)
+})
+
+describe('cli bearer auth', () => {
+    it('compares colon-bearing bearer tokens as opaque secrets', async () => {
+        const config = await createConfiguration()
+        config._setCliApiToken('test-token:runner', 'env', false)
+        const app = createApp({
+            listLocalResumableSessions: () => []
+        } as never)
+
+        const response = await app.request('/cli/sessions/resumable', {
+            headers: authHeaders('test-token:runner')
+        })
+
+        expect(response.status).toBe(200)
+        expect(await response.json()).toEqual({ sessions: [] })
+
+        config._setCliApiToken('test-token', 'env', false)
+    })
+
+    it('does not derive route namespace state from token suffixes', async () => {
+        const seenNamespaces: string[] = []
+        const app = createApp({
+            listLocalResumableSessions: (namespace: string) => {
+                seenNamespaces.push(namespace)
+                return []
+            }
+        } as never)
+
+        const response = await app.request('/cli/sessions/resumable', {
+            headers: authHeaders()
+        })
+
+        expect(response.status).toBe(200)
+        expect(seenNamespaces).toEqual(['default'])
+    })
 })
 
 describe('cli resume routes', () => {

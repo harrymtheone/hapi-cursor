@@ -17,6 +17,7 @@ const jwtPayloadSchema = z.object({
     uid: z.number(),
     ns: z.string()
 })
+const LEGACY_CLI_SOCKET_NAMESPACE = 'default'
 
 const DEFAULT_IDLE_TIMEOUT_MS = 15 * 60_000
 const DEFAULT_MAX_TERMINALS = 4
@@ -103,10 +104,10 @@ export function createSocketServer(deps: SocketServerDeps): {
         const auth = socket.handshake.auth as Record<string, unknown> | undefined
         const token = typeof auth?.token === 'string' ? auth.token : null
         const parsedToken = token ? parseAccessToken(token) : null
-        if (!parsedToken || !constantTimeEquals(parsedToken.baseToken, configuration.cliApiToken)) {
+        if (!parsedToken || !constantTimeEquals(parsedToken, configuration.cliApiToken)) {
             return next(new Error('Invalid token'))
         }
-        socket.data.namespace = parsedToken.namespace
+        socket.data.namespace = LEGACY_CLI_SOCKET_NAMESPACE
         next()
     })
     cliNs.on('connection', (socket) => registerCliHandlers(socket as CliSocketWithData, {

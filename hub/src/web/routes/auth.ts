@@ -10,6 +10,7 @@ import type { WebAppEnv } from '../middleware/auth'
 const authBodySchema = z.object({
     accessToken: z.string()
 })
+const LEGACY_JWT_NAMESPACE = 'default'
 
 export function createAuthRoutes(jwtSecret: Uint8Array): Hono<WebAppEnv> {
     const app = new Hono<WebAppEnv>()
@@ -23,12 +24,12 @@ export function createAuthRoutes(jwtSecret: Uint8Array): Hono<WebAppEnv> {
 
         const configuration = getConfiguration()
         const parsedToken = parseAccessToken(parsed.data.accessToken)
-        if (!parsedToken || !constantTimeEquals(parsedToken.baseToken, configuration.cliApiToken)) {
+        if (!parsedToken || !constantTimeEquals(parsedToken, configuration.cliApiToken)) {
             return c.json({ error: 'Invalid access token' }, 401)
         }
 
         const userId = await getOrCreateOwnerId()
-        const namespace = parsedToken.namespace
+        const namespace = LEGACY_JWT_NAMESPACE
 
         const token = await new SignJWT({ uid: userId, ns: namespace })
             .setProtectedHeader({ alg: 'HS256' })
