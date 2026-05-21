@@ -93,7 +93,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `cli/src/ui/logger.ts` no longer forwards logs to `HAPI_API_URL`; `cli/src/ui/doctor.ts` no longer surfaces the remote-log toggle
   4. `bun run build:single-exe` succeeds without any tunwg download or extraction step; QR-code rendering for tunnel URL removed from `hub/src/index.ts`
   5. Documentation references to relay/tunnel features removed from inline JSDoc and code comments (deferred prose docs handled in Phase 12)
-**Plans**: TBD
+**Plans**: 4 plans
+- [x] 04-01-PLAN.md — Tunnel and hosted relay-web runtime deletion
+- [ ] 04-02-PLAN.md — Relay config/settings/env convergence
+- [ ] 04-03-PLAN.md — Remote logging and doctor cleanup
+- [ ] 04-04-PLAN.md — Build/runtime assets, lockfile, guard, and final gate
 
 ### Phase 5: Flavor consolidation + capability abstraction
 **Goal**: `shared/src/flavors.ts` describes Cursor as the only flavor with an extensible, populated capability set; every capability check reads from this table.
@@ -197,7 +201,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
 | 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
-| 4. Cut deployment infrastructure | 0/TBD | Not started | - |
+| 4. Cut deployment infrastructure | 1/4 | In Progress|  |
 | 5. Flavor consolidation + capability abstraction | 0/TBD | Not started | - |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
 | 7. Wire contracts unification & SSE patch contract | 0/TBD | Not started | - |

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 4 context gathered
-last_updated: "2026-05-21T05:19:53.429Z"
-last_activity: 2026-05-21 -- Phase 03 marked complete
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-05-21T09:08:41.643Z"
+last_activity: 2026-05-21
 progress:
   total_phases: 12
   completed_phases: 3
-  total_plans: 18
-  completed_plans: 18
+  total_plans: 22
+  completed_plans: 19
   percent: 25
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 4 — cut deployment infrastructure
+**Current focus:** Phase 04 — cut-deployment-infrastructure
 
 ## Current Position
 
-Phase: 03 — COMPLETE
-Plan: TBD
-Status: Phase 03 complete
-Last activity: 2026-05-21 -- Phase 03 marked complete
+Phase: 04 (cut-deployment-infrastructure) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-05-21
 
-Progress: [██████████] 100%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [██████████] 100%
 | Phase 03 P05 | 5min 13s | 2 tasks | 10 files |
 | Phase 03 P06 | 2min | 3 tasks | 12 files |
 | Phase 03 P07 | 2min 49s | 1 tasks | 6 files |
+| Phase 04 P01 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -96,7 +97,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Plan 06 cuts runtime SQLite store to schema v10 with no namespace columns/indexes or users table; old v9 namespace-shaped DBs require the offline migration script.
 - [Phase 03]: Plan 06 adds `hub/scripts/migrate-namespace-isolation.ts` for explicit-path v9-to-v10 migration, preserving sessions/machines/messages and deduping push subscriptions by endpoint.
 - [Phase 03]: Plan 07 adds a fail-closed namespace source guard over `cli/src`, `hub/src`, `web/src`, and `shared/src`; explicit source scan and full suite pass.
-
+- [Phase 04]: Plan 01 removed hub built-in tunnel startup, TLS gate, relay CLI/env reads, token-bearing QR/direct URL output, and hosted relay-web serving.
+- [Phase 04]: `HAPI_PUBLIC_URL` remains the neutral Tailscale/public URL output path; remaining CUT-10 work continues in Plans 04-02 through 04-04.
 ### Pending Todos
 
 None yet.
@@ -115,6 +117,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-21T05:19:53.423Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-cut-deployment-infrastructure/04-CONTEXT.md
+Last session: 2026-05-21T09:08:41.637Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None
