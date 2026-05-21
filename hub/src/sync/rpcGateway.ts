@@ -92,7 +92,7 @@ export class RpcGateway {
     }
 
     async abortSession(sessionId: string): Promise<void> {
-        await this.sessionRpc(sessionId, 'abort', { reason: 'User aborted via Telegram Bot' })
+        await this.sessionRpc(sessionId, 'abort', { reason: 'User aborted via webapp' })
     }
 
     async switchSession(sessionId: string, to: 'remote' | 'local'): Promise<void> {

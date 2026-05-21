@@ -348,11 +348,11 @@ export class MessageService {
             text: string
             localId?: string | null
             attachments?: AttachmentMetadata[]
-            sentFrom?: 'telegram-bot' | 'webapp'
+            sentFrom?: 'webapp'
             scheduledAt?: number | null
         }
     ): Promise<void> {
-        // Defence-in-depth invariant for non-REST callers (Telegram bot, MCP,
+        // Defence-in-depth invariant for non-REST callers (MCP,
         // internal callers).  Attachment paths live under the CLI session's
         // upload directory which `cleanupUploadDir` purges on session end; a
         // mature scheduled emit after the CLI exits would dereference deleted

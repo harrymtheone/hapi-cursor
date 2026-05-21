@@ -13,8 +13,6 @@ import { getSettingsFile, readSettings, writeSettings } from './settings'
 const OLD_SETTINGS_FIELDS = ['webappHost', 'webappPort', 'webappUrl'] as const
 
 export interface ServerSettings {
-    telegramBotToken: string | null
-    telegramNotification: boolean
     serverChanSendKey: string | null
     serverChanNotification: boolean
     listenHost: string
@@ -26,8 +24,6 @@ export interface ServerSettings {
 export interface ServerSettingsResult {
     settings: ServerSettings
     sources: {
-        telegramBotToken: 'env' | 'file' | 'default'
-        telegramNotification: 'env' | 'file' | 'default'
         serverChanSendKey: 'env' | 'file' | 'default'
         serverChanNotification: 'env' | 'file' | 'default'
         listenHost: 'env' | 'file' | 'default'
@@ -103,8 +99,6 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
 
     let needsSave = false
     const sources: ServerSettingsResult['sources'] = {
-        telegramBotToken: 'default',
-        telegramNotification: 'default',
         serverChanSendKey: 'default',
         serverChanNotification: 'default',
         listenHost: 'default',
@@ -112,34 +106,6 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
         publicUrl: 'default',
         corsOrigins: 'default',
     }
-    // telegramBotToken: env > file > null
-    let telegramBotToken: string | null = null
-    if (process.env.TELEGRAM_BOT_TOKEN) {
-        telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
-        sources.telegramBotToken = 'env'
-        if (settings.telegramBotToken === undefined) {
-            settings.telegramBotToken = telegramBotToken
-            needsSave = true
-        }
-    } else if (settings.telegramBotToken !== undefined) {
-        telegramBotToken = settings.telegramBotToken
-        sources.telegramBotToken = 'file'
-    }
-
-    // telegramNotification: env > file > true
-    let telegramNotification = true
-    if (process.env.TELEGRAM_NOTIFICATION !== undefined) {
-        telegramNotification = process.env.TELEGRAM_NOTIFICATION === 'true'
-        sources.telegramNotification = 'env'
-        if (settings.telegramNotification === undefined) {
-            settings.telegramNotification = telegramNotification
-            needsSave = true
-        }
-    } else if (settings.telegramNotification !== undefined) {
-        telegramNotification = settings.telegramNotification
-        sources.telegramNotification = 'file'
-    }
-
     // serverChanSendKey: env > file > null
     let serverChanSendKey: string | null = null
     if (process.env.SERVERCHAN_SENDKEY) {
@@ -237,8 +203,6 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
 
     return {
         settings: {
-            telegramBotToken,
-            telegramNotification,
             serverChanSendKey,
             serverChanNotification,
             listenHost,

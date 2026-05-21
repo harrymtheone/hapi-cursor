@@ -12,8 +12,6 @@ export interface Settings {
         privateKey: string
     }
     // Server configuration (persisted from environment variables)
-    telegramBotToken?: string
-    telegramNotification?: boolean
     serverChanSendKey?: string
     serverChanNotification?: boolean
     listenHost?: string

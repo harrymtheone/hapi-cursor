@@ -27,7 +27,7 @@ const sendMessageBodySchema = z.object({
     (data) => data.scheduledAt == null || typeof data.localId === 'string',
     { message: 'scheduledAt requires localId', path: ['localId'] }
 ).refine(
-    // Cap scheduledAt at 7 days from now to prevent zombie rows.  REST/Telegram/
+    // Cap scheduledAt at 7 days from now to prevent zombie rows.  REST/
     // automation callers bypass the frontend 7-day clamp, so we enforce it here.
     // Evaluated at request time so Date.now() is fresh on every call.
     (data) => data.scheduledAt == null || data.scheduledAt <= Date.now() + 7 * 24 * 60 * 60 * 1000,

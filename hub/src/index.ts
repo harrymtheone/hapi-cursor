@@ -5,7 +5,6 @@
  * - Web app + HTTP API
  * - Socket.IO for CLI connections
  * - SSE updates for the web UI
- * - Optional Telegram bot for notifications and Mini App entrypoint
  */
 
 import { createConfiguration, type ConfigSource } from './configuration'
@@ -13,7 +12,6 @@ import { Store } from './store'
 import { SyncEngine, type SyncEvent } from './sync/syncEngine'
 import { NotificationHub } from './notifications/notificationHub'
 import type { NotificationChannel } from './notifications/notificationTypes'
-import { HappyBot } from './telegram/bot'
 import { startWebServer } from './web/server'
 import { getOrCreateJwtSecret } from './config/jwtSecret'
 import { createSocketServer } from './socket/server'
@@ -99,7 +97,6 @@ function mergeCorsOrigins(base: string[], extra: string[]): string[] {
 }
 
 let syncEngine: SyncEngine | null = null
-let happyBot: HappyBot | null = null
 let webServer: BunServer<WebSocketData> | null = null
 let sseManager: SSEManager | null = null
 let visibilityTracker: VisibilityTracker | null = null
@@ -142,14 +139,6 @@ async function main() {
     console.log(`[Hub] HAPI_LISTEN_PORT: ${config.listenPort} (${formatSource(config.sources.listenPort)})`)
     console.log(`[Hub] HAPI_PUBLIC_URL: ${config.publicUrl} (${formatSource(config.sources.publicUrl)})`)
 
-    if (!config.telegramEnabled) {
-        console.log('[Hub] Telegram: disabled (no TELEGRAM_BOT_TOKEN)')
-    } else {
-        const tokenSource = formatSource(config.sources.telegramBotToken)
-        console.log(`[Hub] Telegram: enabled (${tokenSource})`)
-        const notificationSource = formatSource(config.sources.telegramNotification)
-        console.log(`[Hub] Telegram notifications: ${config.telegramNotification ? 'enabled' : 'disabled'} (${notificationSource})`)
-    }
     if (config.serverChanSendKey) {
         const source = formatSource(config.sources.serverChanSendKey)
         const notificationSource = formatSource(config.sources.serverChanNotification)
@@ -204,20 +193,6 @@ async function main() {
         notificationChannels.push(new ServerChanChannel(config.serverChanSendKey, config.publicUrl))
     }
 
-    // Initialize Telegram bot (optional)
-    if (config.telegramEnabled && config.telegramBotToken) {
-        happyBot = new HappyBot({
-            syncEngine,
-            botToken: config.telegramBotToken,
-            publicUrl: config.publicUrl,
-            store
-        })
-        // Only add to notification channels if notifications are enabled
-        if (config.telegramNotification) {
-            notificationChannels.push(happyBot)
-        }
-    }
-
     notificationHub = new NotificationHub(syncEngine, notificationChannels)
 
     // Start HTTP service first (before tunnel, so tunnel has something to forward to)
@@ -233,11 +208,6 @@ async function main() {
         relayMode: relayFlag.enabled,
         officialWebUrl
     })
-
-    // Start the bot if configured
-    if (happyBot) {
-        await happyBot.start()
-    }
 
     console.log('')
     console.log('[Web] Hub listening on :' + config.listenPort)
@@ -310,7 +280,6 @@ async function main() {
     const shutdown = async () => {
         console.log('\nShutting down...')
         await tunnelManager?.stop()
-        await happyBot?.stop()
         notificationHub?.stop()
         syncEngine?.stop()
         sseManager?.stop()

@@ -4,22 +4,14 @@ import { z } from 'zod'
 import { getConfiguration } from '../../configuration'
 import { constantTimeEquals } from '../../utils/crypto'
 import { parseAccessToken } from '../../utils/accessToken'
-import { validateTelegramInitData } from '../telegramInitData'
 import { getOrCreateOwnerId } from '../../config/ownerId'
 import type { WebAppEnv } from '../middleware/auth'
-import type { Store } from '../../store'
 
-const telegramAuthSchema = z.object({
-    initData: z.string()
-})
-
-const accessTokenAuthSchema = z.object({
+const authBodySchema = z.object({
     accessToken: z.string()
 })
 
-const authBodySchema = z.union([telegramAuthSchema, accessTokenAuthSchema])
-
-export function createAuthRoutes(jwtSecret: Uint8Array, store: Store): Hono<WebAppEnv> {
+export function createAuthRoutes(jwtSecret: Uint8Array): Hono<WebAppEnv> {
     const app = new Hono<WebAppEnv>()
 
     app.post('/auth', async (c) => {
@@ -29,46 +21,14 @@ export function createAuthRoutes(jwtSecret: Uint8Array, store: Store): Hono<WebA
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        let userId: number
-        let username: string | undefined
-        let firstName: string | undefined
-        let lastName: string | undefined
-        let namespace: string
-
-        // Access Token authentication (CLI_API_TOKEN)
-        if ('accessToken' in parsed.data) {
-            const configuration = getConfiguration()
-            const parsedToken = parseAccessToken(parsed.data.accessToken)
-            if (!parsedToken || !constantTimeEquals(parsedToken.baseToken, configuration.cliApiToken)) {
-                return c.json({ error: 'Invalid access token' }, 401)
-            }
-            userId = await getOrCreateOwnerId()
-            firstName = 'Web User'
-            namespace = parsedToken.namespace
-        } else {
-            const configuration = getConfiguration()
-            if (!configuration.telegramEnabled || !configuration.telegramBotToken) {
-                return c.json({ error: 'Telegram authentication is disabled. Configure TELEGRAM_BOT_TOKEN.' }, 503)
-            }
-
-            // Telegram initData authentication
-            const result = validateTelegramInitData(parsed.data.initData, configuration.telegramBotToken)
-            if (!result.ok) {
-                return c.json({ error: result.error }, 401)
-            }
-
-            const telegramUserId = String(result.user.id)
-            const storedUser = store.users.getUser('telegram', telegramUserId)
-            if (!storedUser) {
-                return c.json({ error: 'not_bound' }, 401)
-            }
-
-            userId = await getOrCreateOwnerId()
-            username = result.user.username
-            firstName = result.user.first_name
-            lastName = result.user.last_name
-            namespace = storedUser.namespace
+        const configuration = getConfiguration()
+        const parsedToken = parseAccessToken(parsed.data.accessToken)
+        if (!parsedToken || !constantTimeEquals(parsedToken.baseToken, configuration.cliApiToken)) {
+            return c.json({ error: 'Invalid access token' }, 401)
         }
+
+        const userId = await getOrCreateOwnerId()
+        const namespace = parsedToken.namespace
 
         const token = await new SignJWT({ uid: userId, ns: namespace })
             .setProtectedHeader({ alg: 'HS256' })
@@ -80,9 +40,9 @@ export function createAuthRoutes(jwtSecret: Uint8Array, store: Store): Hono<WebA
             token,
             user: {
                 id: userId,
-                username,
-                firstName,
-                lastName
+                username: undefined,
+                firstName: 'Web User',
+                lastName: undefined
             }
         })
     })

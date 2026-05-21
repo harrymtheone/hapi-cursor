@@ -763,7 +763,7 @@ describe('MessageService.sendMessage with scheduledAt', () => {
     })
 
     // Defence-in-depth: REST already rejects scheduledAt + attachments at the
-    // Zod layer, but non-REST callers (Telegram bot, MCP, internal) reach
+    // Zod layer, but non-REST callers (MCP, internal) reach
     // sendMessage directly and must hit the same invariant — otherwise the CLI
     // session's upload directory could be purged before the mature emit lands,
     // leaving @path attachment references pointing at deleted files.
