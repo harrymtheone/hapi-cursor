@@ -16,6 +16,62 @@ function createPublisher(events: SyncEvent[]): EventPublisher {
 }
 
 describe('alive incremental events', () => {
+    it('exposes owner-only cache and SyncEngine access APIs', () => {
+        const store = new Store(':memory:')
+        const events: SyncEvent[] = []
+        const sessionCache = new SessionCache(store, createPublisher(events))
+        const machineCache = new MachineCache(store, createPublisher(events))
+        const engine = new SyncEngine(
+            store,
+            {} as never,
+            new RpcRegistry(),
+            { broadcast() {} } as never
+        )
+
+        try {
+            const session = sessionCache.getOrCreateSession(
+                'owner-only-session',
+                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                null
+            )
+            const machine = machineCache.getOrCreateMachine(
+                'owner-only-machine',
+                { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
+                null
+            )
+            const engineSession = engine.getOrCreateSession(
+                'owner-only-engine-session',
+                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                null
+            )
+            const engineMachine = engine.getOrCreateMachine(
+                'owner-only-engine-machine',
+                { host: 'localhost', platform: 'linux', happyCliVersion: '0.1.0' },
+                null
+            )
+
+            expect(sessionCache.resolveSessionAccess(session.id)).toEqual({
+                ok: true,
+                sessionId: session.id,
+                session
+            })
+            expect(sessionCache.resolveSessionAccess('missing-session')).toEqual({
+                ok: false,
+                reason: 'not-found'
+            })
+            expect(sessionCache.getSessions().map((item) => item.id)).toContain(session.id)
+            expect(machineCache.getMachines().map((item) => item.id)).toContain(machine.id)
+            expect(engine.resolveSessionAccess(engineSession.id)).toEqual({
+                ok: true,
+                sessionId: engineSession.id,
+                session: engineSession
+            })
+            expect(engine.getMachine(engineMachine.id)?.id).toBe(engineMachine.id)
+        } finally {
+            engine.stop()
+        }
+    })
+
     it('includes active=true in session alive updates', () => {
         const store = new Store(':memory:')
         const events: SyncEvent[] = []
