@@ -7,7 +7,6 @@ import {
 import type { PermissionModeTone } from '@hapi/protocol'
 import { useMemo } from 'react'
 import type { AgentState, CodexCollaborationMode, PermissionMode } from '@/types/api'
-import type { ConversationStatus } from '@/realtime/types'
 import type { ThreadGoal } from '@/types/api'
 import { getContextBudgetTokens } from '@/chat/modelConfig'
 import { useTranslation } from '@/lib/use-translation'
@@ -42,21 +41,10 @@ function getConnectionStatus(
     active: boolean,
     thinking: boolean,
     agentState: AgentState | null | undefined,
-    voiceStatus: ConversationStatus | undefined,
     backgroundTaskCount: number,
     t: (key: string) => string
 ): { text: string; color: string; dotColor: string; isPulsing: boolean } {
     const hasPermissions = agentState?.requests && Object.keys(agentState.requests).length > 0
-
-    // Voice connecting takes priority
-    if (voiceStatus === 'connecting') {
-        return {
-            text: t('voice.connecting'),
-            color: 'text-[#007AFF]',
-            dotColor: 'bg-[#007AFF]',
-            isPulsing: true
-        }
-    }
 
     if (!active) {
         return {
@@ -153,12 +141,11 @@ export function StatusBar(props: {
     collaborationMode?: CodexCollaborationMode
     threadGoal?: ThreadGoal | null
     agentFlavor?: string | null
-    voiceStatus?: ConversationStatus
 }) {
     const { t } = useTranslation()
     const connectionStatus = useMemo(
-        () => getConnectionStatus(props.active, props.thinking, props.agentState, props.voiceStatus, props.backgroundTaskCount ?? 0, t),
-        [props.active, props.thinking, props.agentState, props.voiceStatus, props.backgroundTaskCount, t]
+        () => getConnectionStatus(props.active, props.thinking, props.agentState, props.backgroundTaskCount ?? 0, t),
+        [props.active, props.thinking, props.agentState, props.backgroundTaskCount, t]
     )
 
     const contextWarning = useMemo(

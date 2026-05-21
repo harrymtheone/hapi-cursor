@@ -14,7 +14,6 @@ import {
 } from 'react'
 import type { AgentState, CodexCollaborationMode, PermissionMode, ThreadGoal } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
-import type { ConversationStatus } from '@/realtime/types'
 import { useActiveWord } from '@/hooks/useActiveWord'
 import { useActiveSuggestions } from '@/hooks/useActiveSuggestions'
 import { applySuggestion } from '@/utils/applySuggestion'
@@ -72,11 +71,6 @@ export function HappyComposer(props: {
     terminalUnsupported?: boolean
     autocompletePrefixes?: string[]
     autocompleteSuggestions?: (query: string) => Promise<Suggestion[]>
-    // Voice assistant props
-    voiceStatus?: ConversationStatus
-    voiceMicMuted?: boolean
-    onVoiceToggle?: () => void
-    onVoiceMicToggle?: () => void
     // Schedule props (lifted from internal state when provided)
     pendingSchedule?: PendingSchedule | null
     onSchedule?: (pending: PendingSchedule) => void
@@ -113,10 +107,6 @@ export function HappyComposer(props: {
         terminalUnsupported = false,
         autocompletePrefixes = ['@', '/', '$'],
         autocompleteSuggestions = defaultSuggestionHandler,
-        voiceStatus = 'disconnected',
-        voiceMicMuted = false,
-        onVoiceToggle,
-        onVoiceMicToggle,
         pendingSchedule: pendingScheduleProp,
         onSchedule: onScheduleProp,
         onClearSchedule: onClearScheduleProp
@@ -522,7 +512,6 @@ export function HappyComposer(props: {
         || showEffortSettings
     )
     const showAbortButton = true
-    const voiceEnabled = Boolean(onVoiceToggle)
 
     const handleSend = useCallback(() => {
         api.composer().send()
@@ -807,7 +796,6 @@ export function HappyComposer(props: {
                         collaborationMode={collaborationMode}
                         threadGoal={threadGoal}
                         agentFlavor={agentFlavor}
-                        voiceStatus={voiceStatus}
                     />
 
                     <div className="overflow-hidden rounded-[20px] bg-[var(--app-secondary-bg)]">
@@ -851,11 +839,6 @@ export function HappyComposer(props: {
                             switchDisabled={switchDisabled}
                             isSwitching={isSwitching}
                             onSwitch={handleSwitch}
-                            voiceEnabled={voiceEnabled}
-                            voiceStatus={voiceStatus}
-                            voiceMicMuted={voiceMicMuted}
-                            onVoiceToggle={onVoiceToggle ?? (() => {})}
-                            onVoiceMicToggle={onVoiceMicToggle}
                             onSend={handleSend}
                             pendingSchedule={pendingSchedule}
                             onSchedule={setPendingSchedule}
