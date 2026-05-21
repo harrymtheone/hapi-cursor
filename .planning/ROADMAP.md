@@ -96,7 +96,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 - [x] 04-01-PLAN.md — Tunnel and hosted relay-web runtime deletion
 - [x] 04-02-PLAN.md — Relay config/settings/env convergence
-- [ ] 04-03-PLAN.md — Remote logging and doctor cleanup
+- [x] 04-03-PLAN.md — Remote logging and doctor cleanup
 - [ ] 04-04-PLAN.md — Build/runtime assets, lockfile, guard, and final gate
 
 ### Phase 5: Flavor consolidation + capability abstraction
@@ -201,7 +201,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
 | 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
-| 4. Cut deployment infrastructure | 2/4 | In Progress|  |
+| 4. Cut deployment infrastructure | 3/4 | In Progress|  |
 | 5. Flavor consolidation + capability abstraction | 0/TBD | Not started | - |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
 | 7. Wire contracts unification & SSE patch contract | 0/TBD | Not started | - |
