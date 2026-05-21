@@ -28,8 +28,7 @@ export function createMachinesRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return c.json({ error: 'Not connected' }, 503)
         }
 
-        const namespace = c.get('namespace')
-        const machines = engine.getOnlineMachinesByNamespace(namespace)
+        const machines = engine.getOnlineMachines()
         return c.json({ machines })
     })
 

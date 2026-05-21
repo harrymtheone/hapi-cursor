@@ -6,10 +6,7 @@ export type SyncEventListener = (event: SyncEvent) => void
 export class EventPublisher {
     private readonly listeners: Set<SyncEventListener> = new Set()
 
-    constructor(
-        private readonly sseManager: SSEManager,
-        private readonly resolveNamespace: (event: SyncEvent) => string | undefined
-    ) {
+    constructor(private readonly sseManager: SSEManager) {
     }
 
     subscribe(listener: SyncEventListener): () => void {
@@ -18,17 +15,14 @@ export class EventPublisher {
     }
 
     emit(event: SyncEvent): void {
-        const namespace = this.resolveNamespace(event)
-        const enrichedEvent = namespace ? { ...event, namespace } : event
-
         for (const listener of this.listeners) {
             try {
-                listener(enrichedEvent)
+                listener(event)
             } catch (error) {
                 console.error('[SyncEngine] Listener error:', error)
             }
         }
 
-        this.sseManager.broadcast(enrichedEvent)
+        this.sseManager.broadcast(event)
     }
 }

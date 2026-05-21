@@ -39,10 +39,6 @@ function createApp(opts: {
     } as unknown as SyncEngine
 
     const app = new Hono<WebAppEnv>()
-    app.use('*', async (c, next) => {
-        c.set('namespace', 'default')
-        await next()
-    })
     app.route('/api', createMessagesRoutes(() => engine as SyncEngine))
 
     return { app, sentMessages }

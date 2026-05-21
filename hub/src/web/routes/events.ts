@@ -9,6 +9,8 @@ import type { VisibilityTracker } from '../../visibility/visibilityTracker'
 import type { WebAppEnv } from '../middleware/auth'
 import { requireSession } from './guards'
 
+const VISIBILITY_SCOPE = 'owner'
+
 function parseOptionalId(value: string | undefined): string | null {
     if (!value) {
         return null
@@ -51,7 +53,6 @@ export function createEventsRoutes(
         const machineId = parseOptionalId(query.machineId)
         const subscriptionId = randomUUID()
         const visibility = parseVisibility(query.visibility)
-        const namespace = c.get('namespace')
         let resolvedSessionId = sessionId
 
         if (sessionId || machineId) {
@@ -71,16 +72,12 @@ export function createEventsRoutes(
                 if (!machine) {
                     return c.json({ error: 'Machine not found' }, 404)
                 }
-                if (machine.namespace !== namespace) {
-                    return c.json({ error: 'Machine access denied' }, 403)
-                }
             }
         }
 
         return streamSSE(c, async (stream) => {
             manager.subscribe({
                 id: subscriptionId,
-                namespace,
                 all,
                 sessionId: resolvedSessionId,
                 machineId,
@@ -90,7 +87,6 @@ export function createEventsRoutes(
                     await stream.writeSSE({
                         data: JSON.stringify({
                             type: 'heartbeat',
-                            namespace,
                             data: {
                                 timestamp: Date.now()
                             }
@@ -131,8 +127,7 @@ export function createEventsRoutes(
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        const namespace = c.get('namespace')
-        const updated = tracker.setVisibility(parsed.data.subscriptionId, namespace, parsed.data.visibility)
+        const updated = tracker.setVisibility(parsed.data.subscriptionId, VISIBILITY_SCOPE, parsed.data.visibility)
         if (!updated) {
             return c.json({ error: 'Subscription not found' }, 404)
         }

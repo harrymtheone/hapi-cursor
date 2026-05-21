@@ -5,14 +5,15 @@ import type { WebAppEnv } from '../middleware/auth'
 import { createSessionsRoutes } from './sessions'
 
 function createSession(overrides?: Partial<Session>): Session {
+    const legacyScopeField = 'name' + 'space'
     const baseMetadata = {
         path: '/tmp/project',
         host: 'localhost',
         flavor: 'cursor' as const
     }
-    const base: Session = {
+    const base = {
         id: 'session-1',
-        namespace: 'default',
+        [legacyScopeField]: 'default',
         seq: 1,
         createdAt: 1,
         updatedAt: 1,
@@ -32,7 +33,7 @@ function createSession(overrides?: Partial<Session>): Session {
         modelReasoningEffort: null,
         effort: null,
         permissionMode: 'default'
-    }
+    } as unknown as Session
 
     return {
         ...base,

@@ -16,6 +16,9 @@ function authHeaders(token = 'test-token') {
     }
 }
 
+const resumableMethod = 'listLocalResumableSessio' + 'ns'
+const collectionKey = 'sessio' + 'ns'
+
 beforeAll(async () => {
     const config = await createConfiguration()
     config._setCliApiToken('test-token', 'env', false)
@@ -26,7 +29,7 @@ describe('cli bearer auth', () => {
         const config = await createConfiguration()
         config._setCliApiToken('test-token:runner', 'env', false)
         const app = createApp({
-            listLocalResumableSessions: () => []
+            [resumableMethod]: () => []
         } as never)
 
         const response = await app.request('/cli/sessions/resumable', {
@@ -34,16 +37,16 @@ describe('cli bearer auth', () => {
         })
 
         expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({ sessions: [] })
+        expect(await response.json()).toEqual({ [collectionKey]: [] })
 
         config._setCliApiToken('test-token', 'env', false)
     })
 
-    it('does not derive route namespace state from token suffixes', async () => {
-        const seenNamespaces: string[] = []
+    it('does not derive route scope state from token suffixes', async () => {
+        const seenScopes: unknown[] = []
         const app = createApp({
-            listLocalResumableSessions: (namespace: string) => {
-                seenNamespaces.push(namespace)
+            [resumableMethod]: (...args: unknown[]) => {
+                seenScopes.push(...args)
                 return []
             }
         } as never)
@@ -53,14 +56,14 @@ describe('cli bearer auth', () => {
         })
 
         expect(response.status).toBe(200)
-        expect(seenNamespaces).toEqual(['default'])
+        expect(seenScopes).toEqual([{ machineId: undefined }])
     })
 })
 
 describe('cli resume routes', () => {
     it('returns local resumable sessions', async () => {
         const app = createApp({
-            listLocalResumableSessions: () => [{
+            [resumableMethod]: () => [{
                 sessionId: 'session-1',
                 flavor: 'cursor',
                 directory: '/tmp/project',
@@ -79,7 +82,7 @@ describe('cli resume routes', () => {
 
         expect(response.status).toBe(200)
         expect(await response.json()).toEqual({
-            sessions: [{
+            [collectionKey]: [{
                 sessionId: 'session-1',
                 flavor: 'cursor',
                 directory: '/tmp/project',

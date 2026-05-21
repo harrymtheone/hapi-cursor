@@ -5,13 +5,11 @@ import { jwtVerify } from 'jose'
 export type WebAppEnv = {
     Variables: {
         userId: number
-        namespace: string
     }
 }
 
 const jwtPayloadSchema = z.object({
-    uid: z.number(),
-    ns: z.string()
+    uid: z.number()
 })
 
 export function createAuthMiddleware(jwtSecret: Uint8Array): MiddlewareHandler<WebAppEnv> {
@@ -39,7 +37,6 @@ export function createAuthMiddleware(jwtSecret: Uint8Array): MiddlewareHandler<W
             }
 
             c.set('userId', parsed.data.uid)
-            c.set('namespace', parsed.data.ns)
             await next()
             return
         } catch {

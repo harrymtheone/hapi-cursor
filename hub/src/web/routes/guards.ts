@@ -19,12 +19,9 @@ export function requireSession(
     sessionId: string,
     options?: { requireActive?: boolean }
 ): { sessionId: string; session: Session } | Response {
-    const namespace = c.get('namespace')
-    const access = engine.resolveSessionAccess(sessionId, namespace)
+    const access = engine.resolveSessionAccess(sessionId)
     if (!access.ok) {
-        const status = access.reason === 'access-denied' ? 403 : 404
-        const error = access.reason === 'access-denied' ? 'Session access denied' : 'Session not found'
-        return c.json({ error }, status)
+        return c.json({ error: 'Session not found' }, 404)
     }
     if (options?.requireActive && !access.session.active) {
         return c.json({ error: 'Session is inactive' }, 409)
@@ -51,13 +48,9 @@ export function requireMachine(
     engine: SyncEngine,
     machineId: string
 ): Machine | Response {
-    const namespace = c.get('namespace')
     const machine = engine.getMachine(machineId)
     if (!machine) {
         return c.json({ error: 'Machine not found' }, 404)
-    }
-    if (machine.namespace !== namespace) {
-        return c.json({ error: 'Machine access denied' }, 403)
     }
     return machine
 }

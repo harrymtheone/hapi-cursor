@@ -7,7 +7,6 @@ import { parseAccessToken } from '../../utils/accessToken'
 import type { Machine, Session, SyncEngine } from '../../sync/syncEngine'
 
 const bearerSchema = z.string().regex(/^Bearer\s+(.+)$/i)
-const LEGACY_STORE_NAMESPACE = 'default'
 
 const createOrLoadSessionSchema = z.object({
     tag: z.string().min(1),
@@ -33,33 +32,28 @@ type CliEnv = {
     Variables: Record<string, never>
 }
 
-function resolveSessionForNamespace(
+function resolveSession(
     engine: SyncEngine,
-    sessionId: string,
-    namespace: string
-): { ok: true; session: Session; sessionId: string } | { ok: false; status: 403 | 404; error: string } {
-    const access = engine.resolveSessionAccess(sessionId, namespace)
+    sessionId: string
+): { ok: true; session: Session; sessionId: string } | { ok: false; status: 404; error: string } {
+    const access = engine.resolveSessionAccess(sessionId)
     if (access.ok) {
         return { ok: true, session: access.session, sessionId: access.sessionId }
     }
     return {
         ok: false,
-        status: access.reason === 'access-denied' ? 403 : 404,
-        error: access.reason === 'access-denied' ? 'Session access denied' : 'Session not found'
+        status: 404,
+        error: 'Session not found'
     }
 }
 
-function resolveMachineForNamespace(
+function resolveMachine(
     engine: SyncEngine,
-    machineId: string,
-    namespace: string
-): { ok: true; machine: Machine } | { ok: false; status: 403 | 404; error: string } {
-    const machine = engine.getMachineByNamespace(machineId, namespace)
+    machineId: string
+): { ok: true; machine: Machine } | { ok: false; status: 404; error: string } {
+    const machine = engine.getMachine(machineId)
     if (machine) {
         return { ok: true, machine }
-    }
-    if (engine.getMachine(machineId)) {
-        return { ok: false, status: 403, error: 'Machine access denied' }
     }
     return { ok: false, status: 404, error: 'Machine not found' }
 }
@@ -101,15 +95,15 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        const namespace = LEGACY_STORE_NAMESPACE
         const session = engine.getOrCreateSession(
             parsed.data.tag,
             parsed.data.metadata,
             parsed.data.agentState ?? null,
-            namespace,
-            parsed.data.model,
-            parsed.data.effort,
-            parsed.data.modelReasoningEffort
+            {
+                model: parsed.data.model,
+                effort: parsed.data.effort,
+                modelReasoningEffort: parsed.data.modelReasoningEffort
+            }
         )
         return c.json({ session })
     })
@@ -120,9 +114,8 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
             return c.json({ error: 'Not ready' }, 503)
         }
 
-        const namespace = LEGACY_STORE_NAMESPACE
         const machineId = c.req.query('machineId') || undefined
-        const sessions = engine.listLocalResumableSessions(namespace, { machineId })
+        const sessions = engine.listLocalResumableSessions({ machineId })
         return c.json({ sessions })
     })
 
@@ -132,12 +125,9 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
             return c.json({ error: 'Not ready' }, 503)
         }
 
-        const namespace = LEGACY_STORE_NAMESPACE
-        const result = engine.resolveLocalResumeTarget(c.req.param('id'), namespace)
+        const result = engine.resolveLocalResumeTarget(c.req.param('id'))
         if (result.type === 'error') {
-            const status = result.code === 'access_denied' ? 403
-                : result.code === 'session_not_found' ? 404
-                    : 409
+            const status = result.code === 'session_not_found' ? 404 : 409
             return c.json({ error: result.message, code: result.code }, status)
         }
 
@@ -150,13 +140,11 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
             return c.json({ error: 'Not ready' }, 503)
         }
 
-        const namespace = LEGACY_STORE_NAMESPACE
-        const result = await engine.handoffSessionToLocal(c.req.param('id'), namespace)
+        const result = await engine.handoffSessionToLocal(c.req.param('id'))
         if (result.type === 'error') {
-            const status = result.code === 'access_denied' ? 403
-                : result.code === 'session_not_found' ? 404
-                    : result.code === 'already_local' ? 409
-                        : 500
+            const status = result.code === 'session_not_found' ? 404
+                : result.code === 'already_local' ? 409
+                    : 500
             return c.json({ error: result.message, code: result.code }, status)
         }
 
@@ -169,8 +157,7 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
             return c.json({ error: 'Not ready' }, 503)
         }
         const sessionId = c.req.param('id')
-        const namespace = LEGACY_STORE_NAMESPACE
-        const resolved = resolveSessionForNamespace(engine, sessionId, namespace)
+        const resolved = resolveSession(engine, sessionId)
         if (!resolved.ok) {
             return c.json({ error: resolved.error }, resolved.status)
         }
@@ -183,8 +170,7 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
             return c.json({ error: 'Not ready' }, 503)
         }
         const sessionId = c.req.param('id')
-        const namespace = LEGACY_STORE_NAMESPACE
-        const resolved = resolveSessionForNamespace(engine, sessionId, namespace)
+        const resolved = resolveSession(engine, sessionId)
         if (!resolved.ok) {
             return c.json({ error: resolved.error }, resolved.status)
         }
@@ -218,12 +204,7 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        const namespace = LEGACY_STORE_NAMESPACE
-        const existing = engine.getMachine(parsed.data.id)
-        if (existing && existing.namespace !== namespace) {
-            return c.json({ error: 'Machine access denied' }, 403)
-        }
-        const machine = engine.getOrCreateMachine(parsed.data.id, parsed.data.metadata, parsed.data.runnerState ?? null, namespace)
+        const machine = engine.getOrCreateMachine(parsed.data.id, parsed.data.metadata, parsed.data.runnerState ?? null)
         return c.json({ machine })
     })
 
@@ -233,8 +214,7 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
             return c.json({ error: 'Not ready' }, 503)
         }
         const machineId = c.req.param('id')
-        const namespace = LEGACY_STORE_NAMESPACE
-        const resolved = resolveMachineForNamespace(engine, machineId, namespace)
+        const resolved = resolveMachine(engine, machineId)
         if (!resolved.ok) {
             return c.json({ error: resolved.error }, resolved.status)
         }

@@ -93,8 +93,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
 
         const getPendingCount = (s: Session) => s.agentState?.requests ? Object.keys(s.agentState.requests).length : 0
 
-        const namespace = c.get('namespace')
-        const sessions = engine.getSessionsByNamespace(namespace)
+        const sessions = engine.getSessions()
             .sort((a, b) => {
                 // Active sessions first
                 if (a.active !== b.active) {
@@ -153,17 +152,14 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             }
         }
 
-        const namespace = c.get('namespace')
         const result = await engine.resumeSession(
             sessionResult.sessionId,
-            namespace,
             permissionMode !== undefined ? { permissionMode } : undefined
         )
         if (result.type === 'error') {
             const status = result.code === 'no_machine_online' ? 503
-                : result.code === 'access_denied' ? 403
-                    : result.code === 'session_not_found' ? 404
-                        : 500
+                : result.code === 'session_not_found' ? 404
+                    : 500
             return c.json({ error: result.message, code: result.code }, status)
         }
 

@@ -4,7 +4,6 @@ import type { VisibilityTracker } from '../visibility/visibilityTracker'
 
 export type SSESubscription = {
     id: string
-    namespace: string
     all: boolean
     sessionId: string | null
     machineId: string | null
@@ -16,6 +15,7 @@ type SSEConnection = SSESubscription & {
 }
 
 export class SSEManager {
+    private static readonly VISIBILITY_SCOPE = 'owner'
     private readonly connections: Map<string, SSEConnection> = new Map()
     private heartbeatTimer: NodeJS.Timeout | null = null
     private readonly heartbeatMs: number
@@ -28,7 +28,6 @@ export class SSEManager {
 
     subscribe(options: {
         id: string
-        namespace: string
         all?: boolean
         sessionId?: string | null
         machineId?: string | null
@@ -38,7 +37,6 @@ export class SSEManager {
     }): SSESubscription {
         const subscription: SSEConnection = {
             id: options.id,
-            namespace: options.namespace,
             all: Boolean(options.all),
             sessionId: options.sessionId ?? null,
             machineId: options.machineId ?? null,
@@ -49,13 +47,12 @@ export class SSEManager {
         this.connections.set(subscription.id, subscription)
         this.visibilityTracker.registerConnection(
             subscription.id,
-            subscription.namespace,
+            SSEManager.VISIBILITY_SCOPE,
             options.visibility ?? 'hidden'
         )
         this.ensureHeartbeat()
         return {
             id: subscription.id,
-            namespace: subscription.namespace,
             all: subscription.all,
             sessionId: subscription.sessionId,
             machineId: subscription.machineId
@@ -70,12 +67,9 @@ export class SSEManager {
         }
     }
 
-    async sendToast(namespace: string, event: Extract<SyncEvent, { type: 'toast' }>): Promise<number> {
+    async sendToast(_scope: string, event: Extract<SyncEvent, { type: 'toast' }>): Promise<number> {
         const deliveries: Array<Promise<{ id: string; ok: boolean }>> = []
         for (const connection of this.connections.values()) {
-            if (connection.namespace !== namespace) {
-                continue
-            }
             if (!this.visibilityTracker.isVisibleConnection(connection.id)) {
                 continue
             }
@@ -148,13 +142,6 @@ export class SSEManager {
     }
 
     private shouldSend(connection: SSEConnection, event: SyncEvent): boolean {
-        if (event.type !== 'connection-changed') {
-            const eventNamespace = event.namespace
-            if (!eventNamespace || eventNamespace !== connection.namespace) {
-                return false
-            }
-        }
-
         if (event.type === 'message-received') {
             return connection.all || connection.sessionId === event.sessionId
         }

@@ -67,7 +67,7 @@ export class SyncEngine {
         rpcRegistry: RpcRegistry,
         sseManager: SSEManager
     ) {
-        this.eventPublisher = new EventPublisher(sseManager, (event) => this.resolveNamespace(event))
+        this.eventPublisher = new EventPublisher(sseManager)
         this.sessionCache = new SessionCache(store, this.eventPublisher)
         this.machineCache = new MachineCache(store, this.eventPublisher)
         this.messageService = new MessageService(
@@ -90,19 +90,6 @@ export class SyncEngine {
 
     subscribe(listener: SyncEventListener): () => void {
         return this.eventPublisher.subscribe(listener)
-    }
-
-    private resolveNamespace(event: SyncEvent): string | undefined {
-        if (event.namespace) {
-            return event.namespace
-        }
-        if ('sessionId' in event) {
-            return this.getSession(event.sessionId)?.namespace
-        }
-        if ('machineId' in event) {
-            return this.machineCache.getMachine(event.machineId)?.namespace
-        }
-        return undefined
     }
 
     getSessions(): Session[] {
@@ -461,7 +448,7 @@ export class SyncEngine {
         return flavor === 'cursor' ? flavor : 'cursor'
     }
 
-    private resolveAgentResumeId(session: Session, _namespace: string): string | null {
+    private resolveAgentResumeId(session: Session): string | null {
         const metadata = session.metadata
         if (!metadata) {
             return null
@@ -473,8 +460,12 @@ export class SyncEngine {
         return null
     }
 
-    resolveLocalResumeTarget(sessionId: string, namespace: string): LocalResumeTargetResult {
-        const access = this.sessionCache.resolveSessionAccess(sessionId, namespace)
+    resolveLocalResumeTarget(sessionId: string, namespace: string): LocalResumeTargetResult
+    resolveLocalResumeTarget(sessionId: string): LocalResumeTargetResult
+    resolveLocalResumeTarget(sessionId: string, namespace?: string): LocalResumeTargetResult {
+        const access = namespace === undefined
+            ? this.sessionCache.resolveSessionAccess(sessionId)
+            : this.sessionCache.resolveSessionAccess(sessionId, namespace)
         if (!access.ok) {
             return {
                 type: 'error',
@@ -489,7 +480,7 @@ export class SyncEngine {
             return { type: 'error', message: 'Session metadata missing path', code: 'resume_unavailable' }
         }
 
-        const agentSessionId = this.resolveAgentResumeId(session, namespace)
+        const agentSessionId = this.resolveAgentResumeId(session)
         if (!agentSessionId) {
             return { type: 'error', message: 'Resume session ID unavailable', code: 'resume_unavailable' }
         }
@@ -514,12 +505,25 @@ export class SyncEngine {
         }
     }
 
-    listLocalResumableSessions(namespace: string, opts?: { machineId?: string }): ResumableSession[] {
-        return this.getSessionsByNamespace(namespace)
-            .map((session) => this.resolveLocalResumeTarget(session.id, namespace))
+    listLocalResumableSessions(namespace: string, opts?: { machineId?: string }): ResumableSession[]
+    listLocalResumableSessions(opts?: { machineId?: string }): ResumableSession[]
+    listLocalResumableSessions(
+        namespaceOrOpts?: string | { machineId?: string },
+        legacyOpts?: { machineId?: string }
+    ): ResumableSession[] {
+        const namespace = typeof namespaceOrOpts === 'string' ? namespaceOrOpts : undefined
+        const opts = typeof namespaceOrOpts === 'string' ? legacyOpts : namespaceOrOpts
+        const sessions = namespace === undefined ? this.getSessions() : this.getSessionsByNamespace(namespace)
+
+        return sessions
+            .map((session) => namespace === undefined
+                ? this.resolveLocalResumeTarget(session.id)
+                : this.resolveLocalResumeTarget(session.id, namespace))
             .filter((result): result is { type: 'success'; target: LocalResumeTarget } => result.type === 'success')
             .map(({ target }) => {
-                const session = this.getSessionByNamespace(target.sessionId, namespace)
+                const session = namespace === undefined
+                    ? this.getSession(target.sessionId)
+                    : this.getSessionByNamespace(target.sessionId, namespace)
                 return {
                     sessionId: target.sessionId,
                     flavor: target.flavor,
@@ -543,8 +547,18 @@ export class SyncEngine {
             .sort((a, b) => b.updatedAt - a.updatedAt)
     }
 
-    async resumeSession(sessionId: string, namespace: string, opts?: { permissionMode?: PermissionMode }): Promise<ResumeSessionResult> {
-        const access = this.sessionCache.resolveSessionAccess(sessionId, namespace)
+    async resumeSession(sessionId: string, namespace: string, opts?: { permissionMode?: PermissionMode }): Promise<ResumeSessionResult>
+    async resumeSession(sessionId: string, opts?: { permissionMode?: PermissionMode }): Promise<ResumeSessionResult>
+    async resumeSession(
+        sessionId: string,
+        namespaceOrOpts?: string | { permissionMode?: PermissionMode },
+        legacyOpts?: { permissionMode?: PermissionMode }
+    ): Promise<ResumeSessionResult> {
+        const namespace = typeof namespaceOrOpts === 'string' ? namespaceOrOpts : undefined
+        const opts = typeof namespaceOrOpts === 'string' ? legacyOpts : namespaceOrOpts
+        const access = namespace === undefined
+            ? this.sessionCache.resolveSessionAccess(sessionId)
+            : this.sessionCache.resolveSessionAccess(sessionId, namespace)
         if (!access.ok) {
             return {
                 type: 'error',
@@ -558,7 +572,9 @@ export class SyncEngine {
             return { type: 'success', sessionId: access.sessionId }
         }
 
-        const targetResult = this.resolveLocalResumeTarget(access.sessionId, namespace)
+        const targetResult = namespace === undefined
+            ? this.resolveLocalResumeTarget(access.sessionId)
+            : this.resolveLocalResumeTarget(access.sessionId, namespace)
         if (targetResult.type === 'error') {
             return targetResult
         }
@@ -571,7 +587,9 @@ export class SyncEngine {
         }
         const resumeToken = target.agentSessionId
 
-        const onlineMachines = this.machineCache.getOnlineMachinesByNamespace(namespace)
+        const onlineMachines = namespace === undefined
+            ? this.machineCache.getOnlineMachines()
+            : this.machineCache.getOnlineMachinesByNamespace(namespace)
         if (onlineMachines.length === 0) {
             return { type: 'error', message: 'No machine online', code: 'no_machine_online' }
         }
@@ -620,10 +638,16 @@ export class SyncEngine {
             // The old session may have already been merged by the automatic dedup path
             // (triggered when the spawned CLI sets its agent session ID in metadata).
             // Only attempt the explicit merge if the old session still exists.
-            const oldSession = this.sessionCache.getSessionByNamespace(access.sessionId, namespace)
+            const oldSession = namespace === undefined
+                ? this.sessionCache.getSession(access.sessionId)
+                : this.sessionCache.getSessionByNamespace(access.sessionId, namespace)
             if (oldSession) {
                 try {
-                    await this.sessionCache.mergeSessions(access.sessionId, spawnResult.sessionId, namespace)
+                    await this.sessionCache.mergeSessions(
+                        access.sessionId,
+                        spawnResult.sessionId,
+                        namespace ?? access.session.namespace
+                    )
                 } catch (error) {
                     const message = error instanceof Error ? error.message : 'Failed to merge resumed session'
                     return { type: 'error', message, code: 'resume_failed' }
@@ -634,8 +658,12 @@ export class SyncEngine {
         return { type: 'success', sessionId: spawnResult.sessionId }
     }
 
-    async handoffSessionToLocal(sessionId: string, namespace: string): Promise<LocalHandoffResult> {
-        const access = this.sessionCache.resolveSessionAccess(sessionId, namespace)
+    async handoffSessionToLocal(sessionId: string, namespace: string): Promise<LocalHandoffResult>
+    async handoffSessionToLocal(sessionId: string): Promise<LocalHandoffResult>
+    async handoffSessionToLocal(sessionId: string, namespace?: string): Promise<LocalHandoffResult> {
+        const access = namespace === undefined
+            ? this.sessionCache.resolveSessionAccess(sessionId)
+            : this.sessionCache.resolveSessionAccess(sessionId, namespace)
         if (!access.ok) {
             return {
                 type: 'error',

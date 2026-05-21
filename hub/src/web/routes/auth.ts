@@ -10,7 +10,6 @@ import type { WebAppEnv } from '../middleware/auth'
 const authBodySchema = z.object({
     accessToken: z.string()
 })
-const LEGACY_JWT_NAMESPACE = 'default'
 
 export function createAuthRoutes(jwtSecret: Uint8Array): Hono<WebAppEnv> {
     const app = new Hono<WebAppEnv>()
@@ -29,9 +28,8 @@ export function createAuthRoutes(jwtSecret: Uint8Array): Hono<WebAppEnv> {
         }
 
         const userId = await getOrCreateOwnerId()
-        const namespace = LEGACY_JWT_NAMESPACE
 
-        const token = await new SignJWT({ uid: userId, ns: namespace })
+        const token = await new SignJWT({ uid: userId })
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
             .setExpirationTime('4h')
