@@ -9,8 +9,6 @@ import type { VisibilityTracker } from '../../visibility/visibilityTracker'
 import type { WebAppEnv } from '../middleware/auth'
 import { requireSession } from './guards'
 
-const VISIBILITY_SCOPE = 'owner'
-
 function parseOptionalId(value: string | undefined): string | null {
     if (!value) {
         return null
@@ -127,7 +125,7 @@ export function createEventsRoutes(
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        const updated = tracker.setVisibility(parsed.data.subscriptionId, VISIBILITY_SCOPE, parsed.data.visibility)
+        const updated = tracker.setVisibility(parsed.data.subscriptionId, parsed.data.visibility)
         if (!updated) {
             return c.json({ error: 'Subscription not found' }, 404)
         }

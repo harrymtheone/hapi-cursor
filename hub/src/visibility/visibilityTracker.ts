@@ -1,75 +1,41 @@
 export type VisibilityState = 'visible' | 'hidden'
 
 export class VisibilityTracker {
-    private readonly visibleConnections = new Map<string, Set<string>>()
-    private readonly subscriptionToNamespace = new Map<string, string>()
+    private readonly trackedConnections = new Set<string>()
+    private readonly visibleConnections = new Set<string>()
 
-    registerConnection(subscriptionId: string, namespace: string, state: VisibilityState): void {
+    registerConnection(subscriptionId: string, state: VisibilityState): void {
         this.removeConnection(subscriptionId)
-        this.subscriptionToNamespace.set(subscriptionId, namespace)
+        this.trackedConnections.add(subscriptionId)
         if (state === 'visible') {
-            this.addVisibleConnection(namespace, subscriptionId)
+            this.visibleConnections.add(subscriptionId)
         }
     }
 
-    setVisibility(subscriptionId: string, namespace: string, state: VisibilityState): boolean {
-        const trackedNamespace = this.subscriptionToNamespace.get(subscriptionId)
-        if (!trackedNamespace || trackedNamespace !== namespace) {
+    setVisibility(subscriptionId: string, state: VisibilityState): boolean {
+        if (!this.trackedConnections.has(subscriptionId)) {
             return false
         }
 
         if (state === 'visible') {
-            this.addVisibleConnection(trackedNamespace, subscriptionId)
+            this.visibleConnections.add(subscriptionId)
             return true
         }
 
-        this.removeVisibleConnection(trackedNamespace, subscriptionId)
+        this.visibleConnections.delete(subscriptionId)
         return true
     }
 
     removeConnection(subscriptionId: string): void {
-        const namespace = this.subscriptionToNamespace.get(subscriptionId)
-        if (!namespace) {
-            return
-        }
-
-        this.subscriptionToNamespace.delete(subscriptionId)
-        this.removeVisibleConnection(namespace, subscriptionId)
+        this.trackedConnections.delete(subscriptionId)
+        this.visibleConnections.delete(subscriptionId)
     }
 
-    hasVisibleConnection(namespace: string): boolean {
-        const visible = this.visibleConnections.get(namespace)
-        return Boolean(visible && visible.size > 0)
+    hasVisibleConnection(): boolean {
+        return this.visibleConnections.size > 0
     }
 
     isVisibleConnection(subscriptionId: string): boolean {
-        const namespace = this.subscriptionToNamespace.get(subscriptionId)
-        if (!namespace) {
-            return false
-        }
-        const visible = this.visibleConnections.get(namespace)
-        return Boolean(visible && visible.has(subscriptionId))
-    }
-
-    private addVisibleConnection(namespace: string, subscriptionId: string): void {
-        const existing = this.visibleConnections.get(namespace)
-        if (existing) {
-            existing.add(subscriptionId)
-            return
-        }
-
-        this.visibleConnections.set(namespace, new Set([subscriptionId]))
-    }
-
-    private removeVisibleConnection(namespace: string, subscriptionId: string): void {
-        const existing = this.visibleConnections.get(namespace)
-        if (!existing) {
-            return
-        }
-
-        existing.delete(subscriptionId)
-        if (existing.size === 0) {
-            this.visibleConnections.delete(namespace)
-        }
+        return this.visibleConnections.has(subscriptionId)
     }
 }

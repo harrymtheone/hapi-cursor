@@ -36,20 +36,19 @@ export class PushService {
         webPush.setVapidDetails(this.subject, this.vapidKeys.publicKey, this.vapidKeys.privateKey)
     }
 
-    async sendToNamespace(namespace: string, payload: PushPayload): Promise<void> {
-        const subscriptions = this.store.push.getPushSubscriptionsByNamespace(namespace)
+    async send(payload: PushPayload): Promise<void> {
+        const subscriptions = this.store.push.getPushSubscriptions()
         if (subscriptions.length === 0) {
             return
         }
 
         const body = JSON.stringify(payload)
         await Promise.all(subscriptions.map((subscription) => {
-            return this.sendToSubscription(namespace, subscription, body)
+            return this.sendToSubscription(subscription, body)
         }))
     }
 
     private async sendToSubscription(
-        namespace: string,
         subscription: StoredSubscription,
         body: string
     ): Promise<void> {
@@ -69,7 +68,7 @@ export class PushService {
                 : null
 
             if (statusCode === 410) {
-                this.store.push.removePushSubscription(namespace, subscription.endpoint)
+                this.store.push.removePushSubscription(subscription.endpoint)
                 return
             }
 

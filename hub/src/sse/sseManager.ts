@@ -15,7 +15,6 @@ type SSEConnection = SSESubscription & {
 }
 
 export class SSEManager {
-    private static readonly VISIBILITY_SCOPE = 'owner'
     private readonly connections: Map<string, SSEConnection> = new Map()
     private heartbeatTimer: NodeJS.Timeout | null = null
     private readonly heartbeatMs: number
@@ -47,7 +46,6 @@ export class SSEManager {
         this.connections.set(subscription.id, subscription)
         this.visibilityTracker.registerConnection(
             subscription.id,
-            SSEManager.VISIBILITY_SCOPE,
             options.visibility ?? 'hidden'
         )
         this.ensureHeartbeat()
@@ -67,7 +65,7 @@ export class SSEManager {
         }
     }
 
-    async sendToast(_scope: string, event: Extract<SyncEvent, { type: 'toast' }>): Promise<number> {
+    async sendToast(event: Extract<SyncEvent, { type: 'toast' }>): Promise<number> {
         const deliveries: Array<Promise<{ id: string; ok: boolean }>> = []
         for (const connection of this.connections.values()) {
             if (!this.visibilityTracker.isVisibleConnection(connection.id)) {

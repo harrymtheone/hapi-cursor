@@ -116,7 +116,7 @@ describe('SSEManager relevance filtering', () => {
             }
         }
 
-        const delivered = await manager.sendToast('ignored-legacy-scope', toastEvent)
+        const delivered = await manager.sendToast(toastEvent)
 
         expect(delivered).toBe(2)
         expect(received.map((entry) => entry.id).sort()).toEqual(['other', 'visible'])
