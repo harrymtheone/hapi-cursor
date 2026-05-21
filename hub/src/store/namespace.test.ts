@@ -1,29 +1,32 @@
 import { describe, expect, it } from 'bun:test'
 import { Store } from './index'
 
-describe('Store namespace filtering', () => {
-    it('filters sessions by namespace', () => {
+describe('Store owner-only facades', () => {
+    it('creates and updates sessions without namespace arguments', () => {
         const store = new Store(':memory:')
-        const sessionAlpha = store.sessions.getOrCreateSession('tag', { path: '/alpha' }, null, 'alpha')
-        const sessionBeta = store.sessions.getOrCreateSession('tag', { path: '/beta' }, null, 'beta')
+        const session = store.sessions.getOrCreateSession('tag', { path: '/alpha' }, null)
 
-        const sessionsAlpha = store.sessions.getSessionsByNamespace('alpha')
-        const ids = sessionsAlpha.map((session) => session.id)
+        const metadata = store.sessions.updateSessionMetadata(session.id, { path: '/beta' }, 1)
+        const agentState = store.sessions.updateSessionAgentState(session.id, { status: 'running' }, 1)
+        const loaded = store.sessions.getSession(session.id)
 
-        expect(ids).toContain(sessionAlpha.id)
-        expect(ids).not.toContain(sessionBeta.id)
+        expect(metadata).toEqual({ result: 'success', version: 2, value: { path: '/beta' } })
+        expect(agentState).toEqual({ result: 'success', version: 2, value: { status: 'running' } })
+        expect(loaded?.metadata).toEqual({ path: '/beta' })
+        expect(loaded?.agentState).toEqual({ status: 'running' })
     })
 
-    it('filters machines by namespace and blocks mismatches', () => {
+    it('creates and updates machines without namespace arguments', () => {
         const store = new Store(':memory:')
-        const machineAlpha = store.machines.getOrCreateMachine('machine-1', { host: 'alpha' }, null, 'alpha')
-        store.machines.getOrCreateMachine('machine-2', { host: 'beta' }, null, 'beta')
+        const machine = store.machines.getOrCreateMachine('machine-1', { host: 'alpha' }, null)
 
-        const machinesAlpha = store.machines.getMachinesByNamespace('alpha')
-        const ids = machinesAlpha.map((machine) => machine.id)
+        const metadata = store.machines.updateMachineMetadata(machine.id, { host: 'beta' }, 1)
+        const runnerState = store.machines.updateMachineRunnerState(machine.id, { online: true }, 1)
+        const loaded = store.machines.getMachine(machine.id)
 
-        expect(ids).toContain(machineAlpha.id)
-        expect(ids).not.toContain('machine-2')
-        expect(() => store.machines.getOrCreateMachine('machine-1', { host: 'beta' }, null, 'beta')).toThrow()
+        expect(metadata).toEqual({ result: 'success', version: 2, value: { host: 'beta' } })
+        expect(runnerState).toEqual({ result: 'success', version: 2, value: { online: true } })
+        expect(loaded?.metadata).toEqual({ host: 'beta' })
+        expect(loaded?.runnerState).toEqual({ online: true })
     })
 })
