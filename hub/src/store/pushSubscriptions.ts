@@ -48,10 +48,44 @@ export function addPushSubscription(
     })
 }
 
+export function upsertPushSubscription(
+    db: Database,
+    subscription: { endpoint: string; p256dh: string; auth: string }
+): void {
+    const now = Date.now()
+    db.prepare(`
+        INSERT INTO push_subscriptions (
+            namespace, endpoint, p256dh, auth, created_at
+        ) VALUES (
+            @namespace, @endpoint, @p256dh, @auth, @created_at
+        )
+        ON CONFLICT(namespace, endpoint)
+        DO UPDATE SET
+            p256dh = excluded.p256dh,
+            auth = excluded.auth,
+            created_at = excluded.created_at
+    `).run({
+        namespace: subscription.endpoint,
+        endpoint: subscription.endpoint,
+        p256dh: subscription.p256dh,
+        auth: subscription.auth,
+        created_at: now
+    })
+}
+
 export function removePushSubscription(db: Database, namespace: string, endpoint: string): void {
     db.prepare(
         'DELETE FROM push_subscriptions WHERE namespace = ? AND endpoint = ?'
     ).run(namespace, endpoint)
+}
+
+export function removePushSubscriptionByEndpoint(db: Database, endpoint: string): void {
+    db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(endpoint)
+}
+
+export function getPushSubscriptions(db: Database): StoredPushSubscription[] {
+    const rows = db.prepare('SELECT * FROM push_subscriptions ORDER BY created_at DESC').all() as DbPushSubscriptionRow[]
+    return rows.map(toStoredPushSubscription)
 }
 
 export function getPushSubscriptionsByNamespace(
