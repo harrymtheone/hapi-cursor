@@ -15,7 +15,7 @@ Phases execute sequentially. Big deletions go first so every downstream refactor
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Cut non-Cursor agents** — Delete Claude / Codex / Gemini+ACP / OpenCode runtimes, hooks, commands, and CI (completed 2026-05-20)
-- [ ] **Phase 2: Cut external integration channels** — Delete Telegram bot, ElevenLabs voice route, ServerChan push channel
+- [x] **Phase 2: Cut external integration channels** — Delete Telegram bot, ElevenLabs voice route, ServerChan push channel (completed 2026-05-21)
 - [ ] **Phase 3: Cut multi-user namespace isolation** — Remove `CLI_API_TOKEN:<namespace>` suffix, user platform field, namespace-aware cache keys
 - [ ] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream
 - [ ] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches
@@ -61,7 +61,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 02-02-PLAN.md — CUT-06 web-side: delete useTelegram, collapse useAuthSource/useAuth/usePlatform, strip Telegram WebApp from main/router/sw/App + components + i18n + CSS
 - [x] 02-03-PLAN.md — CUT-07: delete hub voice route, web/src/realtime/, voice-context, shared/src/voice.ts, @elevenlabs/react dep, settings Voice Assistant section, voice i18n keys
 - [x] 02-04-PLAN.md — CUT-08: delete hub/src/serverchan/, ServerChan channel registration, settings serverChan* fields
-- [ ] 02-05-PLAN.md — Final cleanup: CLI residuals (TerminalManager + notify), hub banner scrub, extend ripgrep guard PATTERN with telegram|serverchan|elevenlabs|grammy, bun.lock regen
+- [x] 02-05-PLAN.md — Final cleanup: CLI residuals (TerminalManager + notify), hub banner scrub, extend ripgrep guard PATTERN with telegram|serverchan|elevenlabs|grammy, bun.lock regen
 
 ### Phase 3: Cut multi-user namespace isolation
 **Goal**: Hub treats every CLI/web connection as belonging to one user; the namespace concept is removed from auth, sockets, store, and caches.
@@ -187,7 +187,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
-| 2. Cut external integration channels | 3/5 | In Progress|  |
+| 2. Cut external integration channels | 5/5 | Complete   | 2026-05-21 |
 | 3. Cut multi-user namespace isolation | 0/TBD | Not started | - |
 | 4. Cut deployment infrastructure | 0/TBD | Not started | - |
 | 5. Flavor consolidation + capability abstraction | 0/TBD | Not started | - |
