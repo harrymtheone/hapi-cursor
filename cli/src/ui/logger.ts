@@ -44,19 +44,10 @@ function getSessionLogPath(): string {
   return join(configuration.logsDir, filename)
 }
 
-class Logger {
-  private dangerouslyUnencryptedServerLoggingUrl: string | undefined
-
+export class Logger {
   constructor(
     public readonly logFilePath = getSessionLogPath()
-  ) {
-    // Remote logging enabled only when explicitly set with API URL
-    if (process.env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING
-      && process.env.HAPI_API_URL) {
-      this.dangerouslyUnencryptedServerLoggingUrl = process.env.HAPI_API_URL
-      console.log(chalk.yellow('[REMOTE LOGGING] Sending logs to server for AI debugging'))
-    }
-  }
+  ) {}
 
   // Use local timezone for simplicity of locating the logs,
   // in practice you will not need absolute timestamps
@@ -177,46 +168,11 @@ class Logger {
     }
   }
 
-  private async sendToRemoteServer(level: string, message: string, ...args: unknown[]): Promise<void> {
-    if (!this.dangerouslyUnencryptedServerLoggingUrl) return
-    
-    try {
-      await fetch(this.dangerouslyUnencryptedServerLoggingUrl + '/logs-combined-from-cli-and-mobile-for-simple-ai-debugging', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          timestamp: new Date().toISOString(),
-          level,
-          message: `${message} ${args.map(a => 
-            typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)
-          ).join(' ')}`,
-          source: 'cli',
-          platform: process.platform
-        })
-      })
-    } catch (error) {
-      // Silently fail to avoid disrupting the session
-    }
-  }
-
   private logToFile(prefix: string, message: string, ...args: unknown[]): void {
     const logLine = `${prefix} ${message} ${args.map(arg => 
       typeof arg === 'string' ? arg : JSON.stringify(arg)
     ).join(' ')}\n`
-    
-    // Send to remote server if configured
-    if (this.dangerouslyUnencryptedServerLoggingUrl) {
-      // Determine log level from prefix
-      let level = 'info'
-      if (prefix.includes(this.localTimezoneTimestamp())) {
-        level = 'debug'
-      }
-      // Fire and forget, with explicit .catch to prevent unhandled rejection
-      this.sendToRemoteServer(level, message, ...args).catch(() => {
-        // Silently ignore remote logging errors to prevent loops
-      })
-    }
-    
+
     // Handle async file path
     try {
       appendFileSync(this.logFilePath, logLine)
