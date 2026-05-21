@@ -67,7 +67,7 @@ export function registerMachineHandlers(socket: CliSocketWithData, deps: Machine
             return
         }
 
-        const result = store.machines.updateMachineMetadata(id, metadata, expectedVersion, machineAccess.value.namespace)
+        const result = store.machines.updateMachineMetadata(id, metadata, expectedVersion)
         if (result.result === 'success') {
             cb({ result: 'success', version: result.version, metadata: result.value })
         } else if (result.result === 'version-mismatch') {
@@ -110,8 +110,7 @@ export function registerMachineHandlers(socket: CliSocketWithData, deps: Machine
         const result = store.machines.updateMachineRunnerState(
             id,
             runnerState,
-            expectedVersion,
-            machineAccess.value.namespace
+            expectedVersion
         )
         if (result.result === 'success') {
             cb({ result: 'success', version: result.version, runnerState: result.value })

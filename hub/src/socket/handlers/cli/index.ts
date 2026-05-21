@@ -48,32 +48,19 @@ export type CliHandlersDeps = {
 export function registerCliHandlers(socket: CliSocketWithData, deps: CliHandlersDeps): void {
     const { io, store, rpcRegistry, terminalRegistry, onSessionAlive, onSessionEnd, onMachineAlive, onWebappEvent, onBackgroundTaskDelta, onSessionActivity, onSweepImmediateQueued } = deps
     const terminalNamespace = io.of('/terminal')
-    const namespace = typeof socket.data.namespace === 'string' ? socket.data.namespace : null
 
     const resolveSessionAccess = (sessionId: string): AccessResult<StoredSession> => {
-        if (!namespace) {
-            return { ok: false, reason: 'namespace-missing' }
-        }
-        const session = store.sessions.getSessionByNamespace(sessionId, namespace)
+        const session = store.sessions.getSession(sessionId)
         if (session) {
             return { ok: true, value: session }
-        }
-        if (store.sessions.getSession(sessionId)) {
-            return { ok: false, reason: 'access-denied' }
         }
         return { ok: false, reason: 'not-found' }
     }
 
     const resolveMachineAccess = (machineId: string): AccessResult<StoredMachine> => {
-        if (!namespace) {
-            return { ok: false, reason: 'namespace-missing' }
-        }
-        const machine = store.machines.getMachineByNamespace(machineId, namespace)
+        const machine = store.machines.getMachine(machineId)
         if (machine) {
             return { ok: true, value: machine }
-        }
-        if (store.machines.getMachine(machineId)) {
-            return { ok: false, reason: 'access-denied' }
         }
         return { ok: false, reason: 'not-found' }
     }
@@ -92,9 +79,7 @@ export function registerCliHandlers(socket: CliSocketWithData, deps: CliHandlers
     const emitAccessError = (scope: 'session' | 'machine', id: string, reason: AccessErrorReason) => {
         const message = reason === 'access-denied'
             ? `${scope} access denied`
-            : reason === 'not-found'
-                ? `${scope} not found`
-                : 'Namespace missing'
+            : `${scope} not found`
         socket.emit('error', { message, code: reason, scope, id })
     }
 

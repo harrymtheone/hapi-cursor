@@ -14,10 +14,8 @@ import { TerminalRegistry } from './terminalRegistry'
 import type { CliSocketWithData, SocketData, SocketServer } from './socketTypes'
 
 const jwtPayloadSchema = z.object({
-    uid: z.number(),
-    ns: z.string()
+    uid: z.number()
 })
-const LEGACY_CLI_SOCKET_NAMESPACE = 'default'
 
 const DEFAULT_IDLE_TIMEOUT_MS = 15 * 60_000
 const DEFAULT_MAX_TERMINALS = 4
@@ -35,7 +33,7 @@ export type SocketServerDeps = {
     store: Store
     jwtSecret: Uint8Array
     corsOrigins?: string[]
-    getSession?: (sessionId: string) => { active: boolean; namespace: string } | null
+    getSession?: (sessionId: string) => { active: boolean } | null
     onWebappEvent?: (event: SyncEvent) => void
     onSessionAlive?: (payload: { sid: string; time: number; thinking?: boolean; mode?: 'local' | 'remote' }) => void
     onSessionEnd?: (payload: { sid: string; time: number }) => void
@@ -107,7 +105,6 @@ export function createSocketServer(deps: SocketServerDeps): {
         if (!parsedToken || !constantTimeEquals(parsedToken, configuration.cliApiToken)) {
             return next(new Error('Invalid token'))
         }
-        socket.data.namespace = LEGACY_CLI_SOCKET_NAMESPACE
         next()
     })
     cliNs.on('connection', (socket) => registerCliHandlers(socket as CliSocketWithData, {
@@ -138,7 +135,6 @@ export function createSocketServer(deps: SocketServerDeps): {
                 return next(new Error('Invalid token payload'))
             }
             socket.data.userId = parsed.data.uid
-            socket.data.namespace = parsed.data.ns
             next()
             return
         } catch {
