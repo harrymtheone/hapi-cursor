@@ -29,4 +29,22 @@ describe('Store owner-only facades', () => {
         expect(loaded?.metadata).toEqual({ host: 'beta' })
         expect(loaded?.runnerState).toEqual({ online: true })
     })
+
+    it('upserts, lists, and removes push subscriptions without namespace arguments', () => {
+        const store = new Store(':memory:')
+
+        store.push.upsertPushSubscription({ endpoint: 'endpoint-1', p256dh: 'key-1', auth: 'auth-1' })
+        store.push.upsertPushSubscription({ endpoint: 'endpoint-1', p256dh: 'key-2', auth: 'auth-2' })
+
+        const subscriptions = store.push.getPushSubscriptions()
+        expect(subscriptions).toHaveLength(1)
+        expect(subscriptions[0]).toMatchObject({
+            endpoint: 'endpoint-1',
+            p256dh: 'key-2',
+            auth: 'auth-2'
+        })
+
+        store.push.removePushSubscription('endpoint-1')
+        expect(store.push.getPushSubscriptions()).toEqual([])
+    })
 })
