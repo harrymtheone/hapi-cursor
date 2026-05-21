@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 02 context gathered
-last_updated: "2026-05-21T01:16:10.787Z"
+last_updated: "2026-05-21T01:23:53.059Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 12
   completed_phases: 1
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
   percent: 8
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 02 (cut-external-integration-channels) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-05-21
 
-Progress: [██████░░░░] 60%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [██████░░░░] 60%
 
 *Updated after each plan completion*
 | Phase 02 P01 | 5min | 4 tasks | 19 files |
+| Phase 02 P02 | 6min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,7 @@ Recent decisions affecting current work:
 - Flavor capability abstraction (REFA-01) folded into Phase 5 alongside CUT-05 — both edit `shared/src/flavors.ts`
 - Documentation cleanup (CUT-12) is folded into the final verification phase since the VRFY-03 ripgrep check depends on docs being clean
 - [Phase ?]: D-30 commit #1: hub-side Telegram bot removed, /api/auth collapsed to access-token-only
+- [Phase ?]: Phase 02 commit #2 (D-30): web-side Telegram WebApp platform removed; web /api/auth client now strictly { accessToken }.
 
 ### Pending Todos
 
@@ -87,6 +89,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-21T01:16:02.080Z
+Last session: 2026-05-21T01:23:42.109Z
 Stopped at: Phase 02 context gathered
 Resume file: None
