@@ -80,6 +80,13 @@ describe('flavor capability table', () => {
         expect(getCapability('unknown', 'permissionModes')).toBeNull()
     })
 
+    // Case 12b (WR-03 regression): permissionToneCopy is a deferred
+    // forward-extensibility slot — pin its cursor inhabitant so accidental
+    // deletion or re-typing is caught.
+    test("getCapability('cursor', 'permissionToneCopy') === 'cursor'", () => {
+        expect(getCapability('cursor', 'permissionToneCopy')).toBe('cursor')
+    })
+
     // Case 13
     test("getFlavorLabel('cursor') === 'Cursor'", () => {
         expect(getFlavorLabel('cursor')).toBe('Cursor')
