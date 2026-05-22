@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { isObject, safeStringify } from '@hapi/protocol'
 import type { ChatBlock, ToolCallBlock } from '@/chat/types'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 import { getToolFullViewComponent } from '@/components/ToolCard/views/_all'
 import { getToolResultViewComponent } from '@/components/ToolCard/views/_results'
 import { formatTaskChildLabel, TaskStateIcon } from '@/components/ToolCard/helpers'
@@ -94,7 +94,7 @@ export function getTraceSummaryText(
 
 type TraceSectionProps = {
     block: ToolCallBlock
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
 }
 
 export function TraceSection({ block, metadata }: TraceSectionProps) {
@@ -131,7 +131,7 @@ export function TraceSection({ block, metadata }: TraceSectionProps) {
 
 type TraceSectionInnerProps = {
     items: ChatBlock[]
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
     defaultOpen: boolean
     summaryText: string
     fixedHeight: boolean
@@ -178,7 +178,7 @@ function TraceSectionInner({
 
 type TraceChildListProps = {
     items: ChatBlock[]
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
     mode: 'trace' | 'session'
 }
 
@@ -210,7 +210,7 @@ function TraceChildList({ items, metadata, mode }: TraceChildListProps) {
 
 type TraceChildRowProps = {
     child: ChatBlock
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
     expanded: boolean
     onToggle?: () => void
     mode: 'trace' | 'session'

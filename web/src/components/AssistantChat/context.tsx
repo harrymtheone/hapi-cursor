@@ -2,12 +2,12 @@ import type { ReactNode } from 'react'
 import { createContext, useContext } from 'react'
 import type { ApiClient } from '@/api/client'
 import type { TerminalToolDisplayMode } from '@/hooks/useTerminalToolDisplayMode'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 
 export type HappyChatContextValue = {
     api: ApiClient
     sessionId: string
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
     terminalToolDisplayMode: TerminalToolDisplayMode
     disabled: boolean
     onRefresh: () => void

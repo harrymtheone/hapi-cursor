@@ -1,6 +1,6 @@
 import type { ToolCallBlock } from '@/chat/types'
 import type { ApiClient } from '@/api/client'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { isObject, safeStringify } from '@hapi/protocol'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -81,7 +81,7 @@ function getTaskSummaryChildren(block: ToolCallBlock): { visible: ToolCallBlock[
 
 function renderTaskSummary(
     block: ToolCallBlock,
-    metadata: SessionMetadataSummary | null,
+    metadata: SessionSummaryMetadata | null,
     t: (key: string, params?: Record<string, string | number>) => string,
 ): ReactNode | null {
     const summary = getTaskSummaryChildren(block)
@@ -273,7 +273,7 @@ function DetailsIcon() {
 type ToolCardProps = {
     api: ApiClient
     sessionId: string
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
     terminalToolDisplayMode: TerminalToolDisplayMode
     disabled: boolean
     onDone: () => void
@@ -282,7 +282,7 @@ type ToolCardProps = {
 
 export function ToolDetailDialogContent(props: {
     block: ToolCallBlock
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
 }) {
     const { t } = useTranslation()
     const toolName = props.block.tool.name

@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import type { ToolCallBlock } from '@/chat/types'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 import { EditView } from '@/components/ToolCard/views/EditView'
 import { AskUserQuestionView } from '@/components/ToolCard/views/AskUserQuestionView'
 import { RequestUserInputView } from '@/components/ToolCard/views/RequestUserInputView'
@@ -13,7 +13,7 @@ import { getInputStringAny } from '@/lib/toolInputUtils'
 
 export type ToolViewProps = {
     block: ToolCallBlock
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
     surface?: 'inline' | 'dialog'
 }
 

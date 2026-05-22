@@ -1,18 +1,22 @@
 import type {
     DecryptedMessage as ProtocolDecryptedMessage,
-    Session,
-    SessionSummary,
     SyncEvent as ProtocolSyncEvent,
-    WorktreeMetadata
 } from '@hapi/protocol/types'
 
 export type {
     AgentState,
     AttachmentMetadata,
+    Machine,
+    MachinesResponse,
+    MessagesResponse,
     PermissionMode,
+    RunnerState,
     Session,
+    SessionResponse,
     SessionSummary,
     SessionSummaryMetadata,
+    SessionsResponse,
+    SpawnResponse,
     TeamMember,
     TeamMessage,
     TeamState,
@@ -20,24 +24,8 @@ export type {
     ThreadGoal,
     ThreadGoalStatus,
     TodoItem,
-    WorktreeMetadata
+    WorktreeMetadata,
 } from '@hapi/protocol/types'
-
-export type SessionMetadataSummary = {
-    path: string
-    host: string
-    version?: string
-    name?: string
-    os?: string
-    summary?: { text: string; updatedAt: number }
-    machineId?: string
-    tools?: string[]
-    flavor?: string | null
-    capabilities?: {
-        terminal?: boolean
-    }
-    worktree?: WorktreeMetadata
-}
 
 export type MessageStatus = 'queued' | 'sending' | 'sent' | 'failed'
 
@@ -45,35 +33,6 @@ export type DecryptedMessage = ProtocolDecryptedMessage & {
     status?: MessageStatus
     originalText?: string
     invokedAt?: number | null
-}
-
-export type RunnerState = {
-    status?: string
-    pid?: number
-    httpPort?: number
-    startedAt?: number
-    shutdownRequestedAt?: number
-    shutdownSource?: string
-    lastSpawnError?: {
-        message: string
-        pid?: number
-        exitCode?: number | null
-        signal?: string | null
-        at: number
-    } | null
-}
-
-export type Machine = {
-    id: string
-    active: boolean
-    metadata: {
-        host: string
-        platform: string
-        happyCliVersion: string
-        displayName?: string
-        workspaceRoots?: string[]
-    } | null
-    runnerState?: RunnerState | null
 }
 
 export type AuthResponse = {
@@ -86,19 +45,6 @@ export type AuthResponse = {
     }
 }
 
-export type SessionsResponse = { sessions: SessionSummary[] }
-export type SessionResponse = { session: Session }
-export type MessagesResponse = {
-    messages: DecryptedMessage[]
-    page: {
-        limit: number
-        nextBeforeSeq: number | null
-        nextBeforeAt: number | null
-        hasMore: boolean
-    }
-}
-
-export type MachinesResponse = { machines: Machine[] }
 export type MachinePathsExistsResponse = { exists: Record<string, boolean> }
 
 export type MachineDirectoryEntry = {
@@ -114,10 +60,6 @@ export type MachineListDirectoryResponse = {
     entries?: MachineDirectoryEntry[]
     error?: string
 }
-
-export type SpawnResponse =
-    | { type: 'success'; sessionId: string }
-    | { type: 'error'; message: string }
 
 export type GitCommandResponse = {
     success: boolean

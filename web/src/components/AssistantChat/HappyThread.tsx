@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { ThreadPrimitive } from '@assistant-ui/react'
 import type { ApiClient } from '@/api/client'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 import type { ConversationOutlineItem } from '@/chat/outline'
 import { getConversationMessageAnchorId } from '@/chat/outline'
 import { HappyChatProvider } from '@/components/AssistantChat/context'
@@ -242,7 +242,7 @@ export function ConversationOutlinePanel(props: {
 export function HappyThread(props: {
     api: ApiClient
     sessionId: string
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
     disabled: boolean
     onRefresh: () => void
     onRetryMessage?: (localId: string) => void

@@ -1,9 +1,9 @@
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 
 export function isWindowsHostOs(os: string | null | undefined): boolean {
     return typeof os === 'string' && os.toLowerCase() === 'win32'
 }
 
-export function isRemoteTerminalSupported(metadata: SessionMetadataSummary | null | undefined): boolean {
-    return metadata?.capabilities?.terminal ?? true
+export function isRemoteTerminalSupported(_metadata: SessionSummaryMetadata | null | undefined): boolean {
+    return true
 }

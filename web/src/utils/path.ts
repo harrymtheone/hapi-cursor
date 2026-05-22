@@ -1,6 +1,6 @@
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 
-export function resolveDisplayPath(path: string, metadata: SessionMetadataSummary | null): string {
+export function resolveDisplayPath(path: string, metadata: SessionSummaryMetadata | null): string {
     if (!metadata?.path) return path
 
     const root = metadata.path

@@ -76,7 +76,7 @@ function renderCard(block: ToolGroupBlock, options?: { loadOlder?: () => Promise
             <HappyChatProvider value={{
                 api: {} as never,
                 sessionId: 'session-1',
-                metadata: { path: 'repo', host: 'local' },
+                metadata: { path: 'repo' },
                 terminalToolDisplayMode: 'detailed',
                 disabled: false,
                 onRefresh: vi.fn(),
@@ -84,7 +84,7 @@ function renderCard(block: ToolGroupBlock, options?: { loadOlder?: () => Promise
                 isLoadingMoreMessages: options?.isLoadingMore ?? false,
                 loadOlderMessagesPreservingScroll,
             }}>
-                <ToolGroupCard block={block} metadata={{ path: 'repo', host: 'local' }} />
+                <ToolGroupCard block={block} metadata={{ path: 'repo' }} />
             </HappyChatProvider>
         </I18nProvider>
     )
@@ -188,7 +188,7 @@ describe('ToolGroupCard', () => {
                     <HappyChatProvider value={{
                         api: {} as never,
                         sessionId: 'session-1',
-                        metadata: { path: 'repo', host: 'local' },
+                        metadata: { path: 'repo' },
                         terminalToolDisplayMode: 'detailed',
                         disabled: false,
                         onRefresh: vi.fn(),
@@ -202,7 +202,7 @@ describe('ToolGroupCard', () => {
                                 historyState: 'needs-older-history',
                                 needsOlderHistory: true,
                             })}
-                            metadata={{ path: 'repo', host: 'local' }}
+                            metadata={{ path: 'repo' }}
                         />
                     </HappyChatProvider>
                 </I18nProvider>
@@ -248,7 +248,7 @@ describe('ToolGroupCard', () => {
                     <HappyChatProvider value={{
                         api: {} as never,
                         sessionId: 'session-1',
-                        metadata: { path: 'repo', host: 'local' },
+                        metadata: { path: 'repo' },
                         terminalToolDisplayMode: 'detailed',
                         disabled: false,
                         onRefresh: vi.fn(),
@@ -262,7 +262,7 @@ describe('ToolGroupCard', () => {
                                 historyState: 'needs-older-history',
                                 needsOlderHistory: true,
                             })}
-                            metadata={{ path: 'repo', host: 'local' }}
+                            metadata={{ path: 'repo' }}
                         />
                     </HappyChatProvider>
                 </I18nProvider>
@@ -303,7 +303,7 @@ describe('ToolGroupCard', () => {
                     <HappyChatProvider value={{
                         api: {} as never,
                         sessionId: 'session-1',
-                        metadata: { path: 'repo', host: 'local' },
+                        metadata: { path: 'repo' },
                         terminalToolDisplayMode: 'detailed',
                         disabled: false,
                         onRefresh: vi.fn(),
@@ -317,7 +317,7 @@ describe('ToolGroupCard', () => {
                                 historyState: 'needs-older-history',
                                 needsOlderHistory: true,
                             })}
-                            metadata={{ path: 'repo', host: 'local' }}
+                            metadata={{ path: 'repo' }}
                         />
                     </HappyChatProvider>
                 </I18nProvider>

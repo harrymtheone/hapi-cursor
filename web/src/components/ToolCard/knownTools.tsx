@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 import { isObject } from '@hapi/protocol'
 import { BulbIcon, ClipboardIcon, EyeIcon, FileDiffIcon, GlobeIcon, MessageSquareIcon, PuzzleIcon, QuestionIcon, RocketIcon, SearchIcon, TerminalIcon, UsersIcon, WrenchIcon } from '@/components/ToolCard/icons'
 import type { ChecklistItem } from '@/components/ToolCard/checklist'
@@ -51,7 +51,7 @@ type ToolOpts = {
     result: unknown
     childrenCount: number
     description: string | null
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
 }
 
 export const knownTools: Record<string, {
@@ -367,7 +367,7 @@ export const knownTools: Record<string, {
 type Translator = (key: string, params?: Record<string, string | number>) => string
 
 export function getToolPresentation(
-    opts: Omit<ToolOpts, 'metadata'> & { metadata: SessionMetadataSummary | null },
+    opts: Omit<ToolOpts, 'metadata'> & { metadata: SessionSummaryMetadata | null },
     t?: Translator
 ): ToolPresentation {
     if (opts.toolName.startsWith('mcp__')) {

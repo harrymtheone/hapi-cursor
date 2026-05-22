@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ToolGroupBlock } from '@/chat/toolGroups'
 import type { ToolCallBlock } from '@/chat/types'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 import { useHappyChatContext } from '@/components/AssistantChat/context'
 import { ToolDetailDialogContent, ToolStatusIcon, toolStatusColorClass } from '@/components/ToolCard/ToolCard'
 import { getToolPresentation } from '@/components/ToolCard/knownTools'
@@ -67,7 +67,7 @@ function formatActionSummary(block: ToolGroupBlock, t: (key: string, params?: Re
     return parts.length > 0 ? parts.join(' · ') : null
 }
 
-function RowLabel(props: { block: ToolCallBlock; metadata: SessionMetadataSummary | null }) {
+function RowLabel(props: { block: ToolCallBlock; metadata: SessionSummaryMetadata | null }) {
     const { t } = useTranslation()
     const presentation = useMemo(() => getToolPresentation({
         toolName: props.block.tool.name,
@@ -101,7 +101,7 @@ function RowLabel(props: { block: ToolCallBlock; metadata: SessionMetadataSummar
 
 export function ToolGroupCard(props: {
     block: ToolGroupBlock
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
 }) {
     const { t } = useTranslation()
     const ctx = useHappyChatContext()

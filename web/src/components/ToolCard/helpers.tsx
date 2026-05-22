@@ -4,13 +4,13 @@
  */
 import React from 'react'
 import type { ToolCallBlock } from '@/chat/types'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 import { getToolPresentation } from '@/components/ToolCard/knownTools'
 import { truncate } from '@/lib/toolInputUtils'
 
 export function formatTaskChildLabel(
     child: ToolCallBlock,
-    metadata: SessionMetadataSummary | null,
+    metadata: SessionSummaryMetadata | null,
     t?: (key: string, params?: Record<string, string | number>) => string,
 ): string {
     const presentation = getToolPresentation({

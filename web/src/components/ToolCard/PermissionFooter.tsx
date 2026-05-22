@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ApiClient } from '@/api/client'
-import type { SessionMetadataSummary } from '@/types/api'
+import type { SessionSummaryMetadata } from '@/types/api'
 import type { ChatToolCall, ToolPermission } from '@/chat/types'
 import { usePlatform } from '@/hooks/usePlatform'
 import { Spinner } from '@/components/Spinner'
@@ -76,7 +76,7 @@ function PermissionRowButton(props: {
 export function PermissionFooter(props: {
     api: ApiClient
     sessionId: string
-    metadata: SessionMetadataSummary | null
+    metadata: SessionSummaryMetadata | null
     tool: ChatToolCall
     disabled: boolean
     onDone: () => void
