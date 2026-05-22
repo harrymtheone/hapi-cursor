@@ -10,11 +10,10 @@
 #   * Phase-3 owner-only cut   — namespace / :ns in runtime source trees
 #   * Phase-4 deploy cut       — tunwg / HAPI_RELAY_ / dangerous remote-log
 #                                  flags plus relay hosted-web sweep terms
-#   * Phase-5 flavor cut       — single residue (`AGENT_MESSAGE_PAYLOAD_TYPE = 'codex'`
-#                                  in shared/src/modes.ts) is the only allowed survivor;
-#                                  pinned via line-anchored post-filter (D-85).
-#                                  Also enforces zero hits for legacy Phase-5 identifiers
-#                                  and `flavor === '<non-cursor-literal>'` branches.
+#   * Phase-5 flavor cut       — zero hits for legacy Phase-5 identifiers and
+#                                  `flavor === '<non-cursor-literal>'` branches.
+#                                  Phase 7 (D-124) removed the old
+#                                  AGENT_MESSAGE_PAYLOAD_TYPE='codex' whitelist.
 #
 # Whitelist categories:
 #   * Permanent (Phase-12 deferred) — docs / marketing / NOTICE wording owned
@@ -79,21 +78,18 @@ PHASE4_WHITELIST=(
   --glob '!scripts/check-no-cut-agents.sh'
 )
 
-# === Phase-1/2/5 main sweep with line-anchored post-filter (D-85)
+# === Phase-1/2/5 main sweep
 SURVIVORS=$("$RG_BIN" -n -i "${WHITELIST[@]}" "$PATTERN" . || true)
-SURVIVORS_FILTERED=$(echo "$SURVIVORS" | grep -v "shared/src/modes.ts:.*AGENT_MESSAGE_PAYLOAD_TYPE = 'codex' as const" || true)
-if [ -n "$SURVIVORS_FILTERED" ]; then
-  echo "$SURVIVORS_FILTERED"
+if [ -n "$SURVIVORS" ]; then
+  echo "$SURVIVORS"
   echo ""
   echo "❌ Non-Cursor / external-channel literals found outside whitelist."
   echo "   Rewrite the hit at the source (delete or migrate the consumer)."
-  echo "   The only allowed survivor is the wire-protocol literal at"
-  echo "   shared/src/modes.ts (AGENT_MESSAGE_PAYLOAD_TYPE = 'codex' as const)."
   echo "   Phase-12 docs/marketing surfaces are deferred to the polish pass and"
   echo "   already covered by the docs/website globs."
   exit 1
 fi
-echo "✅ No non-Cursor agent literals outside whitelist (Phase-5 territory collapsed; only AGENT_MESSAGE_PAYLOAD_TYPE wire literal allowed)."
+echo "✅ No non-Cursor agent literals outside whitelist."
 
 if "$RG_BIN" -n "$PHASE3_PATTERN" "${PHASE3_SOURCE_DIRS[@]}"; then
   echo ""
