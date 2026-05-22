@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 5 context gathered
-last_updated: "2026-05-22T01:06:09.500Z"
-last_activity: 2026-05-22 -- Phase 05 planning complete
+last_updated: "2026-05-22T02:02:36.848Z"
+last_activity: 2026-05-22
 progress:
   total_phases: 12
   completed_phases: 4
   total_plans: 30
-  completed_plans: 22
+  completed_plans: 23
   percent: 33
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 5 — flavor consolidation + capability abstraction
+**Current focus:** Phase 05 — flavor-consolidation-capability-abstraction
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
+Phase: 05 (flavor-consolidation-capability-abstraction) — EXECUTING
+Plan: 2 of 8
 Status: Ready to execute
-Last activity: 2026-05-22 -- Phase 05 planning complete
+Last activity: 2026-05-22
 
-Progress: [██████████] 100%
+Progress: [████████░░] 77%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [██████████] 100%
 | Phase 04 P02 | 2 min | 2 tasks | 3 files |
 | Phase 04 P03 | 21 min | 2 tasks | 4 files |
 | Phase 04 P04 | 8 min | 3 tasks | 19 files |
+| Phase 05 P01 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,7 @@ Recent decisions affecting current work:
 - [Phase 04]: Plan 03 removed the dangerous remote-log upload path outright while preserving local logger output and legitimate HAPI_API_URL direct-connect diagnostics. — CUT-11 and D-57 through D-60 require deleting remote uploads without breaking direct CLI-to-hub configuration.
 - [Phase 04]: Removed the legacy tunnel binary from the single-exe and embedded runtime asset pipeline while preserving ripgrep and difftastic archive extraction. — Task 04-04-01 required deleting only the tunnel-specific runtime asset code; shared runtime extraction stayed intact.
 - [Phase 04]: Phase 04 guard exclusions are planning-only for deployment-infrastructure residue; docs, website, README, and runtime source are not whitelisted. — The plan required fail-closed zero-tolerance scans and explicitly prohibited broad docs or source whitelists.
+- [Phase ?]: [Phase 05]: Plan 01 promoted FLAVOR_CAPS to Record<AgentFlavor, FlavorCapabilities> with cursor row populated per D-73 + getCapabilities/getCapability lookup helpers; placeholder non-cursor rows preserve legacy hasCapability semantics until Slice 1b (plan 05-07) narrows AgentFlavor.
 
 ### Pending Todos
 
@@ -126,6 +128,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T00:27:09.658Z
+Last session: 2026-05-22T02:02:19.496Z
 Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-flavor-consolidation-capability-abstraction/05-CONTEXT.md
+Resume file: None
