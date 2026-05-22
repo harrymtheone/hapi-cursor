@@ -1,23 +1,10 @@
-import { z } from 'zod'
 import type { Machine } from '@hapi/protocol/types'
-import { RunnerStateSchema } from '@hapi/protocol/schemas'
+import { MachineMetadataSchema, RunnerStateSchema } from '@hapi/protocol/schemas'
 import type { Store } from '../store'
 import { clampAliveTime } from './aliveTime'
 import { EventPublisher } from './eventPublisher'
 
 export type { Machine }
-
-const machineMetadataSchema = z.object({
-    host: z.string().optional(),
-    platform: z.string().optional(),
-    happyCliVersion: z.string().optional(),
-    displayName: z.string().optional(),
-    homeDir: z.string().optional(),
-    happyHomeDir: z.string().optional(),
-    happyLibDir: z.string().optional(),
-    workspaceRoot: z.string().optional(),
-    workspaceRoots: z.array(z.string()).optional()
-})
 
 export class MachineCache {
     private readonly machines: Map<string, Machine> = new Map()
@@ -59,33 +46,21 @@ export class MachineCache {
         const existing = this.machines.get(machineId)
 
         const metadata = (() => {
-            const parsed = machineMetadataSchema.safeParse(stored.metadata)
-            if (!parsed.success) return null
-            const data = parsed.data
-            const host = typeof data.host === 'string' ? data.host : 'unknown'
-            const platform = typeof data.platform === 'string' ? data.platform : 'unknown'
-            const happyCliVersion = typeof data.happyCliVersion === 'string' ? data.happyCliVersion : 'unknown'
-            const displayName = typeof data.displayName === 'string' ? data.displayName : undefined
-            const homeDir = typeof data.homeDir === 'string' ? data.homeDir : 'unknown'
-            const happyHomeDir = typeof data.happyHomeDir === 'string' ? data.happyHomeDir : 'unknown'
-            const happyLibDir = typeof data.happyLibDir === 'string' ? data.happyLibDir : 'unknown'
-            const workspaceRoots = Array.from(new Set(
-                Array.isArray(data.workspaceRoots)
-                    ? data.workspaceRoots.filter((path): path is string => typeof path === 'string' && path.trim().length > 0)
-                    : typeof data.workspaceRoot === 'string'
-                        ? [data.workspaceRoot]
-                        : []
-            ))
-            return {
-                host,
-                platform,
-                happyCliVersion,
-                displayName,
-                homeDir,
-                happyHomeDir,
-                happyLibDir,
-                workspaceRoots: workspaceRoots.length > 0 ? workspaceRoots : undefined
+            if (!stored.metadata || typeof stored.metadata !== 'object' || Array.isArray(stored.metadata)) {
+                return null
             }
+            const raw = stored.metadata as Record<string, unknown>
+            const withFallbacks = {
+                ...raw,
+                host: typeof raw.host === 'string' ? raw.host : 'unknown',
+                platform: typeof raw.platform === 'string' ? raw.platform : 'unknown',
+                happyCliVersion: typeof raw.happyCliVersion === 'string' ? raw.happyCliVersion : 'unknown',
+                homeDir: typeof raw.homeDir === 'string' ? raw.homeDir : 'unknown',
+                happyHomeDir: typeof raw.happyHomeDir === 'string' ? raw.happyHomeDir : 'unknown',
+                happyLibDir: typeof raw.happyLibDir === 'string' ? raw.happyLibDir : 'unknown'
+            }
+            const parsed = MachineMetadataSchema.safeParse(withFallbacks)
+            return parsed.success ? parsed.data : null
         })()
 
         const storedActiveAt = stored.activeAt ?? stored.createdAt

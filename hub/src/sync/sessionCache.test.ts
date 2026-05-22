@@ -163,7 +163,9 @@ describe('publisher.emit contract - SyncEventSchema conformance', () => {
             if (!result.success) {
                 throw new Error(`emit violates SyncEventSchema: ${JSON.stringify(update)} - ${result.error.message}`)
             }
-            expect('metadata' in update.data).toBe(true)
+            if (!('metadata' in update.data)) {
+                throw new Error(`expected full Session payload: ${JSON.stringify(update.data)}`)
+            }
             expect(update.data.id).toBe(session.id)
         })
     })
