@@ -15,6 +15,14 @@ import { PermissionModeSchema } from '@hapi/protocol/schemas';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
 import { getInvokedCwd } from '@/utils/invokedCwd';
 
+export const resolvePermissionMode = (value: unknown): PermissionMode => {
+    const parsed = PermissionModeSchema.safeParse(value);
+    if (!parsed.success || !isPermissionModeAllowedForFlavor(parsed.data, 'cursor')) {
+        throw new UnknownPermissionModeError(typeof value === 'string' ? value : JSON.stringify(value));
+    }
+    return parsed.data as PermissionMode;
+};
+
 const formatFailureReason = (message: string): string => {
     const maxLength = 200;
     if (message.length <= maxLength) {
@@ -105,14 +113,6 @@ export async function runCursor(opts: {
         logger.debug(`[cursor] cancelByLocalId(${localId}): ${removed ? 'removed' : 'not found (best-effort)'}`);
         return removed;
     });
-
-    const resolvePermissionMode = (value: unknown): PermissionMode => {
-        const parsed = PermissionModeSchema.safeParse(value);
-        if (!parsed.success || !isPermissionModeAllowedForFlavor(parsed.data, 'cursor')) {
-            throw new UnknownPermissionModeError(typeof value === 'string' ? value : JSON.stringify(value));
-        }
-        return parsed.data as PermissionMode;
-    };
 
     session.rpcHandlerManager.registerHandler('set-session-config', async (payload: unknown) => {
         if (!payload || typeof payload !== 'object') {
