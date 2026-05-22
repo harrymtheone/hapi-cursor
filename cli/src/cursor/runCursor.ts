@@ -10,6 +10,7 @@ import { bootstrapExistingSession, bootstrapSession } from '@/agent/sessionFacto
 import { registerLocalHandoffHandler } from '@/agent/localHandoff';
 import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
 import { isPermissionModeAllowedForFlavor } from '@hapi/protocol';
+import { UnknownPermissionModeError } from '@hapi/protocol/modes';
 import { PermissionModeSchema } from '@hapi/protocol/schemas';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
 import { getInvokedCwd } from '@/utils/invokedCwd';
@@ -108,7 +109,7 @@ export async function runCursor(opts: {
     const resolvePermissionMode = (value: unknown): PermissionMode => {
         const parsed = PermissionModeSchema.safeParse(value);
         if (!parsed.success || !isPermissionModeAllowedForFlavor(parsed.data, 'cursor')) {
-            throw new Error('Invalid permission mode');
+            throw new UnknownPermissionModeError(typeof value === 'string' ? value : JSON.stringify(value));
         }
         return parsed.data as PermissionMode;
     };
