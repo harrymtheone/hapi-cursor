@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 07-04-PLAN.md
-last_updated: "2026-05-22T14:30:29.695Z"
+status: ready_to_plan
+stopped_at: Phase 07 complete (4/4) — ready to discuss Phase 8
+last_updated: 2026-05-22T15:08:01.694Z
 last_activity: 2026-05-22
 progress:
   total_phases: 12
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 07 — wire-contracts-unification-sse-patch-contract
+**Current focus:** Phase 8 — hub internal decoupling
 
 ## Current Position
 
-Phase: 07 (wire-contracts-unification-sse-patch-contract) — EXECUTING
-Plan: 4 of 4
-Status: Ready to execute
+Phase: 8
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-05-22
 
 Progress: [██████████] 100%
@@ -36,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 35
+- Total plans completed: 39
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -50,6 +50,7 @@ Progress: [██████████] 100%
 | 04 | 4 | - | - |
 | 05 | 8 | - | - |
 | 06 | 4 | - | - |
+| 07 | 4 | - | - |
 
 **Recent Trend:**
 
