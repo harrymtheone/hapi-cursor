@@ -2,26 +2,14 @@ import { logger } from '@/ui/logger';
 import { cursorLocal } from './cursorLocal';
 import { CursorSession } from './session';
 import { BaseLocalLauncher } from '@/modules/common/launcher/BaseLocalLauncher';
-
-function permissionModeToCursorArgs(mode?: string): { mode?: 'plan' | 'ask'; yolo?: boolean } {
-    if (mode === 'plan') {
-        return { mode: 'plan' };
-    }
-    if (mode === 'ask') {
-        return { mode: 'ask' };
-    }
-    if (mode === 'yolo') {
-        return { yolo: true };
-    }
-    return {};
-}
+import { permissionModeToCursorArgs } from '@/agent/modeConfig';
 
 export async function cursorLocalLauncher(session: CursorSession): Promise<'switch' | 'exit'> {
     const resumeChatId = session.sessionId;
     if (resumeChatId) {
         session.onSessionFound(resumeChatId);
     }
-    const { mode, yolo } = permissionModeToCursorArgs(session.getPermissionMode() as string);
+    const { mode, yolo } = permissionModeToCursorArgs(session.getPermissionMode());
 
     const launcher = new BaseLocalLauncher({
         label: 'cursor-local',
