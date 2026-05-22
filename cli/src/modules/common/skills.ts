@@ -25,20 +25,12 @@ function getUserSkillsRoots(): string[] {
     const home = getHomeDirectory();
     return [
         join(home, '.agents', 'skills'),
-        join(home, '.claude', 'skills'),
-        join(home, '.codex', 'skills'),
     ];
-}
-
-function getAdminSkillsRoot(): string {
-    return join('/etc', 'codex', 'skills');
 }
 
 function getProjectSkillsRoots(directory: string): string[] {
     return [
         join(directory, '.agents', 'skills'),
-        join(directory, '.claude', 'skills'),
-        join(directory, '.codex', 'skills'),
     ];
 }
 
@@ -106,7 +98,7 @@ function extractSkillSummary(skillDir: string, fileContent: string): SkillSummar
     return { name, description };
 }
 
-async function listTopLevelSkillDirs(skillsRoot: string, options: { includeCodexSystem?: boolean } = {}): Promise<string[]> {
+async function listTopLevelSkillDirs(skillsRoot: string): Promise<string[]> {
     try {
         const entries = await readdir(skillsRoot, { withFileTypes: true });
         const result: string[] = [];
@@ -117,14 +109,6 @@ async function listTopLevelSkillDirs(skillsRoot: string, options: { includeCodex
             }
 
             if (entry.name.startsWith('.')) {
-                if (options.includeCodexSystem && entry.name === '.system') {
-                    const systemEntries = await readdir(join(skillsRoot, entry.name), { withFileTypes: true }).catch(() => []);
-                    for (const systemEntry of systemEntries) {
-                        if (systemEntry.isDirectory() && !systemEntry.name.startsWith('.')) {
-                            result.push(join(skillsRoot, entry.name, systemEntry.name));
-                        }
-                    }
-                }
                 continue;
             }
 
@@ -151,31 +135,23 @@ async function readSkillsFromDirs(skillDirs: string[]): Promise<SkillSummary[]> 
     return skills.filter((skill): skill is SkillSummary => skill !== null);
 }
 
-function isCodexSkillsRoot(root: string): boolean {
-    return root.endsWith(join('.codex', 'skills'));
-}
-
 export async function listSkills(workingDirectory?: string): Promise<SkillSummary[]> {
     const projectRoots = await listProjectSkillsRoots(workingDirectory);
     const userRoots = getUserSkillsRoots();
-    const adminRoot = getAdminSkillsRoot();
-    const [projectSkillDirs, userSkillDirs, adminSkillDirs] = await Promise.all([
-        Promise.all(projectRoots.map(async (root) => await listTopLevelSkillDirs(root, { includeCodexSystem: isCodexSkillsRoot(root) }))).then((dirs) => dirs.flat()),
-        Promise.all(userRoots.map(async (root) => await listTopLevelSkillDirs(root, { includeCodexSystem: isCodexSkillsRoot(root) }))).then((dirs) => dirs.flat()),
-        listTopLevelSkillDirs(adminRoot, { includeCodexSystem: true }),
+    const [projectSkillDirs, userSkillDirs] = await Promise.all([
+        Promise.all(projectRoots.map(async (root) => await listTopLevelSkillDirs(root))).then((dirs) => dirs.flat()),
+        Promise.all(userRoots.map(async (root) => await listTopLevelSkillDirs(root))).then((dirs) => dirs.flat()),
     ]);
 
-    const [projectSkills, userSkills, adminSkills] = await Promise.all([
+    const [projectSkills, userSkills] = await Promise.all([
         readSkillsFromDirs(projectSkillDirs),
         readSkillsFromDirs(userSkillDirs),
-        readSkillsFromDirs(adminSkillDirs),
     ]);
 
     const dedupedSkills = new Map<string, SkillSummary>();
     for (const skill of [
         ...projectSkills,
         ...userSkills,
-        ...adminSkills,
     ]) {
         if (!dedupedSkills.has(skill.name)) {
             dedupedSkills.set(skill.name, skill);
