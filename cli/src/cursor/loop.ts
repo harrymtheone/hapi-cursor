@@ -5,14 +5,7 @@ import { CursorSession } from './session';
 import { cursorLocalLauncher } from './cursorLocalLauncher';
 import { cursorRemoteLauncher } from './cursorRemoteLauncher';
 import { ApiClient, ApiSessionClient } from '@/lib';
-import type { CursorPermissionMode } from '@hapi/protocol/types';
-
-export type PermissionMode = CursorPermissionMode;
-
-export interface EnhancedMode {
-    permissionMode: PermissionMode;
-    model?: string;
-}
+import type { PermissionMode, EnhancedMode } from './modes';
 
 interface LoopOptions {
     path: string;

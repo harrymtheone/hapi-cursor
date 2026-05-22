@@ -1,5 +1,6 @@
 import { logger } from '@/ui/logger';
-import { loop, type EnhancedMode, type PermissionMode } from './loop';
+import { loop } from './loop';
+import type { EnhancedMode, PermissionMode } from './modes';
 import { MessageQueue2 } from '@/utils/MessageQueue2';
 import { hashObject } from '@/utils/deterministicJson';
 import { registerKillSessionHandler } from '@/agent/registerKillSessionHandler';
