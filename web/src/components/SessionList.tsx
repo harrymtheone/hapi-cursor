@@ -487,25 +487,6 @@ function SessionListSearch(props: {
     )
 }
 
-const FLAVOR_BADGES: Record<string, { label: string; colors: string }> = {
-    cursor: {
-        label: 'Cu',
-        colors: 'bg-[#0f766e] text-white',
-    },
-}
-
-function FlavorIcon({ flavor, className }: { flavor?: string | null; className?: string }) {
-    const badge = FLAVOR_BADGES[(flavor ?? 'cursor')] ?? FLAVOR_BADGES.cursor
-    return (
-        <span
-            aria-hidden="true"
-            className={`inline-flex items-center justify-center rounded-sm text-[8px] font-semibold leading-none ${badge.colors} ${className ?? 'h-4 w-4'}`}
-        >
-            {badge.label}
-        </span>
-    )
-}
-
 function MachineIcon(props: { className?: string }) {
     return (
         <svg
@@ -590,7 +571,6 @@ function SessionItem(props: {
             >
                 <div className={`flex items-center justify-between gap-3 ${!s.active ? 'opacity-50' : ''}`}>
                     <div className="flex items-center gap-2 min-w-0">
-                        <FlavorIcon flavor="cursor" className="h-4 w-4 shrink-0" />
                         <div className={`truncate text-sm font-medium ${s.active ? 'text-[var(--app-fg)]' : 'text-[var(--app-hint)]'}`}>
                             {sessionName}
                         </div>
