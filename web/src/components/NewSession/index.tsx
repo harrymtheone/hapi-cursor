@@ -4,26 +4,16 @@ import type { Machine } from '@/types/api'
 import { usePlatform } from '@/hooks/usePlatform'
 import { useMachinePathsExists } from '@/hooks/useMachinePathsExists'
 import { useSpawnSession } from '@/hooks/mutations/useSpawnSession'
-import { useCodexModels } from '@/hooks/queries/useCodexModels'
 import { useSessions } from '@/hooks/queries/useSessions'
 import { useActiveSuggestions, type Suggestion } from '@/hooks/useActiveSuggestions'
 import { useDirectorySuggestions } from '@/hooks/useDirectorySuggestions'
 import { useRecentPaths } from '@/hooks/useRecentPaths'
 import { useTranslation } from '@/lib/use-translation'
-import type { AgentType, ClaudeEffort, CodexReasoningEffort, SessionType } from './types'
+import type { SessionType } from './types'
 import { ActionButtons } from './ActionButtons'
-import { AgentSelector } from './AgentSelector'
 import { DirectorySection } from './DirectorySection'
 import { MachineSelector } from './MachineSelector'
 import { ModelSelector } from './ModelSelector'
-import { ClaudeEffortSelector } from './ClaudeEffortSelector'
-import { ReasoningEffortSelector } from './ReasoningEffortSelector'
-import {
-    loadPreferredAgent,
-    loadPreferredYoloMode,
-    savePreferredAgent,
-    savePreferredYoloMode,
-} from './preferences'
 import { SessionTypeSelector } from './SessionTypeSelector'
 import { YoloToggle } from './YoloToggle'
 import { formatRunnerSpawnError } from '../../utils/formatRunnerSpawnError'
@@ -49,11 +39,8 @@ export function NewSession(props: {
     const [directory, setDirectory] = useState(props.initialDirectory ?? '')
     const [suppressSuggestions, setSuppressSuggestions] = useState(false)
     const [isDirectoryFocused, setIsDirectoryFocused] = useState(false)
-    const [agent, setAgent] = useState<AgentType>(loadPreferredAgent)
     const [model, setModel] = useState('auto')
-    const [effort, setEffort] = useState<ClaudeEffort>('auto')
-    const [modelReasoningEffort, setModelReasoningEffort] = useState<CodexReasoningEffort>('default')
-    const [yoloMode, setYoloMode] = useState(loadPreferredYoloMode)
+    const [yoloMode, setYoloMode] = useState(false)
     const [sessionType, setSessionType] = useState<SessionType>('simple')
     const [worktreeName, setWorktreeName] = useState('')
     const [directoryCreationConfirmed, setDirectoryCreationConfirmed] = useState(false)
@@ -65,19 +52,6 @@ export function NewSession(props: {
             worktreeInputRef.current?.focus()
         }
     }, [sessionType])
-
-    useEffect(() => {
-        setModel('auto')
-        setEffort('auto')
-    }, [agent])
-
-    useEffect(() => {
-        savePreferredAgent(agent)
-    }, [agent])
-
-    useEffect(() => {
-        savePreferredYoloMode(yoloMode)
-    }, [yoloMode])
 
     useEffect(() => {
         if (props.machines.length === 0) return
@@ -101,28 +75,10 @@ export function NewSession(props: {
         () => (machineId ? props.machines.find((machine) => machine.id === machineId) ?? null : null),
         [machineId, props.machines]
     )
-    const codexModelsState = useCodexModels({
-        api: props.api,
-        machineId,
-        enabled: agent === 'codex' && Boolean(machineId)
-    })
     const runnerSpawnError = useMemo(
         () => formatRunnerSpawnError(selectedMachine),
         [selectedMachine]
     )
-    const codexModelOptions = useMemo(() => {
-        const options = [{ value: 'auto', label: 'Default' }]
-        for (const codexModel of codexModelsState.models) {
-            options.push({
-                value: codexModel.id,
-                label: codexModel.displayName
-            })
-        }
-        if (model !== 'auto' && !options.some((option) => option.value === model)) {
-            options.splice(1, 0, { value: model, label: model })
-        }
-        return options
-    }, [codexModelsState.models, model])
 
     const recentPaths = useMemo(
         () => getRecentPaths(machineId),
@@ -278,17 +234,11 @@ export function NewSession(props: {
             }
 
             const resolvedModel = model !== 'auto' ? model : undefined
-            const resolvedEffort = agent === 'claude' && effort !== 'auto' ? effort : undefined
-            const resolvedModelReasoningEffort = agent === 'codex' && modelReasoningEffort !== 'default'
-                ? modelReasoningEffort
-                : undefined
             const result = await spawnSession({
                 machineId,
                 directory: trimmedDirectory,
-                agent,
+                agent: 'cursor',
                 model: resolvedModel,
-                effort: resolvedEffort,
-                modelReasoningEffort: resolvedModelReasoningEffort,
                 yolo: yoloMode,
                 sessionType,
                 worktreeName: sessionType === 'worktree' ? (worktreeName.trim() || undefined) : undefined
@@ -350,33 +300,11 @@ export function NewSession(props: {
                 onSessionTypeChange={setSessionType}
                 onWorktreeNameChange={setWorktreeName}
             />
-            <AgentSelector
-                agent={agent}
-                isDisabled={isFormDisabled}
-                onAgentChange={setAgent}
-            />
             <ModelSelector
-                agent={agent}
+                agent="cursor"
                 model={model}
-                options={agent === 'codex' ? codexModelOptions : undefined}
-                isDisabled={isFormDisabled || (agent === 'codex' && Boolean(codexModelsState.error))}
-                isLoading={agent === 'codex' && codexModelsState.isLoading}
-                error={agent === 'codex' && codexModelsState.error
-                    ? `${t('newSession.model.loadFailed')}: ${codexModelsState.error}`
-                    : null}
+                isDisabled={isFormDisabled}
                 onModelChange={setModel}
-            />
-            <ClaudeEffortSelector
-                agent={agent}
-                effort={effort}
-                isDisabled={isFormDisabled}
-                onEffortChange={setEffort}
-            />
-            <ReasoningEffortSelector
-                agent={agent}
-                value={modelReasoningEffort}
-                isDisabled={isFormDisabled}
-                onChange={setModelReasoningEffort}
             />
             <YoloToggle
                 yoloMode={yoloMode}
