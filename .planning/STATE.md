@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-05-22T14:22:17.457Z"
+stopped_at: Completed 07-04-PLAN.md
+last_updated: "2026-05-22T14:30:29.695Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 12
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 38
-  completed_plans: 37
-  percent: 97
+  completed_plans: 38
+  percent: 58
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 07 (wire-contracts-unification-sse-patch-contract) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [██████████] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -88,6 +88,7 @@ Progress: [██████████] 97%
 | Phase 07 P07-01 | 25min | 3 tasks | 24 files |
 | Phase 07 P02 | 3min 26s | 4 tasks | 3 files |
 | Phase 07 P03 | 11min | 7 tasks | 25 files |
+| Phase 07 P04 | 5min 24s | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 07]: Plan 01 (Slice 1) lifted Machine/RunnerState/MachineMetadata/Message wire schemas + new SessionPatchSchema/MachinePatchSchema (strict) into shared/src/schemas.ts; tightened SyncEventSchema.data on session-added/session-updated/machine-updated; deleted MetadataSchema.flavor (Pitfall #1: stays default-strip not strict); flipped AGENT_MESSAGE_PAYLOAD_TYPE to 'cursor'; created shared/src/responses.ts. Slice 1 absorbed slice-2/3 cascades (hub flavor reads, web flavor display reads, hub emit-shape conformance, hub local interface Machine collision) as Rule-3 deviations to keep workspace gate green; slices 07-02 + 07-03 should be re-scoped per SUMMARY's deviations section. 532 tests green.
 - [Phase 07]: Plan 02 added runtime hub broadcast contract proof for SessionCache and MachineCache emits; removed hub-local machineMetadataSchema in favor of shared MachineMetadataSchema with read-site fallbacks; added non-blocking dev/test SyncEventSchema self-check in EventPublisher.emit. Full gate `bun typecheck && bun run test` passed (CLI 237, Hub 155 incl. 6 new contract tests, Web 532, guard green).
 - [Phase 07]: Plan 03 collapsed CLI/web wire mirrors onto shared protocol schemas/types, removed remaining CLI writer-side flavor plumbing, and rewrote `useSSE` to parse `SyncEventSchema` directly. Malformed SSE events now log/drop without fallback invalidation; `SessionSummary.backgroundTaskCount` updates list/detail cache directly; `SessionList` no longer renders flavor badges. Full gate `bun typecheck && bun run test` passed (CLI 237, Hub 155, Web 541, guard green).
+- [Phase 07]: Guard checks target declarations/usages while preserving top-level resume-target flavor — The D-126 guard must enforce REFA-03/REFA-04 without flagging legitimate LocalResumeTarget/ResumableSession flavor fields.
+- [Phase 07]: Strip hub metadata flavor fixtures before enabling D-126 — The completed wire contract deletes metadata.flavor, so remaining hub test fixtures were old contract residue that would make the new zero-tolerance guard fail.
 
 ### Pending Todos
 
@@ -155,6 +158,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T14:22:17.453Z
-Stopped at: Completed 07-03-PLAN.md
+Last session: 2026-05-22T14:30:15.509Z
+Stopped at: Completed 07-04-PLAN.md
 Resume file: None

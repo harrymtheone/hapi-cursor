@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream (completed 2026-05-21)
 - [x] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches (completed 2026-05-22)
 - [x] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode (completed 2026-05-22)
-- [ ] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection
+- [x] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection (completed 2026-05-22)
 - [ ] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler
 - [ ] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/`
 - [ ] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters
@@ -147,7 +147,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 07-01-PLAN.md — Slice 1: shared schema lift (Machine/RunnerState/Message/Patch) + SyncEventSchema tighten + AGENT_MESSAGE_PAYLOAD_TYPE='cursor' + MetadataSchema.flavor delete + schemas.test.ts
 - [x] 07-02-PLAN.md — Slice 2: hub broadcast conformance + machineCache type collapse + syncEngine flavor-defense delete + sessionCache.test.ts contract test
 - [x] 07-03-PLAN.md — Slice 3: cli + web type-duplicate cleanup + useSSE rewrite (delete 7 narrows + invalidation queue) + useSSE.test.tsx (backgroundTaskCount regression)
-- [ ] 07-04-PLAN.md — Slice 4: scripts/check-no-cut-agents.sh D-126 additions + D-124 whitelist removal + final ripgrep zero-hit phase gate
+- [x] 07-04-PLAN.md — Slice 4: scripts/check-no-cut-agents.sh D-126 additions + D-124 whitelist removal + final ripgrep zero-hit phase gate
 
 ### Phase 8: Hub internal decoupling
 **Goal**: Hub sync layer is decomposed into single-responsibility services; SSE no longer reverse-depends on `SyncEngine`; every recurring timer goes through a shared scheduler that is fully cleared on shutdown.
@@ -220,7 +220,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
 | 5. Flavor consolidation + capability abstraction | 8/8 | Complete   | 2026-05-22 |
 | 6. Agent runtime shared kit + mode hardening | 4/4 | Complete   | 2026-05-22 |
-| 7. Wire contracts unification & SSE patch contract | 3/4 | In Progress|  |
+| 7. Wire contracts unification & SSE patch contract | 4/4 | Complete   | 2026-05-22 |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
 | 9. Web internal decoupling | 0/TBD | Not started | - |
 | 10. Config cleanup | 0/TBD | Not started | - |
