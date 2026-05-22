@@ -1,4 +1,4 @@
-import type { SyncEvent } from '../sync/syncEngine'
+import type { SyncEvent } from '@hapi/protocol/types'
 import type { VisibilityState } from '../visibility/visibilityTracker'
 import type { VisibilityTracker } from '../visibility/visibilityTracker'
 

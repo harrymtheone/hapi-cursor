@@ -68,7 +68,7 @@ describe('alive incremental events', () => {
             })
             expect(engine.getMachine(engineMachine.id)?.id).toBe(engineMachine.id)
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -177,7 +177,7 @@ describe('alive incremental events', () => {
             expect((update.data as { updatedAt?: unknown }).updatedAt).toEqual(expect.any(Number))
         } finally {
             unsubscribe()
-            engine.stop()
+            engine.shutdown()
         }
     })
 

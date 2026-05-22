@@ -65,6 +65,49 @@ let sseManager: SSEManager | null = null
 let visibilityTracker: VisibilityTracker | null = null
 let notificationHub: NotificationHub | null = null
 
+/**
+ * Factory for the SIGINT / SIGTERM shutdown closure (D-141).
+ *
+ * Extracted from `main()` so unit tests can invoke the handler directly without
+ * resorting to `process.emit('SIGINT')` (unreliable across runtimes).
+ *
+ * Shutdown order (D-140): cancel scheduler handles first so no further callbacks
+ * fire after subsystem stops, then stop notificationHub, await syncEngine.shutdown
+ * (raced with a configurable timeout — default 5s — so a hanging shutdown does
+ * not block exit), then SSE + web server, then `process.exit(0)`.
+ *
+ * Plan 08-02 Task 2: scaffolds the factory with a no-op scheduler stub; Task 3
+ * wires the real KeepaliveScheduler and the per-subsystem cancellations.
+ */
+export type ShutdownDeps = {
+    scheduler: { shutdown: () => void }
+    syncEngine: { shutdown: () => void | Promise<void> } | null
+    notificationHub: { stop: () => void } | null
+    sseManager: { stop: () => void } | null
+    webServer: { stop: () => void } | null
+    /** Race timeout (ms) for awaiting syncEngine.shutdown(). Default 5_000. */
+    syncEngineShutdownTimeoutMs?: number
+}
+
+export function createShutdownHandler(deps: ShutdownDeps): () => Promise<void> {
+    const timeoutMs = deps.syncEngineShutdownTimeoutMs ?? 5_000
+    return async () => {
+        console.log('\nShutting down...')
+        deps.scheduler.shutdown()
+        deps.notificationHub?.stop()
+        if (deps.syncEngine) {
+            const shutdownPromise = Promise.resolve(deps.syncEngine.shutdown())
+            await Promise.race([
+                shutdownPromise,
+                new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))
+            ])
+        }
+        deps.sseManager?.stop()
+        deps.webServer?.stop()
+        process.exit(0)
+    }
+}
+
 async function main() {
     console.log('HAPI Hub starting...')
 
@@ -148,15 +191,16 @@ async function main() {
     console.log('')
     console.log('HAPI Hub is ready!')
 
-    // Handle shutdown
-    const shutdown = async () => {
-        console.log('\nShutting down...')
-        notificationHub?.stop()
-        syncEngine?.stop()
-        sseManager?.stop()
-        webServer?.stop()
-        process.exit(0)
-    }
+    // Handle shutdown — Plan 08-02 Task 2 scaffolds with a no-op scheduler stub
+    // until Task 3 wires the real KeepaliveScheduler instance through DI.
+    const shutdownScheduler = { shutdown: () => {} }
+    const shutdown = createShutdownHandler({
+        scheduler: shutdownScheduler,
+        syncEngine,
+        notificationHub,
+        sseManager,
+        webServer
+    })
 
     process.on('SIGINT', shutdown)
     process.on('SIGTERM', shutdown)
@@ -165,7 +209,9 @@ async function main() {
     await new Promise(() => {})
 }
 
-main().catch((error) => {
-    console.error('Fatal error:', error)
-    process.exit(1)
-})
+if (import.meta.main) {
+    main().catch((error) => {
+        console.error('Fatal error:', error)
+        process.exit(1)
+    })
+}

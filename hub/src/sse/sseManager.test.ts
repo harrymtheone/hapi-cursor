@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { SSEManager } from './sseManager'
-import type { SyncEvent } from '../sync/syncEngine'
+import type { SyncEvent } from '@hapi/protocol/types'
 import { VisibilityTracker } from '../visibility/visibilityTracker'
 
 describe('SSEManager relevance filtering', () => {

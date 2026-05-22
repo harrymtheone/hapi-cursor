@@ -268,7 +268,7 @@ describe('session model', () => {
             expect(after).toBeGreaterThan(before)
             expect(engine.getSession(session.id)?.updatedAt).toBe(after)
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -410,7 +410,7 @@ describe('session model', () => {
             let capturedModel: string | undefined
             let capturedModelReasoningEffort: string | undefined
             let capturedEffort: string | undefined
-            ;(engine as any).rpcGateway.spawnSession = async (
+            ;(engine as any).session.resume.rpcGateway.spawnSession = async (
                 _machineId: string,
                 _directory: string,
                 _agent: string,
@@ -427,7 +427,7 @@ describe('session model', () => {
                 capturedEffort = effort
                 return { type: 'success', sessionId: session.id }
             }
-            ;(engine as any).waitForSessionActive = async () => true
+            ;(engine as any).session.resume.waitForSessionActive = async () => true
 
             const result = await engine.resumeSession(session.id)
 
@@ -436,7 +436,7 @@ describe('session model', () => {
             expect(capturedModelReasoningEffort).toBeUndefined()
             expect(capturedEffort).toBeUndefined()
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -469,7 +469,7 @@ describe('session model', () => {
             engine.handleMachineAlive({ machineId: 'machine-1', time: Date.now() })
 
             let capturedModelReasoningEffort: string | undefined
-            ;(engine as any).rpcGateway.spawnSession = async (
+            ;(engine as any).session.resume.rpcGateway.spawnSession = async (
                 _machineId: string,
                 _directory: string,
                 _agent: string,
@@ -479,14 +479,14 @@ describe('session model', () => {
                 capturedModelReasoningEffort = modelReasoningEffort
                 return { type: 'success', sessionId: session.id }
             }
-            ;(engine as any).waitForSessionActive = async () => true
+            ;(engine as any).session.resume.waitForSessionActive = async () => true
 
             const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedModelReasoningEffort).toBe('xhigh')
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -519,7 +519,7 @@ describe('session model', () => {
             engine.handleMachineAlive({ machineId: 'machine-1', time: Date.now() })
 
             let capturedResumeSessionId: string | undefined
-            ;(engine as any).rpcGateway.spawnSession = async (
+            ;(engine as any).session.resume.rpcGateway.spawnSession = async (
                 _machineId: string,
                 _directory: string,
                 _agent: string,
@@ -533,14 +533,14 @@ describe('session model', () => {
                 capturedResumeSessionId = resumeSessionId
                 return { type: 'success', sessionId: session.id }
             }
-            ;(engine as any).waitForSessionActive = async () => true
+            ;(engine as any).session.resume.waitForSessionActive = async () => true
 
             const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedResumeSessionId).toBe('cursor-session-1')
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -585,7 +585,7 @@ describe('session model', () => {
             engine.handleSessionEnd({ sid: session.id, time: Date.now() })
 
             let capturedPermissionMode: string | undefined
-            ;(engine as any).rpcGateway.spawnSession = async (
+            ;(engine as any).session.resume.rpcGateway.spawnSession = async (
                 _machineId: string,
                 _directory: string,
                 _agent: string,
@@ -601,14 +601,14 @@ describe('session model', () => {
                 capturedPermissionMode = permissionMode
                 return { type: 'success', sessionId: session.id }
             }
-            ;(engine as any).waitForSessionActive = async () => true
+            ;(engine as any).session.resume.waitForSessionActive = async () => true
 
             const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
             expect(capturedPermissionMode).toBe('yolo')
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -654,7 +654,7 @@ describe('session model', () => {
                 })
             })
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -687,7 +687,7 @@ describe('session model', () => {
                 code: 'resume_unavailable'
             })
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -717,7 +717,7 @@ describe('session model', () => {
                 type: 'success'
             })
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -749,7 +749,7 @@ describe('session model', () => {
                 code: 'already_local'
             })
         } finally {
-            engine.stop()
+            engine.shutdown()
         }
     })
 
@@ -941,7 +941,7 @@ describe('session model', () => {
 
                 // s1 is active, so dedup keeps its live record around
                 const events: SyncEvent[] = []
-                const cache = (engine as any).sessionCache as SessionCache
+                const cache = (engine as any).session.sessionCache as SessionCache
                 await cache.deduplicateByAgentSessionId(s2.id)
                 expect(cache.getSession(s1.id)).toBeDefined()
 
@@ -956,7 +956,7 @@ describe('session model', () => {
                 const s2Exists = cache.getSession(s2.id)
                 expect(!s1Exists || !s2Exists).toBe(true)
             } finally {
-                engine.stop()
+                engine.shutdown()
             }
         })
 
