@@ -145,7 +145,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. `bun typecheck` and `bun run test` both pass; new tests exercise the SSE handler against a strictly typed event stream
 **Plans**: 4 plans
 - [x] 07-01-PLAN.md — Slice 1: shared schema lift (Machine/RunnerState/Message/Patch) + SyncEventSchema tighten + AGENT_MESSAGE_PAYLOAD_TYPE='cursor' + MetadataSchema.flavor delete + schemas.test.ts
-- [ ] 07-02-PLAN.md — Slice 2: hub broadcast conformance + machineCache type collapse + syncEngine flavor-defense delete + sessionCache.test.ts contract test
+- [x] 07-02-PLAN.md — Slice 2: hub broadcast conformance + machineCache type collapse + syncEngine flavor-defense delete + sessionCache.test.ts contract test
 - [ ] 07-03-PLAN.md — Slice 3: cli + web type-duplicate cleanup + useSSE rewrite (delete 7 narrows + invalidation queue) + useSSE.test.tsx (backgroundTaskCount regression)
 - [ ] 07-04-PLAN.md — Slice 4: scripts/check-no-cut-agents.sh D-126 additions + D-124 whitelist removal + final ripgrep zero-hit phase gate
 
@@ -220,7 +220,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
 | 5. Flavor consolidation + capability abstraction | 8/8 | Complete   | 2026-05-22 |
 | 6. Agent runtime shared kit + mode hardening | 4/4 | Complete   | 2026-05-22 |
-| 7. Wire contracts unification & SSE patch contract | 1/4 | In Progress|  |
+| 7. Wire contracts unification & SSE patch contract | 2/4 | In Progress|  |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
 | 9. Web internal decoupling | 0/TBD | Not started | - |
 | 10. Config cleanup | 0/TBD | Not started | - |

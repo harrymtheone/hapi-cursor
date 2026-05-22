@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 7 context gathered
-last_updated: "2026-05-22T13:44:22.934Z"
-last_activity: 2026-05-22 -- Phase 07 planning complete
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-05-22T14:09:01.666Z"
+last_activity: 2026-05-22
 progress:
   total_phases: 12
   completed_phases: 6
   total_plans: 38
-  completed_plans: 35
-  percent: 50
+  completed_plans: 36
+  percent: 95
 ---
 
 # Project State
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 Phase: 07 (wire-contracts-unification-sse-patch-contract) — EXECUTING
 Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-05-22 -- Phase 07 planning complete
+Last activity: 2026-05-22
 
-Progress: [█████████░] 92%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -86,6 +86,7 @@ Progress: [█████████░] 92%
 | Phase 06 P06-03 | 7min | 3 tasks | 6 files |
 | Phase 06 P06-04 | 8min | 3 tasks | 3 files |
 | Phase 07 P07-01 | 25min | 3 tasks | 24 files |
+| Phase 07 P02 | 3min 26s | 4 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -132,6 +133,7 @@ Recent decisions affecting current work:
 - [Phase 06]: Plan 01 extracted `cli/src/cursor/modes.ts` as a leaf module re-exporting `PermissionMode` (= `CursorPermissionMode`) and `EnhancedMode`; deleted the duplicate type defs from `loop.ts` and swapped `session.ts` + `runCursor.ts` type imports from `./loop` to `./modes`. The session→loop reverse edge is gone; `npx madge --circular --extensions ts,tsx cli/src/cursor` collapses from 3 cycles to 0 (REFA-05 / SC#2). Launcher files intentionally untouched — they still use a local string-typed helper (migration scheduled for Plan 06-03 when the shared `modeConfig` lands). `bun typecheck` + `bun run test` (532) green.
 - [Phase 05]: Plan 08 (slice 4 — phase gate) collapsed `scripts/check-no-cut-agents.sh` Phase-5 territory whitelist to zero entries; added line-anchored post-filter for `AGENT_MESSAGE_PAYLOAD_TYPE = 'codex' as const` at `shared/src/modes.ts:9` (D-85; survives line-position drift via JSDoc-anchored content match); added `PHASE5_IDENTIFIER_PATTERN` sibling-block sweep (rejects `isCodexFamilyFlavor` / `CodexCollaborationMode` / `getCodexCollaboration*` / `(CLAUDE|CODEX|GEMINI|OPENCODE)_PERMISSION_MODES` in `cli/src hub/src web/src shared/src`); added `PHASE5_BRANCH_PATTERN` sibling-block sweep with `=== 'cursor'` + `typeof flavor ===` post-filters (rejects non-cursor `flavor === '<literal>'` branches). Cross-plan corrections (Rule 1): narrowed `permissionToneCopy: 'cursor' | 'codex'` to `'cursor'` in `shared/src/flavors.ts:24`; swapped `'claude'` literals to `'unknown-flavor'` in `shared/src/flavors.test.ts` cases 14 + 17. Final phase gate `bun typecheck && bun run test && bash scripts/check-no-cut-agents.sh` exits 0 (532 tests); SC#1–#4 all met; `05-VALIDATION.md` `nyquist_compliant: true`.
 - [Phase ?]: [Phase 07]: Plan 01 (Slice 1) lifted Machine/RunnerState/MachineMetadata/Message wire schemas + new SessionPatchSchema/MachinePatchSchema (strict) into shared/src/schemas.ts; tightened SyncEventSchema.data on session-added/session-updated/machine-updated; deleted MetadataSchema.flavor (Pitfall #1: stays default-strip not strict); flipped AGENT_MESSAGE_PAYLOAD_TYPE to 'cursor'; created shared/src/responses.ts. Slice 1 absorbed slice-2/3 cascades (hub flavor reads, web flavor display reads, hub emit-shape conformance, hub local interface Machine collision) as Rule-3 deviations to keep workspace gate green; slices 07-02 + 07-03 should be re-scoped per SUMMARY's deviations section. 532 tests green.
+- [Phase 07]: Plan 02 added runtime hub broadcast contract proof for SessionCache and MachineCache emits; removed hub-local machineMetadataSchema in favor of shared MachineMetadataSchema with read-site fallbacks; added non-blocking dev/test SyncEventSchema self-check in EventPublisher.emit. Full gate `bun typecheck && bun run test` passed (CLI 237, Hub 155 incl. 6 new contract tests, Web 532, guard green).
 
 ### Pending Todos
 
@@ -151,6 +153,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T13:10:38.139Z
-Stopped at: Phase 7 context gathered
+Last session: 2026-05-22T14:09:01.662Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
