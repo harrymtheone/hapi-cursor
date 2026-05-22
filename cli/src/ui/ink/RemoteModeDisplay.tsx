@@ -70,7 +70,7 @@ export const RemoteModeDisplay: React.FC<RemoteModeDisplayProps> = ({ messageBuf
                 overflow="hidden"
             >
                 <Box flexDirection="column" marginBottom={1}>
-                    <Text color="gray" bold>📡 Remote Mode - Claude Messages</Text>
+                    <Text color="gray" bold>📡 Remote Mode - Agent Messages</Text>
                     <Text color="gray" dimColor>{'─'.repeat(Math.min(terminalWidth - 4, 60))}</Text>
                 </Box>
                 

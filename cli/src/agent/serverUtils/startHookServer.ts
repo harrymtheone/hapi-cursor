@@ -1,7 +1,7 @@
 /**
- * Dedicated HTTP server for receiving Claude session hooks.
+ * Dedicated HTTP server for receiving agent session hooks.
  *
- * This server receives notifications from Claude when sessions change
+ * This server receives notifications from the agent when sessions change
  * (new session, resume, compact, fork, etc.) via the SessionStart hook.
  */
 
@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto';
 import { logger } from '@/ui/logger';
 
 /**
- * Data received from Claude's SessionStart hook.
+ * Data received from the agent's SessionStart hook.
  */
 export interface SessionHookData {
     session_id?: string;
@@ -47,7 +47,7 @@ function readHookToken(req: IncomingMessage): string | null {
 }
 
 /**
- * Start a dedicated HTTP server for receiving Claude session hooks.
+ * Start a dedicated HTTP server for receiving agent session hooks.
  */
 export async function startHookServer(options: HookServerOptions): Promise<HookServer> {
     const { onSessionHook } = options;

@@ -76,23 +76,20 @@ Control Flow:
    - Releases lock file
 5. If HTTP fails, falls back to `killProcess(pid, true)` (uses `taskkill /T /F` on Windows)
 
-## 2. Multi-Agent Support
+## 2. Agent Support
 
-The runner supports spawning sessions with different AI agents:
+The runner spawns sessions through the Cursor agent binary:
 
 | Agent | Command | Token Environment |
 |-------|---------|-------------------|
-| `claude` (default) | `hapi claude` | `CLAUDE_CODE_OAUTH_TOKEN` |
-| `codex` | `hapi codex` | `CODEX_HOME` (temp directory with `auth.json`) |
-| `gemini` | `hapi gemini` | - |
-| `opencode` | `hapi opencode` | OpenCode config (no token injection) |
+| `cursor` (only) | `hapi cursor` | — (no spawn-time OAuth env in v1) |
 
 ### Token Authentication
 
-When spawning a session with a token:
-- **Claude**: Sets `CLAUDE_CODE_OAUTH_TOKEN` environment variable
-- **Codex**: Creates temp directory at `os.tmpdir()/hapi-codex-*`, writes token to `auth.json`, sets `CODEX_HOME`
-- **OpenCode**: No token injection; relies on OpenCode's own configuration
+The legacy per-flavor `options.token` field is retained on the spawn RPC contract
+for future CURS-* work but is currently a no-op: the v1 Cursor wrapper takes its
+auth from the user's Cursor IDE login (`~/.cursor/...`) rather than from an env
+variable injected at spawn time.
 
 ## 3. Session Management
 

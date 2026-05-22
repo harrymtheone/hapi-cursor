@@ -1,11 +1,6 @@
 /**
  * Unified MCP bridge setup. Spawns the hapi MCP stdio bridge and returns
  * the MCP server config for downstream consumers.
- *
- * NOTE: The legacy `hapi mcp` subcommand was removed alongside the Codex
- * agent (Phase 1 / CUT-02 + SC#4). Callers in surviving non-Cursor agents
- * that still reference this helper will fail at spawn-time until they are
- * themselves removed (01-03 / 01-04).
  */
 
 import { startHappyServer } from '@/agent/serverUtils/startHappyServer';

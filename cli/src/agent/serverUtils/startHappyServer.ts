@@ -84,8 +84,9 @@ export async function startHappyServer(client: ApiSessionClient, options: StartH
     });
 
     const transport = new StreamableHTTPServerTransport({
-        // NOTE: Returning session id here will result in claude
-        // sdk spawn to fail with `Invalid Request: Server already initialized`
+        // NOTE: Returning a session id here would make agent SDKs that strictly
+        // enforce stateless transport behavior fail with
+        // `Invalid Request: Server already initialized`.
         sessionIdGenerator: undefined
     });
     await mcp.connect(transport);
