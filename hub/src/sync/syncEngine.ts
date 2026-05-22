@@ -363,7 +363,7 @@ export class SyncEngine {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent: 'claude' | 'cursor' = 'claude',
+        agent: 'cursor' = 'cursor',
         model?: string,
         modelReasoningEffort?: string,
         yolo?: boolean,
@@ -388,21 +388,12 @@ export class SyncEngine {
         )
     }
 
-    private resolveFlavor(session: Session): AgentFlavor {
-        const flavor = session.metadata?.flavor
-        return flavor === 'cursor' ? flavor : 'cursor'
+    private resolveFlavor(_session: Session): AgentFlavor {
+        return 'cursor'
     }
 
     private resolveAgentResumeId(session: Session): string | null {
-        const metadata = session.metadata
-        if (!metadata) {
-            return null
-        }
-
-        const flavor = this.resolveFlavor(session)
-        if (flavor === 'cursor') return metadata.cursorSessionId ?? null
-
-        return null
+        return session.metadata?.cursorSessionId ?? null
     }
 
     resolveLocalResumeTarget(sessionId: string, scope: string): LocalResumeTargetResult
@@ -515,7 +506,7 @@ export class SyncEngine {
         const target = targetResult.target
         const metadata = session.metadata!
         const flavor = target.flavor
-        if (flavor !== 'claude' && flavor !== 'cursor') {
+        if (flavor !== 'cursor') {
             return { type: 'error', message: `Sessions of flavor "${flavor}" are no longer supported`, code: 'resume_failed' }
         }
         const resumeToken = target.agentSessionId
