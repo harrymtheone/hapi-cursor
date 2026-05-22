@@ -130,7 +130,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. `bun typecheck` passes; no `cursorLocalLauncher` ↔ `cursorRemoteLauncher` copy-paste detected by ripgrep on permission-mode mapping
 **Plans**: 4 plans
 - [x] 06-01-PLAN.md — Extract `cli/src/cursor/modes.ts` leaf module + redirect imports; break the 3 madge cycles in `cli/src/cursor` (completed 2026-05-22)
-- [ ] 06-02-PLAN.md — Add `UnknownPermissionModeError` to `shared/src/modes.ts`; create `cli/src/agent/modeConfig.ts` + unit tests; upgrade `runCursor.ts::resolvePermissionMode` throw class
+- [x] 06-02-PLAN.md — Add `UnknownPermissionModeError` to `shared/src/modes.ts`; create `cli/src/agent/modeConfig.ts` + unit tests; upgrade `runCursor.ts::resolvePermissionMode` throw class
 - [ ] 06-03-PLAN.md — Converge both launchers onto `modeConfig.permissionModeToCursorArgs`; delete `permissionModeToAgentArgs` + `as string` casts; export `buildAgentArgs`; stamp 4 SC#1 JSDoc anchors
 - [ ] 06-04-PLAN.md — Add mid-session yolo + plan switch tests (remote + local); extend `scripts/check-no-cut-agents.sh` with Phase 6 ripgrep + madge guard; pin `madge` devDep
 
@@ -215,7 +215,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
 | 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
 | 5. Flavor consolidation + capability abstraction | 7/8 | In Progress|  |
-| 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
+| 6. Agent runtime shared kit + mode hardening | 2/4 | In Progress|  |
 | 7. Wire contracts unification & SSE patch contract | 0/TBD | Not started | - |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
 | 9. Web internal decoupling | 0/TBD | Not started | - |
