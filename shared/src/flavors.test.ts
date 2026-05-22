@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import {
     Capabilities,
+    getCapabilities,
+    getCapability,
     getFlavorLabel,
     hasCapability,
     isKnownFlavor,
@@ -8,94 +10,134 @@ import {
     supportsModelChange,
 } from './flavors'
 
-describe('hasCapability', () => {
-    test('claude supports model-change', () => {
-        expect(hasCapability('claude', Capabilities.ModelChange)).toBe(true)
+describe('flavor capability table', () => {
+    // Case 1
+    test('getCapabilities(cursor) returns an object with all 7 D-73 slots populated', () => {
+        const caps = getCapabilities('cursor')
+        expect(caps).not.toBeNull()
+        expect(caps).toHaveProperty('permissionModes')
+        expect(caps).toHaveProperty('supportsModelChange')
+        expect(caps).toHaveProperty('supportsEffort')
+        expect(caps).toHaveProperty('contextBudgetTokens')
+        expect(caps).toHaveProperty('userSlashCommandsDir')
+        expect(caps).toHaveProperty('projectSlashCommandsDir')
+        expect(caps).toHaveProperty('permissionToneCopy')
     })
 
-    test('claude supports effort', () => {
-        expect(hasCapability('claude', Capabilities.Effort)).toBe(true)
+    // Case 2
+    test('getCapabilities(cursor).permissionModes deep-equals [default, plan, ask, yolo]', () => {
+        expect(getCapabilities('cursor')!.permissionModes).toEqual(['default', 'plan', 'ask', 'yolo'])
     })
 
-    test('gemini supports model-change but not effort', () => {
-        expect(hasCapability('gemini', Capabilities.ModelChange)).toBe(true)
-        expect(hasCapability('gemini', Capabilities.Effort)).toBe(false)
+    // Case 3
+    test('getCapabilities(cursor).supportsModelChange === false', () => {
+        expect(getCapabilities('cursor')!.supportsModelChange).toBe(false)
     })
 
-    test('codex supports model-change but not effort', () => {
-        expect(hasCapability('codex', Capabilities.ModelChange)).toBe(true)
-        expect(hasCapability('codex', Capabilities.Effort)).toBe(false)
+    // Case 4
+    test('getCapabilities(cursor).supportsEffort === false', () => {
+        expect(getCapabilities('cursor')!.supportsEffort).toBe(false)
     })
 
-    test('cursor has no capabilities', () => {
-        expect(hasCapability('cursor', Capabilities.ModelChange)).toBe(false)
-        expect(hasCapability('cursor', Capabilities.Effort)).toBe(false)
+    // Case 5
+    test('getCapabilities(cursor).contextBudgetTokens === null', () => {
+        expect(getCapabilities('cursor')!.contextBudgetTokens).toBeNull()
     })
 
-    test('opencode supports model-change but not effort', () => {
-        expect(hasCapability('opencode', Capabilities.ModelChange)).toBe(true)
-        expect(hasCapability('opencode', Capabilities.Effort)).toBe(false)
+    // Case 6
+    test('getCapabilities(cursor).userSlashCommandsDir === null', () => {
+        expect(getCapabilities('cursor')!.userSlashCommandsDir).toBeNull()
     })
 
-    test('unknown flavor returns false', () => {
-        expect(hasCapability('unknown-flavor', Capabilities.ModelChange)).toBe(false)
+    // Case 7
+    test('getCapabilities(cursor).projectSlashCommandsDir === null', () => {
+        expect(getCapabilities('cursor')!.projectSlashCommandsDir).toBeNull()
     })
 
-    test('null/undefined flavor returns false', () => {
-        expect(hasCapability(null, Capabilities.ModelChange)).toBe(false)
-        expect(hasCapability(undefined, Capabilities.ModelChange)).toBe(false)
+    // Case 8
+    test("getCapabilities(cursor).permissionToneCopy === 'cursor'", () => {
+        expect(getCapabilities('cursor')!.permissionToneCopy).toBe('cursor')
     })
-})
 
-describe('getFlavorLabel', () => {
-    test('known flavors return display names', () => {
-        expect(getFlavorLabel('claude')).toBe('Claude')
-        expect(getFlavorLabel('gemini')).toBe('Gemini')
-        expect(getFlavorLabel('codex')).toBe('Codex')
+    // Case 9
+    test('getCapabilities(unknown) === null', () => {
+        expect(getCapabilities('unknown')).toBeNull()
+    })
+
+    // Case 10
+    test('getCapabilities(null) === null AND getCapabilities(undefined) === null', () => {
+        expect(getCapabilities(null)).toBeNull()
+        expect(getCapabilities(undefined)).toBeNull()
+    })
+
+    // Case 11
+    test("getCapability(cursor, 'permissionModes') returns the array", () => {
+        expect(getCapability('cursor', 'permissionModes')).toEqual(['default', 'plan', 'ask', 'yolo'])
+    })
+
+    // Case 12
+    test("getCapability(unknown, 'permissionModes') === null", () => {
+        expect(getCapability('unknown', 'permissionModes')).toBeNull()
+    })
+
+    // Case 13
+    test("getFlavorLabel('cursor') === 'Cursor'", () => {
         expect(getFlavorLabel('cursor')).toBe('Cursor')
-        expect(getFlavorLabel('opencode')).toBe('OpenCode')
     })
 
-    test('unknown flavor returns Unknown', () => {
-        expect(getFlavorLabel('some-new-cli')).toBe('Unknown')
+    // Case 14
+    // TODO(plan 05-07-PLAN.md): tighten to getFlavorLabel('claude') === 'Unknown' once
+    // AgentFlavor narrows to 'cursor' and FLAVOR_LABELS collapses to a single cursor row.
+    test("getFlavorLabel('claude') — historical-string fallback (Slice 1b tightens to 'Unknown')", () => {
+        expect(getFlavorLabel('claude')).toBe('Claude')
     })
 
-    test('null/undefined returns Unknown', () => {
+    // Case 15
+    test("getFlavorLabel(null) === 'Unknown'", () => {
         expect(getFlavorLabel(null)).toBe('Unknown')
-        expect(getFlavorLabel(undefined)).toBe('Unknown')
     })
-})
 
-describe('isKnownFlavor', () => {
-    test('returns true for registered flavors', () => {
-        expect(isKnownFlavor('claude')).toBe(true)
-        expect(isKnownFlavor('gemini')).toBe(true)
-        expect(isKnownFlavor('codex')).toBe(true)
+    // Case 16
+    test('isKnownFlavor(cursor) === true (also serves as TS narrow check)', () => {
         expect(isKnownFlavor('cursor')).toBe(true)
-        expect(isKnownFlavor('opencode')).toBe(true)
     })
 
-    test('returns false for unknown/null/undefined', () => {
-        expect(isKnownFlavor('foo')).toBe(false)
+    // Case 17
+    // TODO(plan 05-07-PLAN.md): tighten to isKnownFlavor('claude') === false once
+    // AgentFlavor narrows to the single 'cursor' literal.
+    test("isKnownFlavor('claude') — still true this slice (Slice 1b tightens to false)", () => {
+        expect(isKnownFlavor('claude')).toBe(true)
+    })
+
+    // Case 18
+    test('isKnownFlavor(null) === false AND isKnownFlavor(undefined) === false', () => {
         expect(isKnownFlavor(null)).toBe(false)
         expect(isKnownFlavor(undefined)).toBe(false)
     })
-})
 
-describe('convenience functions', () => {
-    test('supportsModelChange matches hasCapability', () => {
-        expect(supportsModelChange('claude')).toBe(true)
-        expect(supportsModelChange('gemini')).toBe(true)
-        expect(supportsModelChange('codex')).toBe(true)
-        expect(supportsModelChange('opencode')).toBe(true)
+    // Case 19
+    test("hasCapability('cursor', 'model-change') === false", () => {
+        expect(hasCapability('cursor', Capabilities.ModelChange)).toBe(false)
+    })
+
+    // Case 20
+    test("hasCapability('cursor', 'effort') === false", () => {
+        expect(hasCapability('cursor', Capabilities.Effort)).toBe(false)
+    })
+
+    // Case 21
+    test("hasCapability(null, 'model-change') === false", () => {
+        expect(hasCapability(null, Capabilities.ModelChange)).toBe(false)
+    })
+
+    // Case 22
+    test('supportsModelChange(cursor) === false; supportsModelChange(null) === false', () => {
         expect(supportsModelChange('cursor')).toBe(false)
         expect(supportsModelChange(null)).toBe(false)
     })
 
-    test('supportsEffort matches hasCapability', () => {
-        expect(supportsEffort('claude')).toBe(true)
-        expect(supportsEffort('codex')).toBe(false)
-        expect(supportsEffort('gemini')).toBe(false)
-        expect(supportsEffort(null)).toBe(false)
+    // Case 23
+    test('supportsEffort(cursor) === false', () => {
+        expect(supportsEffort('cursor')).toBe(false)
     })
 })
