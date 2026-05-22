@@ -9,7 +9,6 @@ import type {
 export type {
     AgentState,
     AttachmentMetadata,
-    CodexCollaborationMode,
     PermissionMode,
     Session,
     SessionSummary,
@@ -194,7 +193,7 @@ export type SlashCommand = {
     name: string
     description?: string
     source: 'builtin' | 'user' | 'plugin' | 'project'
-    content?: string  // Expanded content for Codex user prompts
+    content?: string  // Expanded content for user prompts
     pluginName?: string
 }
 
@@ -212,32 +211,6 @@ export type SkillSummary = {
 export type SkillsResponse = {
     success: boolean
     skills?: SkillSummary[]
-    error?: string
-}
-
-export type CodexModelSummary = {
-    id: string
-    displayName: string
-    isDefault: boolean
-    defaultReasoningEffort?: string | null
-    supportedReasoningEfforts?: string[]
-}
-
-export type CodexModelsResponse = {
-    success: boolean
-    models?: CodexModelSummary[]
-    error?: string
-}
-
-export type OpencodeModelSummary = {
-    modelId: string
-    name?: string
-}
-
-export type OpencodeModelsResponse = {
-    success: boolean
-    availableModels?: OpencodeModelSummary[]
-    currentModelId?: string | null
     error?: string
 }
 

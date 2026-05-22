@@ -1,7 +1,6 @@
 import type {
     AttachmentMetadata,
     AuthResponse,
-    CodexCollaborationMode,
     DeleteUploadResponse,
     ListDirectoryResponse,
     FileReadResponse,
@@ -11,8 +10,6 @@ import type {
     MachinePathsExistsResponse,
     MachinesResponse,
     MessagesResponse,
-    CodexModelsResponse,
-    OpencodeModelsResponse,
     PermissionMode,
     PushSubscriptionPayload,
     PushUnsubscribePayload,
@@ -25,6 +22,7 @@ import type {
     SessionResponse,
     SessionsResponse
 } from '@/types/api'
+import type { CursorPermissionMode } from '@hapi/protocol'
 import type { CancelMessageResponse } from '@hapi/protocol/schemas'
 
 type ApiClientOptions = {
@@ -349,24 +347,10 @@ export class ApiClient {
         })
     }
 
-    async setCollaborationMode(sessionId: string, mode: CodexCollaborationMode): Promise<void> {
-        await this.request(`/api/sessions/${encodeURIComponent(sessionId)}/collaboration-mode`, {
-            method: 'POST',
-            body: JSON.stringify({ mode })
-        })
-    }
-
     async setModel(sessionId: string, model: string | null): Promise<void> {
         await this.request(`/api/sessions/${encodeURIComponent(sessionId)}/model`, {
             method: 'POST',
             body: JSON.stringify({ model })
-        })
-    }
-
-    async setModelReasoningEffort(sessionId: string, modelReasoningEffort: string | null): Promise<void> {
-        await this.request(`/api/sessions/${encodeURIComponent(sessionId)}/model-reasoning-effort`, {
-            method: 'POST',
-            body: JSON.stringify({ modelReasoningEffort })
         })
     }
 
@@ -380,8 +364,8 @@ export class ApiClient {
     async approvePermission(
         sessionId: string,
         requestId: string,
-        modeOrOptions?: 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan' | {
-            mode?: 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan'
+        modeOrOptions?: CursorPermissionMode | {
+            mode?: CursorPermissionMode
             allowTools?: string[]
             decision?: 'approved' | 'approved_for_session' | 'denied' | 'abort'
             answers?: Record<string, string[]> | Record<string, { answers: string[] }>
@@ -442,9 +426,8 @@ export class ApiClient {
     async spawnSession(
         machineId: string,
         directory: string,
-        agent?: 'claude' | 'codex' | 'cursor' | 'gemini' | 'opencode',
+        agent?: 'cursor',
         model?: string,
-        modelReasoningEffort?: string,
         yolo?: boolean,
         sessionType?: 'simple' | 'worktree',
         worktreeName?: string,
@@ -452,32 +435,8 @@ export class ApiClient {
     ): Promise<SpawnResponse> {
         return await this.request<SpawnResponse>(`/api/machines/${encodeURIComponent(machineId)}/spawn`, {
             method: 'POST',
-            body: JSON.stringify({ directory, agent, model, modelReasoningEffort, yolo, sessionType, worktreeName, effort })
+            body: JSON.stringify({ directory, agent, model, yolo, sessionType, worktreeName, effort })
         })
-    }
-
-    async getMachineCodexModels(machineId: string): Promise<CodexModelsResponse> {
-        return await this.request<CodexModelsResponse>(
-            `/api/machines/${encodeURIComponent(machineId)}/codex-models`
-        )
-    }
-
-    async getSessionCodexModels(sessionId: string): Promise<CodexModelsResponse> {
-        return await this.request<CodexModelsResponse>(
-            `/api/sessions/${encodeURIComponent(sessionId)}/codex-models`
-        )
-    }
-
-    async getSessionOpencodeModels(sessionId: string): Promise<OpencodeModelsResponse> {
-        return await this.request<OpencodeModelsResponse>(
-            `/api/sessions/${encodeURIComponent(sessionId)}/opencode-models`
-        )
-    }
-
-    async getMachineOpencodeModelsForCwd(machineId: string, cwd: string): Promise<OpencodeModelsResponse> {
-        return await this.request<OpencodeModelsResponse>(
-            `/api/machines/${encodeURIComponent(machineId)}/opencode-models?cwd=${encodeURIComponent(cwd)}`
-        )
     }
 
     async getSlashCommands(sessionId: string): Promise<SlashCommandsResponse> {

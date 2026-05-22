@@ -6,10 +6,9 @@ import { queryKeys } from '@/lib/query-keys'
 type SpawnInput = {
     machineId: string
     directory: string
-    agent?: 'claude' | 'codex' | 'cursor' | 'gemini' | 'opencode'
+    agent?: 'cursor'
     model?: string
     effort?: string
-    modelReasoningEffort?: string
     yolo?: boolean
     sessionType?: 'simple' | 'worktree'
     worktreeName?: string
@@ -32,7 +31,6 @@ export function useSpawnSession(api: ApiClient | null): {
                 input.directory,
                 input.agent,
                 input.model,
-                input.modelReasoningEffort,
                 input.yolo,
                 input.sessionType,
                 input.worktreeName,

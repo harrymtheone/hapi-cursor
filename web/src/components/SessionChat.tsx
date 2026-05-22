@@ -119,8 +119,7 @@ export function SessionChat(props: {
     } = useSessionActions(
         props.api,
         props.session.id,
-        agentFlavor,
-        false
+        agentFlavor
     )
 
     // Track session id to clear caches when it changes
