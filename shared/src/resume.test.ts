@@ -7,19 +7,18 @@ describe('resume schemas', () => {
     it('accepts a local resume target', () => {
         const parsed = LocalResumeTargetSchema.safeParse({
             sessionId: 'hapi-session-1',
-            flavor: 'codex',
+            flavor: 'cursor',
             directory: '/tmp/project',
             machineId: 'machine-1',
             host: 'devbox',
             active: true,
             thinking: false,
             controlledByUser: false,
-            agentSessionId: 'codex-thread-1',
+            agentSessionId: 'cursor-thread-1',
             model: 'gpt-5.4',
             effort: null,
             modelReasoningEffort: 'xhigh',
-            permissionMode: 'default',
-            collaborationMode: 'default'
+            permissionMode: 'default'
         })
 
         expect(parsed.success).toBe(true)
@@ -28,7 +27,7 @@ describe('resume schemas', () => {
     it('accepts a resumable session summary', () => {
         const parsed = ResumableSessionSchema.safeParse({
             sessionId: 'hapi-session-1',
-            flavor: 'claude',
+            flavor: 'cursor',
             directory: '/tmp/project',
             active: false,
             thinking: false,

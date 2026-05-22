@@ -610,7 +610,7 @@ describe('session model', () => {
             const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
-            expect(capturedPermissionMode).toBe('bypassPermissions')
+            expect(capturedPermissionMode).toBe('yolo')
         } finally {
             engine.stop()
         }
