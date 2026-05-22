@@ -79,8 +79,7 @@ describe('API extra headers integration', () => {
                     model: null,
                     modelReasoningEffort: null,
                     effort: null,
-                    permissionMode: undefined,
-                    collaborationMode: undefined
+                    permissionMode: undefined
                 }
             }
         })
@@ -135,8 +134,7 @@ describe('API extra headers integration', () => {
             model: null,
             modelReasoningEffort: null,
             effort: null,
-            permissionMode: undefined,
-            collaborationMode: undefined
+            permissionMode: undefined
         })
 
         expect(ioMock).toHaveBeenCalledOnce()

@@ -25,7 +25,7 @@ export async function startHappyServer(client: ApiSessionClient, options: StartH
         try {
             if (emitTitleSummary) {
                 // Send title as a summary message, similar to title generator.
-                client.sendClaudeSessionMessage({
+                client.sendAgentSessionMessage({
                     type: 'summary',
                     summary: title,
                     leafUuid: randomUUID()

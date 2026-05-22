@@ -232,7 +232,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
       logger.debugLargeJson('[RUNNER RUN] Spawning session', options);
 
       const { directory, sessionId, machineId, approvedNewDirectoryCreation = true } = options;
-      const agent = options.agent ?? 'claude';
+      const agent = options.agent ?? 'cursor';
       const yolo = options.yolo === true;
       const sessionType = options.sessionType ?? 'simple';
       const worktreeName = options.worktreeName;
@@ -343,15 +343,10 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
 
       try {
 
-        // Resolve authentication token if provided
+        // Cursor v1 does not consume a spawn-time OAuth token via env. The
+        // `options.token` field is retained on the RPC contract for future
+        // CURS-* work but currently performs no setup here.
         let extraEnv: Record<string, string> = {};
-        if (options.token) {
-          if (options.agent === 'claude' || !options.agent) {
-            extraEnv = {
-              CLAUDE_CODE_OAUTH_TOKEN: options.token
-            };
-          }
-        }
 
         if (worktreeInfo) {
           extraEnv = {
@@ -887,21 +882,17 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
 }
 
 export function buildCliArgs(
-  agent: string,
+  _agent: string,
   options: SpawnSessionOptions,
   yolo?: boolean
 ): string[] {
-  const agentCommand = agent === 'cursor' ? 'cursor' : 'claude';
-  const args = [agentCommand];
+  const args = ['cursor'];
   if (options.resumeSessionId) {
     args.push('--resume', options.resumeSessionId);
   }
   args.push('--hapi-starting-mode', 'remote', '--started-by', 'runner');
   if (options.model) {
     args.push('--model', options.model);
-  }
-  if (options.effort && agent === 'claude') {
-    args.push('--effort', options.effort);
   }
   if (options.permissionMode && (PERMISSION_MODES as readonly string[]).includes(options.permissionMode)) {
     args.push('--permission-mode', options.permissionMode);

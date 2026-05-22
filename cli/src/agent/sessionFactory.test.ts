@@ -73,8 +73,7 @@ function createSession(): Session {
         model: null,
         modelReasoningEffort: null,
         effort: null,
-        permissionMode: undefined,
-        collaborationMode: undefined
+        permissionMode: undefined
     }
 }
 

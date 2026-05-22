@@ -2,7 +2,6 @@ import { ApiClient, ApiSessionClient } from '@/lib';
 import { MessageQueue2 } from '@/utils/MessageQueue2';
 import type {
     Metadata,
-    SessionCollaborationMode,
     SessionEffort,
     SessionModel,
     SessionModelReasoningEffort,
@@ -26,7 +25,6 @@ export type AgentSessionBaseOptions<Mode> = {
     model?: SessionModel;
     modelReasoningEffort?: SessionModelReasoningEffort;
     effort?: SessionEffort;
-    collaborationMode?: SessionCollaborationMode;
 };
 
 export class AgentSessionBase<Mode> {
@@ -50,7 +48,6 @@ export class AgentSessionBase<Mode> {
     protected model?: SessionModel;
     protected modelReasoningEffort?: SessionModelReasoningEffort;
     protected effort?: SessionEffort;
-    protected collaborationMode?: SessionCollaborationMode;
 
     constructor(opts: AgentSessionBaseOptions<Mode>) {
         this.path = opts.path;
@@ -68,7 +65,6 @@ export class AgentSessionBase<Mode> {
         this.model = opts.model;
         this.modelReasoningEffort = opts.modelReasoningEffort;
         this.effort = opts.effort;
-        this.collaborationMode = opts.collaborationMode;
 
         this.queue.onBatchConsumed = (localIds) => this.client.emitMessagesConsumed(localIds);
 
@@ -95,10 +91,9 @@ export class AgentSessionBase<Mode> {
         const modelLabel = this.model === undefined ? 'unset' : (this.model ?? 'auto');
         const modelReasoningEffortLabel = this.modelReasoningEffort === undefined ? 'unset' : (this.modelReasoningEffort ?? 'default');
         const effortLabel = this.effort === undefined ? 'unset' : (this.effort ?? 'auto');
-        const collaborationLabel = this.collaborationMode ?? 'unset';
         logger.debug(
             `[${this.sessionLabel}] Mode switched to ${mode} ` +
-            `(permissionMode=${permissionLabel}, model=${modelLabel}, modelReasoningEffort=${modelReasoningEffortLabel}, effort=${effortLabel}, collaborationMode=${collaborationLabel})`
+            `(permissionMode=${permissionLabel}, model=${modelLabel}, modelReasoningEffort=${modelReasoningEffortLabel}, effort=${effortLabel})`
         );
         this._onModeChange(mode);
     };
@@ -137,14 +132,12 @@ export class AgentSessionBase<Mode> {
             model?: SessionModel
             modelReasoningEffort?: SessionModelReasoningEffort
             effort?: SessionEffort
-            collaborationMode?: SessionCollaborationMode
         } | undefined {
         if (
             this.permissionMode === undefined
             && this.model === undefined
             && this.modelReasoningEffort === undefined
             && this.effort === undefined
-            && this.collaborationMode === undefined
         ) {
             return undefined;
         }
@@ -152,8 +145,7 @@ export class AgentSessionBase<Mode> {
             permissionMode: this.permissionMode,
             model: this.model,
             modelReasoningEffort: this.modelReasoningEffort,
-            effort: this.effort,
-            collaborationMode: this.collaborationMode
+            effort: this.effort
         };
     }
 
@@ -171,9 +163,5 @@ export class AgentSessionBase<Mode> {
 
     getEffort(): SessionEffort | undefined {
         return this.effort;
-    }
-
-    getCollaborationMode(): SessionCollaborationMode | undefined {
-        return this.collaborationMode;
     }
 }

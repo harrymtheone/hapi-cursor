@@ -1,10 +1,10 @@
 import type { AttachmentMetadata } from '@/api/types'
 
 /**
- * Formats attachments for Claude by converting them to @path references.
- * Claude understands the @path format for file references.
+ * Formats attachments for the agent by converting them to @path references.
+ * The agent understands the @path format for file references.
  */
-export function formatAttachmentsForClaude(attachments: AttachmentMetadata[] | undefined): string {
+export function formatAttachmentsForAgent(attachments: AttachmentMetadata[] | undefined): string {
     if (!attachments || attachments.length === 0) {
         return ''
     }
@@ -19,7 +19,7 @@ export function formatMessageWithAttachments(
     text: string,
     attachments: AttachmentMetadata[] | undefined
 ): string {
-    const attachmentText = formatAttachmentsForClaude(attachments)
+    const attachmentText = formatAttachmentsForAgent(attachments)
     if (!attachmentText) {
         return text
     }

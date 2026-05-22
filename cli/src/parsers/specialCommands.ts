@@ -79,8 +79,8 @@ function stripMatchingQuotes(value: string): string {
 }
 
 /**
- * Parse /plan command for remote Claude sessions.
- * - /plan: switch to Claude plan permission mode.
+ * Parse /plan command for remote agent sessions.
+ * - /plan: switch to plan permission mode.
  * - /plan off: switch back to default mode.
  * - /plan <prompt>: switch to plan mode and send the remaining prompt.
  */

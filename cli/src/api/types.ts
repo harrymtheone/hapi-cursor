@@ -1,7 +1,6 @@
 import {
     AgentStateSchema,
     AttachmentMetadataSchema,
-    CodexCollaborationModeSchema,
     MetadataSchema,
     PermissionModeSchema,
     TodosSchema
@@ -11,7 +10,7 @@ import {
     LocalResumeTargetResponseSchema,
     ResumableSessionsResponseSchema
 } from '@hapi/protocol'
-import type { CodexCollaborationMode, PermissionMode } from '@hapi/protocol/types'
+import type { PermissionMode } from '@hapi/protocol/types'
 import { z } from 'zod'
 import { UsageSchema } from '@/agent/agentLogSchema'
 
@@ -20,12 +19,10 @@ export type Usage = z.infer<typeof UsageSchema>
 export type {
     AgentState,
     AttachmentMetadata,
-    CodexCollaborationMode,
     Metadata,
     Session
 } from '@hapi/protocol/types'
 export type SessionPermissionMode = PermissionMode
-export type SessionCollaborationMode = CodexCollaborationMode
 export type SessionModel = string | null
 export type SessionModelReasoningEffort = string | null
 export type SessionEffort = string | null
@@ -120,8 +117,7 @@ export const CreateSessionResponseSchema = z.object({
         model: z.string().nullable().optional().default(null),
         modelReasoningEffort: z.string().nullable().optional().default(null),
         effort: z.string().nullable().optional().default(null),
-        permissionMode: PermissionModeSchema.optional(),
-        collaborationMode: CodexCollaborationModeSchema.optional()
+        permissionMode: PermissionModeSchema.optional()
     })
 })
 

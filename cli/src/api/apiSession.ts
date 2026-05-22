@@ -23,7 +23,6 @@ import type {
     MessageContent,
     MessageMeta,
     Metadata,
-    SessionCollaborationMode,
     Session,
     SessionModel,
     SessionPermissionMode,
@@ -38,7 +37,7 @@ import { applyVersionedAck } from './versionedUpdate'
 import { buildHubRequestHeaders, buildSocketIoExtraHeaderOptions } from './hubExtraHeaders'
 
 /**
- * XML tags that Claude Code injects as `type:'user'` messages.
+ * XML tags that the agent injects as `type:'user'` messages.
  * These are internal bookkeeping, not text the human actually typed.
  */
 const SYSTEM_INJECTION_PREFIXES = [
@@ -52,7 +51,7 @@ const SYSTEM_INJECTION_PREFIXES = [
  * Returns true if a JSONL message should be classified as a user-role message
  * (i.e., text typed by a real human) rather than an agent-role message.
  *
- * Claude Code injects system messages (task notifications, command caveats, …)
+ * The agent injects system messages (task notifications, command caveats, …)
  * into the JSONL log as `type:'user'` entries so the model sees them in
  * context.  All metadata fields (`userType`, `isMeta`, …) are identical to
  * genuine user messages, so the only reliable signal is the message content
@@ -432,7 +431,7 @@ export class ApiSessionClient extends EventEmitter {
         await this.backfillInFlight
     }
 
-    sendClaudeSessionMessage(body: RawJSONLines): void {
+    sendAgentSessionMessage(body: RawJSONLines): void {
         let content: MessageContent
 
         if (isExternalUserMessage(body)) {
@@ -550,7 +549,6 @@ export class ApiSessionClient extends EventEmitter {
             model?: SessionModel
             modelReasoningEffort?: string | null
             effort?: string | null
-            collaborationMode?: SessionCollaborationMode
         }
     ): void {
         this.socket.volatile.emit('session-alive', {
