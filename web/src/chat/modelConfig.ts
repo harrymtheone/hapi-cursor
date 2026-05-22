@@ -12,6 +12,12 @@ import { getCapability } from '@hapi/protocol'
  */
 const CONTEXT_HEADROOM_TOKENS = 10_000
 
+/**
+ * Returns a Cursor session's context budget (capability-driven; `null` when no
+ * budget is registered for the flavor). The `_model` parameter is reserved for
+ * `CURS-01` model presets (per-model context budgets) and is currently unused —
+ * the budget is derived solely from the flavor capability table.
+ */
 export function getContextBudgetTokens(_model: string | null | undefined, flavor?: string | null): number | null {
     const windowTokens = getCapability(flavor, 'contextBudgetTokens')
     if (windowTokens === null) return null
