@@ -97,7 +97,6 @@ describe('bootstrapExistingSession', () => {
 
         const result = await bootstrapExistingSession({
             sessionId: 'hapi-session-1',
-            flavor: 'cursor',
             workingDirectory: '/tmp/project'
         })
 
@@ -141,7 +140,6 @@ describe('bootstrapExistingSession', () => {
 
         const result = await bootstrapExistingSession({
             sessionId: 'hapi-session-1',
-            flavor: 'cursor',
             workingDirectory: '/tmp/project'
         })
 
@@ -169,7 +167,6 @@ describe('bootstrapExistingSession', () => {
 
     it('advertises remote terminal capability in session metadata', () => {
         const metadata = buildSessionMetadata({
-            flavor: 'cursor',
             startedBy: 'terminal',
             workingDirectory: '/tmp/project',
             machineId: 'machine-1',

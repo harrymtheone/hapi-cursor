@@ -17,7 +17,6 @@ import packageJson from '../../package.json'
 export type SessionStartedBy = 'runner' | 'terminal'
 
 export type SessionBootstrapOptions = {
-    flavor: string
     startedBy?: SessionStartedBy
     workingDirectory?: string
     tag?: string
@@ -51,7 +50,6 @@ export function buildMachineMetadata(options?: { workspaceRoots?: string[] }): M
 }
 
 export function buildSessionMetadata(options: {
-    flavor: string
     startedBy: SessionStartedBy
     workingDirectory: string
     machineId: string
@@ -140,7 +138,6 @@ export async function bootstrapSession(options: SessionBootstrapOptions): Promis
     })
 
     const metadata = buildSessionMetadata({
-        flavor: options.flavor,
         startedBy,
         workingDirectory,
         machineId,
@@ -173,7 +170,6 @@ export async function bootstrapSession(options: SessionBootstrapOptions): Promis
 
 export async function bootstrapExistingSession(options: {
     sessionId: string
-    flavor: string
     startedBy?: SessionStartedBy
     workingDirectory: string
     metadataOverrides?: Partial<Metadata>
@@ -189,7 +185,6 @@ export async function bootstrapExistingSession(options: {
 
     const sessionInfo = await api.getSession(options.sessionId)
     const baseMetadata = buildSessionMetadata({
-        flavor: options.flavor,
         startedBy,
         workingDirectory: options.workingDirectory,
         machineId

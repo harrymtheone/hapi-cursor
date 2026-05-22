@@ -51,12 +51,10 @@ export async function runCursor(opts: {
     const bootstrap = opts.existingSessionId
         ? await bootstrapExistingSession({
             sessionId: opts.existingSessionId,
-            flavor: 'cursor',
             startedBy,
             workingDirectory
         })
         : await bootstrapSession({
-            flavor: 'cursor',
             startedBy,
             workingDirectory,
             agentState: state,

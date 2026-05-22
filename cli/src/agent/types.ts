@@ -1,5 +1,3 @@
-import type { AgentFlavor } from '@hapi/protocol';
-
 export type McpEnvVar = {
     name: string;
     value: string;
@@ -71,7 +69,7 @@ export type AgentSessionModelsMetadata = {
 export interface AgentBackend {
     initialize(): Promise<void>;
     newSession(config: AgentSessionConfig): Promise<string>;
-    setModel?(sessionId: string, modelId: string, opts?: { flavor?: AgentFlavor }): Promise<void>;
+    setModel?(sessionId: string, modelId: string): Promise<void>;
     getSessionModelsMetadata?(sessionId: string): AgentSessionModelsMetadata | undefined;
     prompt(sessionId: string, content: PromptContent[], onUpdate: (msg: AgentMessage) => void): Promise<void>;
     cancelPrompt(sessionId: string): Promise<void>;
