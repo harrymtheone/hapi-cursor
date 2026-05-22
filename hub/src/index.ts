@@ -16,6 +16,7 @@ import { startWebServer } from './web/server'
 import { getOrCreateJwtSecret } from './config/jwtSecret'
 import { createSocketServer } from './socket/server'
 import { SSEManager } from './sse/sseManager'
+import { KeepaliveScheduler } from './utils/scheduler'
 import { getOrCreateVapidKeys } from './config/vapidKeys'
 import { PushService } from './push/pushService'
 import { PushNotificationChannel } from './push/pushNotificationChannel'
@@ -143,12 +144,14 @@ async function main() {
     const vapidSubject = process.env.VAPID_SUBJECT ?? 'mailto:admin@hapi.run'
     const pushService = new PushService(vapidKeys, vapidSubject, store)
 
+    const scheduler = new KeepaliveScheduler()
     visibilityTracker = new VisibilityTracker()
-    sseManager = new SSEManager(30_000, visibilityTracker)
+    sseManager = new SSEManager(30_000, visibilityTracker, scheduler)
 
     const socketServer = createSocketServer({
         store,
         jwtSecret,
+        scheduler,
         corsOrigins,
         getSession: (sessionId) => {
             if (syncEngine) {
@@ -165,13 +168,13 @@ async function main() {
         onSweepImmediateQueued: (sessionId, now) => syncEngine?.sweepImmediateQueuedOnSessionEnd(sessionId, now)
     })
 
-    syncEngine = new SyncEngine(store, socketServer.io, socketServer.rpcRegistry, sseManager)
+    syncEngine = new SyncEngine(store, socketServer.io, socketServer.rpcRegistry, sseManager, scheduler)
 
     const notificationChannels: NotificationChannel[] = [
         new PushNotificationChannel(pushService, sseManager, visibilityTracker, config.publicUrl)
     ]
 
-    notificationHub = new NotificationHub(syncEngine, notificationChannels)
+    notificationHub = new NotificationHub(syncEngine, notificationChannels, scheduler)
 
     webServer = await startWebServer({
         getSyncEngine: () => syncEngine,
@@ -191,11 +194,8 @@ async function main() {
     console.log('')
     console.log('HAPI Hub is ready!')
 
-    // Handle shutdown — Plan 08-02 Task 2 scaffolds with a no-op scheduler stub
-    // until Task 3 wires the real KeepaliveScheduler instance through DI.
-    const shutdownScheduler = { shutdown: () => {} }
     const shutdown = createShutdownHandler({
-        scheduler: shutdownScheduler,
+        scheduler,
         syncEngine,
         notificationHub,
         sseManager,

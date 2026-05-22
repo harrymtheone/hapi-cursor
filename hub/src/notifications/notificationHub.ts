@@ -2,19 +2,21 @@ import type { Session, SyncEngine, SyncEvent } from '../sync/syncEngine'
 import type { SessionEndReason } from '@hapi/protocol'
 import type { NotificationChannel, NotificationHubOptions, TaskNotification } from './notificationTypes'
 import { extractMessageEventType, extractTaskNotification } from './eventParsing'
+import type { KeepaliveScheduler, SchedulerHandle } from '../utils/scheduler'
 
 export class NotificationHub {
     private readonly channels: NotificationChannel[]
     private readonly readyCooldownMs: number
     private readonly permissionDebounceMs: number
     private readonly lastKnownRequests: Map<string, Set<string>> = new Map()
-    private readonly notificationDebounce: Map<string, NodeJS.Timeout> = new Map()
+    private readonly notificationDebounce: Map<string, SchedulerHandle> = new Map()
     private readonly lastReadyNotificationAt: Map<string, number> = new Map()
     private unsubscribeSyncEvents: (() => void) | null = null
 
     constructor(
         private readonly syncEngine: SyncEngine,
         channels: NotificationChannel[],
+        private readonly scheduler: KeepaliveScheduler,
         options?: NotificationHubOptions
     ) {
         this.channels = channels
@@ -31,8 +33,8 @@ export class NotificationHub {
             this.unsubscribeSyncEvents = null
         }
 
-        for (const timer of this.notificationDebounce.values()) {
-            clearTimeout(timer)
+        for (const handle of this.notificationDebounce.values()) {
+            handle.cancel()
         }
         this.notificationDebounce.clear()
         this.lastKnownRequests.clear()
@@ -84,7 +86,7 @@ export class NotificationHub {
     private clearSessionState(sessionId: string): void {
         const existingTimer = this.notificationDebounce.get(sessionId)
         if (existingTimer) {
-            clearTimeout(existingTimer)
+            existingTimer.cancel()
             this.notificationDebounce.delete(sessionId)
         }
         this.lastKnownRequests.delete(sessionId)
@@ -125,17 +127,21 @@ export class NotificationHub {
 
         const existingTimer = this.notificationDebounce.get(session.id)
         if (existingTimer) {
-            clearTimeout(existingTimer)
+            existingTimer.cancel()
         }
 
-        const timer = setTimeout(() => {
-            this.notificationDebounce.delete(session.id)
-            this.sendPermissionNotification(session.id).catch((error) => {
-                console.error('[NotificationHub] Failed to send permission notification:', error)
-            })
-        }, this.permissionDebounceMs)
+        const handle = this.scheduler.afterMs(
+            `notify:${session.id}`,
+            this.permissionDebounceMs,
+            () => {
+                this.notificationDebounce.delete(session.id)
+                this.sendPermissionNotification(session.id).catch((error) => {
+                    console.error('[NotificationHub] Failed to send permission notification:', error)
+                })
+            }
+        )
 
-        this.notificationDebounce.set(session.id, timer)
+        this.notificationDebounce.set(session.id, handle)
     }
 
     private async sendPermissionNotification(sessionId: string): Promise<void> {

@@ -2,10 +2,11 @@ import { describe, expect, it } from 'bun:test'
 import { SSEManager } from './sseManager'
 import type { SyncEvent } from '@hapi/protocol/types'
 import { VisibilityTracker } from '../visibility/visibilityTracker'
+import { KeepaliveScheduler } from '../utils/scheduler'
 
 describe('SSEManager relevance filtering', () => {
     it('routes session events by subscription relevance', () => {
-        const manager = new SSEManager(0, new VisibilityTracker())
+        const manager = new SSEManager(0, new VisibilityTracker(), new KeepaliveScheduler())
         const receivedAll: SyncEvent[] = []
         const receivedSession: SyncEvent[] = []
         const receivedOther: SyncEvent[] = []
@@ -45,7 +46,7 @@ describe('SSEManager relevance filtering', () => {
     })
 
     it('broadcasts connection-changed globally', () => {
-        const manager = new SSEManager(0, new VisibilityTracker())
+        const manager = new SSEManager(0, new VisibilityTracker(), new KeepaliveScheduler())
         const received: Array<{ id: string; event: SyncEvent }> = []
 
         manager.subscribe({
@@ -73,7 +74,7 @@ describe('SSEManager relevance filtering', () => {
     })
 
     it('sends toast only to visible connections', async () => {
-        const manager = new SSEManager(0, new VisibilityTracker())
+        const manager = new SSEManager(0, new VisibilityTracker(), new KeepaliveScheduler())
         const received: Array<{ id: string; event: SyncEvent }> = []
 
         manager.subscribe({

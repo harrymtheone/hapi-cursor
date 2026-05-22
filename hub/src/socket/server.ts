@@ -10,6 +10,7 @@ import { registerCliHandlers } from './handlers/cli'
 import { registerTerminalHandlers } from './handlers/terminal'
 import { RpcRegistry } from './rpcRegistry'
 import type { SyncEvent } from '../sync/syncEngine'
+import type { KeepaliveScheduler } from '../utils/scheduler'
 import { TerminalRegistry } from './terminalRegistry'
 import type { CliSocketWithData, SocketData, SocketServer } from './socketTypes'
 
@@ -32,6 +33,7 @@ function resolveEnvNumber(name: string, fallback: number): number {
 export type SocketServerDeps = {
     store: Store
     jwtSecret: Uint8Array
+    scheduler: KeepaliveScheduler
     corsOrigins?: string[]
     getSession?: (sessionId: string) => { active: boolean } | null
     onWebappEvent?: (event: SyncEvent) => void
@@ -84,6 +86,7 @@ export function createSocketServer(deps: SocketServerDeps): {
     const terminalNs = io.of('/terminal')
     const terminalRegistry = new TerminalRegistry({
         idleTimeoutMs,
+        scheduler: deps.scheduler,
         onIdle: (entry) => {
             const terminalSocket = terminalNs.sockets.get(entry.socketId)
             terminalSocket?.emit('terminal:error', {

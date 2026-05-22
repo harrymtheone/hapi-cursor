@@ -6,6 +6,7 @@ import type { EventPublisher } from './eventPublisher'
 import { MachineCache } from './machineCache'
 import { SessionCache } from './sessionCache'
 import { SyncEngine } from './syncEngine'
+import { KeepaliveScheduler } from '../utils/scheduler'
 
 function createPublisher(events: SyncEvent[]): EventPublisher {
     return {
@@ -25,7 +26,8 @@ describe('alive incremental events', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -134,7 +136,8 @@ describe('alive incremental events', () => {
             store,
             io as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
         const events: SyncEvent[] = []
         const unsubscribe = engine.subscribe((event) => {

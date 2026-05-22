@@ -3,6 +3,7 @@ import type { Session, SyncEvent, SyncEventListener, SyncEngine } from '../sync/
 import type { SessionEndReason } from '@hapi/protocol'
 import type { NotificationChannel, TaskNotification } from './notificationTypes'
 import { NotificationHub } from './notificationHub'
+import { KeepaliveScheduler } from '../utils/scheduler'
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -78,7 +79,7 @@ describe('NotificationHub', () => {
     it('debounces permission notifications and triggers when request IDs change', async () => {
         const engine = new FakeSyncEngine()
         const channel = new StubChannel()
-        const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], {
+        const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], new KeepaliveScheduler(), {
             permissionDebounceMs: 5,
             readyCooldownMs: 5
         })
@@ -123,7 +124,7 @@ describe('NotificationHub', () => {
     it('throttles ready notifications per session', async () => {
         const engine = new FakeSyncEngine()
         const channel = new StubChannel()
-        const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], {
+        const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], new KeepaliveScheduler(), {
             permissionDebounceMs: 1,
             readyCooldownMs: 20
         })
@@ -169,7 +170,7 @@ describe('NotificationHub', () => {
     it('sends task notifications for task_notification system messages', async () => {
         const engine = new FakeSyncEngine()
         const channel = new StubChannel()
-        const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], {
+        const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], new KeepaliveScheduler(), {
             permissionDebounceMs: 1,
             readyCooldownMs: 20
         })
@@ -215,7 +216,7 @@ describe('NotificationHub', () => {
     it('sends session completion only for completed session-ended events', async () => {
         const engine = new FakeSyncEngine()
         const channel = new StubChannel()
-        const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], {
+        const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], new KeepaliveScheduler(), {
             permissionDebounceMs: 1,
             readyCooldownMs: 20
         })

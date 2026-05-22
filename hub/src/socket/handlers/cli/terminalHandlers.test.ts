@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import type { StoredSession } from '../../../store'
 import type { CliSocketWithData } from '../../socketTypes'
 import { TerminalRegistry } from '../../terminalRegistry'
+import { KeepaliveScheduler } from '../../../utils/scheduler'
 import { registerTerminalHandlers } from './terminalHandlers'
 
 type EmittedEvent = {
@@ -55,7 +56,7 @@ describe('cli terminal handlers', () => {
         const cliSocket = new FakeSocket('cli-socket')
         const terminalSocket = new FakeSocket('terminal-socket')
         const terminalNamespace = new FakeNamespace()
-        const terminalRegistry = new TerminalRegistry({ idleTimeoutMs: 0 })
+        const terminalRegistry = new TerminalRegistry({ idleTimeoutMs: 0, scheduler: new KeepaliveScheduler() })
 
         terminalNamespace.sockets.set(terminalSocket.id, terminalSocket)
         terminalRegistry.register('terminal-1', 'session-1', terminalSocket.id, cliSocket.id)

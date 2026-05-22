@@ -19,13 +19,14 @@ import type { MachineCache } from './machineCache'
 import type { MessageService } from './messageService'
 import type { RpcGateway } from './rpcGateway'
 import type { SessionCache } from './sessionCache'
+import type { KeepaliveScheduler, SchedulerHandle } from '../utils/scheduler'
 import { SyncEngineSessionResume } from './syncEngineSessionResume'
 import type { LocalHandoffResult, LocalResumeTargetResult, ResumeSessionResult } from './syncEngineSessionTypes'
 
 export type { LocalHandoffResult, LocalResumeTargetResult, ResumeSessionResult } from './syncEngineSessionTypes'
 
 export class SyncEngineSession {
-    private inactivityTimer: NodeJS.Timeout | null = null
+    private inactivityHandle: SchedulerHandle | null = null
     private readonly resume: SyncEngineSessionResume
 
     constructor(
@@ -33,7 +34,8 @@ export class SyncEngineSession {
         private readonly machineCache: MachineCache,
         private readonly messageService: MessageService,
         private readonly rpcGateway: RpcGateway,
-        private readonly eventPublisher: EventPublisher
+        private readonly eventPublisher: EventPublisher,
+        private readonly scheduler: KeepaliveScheduler
     ) {
         this.resume = new SyncEngineSessionResume(
             sessionCache,
@@ -44,16 +46,16 @@ export class SyncEngineSession {
     }
 
     start(): void {
-        if (this.inactivityTimer) {
+        if (this.inactivityHandle) {
             return
         }
-        this.inactivityTimer = setInterval(() => this.expireInactive(), 5_000)
+        this.inactivityHandle = this.scheduler.everyMs('inactivity', 5_000, () => this.expireInactive())
     }
 
     shutdown(): void {
-        if (this.inactivityTimer) {
-            clearInterval(this.inactivityTimer)
-            this.inactivityTimer = null
+        if (this.inactivityHandle) {
+            this.inactivityHandle.cancel()
+            this.inactivityHandle = null
         }
     }
 

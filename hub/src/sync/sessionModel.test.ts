@@ -7,6 +7,7 @@ import { registerSessionHandlers } from '../socket/handlers/cli/sessionHandlers'
 import type { EventPublisher } from './eventPublisher'
 import { SessionCache } from './sessionCache'
 import { SyncEngine } from './syncEngine'
+import { KeepaliveScheduler } from '../utils/scheduler'
 
 function createPublisher(events: SyncEvent[]): EventPublisher {
     return {
@@ -250,7 +251,8 @@ describe('session model', () => {
             store,
             { of: () => ({ to: () => ({ emit() {} }) }) } as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -385,7 +387,8 @@ describe('session model', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -446,7 +449,8 @@ describe('session model', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -496,7 +500,8 @@ describe('session model', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -555,7 +560,8 @@ describe('session model', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -618,7 +624,8 @@ describe('session model', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -667,7 +674,8 @@ describe('session model', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -697,7 +705,8 @@ describe('session model', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -727,7 +736,8 @@ describe('session model', () => {
             store,
             {} as never,
             new RpcRegistry(),
-            { broadcast() {} } as never
+            { broadcast() {} } as never,
+            new KeepaliveScheduler()
         )
 
         try {
@@ -921,7 +931,8 @@ describe('session model', () => {
                 store,
                 {} as never,
                 new RpcRegistry(),
-                { broadcast() {} } as never
+                { broadcast() {} } as never,
+                new KeepaliveScheduler()
             )
 
             try {

@@ -1,6 +1,7 @@
 import type { SyncEvent } from '@hapi/protocol/types'
 import type { VisibilityState } from '../visibility/visibilityTracker'
 import type { VisibilityTracker } from '../visibility/visibilityTracker'
+import type { KeepaliveScheduler, SchedulerHandle } from '../utils/scheduler'
 
 export type SSESubscription = {
     id: string
@@ -16,13 +17,15 @@ type SSEConnection = SSESubscription & {
 
 export class SSEManager {
     private readonly connections: Map<string, SSEConnection> = new Map()
-    private heartbeatTimer: NodeJS.Timeout | null = null
+    private heartbeatHandle: SchedulerHandle | null = null
     private readonly heartbeatMs: number
     private readonly visibilityTracker: VisibilityTracker
+    private readonly scheduler: KeepaliveScheduler
 
-    constructor(heartbeatMs = 30_000, visibilityTracker: VisibilityTracker) {
+    constructor(heartbeatMs: number, visibilityTracker: VisibilityTracker, scheduler: KeepaliveScheduler) {
         this.heartbeatMs = heartbeatMs
         this.visibilityTracker = visibilityTracker
+        this.scheduler = scheduler
     }
 
     subscribe(options: {
@@ -117,26 +120,26 @@ export class SSEManager {
     }
 
     private ensureHeartbeat(): void {
-        if (this.heartbeatTimer || this.heartbeatMs <= 0) {
+        if (this.heartbeatHandle || this.heartbeatMs <= 0) {
             return
         }
 
-        this.heartbeatTimer = setInterval(() => {
+        this.heartbeatHandle = this.scheduler.everyMs('sse-heartbeat', this.heartbeatMs, () => {
             for (const connection of this.connections.values()) {
                 void Promise.resolve(connection.sendHeartbeat()).catch(() => {
                     this.unsubscribe(connection.id)
                 })
             }
-        }, this.heartbeatMs)
+        })
     }
 
     private stopHeartbeat(): void {
-        if (!this.heartbeatTimer) {
+        if (!this.heartbeatHandle) {
             return
         }
 
-        clearInterval(this.heartbeatTimer)
-        this.heartbeatTimer = null
+        this.heartbeatHandle.cancel()
+        this.heartbeatHandle = null
     }
 
     private shouldSend(connection: SSEConnection, event: SyncEvent): boolean {

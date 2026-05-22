@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { registerTerminalHandlers } from './terminal'
 import { TerminalRegistry } from '../terminalRegistry'
+import { KeepaliveScheduler } from '../../utils/scheduler'
 import type { SocketServer, SocketWithData } from '../socketTypes'
 
 type EmittedEvent = {
@@ -74,7 +75,7 @@ function createHarness(options?: {
 }): Harness {
     const io = new FakeServer()
     const terminalSocket = new FakeSocket('terminal-socket')
-    const terminalRegistry = new TerminalRegistry({ idleTimeoutMs: 0 })
+    const terminalRegistry = new TerminalRegistry({ idleTimeoutMs: 0, scheduler: new KeepaliveScheduler() })
     const cliNamespace = io.of('/cli')
 
     registerTerminalHandlers(terminalSocket as unknown as SocketWithData, {

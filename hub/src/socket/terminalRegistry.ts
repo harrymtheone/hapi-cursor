@@ -1,13 +1,16 @@
+import type { KeepaliveScheduler, SchedulerHandle } from '../utils/scheduler'
+
 export type TerminalRegistryEntry = {
     terminalId: string
     sessionId: string
     socketId: string
     cliSocketId: string
-    idleTimer: ReturnType<typeof setTimeout> | null
+    idleTimer: SchedulerHandle | null
 }
 
 type TerminalRegistryOptions = {
     idleTimeoutMs: number
+    scheduler: KeepaliveScheduler
     onIdle?: (entry: TerminalRegistryEntry) => void
 }
 
@@ -17,10 +20,12 @@ export class TerminalRegistry {
     private readonly terminalsBySession = new Map<string, Set<string>>()
     private readonly terminalsByCliSocket = new Map<string, Set<string>>()
     private readonly idleTimeoutMs: number
+    private readonly scheduler: KeepaliveScheduler
     private readonly onIdle?: (entry: TerminalRegistryEntry) => void
 
     constructor(options: TerminalRegistryOptions) {
         this.idleTimeoutMs = options.idleTimeoutMs
+        this.scheduler = options.scheduler
         this.onIdle = options.onIdle
     }
 
@@ -80,7 +85,7 @@ export class TerminalRegistry {
         this.removeFromIndex(this.terminalsBySession, entry.sessionId, terminalId)
         this.removeFromIndex(this.terminalsByCliSocket, entry.cliSocketId, terminalId)
         if (entry.idleTimer) {
-            clearTimeout(entry.idleTimer)
+            entry.idleTimer.cancel()
         }
 
         return entry
@@ -116,17 +121,21 @@ export class TerminalRegistry {
         }
 
         if (entry.idleTimer) {
-            clearTimeout(entry.idleTimer)
+            entry.idleTimer.cancel()
         }
 
-        entry.idleTimer = setTimeout(() => {
-            const current = this.terminals.get(entry.terminalId)
-            if (!current) {
-                return
+        entry.idleTimer = this.scheduler.afterMs(
+            `terminal-idle:${entry.terminalId}`,
+            this.idleTimeoutMs,
+            () => {
+                const current = this.terminals.get(entry.terminalId)
+                if (!current) {
+                    return
+                }
+                this.onIdle?.(current)
+                this.remove(entry.terminalId)
             }
-            this.onIdle?.(current)
-            this.remove(entry.terminalId)
-        }, this.idleTimeoutMs)
+        )
     }
 
     private addToIndex(index: Map<string, Set<string>>, key: string, terminalId: string): void {

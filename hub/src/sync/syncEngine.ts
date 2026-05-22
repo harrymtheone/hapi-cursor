@@ -16,6 +16,7 @@ import type { Server } from 'socket.io'
 import type { Store, CancelQueuedMessageResult } from '../store'
 import type { RpcRegistry } from '../socket/rpcRegistry'
 import type { SSEManager } from '../sse/sseManager'
+import type { KeepaliveScheduler } from '../utils/scheduler'
 import { EventPublisher, type SyncEventListener } from './eventPublisher'
 import { MachineCache, type Machine } from './machineCache'
 import { MessageService } from './messageService'
@@ -60,7 +61,8 @@ export class SyncEngine {
         store: Store,
         io: Server,
         rpcRegistry: RpcRegistry,
-        sseManager: SSEManager
+        sseManager: SSEManager,
+        scheduler: KeepaliveScheduler
     ) {
         this.eventPublisher = new EventPublisher(sseManager)
         const sessionCache = new SessionCache(store, this.eventPublisher)
@@ -73,7 +75,7 @@ export class SyncEngine {
         )
         const rpcGateway = new RpcGateway(io, rpcRegistry)
 
-        this.session = new SyncEngineSession(sessionCache, machineCache, messageService, rpcGateway, this.eventPublisher)
+        this.session = new SyncEngineSession(sessionCache, machineCache, messageService, rpcGateway, this.eventPublisher, scheduler)
         this.machine = new SyncEngineMachine(machineCache)
         this.message = new SyncEngineMessage(messageService, sessionCache)
         this.rpc = new SyncEngineRpc(rpcGateway, (payload) => this.session.handleSessionEnd(payload))
