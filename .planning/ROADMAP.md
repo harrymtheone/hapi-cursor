@@ -129,7 +129,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. New tests cover mid-session `bypass + remote` and `bypass + plan` switches plus the unknown-mode error path; existing `bun run test` suite stays green
   5. `bun typecheck` passes; no `cursorLocalLauncher` ↔ `cursorRemoteLauncher` copy-paste detected by ripgrep on permission-mode mapping
 **Plans**: 4 plans
-- [ ] 06-01-PLAN.md — Extract `cli/src/cursor/modes.ts` leaf module + redirect imports; break the 3 madge cycles in `cli/src/cursor`
+- [x] 06-01-PLAN.md — Extract `cli/src/cursor/modes.ts` leaf module + redirect imports; break the 3 madge cycles in `cli/src/cursor` (completed 2026-05-22)
 - [ ] 06-02-PLAN.md — Add `UnknownPermissionModeError` to `shared/src/modes.ts`; create `cli/src/agent/modeConfig.ts` + unit tests; upgrade `runCursor.ts::resolvePermissionMode` throw class
 - [ ] 06-03-PLAN.md — Converge both launchers onto `modeConfig.permissionModeToCursorArgs`; delete `permissionModeToAgentArgs` + `as string` casts; export `buildAgentArgs`; stamp 4 SC#1 JSDoc anchors
 - [ ] 06-04-PLAN.md — Add mid-session yolo + plan switch tests (remote + local); extend `scripts/check-no-cut-agents.sh` with Phase 6 ripgrep + madge guard; pin `madge` devDep

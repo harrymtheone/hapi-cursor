@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-05-22T08:56:06.942Z"
-last_activity: 2026-05-22 -- Phase 06 planning complete
+stopped_at: Phase 06 Plan 01 complete
+last_updated: "2026-05-22T09:10:00.000Z"
+last_activity: 2026-05-22 -- Phase 06 Plan 01 complete (cursor/modes.ts leaf; 3 madge cycles → 0)
 progress:
   total_phases: 12
   completed_phases: 5
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 6 — agent runtime shared kit + mode hardening
+**Current focus:** Phase 06 — agent-runtime-shared-kit-mode-hardening
 
 ## Current Position
 
-Phase: 6
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-22 -- Phase 06 planning complete
+Phase: 06 (agent-runtime-shared-kit-mode-hardening) — EXECUTING
+Plan: 2 of 4
+Status: Executing Phase 06 (Plan 01 complete)
+Last activity: 2026-05-22 -- Phase 06 Plan 01 complete (cursor/modes.ts leaf; 3 madge cycles → 0)
 
 Progress: [██████████] 100% (Phase 5)
 
@@ -80,6 +80,7 @@ Progress: [██████████] 100% (Phase 5)
 | Phase 05 P06 | 12min | 2 tasks | 11 files |
 | Phase 05 P07 | 8min | 3 tasks | 10 files |
 | Phase 05 P08 | 6min | 3 tasks | 6 files |
+| Phase 06 P01 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,7 @@ Recent decisions affecting current work:
 - [Phase 05]: Plan 06 collapsed hub/src to cursor-only (~11 files modified): syncEngine.resolveFlavor returns 'cursor' constant, resolveAgentResumeId collapses to cursorSessionId, spawnSession default param narrowed to 'cursor'; rpcGateway agent param narrowed; deleted extractTodosFromClaudeOutput (dead — cursor uses AGENT_MESSAGE_PAYLOAD_TYPE); web/routes/sessions/permissions/machines defaults collapsed to 'cursor'; deleted /sessions/:id/effort endpoint (Claude-only); machines.ts Zod spawn agent narrowed to z.literal('cursor'); test fixtures rewritten to cursor + AGENT_MESSAGE_PAYLOAD_TYPE; removed 4 `.skip`'d Claude resume-recovery tests. Slice gate `rg -ni '\\b(claude|codex|gemini|opencode)\\b' hub/src/` zero hits.
 - [Phase 05]: Plan 07 (slice 1b, "close the door") narrowed shared/ to cursor-only at the type+Zod level: AgentFlavor='cursor' literal (SC#1, D-69); deleted CLAUDE/CODEX/GEMINI/OPENCODE_PERMISSION_MODES + CodexCollaborationMode* surface from modes.ts; PERMISSION_MODES collapsed to 4 cursor modes; FLAVOR_CAPS+FLAVOR_LABELS reduced to single row; isCodexFamilyFlavor deleted (D-82); AgentFlavorSchema=z.literal('cursor'); SessionSchema/LocalResumeTargetSchema.collaborationMode deleted; MetadataSchema.flavor kept as z.string().nullish() (wire narrow safety §1); AGENT_MESSAGE_PAYLOAD_TYPE='codex' retained with JSDoc "wire-protocol legacy literal" anchor for guard post-filter (D-81). Cascade fixes in cli BasePermissionHandler (dead safe-yolo/read-only branches), hub sessionModel.test (bypassPermissions→yolo), web useSSE (collaborationMode patch key). Slice gate `bun typecheck && bun run test` green (532 tests).
 - [Phase 05]: Plan 05 collapsed cli/src to cursor-only (~24 files, 1 deleted: ui/ink/CodexDisplay.tsx). slashCommands.ts/skills.ts rewritten as capability-driven (getCapability for user/project dirs; ~/.agents/skills only); runner/run.ts spawns 'cursor' binary as constant + drops --effort + drops CLAUDE_CODE_OAUTH_TOKEN env path; api/types.ts free of CodexCollaborationMode (cascaded to api.ts/apiSession.ts/sessionBase.ts/2 test fixtures); renamed sendClaudeSessionMessage → sendAgentSessionMessage and formatAttachmentsForClaude → formatAttachmentsForAgent. All phase-1-whitelisted cli files (agent/serverUtils/*, ui/logger.ts, ui/ink/RemoteModeDisplay.tsx, runner/README.md) scrubbed; `rg -ni '\\b(claude|codex|gemini|opencode)\\b' cli/src/` now zero-hit.
+- [Phase 06]: Plan 01 extracted `cli/src/cursor/modes.ts` as a leaf module re-exporting `PermissionMode` (= `CursorPermissionMode`) and `EnhancedMode`; deleted the duplicate type defs from `loop.ts` and swapped `session.ts` + `runCursor.ts` type imports from `./loop` to `./modes`. The session→loop reverse edge is gone; `npx madge --circular --extensions ts,tsx cli/src/cursor` collapses from 3 cycles to 0 (REFA-05 / SC#2). Launcher files intentionally untouched — they still use a local string-typed helper (migration scheduled for Plan 06-03 when the shared `modeConfig` lands). `bun typecheck` + `bun run test` (532) green.
 - [Phase 05]: Plan 08 (slice 4 — phase gate) collapsed `scripts/check-no-cut-agents.sh` Phase-5 territory whitelist to zero entries; added line-anchored post-filter for `AGENT_MESSAGE_PAYLOAD_TYPE = 'codex' as const` at `shared/src/modes.ts:9` (D-85; survives line-position drift via JSDoc-anchored content match); added `PHASE5_IDENTIFIER_PATTERN` sibling-block sweep (rejects `isCodexFamilyFlavor` / `CodexCollaborationMode` / `getCodexCollaboration*` / `(CLAUDE|CODEX|GEMINI|OPENCODE)_PERMISSION_MODES` in `cli/src hub/src web/src shared/src`); added `PHASE5_BRANCH_PATTERN` sibling-block sweep with `=== 'cursor'` + `typeof flavor ===` post-filters (rejects non-cursor `flavor === '<literal>'` branches). Cross-plan corrections (Rule 1): narrowed `permissionToneCopy: 'cursor' | 'codex'` to `'cursor'` in `shared/src/flavors.ts:24`; swapped `'claude'` literals to `'unknown-flavor'` in `shared/src/flavors.test.ts` cases 14 + 17. Final phase gate `bun typecheck && bun run test && bash scripts/check-no-cut-agents.sh` exits 0 (532 tests); SC#1–#4 all met; `05-VALIDATION.md` `nyquist_compliant: true`.
 
 ### Pending Todos
@@ -143,6 +145,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T08:07:33.806Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-agent-runtime-shared-kit-mode-hardening/06-CONTEXT.md
+Last session: 2026-05-22T09:10:00.000Z
+Stopped at: Phase 06 Plan 01 complete
+Resume file: .planning/phases/06-agent-runtime-shared-kit-mode-hardening/06-02-PLAN.md
