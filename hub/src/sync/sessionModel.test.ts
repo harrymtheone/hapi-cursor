@@ -583,7 +583,7 @@ describe('session model', () => {
 
             engine.handleSessionAlive({
                 sid: session.id,
-                permissionMode: 'bypassPermissions',
+                permissionMode: 'yolo',
                 time: Date.now()
             })
             engine.handleSessionEnd({ sid: session.id, time: Date.now() })

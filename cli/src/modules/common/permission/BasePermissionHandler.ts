@@ -13,7 +13,6 @@ export type AutoApprovalDecision = 'approved' | 'approved_for_session';
 export type AutoApprovalRuleSet = {
     alwaysToolNameHints?: string[];
     alwaysToolIdHints?: string[];
-    writeToolNameHints?: string[];
 };
 
 const AUTO_APPROVE_TOOL_NAME_HINTS = [
@@ -24,7 +23,6 @@ const AUTO_APPROVE_TOOL_NAME_HINTS = [
     'save_memory'
 ];
 const AUTO_APPROVE_TOOL_ID_HINTS = ['change_title', 'save_memory'];
-const AUTO_APPROVE_WRITE_TOOL_HINTS = ['write', 'edit', 'create', 'delete', 'patch', 'fs-edit'];
 
 export function resolveToolAutoApprovalDecision(
     mode: PermissionMode | undefined,
@@ -34,8 +32,7 @@ export function resolveToolAutoApprovalDecision(
 ): AutoApprovalDecision | null {
     const rules = {
         alwaysToolNameHints: ruleOverrides?.alwaysToolNameHints ?? AUTO_APPROVE_TOOL_NAME_HINTS,
-        alwaysToolIdHints: ruleOverrides?.alwaysToolIdHints ?? AUTO_APPROVE_TOOL_ID_HINTS,
-        writeToolNameHints: ruleOverrides?.writeToolNameHints ?? AUTO_APPROVE_WRITE_TOOL_HINTS
+        alwaysToolIdHints: ruleOverrides?.alwaysToolIdHints ?? AUTO_APPROVE_TOOL_ID_HINTS
     };
 
     const lowerTool = toolName.toLowerCase();
@@ -52,15 +49,6 @@ export function resolveToolAutoApprovalDecision(
 
     if (mode === 'yolo') {
         return 'approved_for_session';
-    }
-
-    if (mode === 'safe-yolo') {
-        return 'approved';
-    }
-
-    if (mode === 'read-only') {
-        const isWriteTool = rules.writeToolNameHints.some((name) => lowerTool.includes(name));
-        return isWriteTool ? null : 'approved';
     }
 
     return null;
