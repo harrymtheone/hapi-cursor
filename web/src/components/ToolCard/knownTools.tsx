@@ -4,17 +4,8 @@ import { isObject } from '@hapi/protocol'
 import { BulbIcon, ClipboardIcon, EyeIcon, FileDiffIcon, GlobeIcon, MessageSquareIcon, PuzzleIcon, QuestionIcon, RocketIcon, SearchIcon, TerminalIcon, UsersIcon, WrenchIcon } from '@/components/ToolCard/icons'
 import type { ChecklistItem } from '@/components/ToolCard/checklist'
 import { extractTodoChecklist, extractUpdatePlanChecklist } from '@/components/ToolCard/checklist'
-import { basename, resolveDisplayPath } from '@/utils/path'
+import { resolveDisplayPath } from '@/utils/path'
 import { getInputStringAny, truncate } from '@/lib/toolInputUtils'
-import {
-    getCodexAgentActivity,
-    getCodexAgentPrompt,
-    getCodexAgentReasoningEffortLabel,
-    getCodexAgentSummary,
-    getCodexAgentTargets,
-    getCodexAgentType,
-    summarizeCodexAgentResult
-} from '@/components/ToolCard/codexAgents'
 
 const DEFAULT_ICON_CLASS = 'h-3.5 w-3.5'
 // Tool presentation registry for `hapi/web` (aligned with `hapi-app`).
@@ -138,67 +129,6 @@ export const knownTools: Record<string, {
         title: (opts) => {
             const path = getInputStringAny(opts.input, ['path'])
             return path ? resolveDisplayPath(path, opts.metadata) : 'List files'
-        },
-        minimal: true
-    },
-    CodexBash: {
-        icon: (opts) => {
-            if (isObject(opts.input) && Array.isArray(opts.input.parsed_cmd) && opts.input.parsed_cmd.length > 0) {
-                const first = opts.input.parsed_cmd[0]
-                const type = isObject(first) ? first.type : null
-                if (type === 'read') return <EyeIcon className={DEFAULT_ICON_CLASS} />
-                if (type === 'write') return <FileDiffIcon className={DEFAULT_ICON_CLASS} />
-            }
-            return <TerminalIcon className={DEFAULT_ICON_CLASS} />
-        },
-        title: (opts) => {
-            if (isObject(opts.input) && Array.isArray(opts.input.parsed_cmd) && opts.input.parsed_cmd.length === 1) {
-                const parsed = opts.input.parsed_cmd[0]
-                if (isObject(parsed) && parsed.type === 'read' && typeof parsed.name === 'string') {
-                    return resolveDisplayPath(parsed.name, opts.metadata)
-                }
-            }
-            return opts.description ?? 'Terminal'
-        },
-        subtitle: (opts) => {
-            const command = getInputStringAny(opts.input, ['command', 'cmd'])
-            if (command) return command
-            if (isObject(opts.input) && Array.isArray(opts.input.command)) {
-                return opts.input.command.filter((part) => typeof part === 'string').join(' ')
-            }
-            return null
-        },
-        minimal: (opts) => {
-            const result = isObject(opts.result) ? opts.result : null
-            const stdout = result && typeof result.stdout === 'string' ? result.stdout.trim() : ''
-            const stderr = result && typeof result.stderr === 'string' ? result.stderr.trim() : ''
-            return stdout.length === 0 && stderr.length === 0
-        }
-    },
-    CodexPermission: {
-        icon: () => <QuestionIcon className={DEFAULT_ICON_CLASS} />,
-        title: (opts) => {
-            const tool = getInputStringAny(opts.input, ['tool'])
-            return tool ? `Permission: ${tool}` : 'Permission request'
-        },
-        subtitle: (opts) => getInputStringAny(opts.input, ['message', 'command']) ?? null,
-        minimal: true
-    },
-    CodexAgent: {
-        icon: () => <RocketIcon className={DEFAULT_ICON_CLASS} />,
-        title: (opts) => {
-            const summary = getCodexAgentSummary(opts.input)
-            if (summary) return `Agent: ${summary}`
-            return 'Agent'
-        },
-        subtitle: (opts) => {
-            const activity = getCodexAgentActivity(opts.input)
-            const result = summarizeCodexAgentResult('wait_agent', opts.result)
-            const prompt = getCodexAgentPrompt(opts.input)
-            const status = activity ?? result ?? (prompt ? truncate(prompt, 120) : null)
-            const effort = getCodexAgentReasoningEffortLabel(opts.input)
-            if (effort && status) return `${effort} · ${status}`
-            return effort ?? status
         },
         minimal: true
     },
@@ -331,105 +261,6 @@ export const knownTools: Record<string, {
             return model ?? null
         },
         minimal: (opts) => opts.childrenCount === 0
-    },
-    spawn_agent: {
-        icon: () => <RocketIcon className={DEFAULT_ICON_CLASS} />,
-        title: (opts) => {
-            const agentType = getCodexAgentType(opts.input)
-            return agentType ? `Spawn ${agentType} agent` : 'Spawn agent'
-        },
-        subtitle: (opts) => {
-            const summary = summarizeCodexAgentResult(opts.toolName, opts.result)
-            if (summary) return summary
-            const agentType = getCodexAgentType(opts.input)
-            return agentType ? `${agentType} agent` : 'Background agent'
-        },
-        minimal: true
-    },
-    send_input: {
-        icon: () => <MessageSquareIcon className={DEFAULT_ICON_CLASS} />,
-        title: () => 'Message agent',
-        subtitle: (opts) => {
-            const targets = getCodexAgentTargets(opts.input)
-            return targets.length > 0 ? targets.join(', ') : 'Background message'
-        },
-        minimal: true
-    },
-    resume_agent: {
-        icon: () => <RocketIcon className={DEFAULT_ICON_CLASS} />,
-        title: () => 'Resume agent',
-        subtitle: (opts) => {
-            const targets = getCodexAgentTargets(opts.input)
-            return targets.length > 0 ? targets.join(', ') : null
-        },
-        minimal: true
-    },
-    wait_agent: {
-        icon: () => <RocketIcon className={DEFAULT_ICON_CLASS} />,
-        title: (opts) => {
-            const targets = getCodexAgentTargets(opts.input)
-            return targets.length > 1 ? `Wait for ${targets.length} agents` : 'Wait for agent'
-        },
-        subtitle: (opts) => {
-            const summary = summarizeCodexAgentResult(opts.toolName, opts.result)
-            if (summary) return summary
-            const targets = getCodexAgentTargets(opts.input)
-            return targets.length > 0 ? targets.join(', ') : null
-        },
-        minimal: true
-    },
-    close_agent: {
-        icon: () => <RocketIcon className={DEFAULT_ICON_CLASS} />,
-        title: () => 'Close agent',
-        subtitle: (opts) => {
-            const summary = summarizeCodexAgentResult(opts.toolName, opts.result)
-            if (summary) return summary
-            const targets = getCodexAgentTargets(opts.input)
-            return targets.length > 0 ? targets.join(', ') : null
-        },
-        minimal: true
-    },
-    CodexReasoning: {
-        icon: () => <BulbIcon className={DEFAULT_ICON_CLASS} />,
-        title: (opts) => getInputStringAny(opts.input, ['title']) ?? 'Reasoning',
-        minimal: true
-    },
-    CodexPatch: {
-        icon: () => <FileDiffIcon className={DEFAULT_ICON_CLASS} />,
-        title: () => 'Apply changes',
-        subtitle: (opts) => {
-            if (isObject(opts.input) && isObject(opts.input.changes)) {
-                const files = Object.keys(opts.input.changes)
-                if (files.length === 0) return null
-                const first = files[0]
-                const display = resolveDisplayPath(first, opts.metadata)
-                const name = basename(display)
-                return files.length > 1 ? `${name} (+${files.length - 1})` : name
-            }
-            return null
-        },
-        minimal: true
-    },
-    CodexDiff: {
-        icon: () => <FileDiffIcon className={DEFAULT_ICON_CLASS} />,
-        title: () => 'Diff',
-        subtitle: (opts) => {
-            const unified = getInputStringAny(opts.input, ['unified_diff'])
-            if (!unified) return null
-            const lines = unified.split('\n')
-            for (const line of lines) {
-                if (line.startsWith('+++ b/') || line.startsWith('+++ ')) {
-                    const fileName = line.replace(/^\+\+\+ (b\/)?/, '')
-                    return fileName.split('/').pop() ?? fileName
-                }
-            }
-            return null
-        },
-        minimal: (opts) => {
-            const unified = getInputStringAny(opts.input, ['unified_diff'])
-            if (!unified) return true
-            return unified.length >= 2000 || countLines(unified) >= 50
-        }
     },
     ExitPlanMode: {
         icon: () => <ClipboardIcon className={DEFAULT_ICON_CLASS} />,

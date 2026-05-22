@@ -43,7 +43,7 @@ function makeTool(id: string, name: string, input: unknown = {}): ToolCallBlock 
 function makeGroup(tools: ToolCallBlock[]): ToolGroupBlock {
     const read = tools.filter((tool) => tool.tool.name === 'Read').length
     const search = tools.filter((tool) => tool.tool.name === 'Grep' || tool.tool.name === 'Glob').length
-    const command = tools.filter((tool) => tool.tool.name === 'Bash' || tool.tool.name === 'CodexBash' || tool.tool.name === 'shell_command').length
+    const command = tools.filter((tool) => tool.tool.name === 'Bash' || tool.tool.name === 'shell_command').length
     const mutation = tools.filter((tool) => tool.tool.name === 'Edit' || tool.tool.name === 'Write' || tool.tool.name === 'MultiEdit').length
     const web = tools.filter((tool) => tool.tool.name === 'WebFetch' || tool.tool.name === 'WebSearch').length
 

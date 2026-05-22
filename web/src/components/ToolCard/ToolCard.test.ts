@@ -3,18 +3,18 @@ import { shouldShowInlineToolCardBody, shouldUseCompactTerminalToolCard } from '
 
 describe('ToolCard terminal display mode helpers', () => {
     it('treats terminal-related cards as compact by default', () => {
-        expect(shouldUseCompactTerminalToolCard('CodexBash', 'compact')).toBe(true)
+        expect(shouldUseCompactTerminalToolCard('Bash', 'compact')).toBe(true)
         expect(shouldUseCompactTerminalToolCard('shell_command', 'compact')).toBe(true)
         expect(shouldUseCompactTerminalToolCard('run_shell_command', 'compact')).toBe(true)
         expect(shouldUseCompactTerminalToolCard('Read', 'compact')).toBe(false)
     })
 
     it('hides inline terminal previews in compact mode', () => {
-        expect(shouldShowInlineToolCardBody('CodexBash', false, 'compact')).toBe(false)
+        expect(shouldShowInlineToolCardBody('Bash', false, 'compact')).toBe(false)
     })
 
     it('keeps inline terminal previews in detailed mode', () => {
-        expect(shouldShowInlineToolCardBody('CodexBash', false, 'detailed')).toBe(true)
+        expect(shouldShowInlineToolCardBody('Bash', false, 'detailed')).toBe(true)
         expect(shouldShowInlineToolCardBody('Bash', true, 'detailed')).toBe(true)
         expect(shouldShowInlineToolCardBody('shell_command', true, 'detailed')).toBe(true)
         expect(shouldShowInlineToolCardBody('run_shell_command', true, 'detailed')).toBe(true)

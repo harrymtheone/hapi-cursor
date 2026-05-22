@@ -57,14 +57,14 @@ export function inferGroupedSummaryIntent(tool: ToolCallBlock): GroupedSummaryIn
     if (toolName === 'Grep' || toolName === 'Glob') {
         return 'search-content'
     }
-    if (toolName === 'Edit' || toolName === 'MultiEdit' || toolName === 'Write' || toolName === 'NotebookEdit' || toolName === 'CodexPatch' || toolName === 'CodexDiff') {
+    if (toolName === 'Edit' || toolName === 'MultiEdit' || toolName === 'Write' || toolName === 'NotebookEdit') {
         return 'modify-files'
     }
     if (toolName === 'WebFetch' || toolName === 'WebSearch') {
         return 'open-web'
     }
 
-    if (toolName === 'Bash' || toolName === 'CodexBash' || toolName === 'shell_command') {
+    if (toolName === 'Bash' || toolName === 'shell_command') {
         if (command && FILE_INSPECTION_COMMAND_RE.test(command)) {
             return 'inspect-files'
         }

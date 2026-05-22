@@ -26,7 +26,7 @@ import { TraceSection } from '@/components/ToolCard/trace'
 import { isSubagentToolName } from '@/chat/subagentTool'
 
 const ELAPSED_INTERVAL_MS = 1000
-const TERMINAL_RELATED_TOOL_NAMES = new Set(['Bash', 'CodexBash', 'shell_command', 'run_shell_command'])
+const TERMINAL_RELATED_TOOL_NAMES = new Set(['Bash', 'shell_command', 'run_shell_command'])
 
 export function shouldUseCompactTerminalToolCard(toolName: string, terminalToolDisplayMode: TerminalToolDisplayMode): boolean {
     return TERMINAL_RELATED_TOOL_NAMES.has(toolName) && terminalToolDisplayMode === 'compact'
@@ -204,17 +204,13 @@ function renderToolInput(block: ToolCallBlock, surface: 'inline' | 'dialog' = 'i
         }
     }
 
-    if (toolName === 'CodexDiff' && isObject(input) && typeof input.unified_diff === 'string') {
-        return <CodeBlock code={input.unified_diff} language="diff" title="Patch" collapseLongContent={collapseLongContent} {...codeBlockSurfaceProps} />
-    }
-
     if (toolName === 'ExitPlanMode' || toolName === 'exit_plan_mode') {
         const plan = renderExitPlanModeInput(input)
         if (plan) return plan
     }
 
     const commandArray = isObject(input) && Array.isArray(input.command) ? input.command : null
-    if ((toolName === 'CodexBash' || toolName === 'Bash') && (typeof commandArray?.[0] === 'string' || typeof input === 'object')) {
+    if (toolName === 'Bash' && (typeof commandArray?.[0] === 'string' || typeof input === 'object')) {
         const cmd = Array.isArray(commandArray)
             ? commandArray.filter((part) => typeof part === 'string').join(' ')
             : getInputStringAny(input, ['command', 'cmd'])
@@ -347,7 +343,6 @@ function ToolCardInner(props: ToolCardProps) {
     const subtitle = presentation.subtitle ?? props.block.tool.description
     const taskSummary = renderTaskSummary(props.block, props.metadata, t)
     const runningFrom = props.block.tool.startedAt ?? props.block.tool.createdAt
-    const isCodexAgentCard = toolName === 'CodexAgent'
     const useCompactTerminalCard = shouldUseCompactTerminalToolCard(toolName, props.terminalToolDisplayMode)
     const showInline = shouldShowInlineToolCardBody(toolName, presentation.minimal, props.terminalToolDisplayMode)
     const CompactToolView = showInline ? getToolViewComponent(toolName) : null
@@ -373,7 +368,7 @@ function ToolCardInner(props: ToolCardProps) {
                     </div>
                     <CardTitle className={cn(
                         'min-w-0 text-sm font-medium leading-tight text-[var(--app-fg)]',
-                        isCodexAgentCard ? 'truncate whitespace-nowrap' : 'break-words'
+                        'break-words'
                     )}>
                         {toolTitle}
                     </CardTitle>
@@ -382,7 +377,7 @@ function ToolCardInner(props: ToolCardProps) {
                 {subtitle ? (
                     <CardDescription className={cn(
                         'font-mono text-xs text-[var(--app-tool-card-subtitle)]',
-                        isCodexAgentCard || useCompactTerminalCard ? 'truncate whitespace-nowrap' : 'break-all'
+                        useCompactTerminalCard ? 'truncate whitespace-nowrap' : 'break-all'
                     )}>
                         {truncate(subtitle, 160)}
                     </CardDescription>

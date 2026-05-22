@@ -60,9 +60,6 @@ export function getTaskTraceChildren(block: ToolCallBlock): ToolCallBlock[] | nu
 }
 
 function getTraceChildren(block: ToolCallBlock): ChatBlock[] | null {
-    if (block.tool.name === 'CodexAgent') {
-        return block.children.length === 0 ? null : block.children
-    }
     return getTaskTraceChildren(block)
 }
 
@@ -106,10 +103,9 @@ export function TraceSection({ block, metadata }: TraceSectionProps) {
     if (!children) return null
 
     const state = block.tool.state
-    const isCodexAgentTrace = block.tool.name === 'CodexAgent'
-    const defaultOpen = isCodexAgentTrace || state === 'running' || state === 'error' || state === 'pending'
-    const fixedHeight = isCodexAgentTrace
-    const mode = isCodexAgentTrace ? 'session' : 'trace'
+    const defaultOpen = state === 'running' || state === 'error' || state === 'pending'
+    const fixedHeight = false
+    const mode = 'trace' as const
 
     // Extract summary metadata from result using typed helper
     const { totalTokens, totalDurationMs, totalToolUseCount } = readSummaryFields(block.tool.result)

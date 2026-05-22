@@ -95,31 +95,6 @@ function makeTaskBlock(
     }
 }
 
-function makeCodexAgentBlock(
-    children: ToolCallBlock[],
-    state: ToolCallBlock['tool']['state'] = 'completed',
-    result: unknown = 'done',
-): ToolCallBlock {
-    return {
-        kind: 'tool-call',
-        id: 'agent-1',
-        localId: null,
-        createdAt: 1000,
-        tool: {
-            id: 'agent-1',
-            name: 'CodexAgent',
-            state,
-            input: { message: 'inspect repo', agentId: 'subagent-1' },
-            createdAt: 1000,
-            startedAt: 1000,
-            completedAt: 2000,
-            description: null,
-            result,
-        },
-        children,
-    }
-}
-
 function makeAgentBlock(
     children: ToolCallBlock[],
     state: ToolCallBlock['tool']['state'] = 'completed',
@@ -332,26 +307,6 @@ describe('TraceSection', () => {
         expect(screen.getByText('Input')).toBeInTheDocument()
         // Result section label must also be present
         expect(screen.getByText('Result')).toBeInTheDocument()
-    })
-
-    it('opens CodexAgent trace by default but leaves child rows collapsed', () => {
-        const block = makeCodexAgentBlock([makeChild('c1', 'Bash'), makeChild('c2', 'Read')], 'completed')
-        const { container } = render(<TraceSection block={block} metadata={null} />)
-
-        expect(container.querySelector('button[aria-expanded="true"]')).not.toBeNull()
-        expect(container.querySelector('.border-l')).toBeNull()
-        expect(container.textContent).toContain('Terminal')
-        expect(container.textContent).toContain('file-c2.ts')
-        expect(container.textContent).not.toContain('Input')
-        expect(container.textContent).not.toContain('Result')
-
-        const childButtons = Array.from(container.querySelectorAll('button'))
-            .filter((button) => button.getAttribute('aria-expanded') === null)
-        expect(childButtons).toHaveLength(2)
-
-        fireEvent.click(childButtons[0])
-        expect(container.textContent).toContain('Input')
-        expect(container.textContent).toContain('Result')
     })
 
     // Agent tool name — same Trace UX as Task
