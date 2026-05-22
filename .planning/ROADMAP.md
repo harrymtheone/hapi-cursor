@@ -162,7 +162,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 - [x] 08-01-PLAN.md — Slice 1 (REFH-01): SessionCache 4-way split into sessionRepository/Liveness/Config/Merge + thin facade; redistribute tests
 - [x] 08-02-PLAN.md — Slice 2 (REFH-02 + REFH-04): KeepaliveScheduler + 4 timer rewires + SyncEngine 4 sub-facades + SSE SyncEvent swap + SIGINT closure extension
-- [ ] 08-03-PLAN.md — Slice 3 (REFH-03): route-helpers middleware + ApiRouteError + app.onError + sessions.ts → sessions/{lifecycle,config,upload,read,index}.ts
+- [x] 08-03-PLAN.md — Slice 3 (REFH-03): route-helpers middleware + ApiRouteError + app.onError + sessions.ts → sessions/{lifecycle,config,upload,read,index}.ts
 - [ ] 08-04-PLAN.md — Slice 4: check-no-circular-hub.sh + Phase-8 D-143 block appended to check-no-cut-agents.sh; consolidated phase gate
 
 ### Phase 9: Web internal decoupling
@@ -225,7 +225,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Flavor consolidation + capability abstraction | 8/8 | Complete   | 2026-05-22 |
 | 6. Agent runtime shared kit + mode hardening | 4/4 | Complete   | 2026-05-22 |
 | 7. Wire contracts unification & SSE patch contract | 1/4 | In Progress|  |
-| 8. Hub internal decoupling | 2/4 | In Progress|  |
+| 8. Hub internal decoupling | 3/4 | In Progress|  |
 | 9. Web internal decoupling | 0/TBD | Not started | - |
 | 10. Config cleanup | 0/TBD | Not started | - |
 | 11. Test gap fill | 0/TBD | Not started | - |
