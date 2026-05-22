@@ -61,3 +61,13 @@ export function getPermissionModeOptionsForFlavor(flavor?: string | null): Permi
 export function isPermissionModeAllowedForFlavor(mode: PermissionMode, _flavor?: string | null): boolean {
     return (CURSOR_PERMISSION_MODES as readonly PermissionMode[]).includes(mode)
 }
+
+export class UnknownPermissionModeError extends Error {
+    readonly offendingMode: string
+
+    constructor(offendingMode: string) {
+        super(`Unknown permission mode: ${offendingMode}`)
+        this.name = 'UnknownPermissionModeError'
+        this.offendingMode = offendingMode
+    }
+}
