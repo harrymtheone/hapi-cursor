@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-05-22T02:02:36.848Z"
+stopped_at: Phase 5 Plan 02 complete
+last_updated: "2026-05-22T02:13:00.000Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 12
   completed_phases: 4
   total_plans: 30
-  completed_plans: 23
-  percent: 33
+  completed_plans: 24
+  percent: 36
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 05 (flavor-consolidation-capability-abstraction) — EXECUTING
-Plan: 2 of 8
+Plan: 3 of 8
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [████████░░] 77%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [████████░░] 77%
 | Phase 04 P03 | 21 min | 2 tasks | 4 files |
 | Phase 04 P04 | 8 min | 3 tasks | 19 files |
 | Phase 05 P01 | 5min | 2 tasks | 2 files |
+| Phase 05 P02 | 8min | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,7 @@ Recent decisions affecting current work:
 - [Phase 04]: Removed the legacy tunnel binary from the single-exe and embedded runtime asset pipeline while preserving ripgrep and difftastic archive extraction. — Task 04-04-01 required deleting only the tunnel-specific runtime asset code; shared runtime extraction stayed intact.
 - [Phase 04]: Phase 04 guard exclusions are planning-only for deployment-infrastructure residue; docs, website, README, and runtime source are not whitelisted. — The plan required fail-closed zero-tolerance scans and explicitly prohibited broad docs or source whitelists.
 - [Phase ?]: [Phase 05]: Plan 01 promoted FLAVOR_CAPS to Record<AgentFlavor, FlavorCapabilities> with cursor row populated per D-73 + getCapabilities/getCapability lookup helpers; placeholder non-cursor rows preserve legacy hasCapability semantics until Slice 1b (plan 05-07) narrows AgentFlavor.
+- [Phase 05]: Plan 02 purged Codex* renderer surface from web/src/components/ToolCard/ (≈1500 LoC across 3 deleted files + 11 modified) and migrated PermissionFooter from isCodexFamilyFlavor to getCapability(flavor, 'permissionToneCopy'); knownTools.tsx + knownTools.test.tsx purged under Rule 3 (not in plan files_modified but imported codexAgents.ts directly).
 
 ### Pending Todos
 
@@ -128,6 +130,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T02:02:19.496Z
-Stopped at: Phase 5 context gathered
+Last session: 2026-05-22T02:13:00.000Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None

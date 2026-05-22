@@ -110,7 +110,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. `bun typecheck` and `bun run test` both pass; capability lookup helper has a focused unit test
 **Plans**: 8 plans
 - [x] 05-01-PLAN.md — Slice 1a (shared add): FlavorCapabilities type + Record-shaped FLAVOR_CAPS + lookup helpers + rewritten 23-case flavors.test.ts (SC#4 seed)
-- [ ] 05-02-PLAN.md — Slice 2a (web ToolCard): PermissionFooter capability-driven tone, delete Codex* renderer files + registry purge, drop acceptEdits UI
+- [x] 05-02-PLAN.md — Slice 2a (web ToolCard): PermissionFooter capability-driven tone, delete Codex* renderer files + registry purge, drop acceptEdits UI
 - [ ] 05-03-PLAN.md — Slice 2b (web NewSession/AssistantChat/SessionList): AgentType narrow to 'cursor', delete codex/claude option files, FLAVOR_BADGES single-row
 - [ ] 05-04-PLAN.md — Slice 2c (web chat/lib/hooks/api): capability-driven getContextBudgetTokens, AGENT_MESSAGE_PAYLOAD_TYPE constant adoption, delete useCodexModels + setCollaborationMode
 - [ ] 05-05-PLAN.md — Slice 3a (cli): slashCommands capability lookup, runner Cursor default, delete CodexDisplay + Codex skills path, rename Claude-named helpers
