@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { AGENT_MESSAGE_PAYLOAD_TYPE } from '@hapi/protocol'
 import { reduceChatBlocks } from './reducer'
 import { normalizeDecryptedMessage } from './normalize'
 import type { NormalizedMessage } from './types'
@@ -259,7 +260,7 @@ describe('reduceChatBlocks', () => {
             decryptedMessage('goal-structured-envelope', {
                 role: 'agent',
                 content: {
-                    type: 'codex',
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
                     data: {
                         type: 'thread_goal_updated',
                         thread_id: 'thread-1',

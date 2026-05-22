@@ -6,7 +6,7 @@ import type { PendingSchedule } from '@/components/AssistantChat/ScheduleTimePic
 import { resolvePendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
 import { safeStringify } from '@hapi/protocol'
 import { renderEventLabel } from '@/chat/presentation'
-import type { ChatBlock, CliOutputBlock, CodexReview, UsageData } from '@/chat/types'
+import type { ChatBlock, CliOutputBlock, UsageData } from '@/chat/types'
 import type { AgentEvent, ToolCallBlock } from '@/chat/types'
 import type { ToolGroupBlock, VisibleChatBlock } from '@/chat/toolGroups'
 import type { AttachmentMetadata, MessageStatus as HappyMessageStatus, Session } from '@/types/api'
@@ -25,7 +25,7 @@ export type AggregatedAssistantMeta = {
 }
 
 export type HappyChatMessageMetadata = {
-    kind: 'user' | 'assistant' | 'tool' | 'event' | 'cli-output' | 'codex-review'
+    kind: 'user' | 'assistant' | 'tool' | 'event' | 'cli-output'
     status?: HappyMessageStatus
     localId?: string | null
     originalText?: string
@@ -37,35 +37,12 @@ export type HappyChatMessageMetadata = {
     durationMs?: number
     usage?: UsageData
     model?: string | null
-    review?: CodexReview
     /**
      * Distinct turn count when this block carries an aggregated response
      * group footer. Single-turn blocks omit this field so the existing
      * per-message footer is rendered unchanged.
      */
     turnCount?: number
-}
-
-function formatCodexReviewText(review: CodexReview): string {
-    const lines = ['Codex review']
-    if (review.overallCorrectness) {
-        lines.push(`Overall: ${review.overallCorrectness}`)
-    }
-    if (review.overallExplanation) {
-        lines.push('', review.overallExplanation)
-    }
-    if (review.findings.length > 0) {
-        lines.push('', 'Findings:')
-        for (const finding of review.findings) {
-            const priority = finding.priority === null ? '' : `[P${finding.priority}] `
-            const location = finding.filePath
-                ? ` (${finding.filePath}${finding.lineStart === null ? '' : `:${finding.lineStart}${finding.lineEnd !== null && finding.lineEnd !== finding.lineStart ? `-${finding.lineEnd}` : ''}`})`
-                : ''
-            lines.push(`- ${priority}${finding.title}${location}`)
-            lines.push(`  ${finding.body}`)
-        }
-    }
-    return lines.join('\n')
 }
 
 type VisibleChatBlockRole = 'user' | 'assistant' | 'system'
@@ -352,26 +329,6 @@ function toThreadMessageLike(block: VisibleChatBlock): ThreadMessageLike {
                     durationMs: block.durationMs,
                     usage: block.usage,
                     model: block.model
-                } satisfies HappyChatMessageMetadata
-            }
-        }
-    }
-
-    if (block.kind === 'codex-review') {
-        const messageId = `review:${block.id}`
-        return {
-            role: 'assistant',
-            id: messageId,
-            createdAt: new Date(block.createdAt),
-            content: [{ type: 'text', text: formatCodexReviewText(block.review) }],
-            metadata: {
-                custom: {
-                    kind: 'codex-review',
-                    invokedAt: block.invokedAt,
-                    durationMs: block.durationMs,
-                    usage: block.usage,
-                    model: block.model,
-                    review: block.review
                 } satisfies HappyChatMessageMetadata
             }
         }

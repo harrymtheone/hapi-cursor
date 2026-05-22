@@ -1,4 +1,4 @@
-import { isClaudeModelPreset } from '@hapi/protocol'
+import { getCapability } from '@hapi/protocol'
 
 /**
  * Context windows vary by model/provider and may change over time.
@@ -11,37 +11,9 @@ import { isClaudeModelPreset } from '@hapi/protocol'
  * and use this only as a fallback.
  */
 const CONTEXT_HEADROOM_TOKENS = 10_000
-const DEFAULT_CLAUDE_CONTEXT_WINDOW_TOKENS = 200_000
-const LARGE_CLAUDE_CONTEXT_WINDOW_TOKENS = 1_000_000
-// Fallback for Codex sessions when the server has not reported an explicit modelContextWindow.
-// The value matches the context window currently reported by Codex App Server token-count events.
-const DEFAULT_CODEX_CONTEXT_WINDOW_TOKENS = 258_400
 
-export function getContextBudgetTokens(model: string | null | undefined, flavor?: string | null): number | null {
-    if (flavor === 'codex') {
-        return Math.max(1, DEFAULT_CODEX_CONTEXT_WINDOW_TOKENS - CONTEXT_HEADROOM_TOKENS)
-    }
-
-    if (flavor !== 'claude') {
-        return null
-    }
-
-    const trimmedModel = model?.trim()
-    const windowTokens = (() => {
-        if (!trimmedModel) {
-            return DEFAULT_CLAUDE_CONTEXT_WINDOW_TOKENS
-        }
-        if (isClaudeModelPreset(trimmedModel)) {
-            return trimmedModel.endsWith('[1m]')
-                ? LARGE_CLAUDE_CONTEXT_WINDOW_TOKENS
-                : DEFAULT_CLAUDE_CONTEXT_WINDOW_TOKENS
-        }
-        if (trimmedModel.startsWith('claude-')) {
-            return DEFAULT_CLAUDE_CONTEXT_WINDOW_TOKENS
-        }
-        return null
-    })()
-
-    if (!windowTokens) return null
+export function getContextBudgetTokens(_model: string | null | undefined, flavor?: string | null): number | null {
+    const windowTokens = getCapability(flavor, 'contextBudgetTokens')
+    if (windowTokens === null) return null
     return Math.max(1, windowTokens - CONTEXT_HEADROOM_TOKENS)
 }

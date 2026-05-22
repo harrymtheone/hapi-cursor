@@ -44,14 +44,12 @@ const PLAN_TOOL_NAMES = new Set([
     'TodoWrite',
     'update_plan',
     'ExitPlanMode',
-    'exit_plan_mode',
-    'CodexReasoning'
+    'exit_plan_mode'
 ])
 
 const MILESTONE_TOOL_NAMES = new Set([
     'Task',
     'Agent',
-    'CodexAgent',
     'TeamCreate',
     'TeamDelete',
     'SendMessage',
@@ -63,9 +61,7 @@ const MILESTONE_TOOL_NAMES = new Set([
     'close_agent'
 ])
 
-const INTERACTIVE_TOOL_NAMES = new Set([
-    'CodexPermission'
-])
+const INTERACTIVE_TOOL_NAMES = new Set<string>()
 
 function pushUnique(target: string[], value: string | null): void {
     if (!value) return
@@ -90,8 +86,8 @@ export function getToolGroupActionKind(block: ToolCallBlock): ToolGroupActionKin
 
     if (name === 'Read' || name === 'NotebookRead') return 'read'
     if (name === 'Grep' || name === 'Glob' || name === 'LS') return 'search'
-    if (name === 'Bash' || name === 'CodexBash' || name === 'shell_command') return 'command'
-    if (name === 'Edit' || name === 'MultiEdit' || name === 'Write' || name === 'NotebookEdit' || name === 'CodexPatch' || name === 'CodexDiff') {
+    if (name === 'Bash' || name === 'shell_command') return 'command'
+    if (name === 'Edit' || name === 'MultiEdit' || name === 'Write' || name === 'NotebookEdit') {
         return 'mutation'
     }
     if (name === 'WebFetch' || name === 'WebSearch') return 'web'

@@ -2,7 +2,7 @@ import { unwrapRoleWrappedRecordEnvelope } from '@hapi/protocol/messages'
 import { safeStringify } from '@hapi/protocol'
 import type { DecryptedMessage } from '@/types/api'
 import type { NormalizedMessage } from '@/chat/types'
-import { isCodexContent, isSkippableAgentContent, normalizeAgentRecord } from '@/chat/normalizeAgent'
+import { isAgentMessagePayload, isSkippableAgentContent, normalizeAgentRecord } from '@/chat/normalizeAgent'
 import { normalizeUserRecord } from '@/chat/normalizeUser'
 
 export function normalizeDecryptedMessage(message: DecryptedMessage): NormalizedMessage | null {
@@ -42,7 +42,7 @@ export function normalizeDecryptedMessage(message: DecryptedMessage): Normalized
             return null
         }
         const normalized = normalizeAgentRecord(message.id, message.localId, message.createdAt, record.content, record.meta)
-        if (!normalized && isCodexContent(record.content)) {
+        if (!normalized && isAgentMessagePayload(record.content)) {
             return null
         }
         return normalized

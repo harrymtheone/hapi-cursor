@@ -193,7 +193,7 @@ function HappyNestedBlockList(props: {
 
                 if (block.kind === 'tool-call') {
                     const isTask = isSubagentToolName(block.tool.name)
-                    const hideChildren = block.tool.name === 'CodexAgent'
+                    const hideChildren = false
                     const taskChildren = isTask ? splitTaskChildren(block) : null
 
                     return (
@@ -304,7 +304,7 @@ export function HappyToolMessage(props: ToolCallMessagePartProps) {
 
     const block = artifact
     const isTask = isSubagentToolName(block.tool.name)
-    const hideChildren = block.tool.name === 'CodexAgent'
+    const hideChildren = false
     const taskChildren = isTask ? splitTaskChildren(block) : null
 
     return (

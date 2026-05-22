@@ -76,7 +76,7 @@ describe('getEventPresentation — limit-reached', () => {
 })
 
 describe('getEventPresentation — token-count', () => {
-    it('formats Codex token-count as compact context usage', () => {
+    it('formats token-count as compact context usage', () => {
         const result = getEventPresentation({
             type: 'token-count',
             info: {

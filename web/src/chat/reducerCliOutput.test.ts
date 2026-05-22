@@ -28,7 +28,7 @@ describe('mergeCliOutputBlocks', () => {
             text: '<command-name>foo</command-name>',
             invokedAt: 1000,
             usage: { input_tokens: 1, output_tokens: 2 },
-            model: 'claude-sonnet-4-6'
+            model: 'cursor-model-x'
         })
         prev.durationMs = 500
 
@@ -46,7 +46,7 @@ describe('mergeCliOutputBlocks', () => {
         expect(merged.invokedAt).toBe(1000)
         expect(merged.durationMs).toBe(500)
         expect(merged.usage).toEqual({ input_tokens: 1, output_tokens: 2 })
-        expect(merged.model).toBe('claude-sonnet-4-6')
+        expect(merged.model).toBe('cursor-model-x')
         expect(merged.text).toContain('<command-name>foo</command-name>')
         expect(merged.text).toContain('<local-command-stdout>bar</local-command-stdout>')
     })

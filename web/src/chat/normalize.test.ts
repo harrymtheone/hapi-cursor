@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { AGENT_MESSAGE_PAYLOAD_TYPE } from '@hapi/protocol'
 import { normalizeDecryptedMessage } from './normalize'
 import type { DecryptedMessage } from '@/types/api'
 
@@ -13,7 +14,7 @@ function makeMessage(content: unknown): DecryptedMessage {
 }
 
 describe('normalizeDecryptedMessage', () => {
-    it('drops unsupported Claude system output records', () => {
+    it('drops unsupported system output records', () => {
         const message = makeMessage({
             role: 'agent',
             content: {
@@ -29,7 +30,7 @@ describe('normalizeDecryptedMessage', () => {
         expect(normalizeDecryptedMessage(message)).toBeNull()
     })
 
-    it('drops Claude init system output records', () => {
+    it('drops init system output records', () => {
         const message = makeMessage({
             role: 'agent',
             content: {
@@ -46,7 +47,7 @@ describe('normalizeDecryptedMessage', () => {
         expect(normalizeDecryptedMessage(message)).toBeNull()
     })
 
-    it('keeps known Claude system subtypes as normalized events', () => {
+    it('keeps known system subtypes as normalized events', () => {
         const message = makeMessage({
             role: 'agent',
             content: {
@@ -373,11 +374,11 @@ describe('normalizeDecryptedMessage', () => {
         })
     })
 
-    it('preserves Codex tool-call-result errors for timeline state', () => {
+    it('preserves agent-payload tool-call-result errors for timeline state', () => {
         const message = makeMessage({
             role: 'agent',
             content: {
-                type: 'codex',
+                type: AGENT_MESSAGE_PAYLOAD_TYPE,
                 data: {
                     type: 'tool-call-result',
                     callId: 'call-1',
@@ -403,61 +404,11 @@ describe('normalizeDecryptedMessage', () => {
         })
     })
 
-    it('normalizes Codex review JSON messages as structured review content', () => {
+    it('emits agent-payload string messages as plain text', () => {
         const message = makeMessage({
             role: 'agent',
             content: {
-                type: 'codex',
-                data: {
-                    type: 'message',
-                    message: JSON.stringify({
-                        findings: [{
-                            title: '[P2] Remove retained sessions when sockets disconnect',
-                            body: 'Retained sockets survive disconnects.',
-                            confidence_score: 0.82,
-                            priority: 2,
-                            code_location: {
-                                absolute_file_path: '/data/dz/wapair-ts/src/pairing/manager.ts',
-                                line_range: { start: 1614, end: 1619 }
-                            }
-                        }],
-                        overall_correctness: 'patch is incorrect',
-                        overall_explanation: 'The message-sending feature retains long-lived sockets but does not fully manage their lifecycle.',
-                        overall_confidence_score: 0.8
-                    })
-                }
-            }
-        })
-
-        const normalized = normalizeDecryptedMessage(message)
-
-        expect(normalized).toMatchObject({
-            role: 'agent',
-            content: [{
-                type: 'codex-review',
-                review: {
-                    overallCorrectness: 'patch is incorrect',
-                    overallExplanation: 'The message-sending feature retains long-lived sockets but does not fully manage their lifecycle.',
-                    overallConfidenceScore: 0.8,
-                    findings: [{
-                        title: '[P2] Remove retained sessions when sockets disconnect',
-                        body: 'Retained sockets survive disconnects.',
-                        priority: 2,
-                        confidenceScore: 0.82,
-                        filePath: '/data/dz/wapair-ts/src/pairing/manager.ts',
-                        lineStart: 1614,
-                        lineEnd: 1619
-                    }]
-                }
-            }]
-        })
-    })
-
-    it('keeps non-review Codex JSON messages as text', () => {
-        const message = makeMessage({
-            role: 'agent',
-            content: {
-                type: 'codex',
+                type: AGENT_MESSAGE_PAYLOAD_TYPE,
                 data: {
                     type: 'message',
                     message: JSON.stringify({ status: 'ok', message: 'plain JSON' })
@@ -476,153 +427,11 @@ describe('normalizeDecryptedMessage', () => {
         })
     })
 
-    it('keeps malformed Codex review-looking messages as text', () => {
+    it('normalizes agent-payload context_compacted as a compact event', () => {
         const message = makeMessage({
             role: 'agent',
             content: {
-                type: 'codex',
-                data: {
-                    type: 'message',
-                    message: '{"findings": ['
-                }
-            }
-        })
-
-        const normalized = normalizeDecryptedMessage(message)
-
-        expect(normalized).toMatchObject({
-            role: 'agent',
-            content: [{
-                type: 'text',
-                text: '{"findings": ['
-            }]
-        })
-    })
-
-    it('normalizes Codex plan updates as completed update_plan snapshots', () => {
-        const message = makeMessage({
-            role: 'agent',
-            content: {
-                type: 'codex',
-                data: {
-                    type: 'plan_update',
-                    plan: [
-                        { step: 'Inspect event stream', status: 'completed' },
-                        { step: 'Render plan card', status: 'in_progress' }
-                    ],
-                    id: 'plan-update-1'
-                }
-            }
-        })
-
-        const normalized = normalizeDecryptedMessage(message)
-
-        expect(normalized).toMatchObject({
-            role: 'agent',
-            content: [
-                {
-                    type: 'tool-call',
-                    id: 'codex-plan-state',
-                    name: 'update_plan',
-                    input: {
-                        plan: [
-                            { step: 'Inspect event stream', status: 'completed' },
-                            { step: 'Render plan card', status: 'in_progress' }
-                        ],
-                        source: 'codex'
-                    }
-                },
-                {
-                    type: 'tool-result',
-                    tool_use_id: 'codex-plan-state',
-                    content: {
-                        plan: [
-                            { step: 'Inspect event stream', status: 'completed' },
-                            { step: 'Render plan card', status: 'in_progress' }
-                        ],
-                        source: 'codex',
-                        status: 'updated'
-                    }
-                }
-            ]
-        })
-    })
-
-    it('normalizes Codex token_count as usage data for context display', () => {
-        const message = makeMessage({
-            role: 'agent',
-            content: {
-                type: 'codex',
-                data: {
-                    type: 'token_count',
-                    info: {
-                        total: {
-                            inputTokens: 82_503,
-                            cachedInputTokens: 71_808,
-                            outputTokens: 166
-                        },
-                        modelContextWindow: 258_400
-                    }
-                }
-            }
-        })
-
-        const normalized = normalizeDecryptedMessage(message)
-
-        expect(normalized).toMatchObject({
-            role: 'event',
-            content: {
-                type: 'token-count'
-            },
-            usage: {
-                input_tokens: 82503,
-                output_tokens: 166
-            }
-        })
-    })
-
-    it('normalizes Codex scoped snake_case usage fields', () => {
-        const message = makeMessage({
-            role: 'agent',
-            content: {
-                type: 'codex',
-                data: {
-                    type: 'token_count',
-                    thread_id: 'child-thread',
-                    scope: { role: 'child' },
-                    info: {
-                        last_token_usage: {
-                            input_tokens: 321,
-                            output_tokens: 12,
-                            cached_input_tokens: 100
-                        },
-                        model_context_window: 258_400
-                    }
-                }
-            }
-        })
-
-        const normalized = normalizeDecryptedMessage(message)
-
-        expect(normalized).toMatchObject({
-            role: 'event',
-            usage: {
-                input_tokens: 321,
-                output_tokens: 12,
-                cache_read_input_tokens: 100,
-                context_tokens: 321,
-                context_window: 258400,
-                thread_id: 'child-thread',
-                scope_role: 'child'
-            }
-        })
-    })
-
-    it('normalizes Codex context_compacted as a compact event', () => {
-        const message = makeMessage({
-            role: 'agent',
-            content: {
-                type: 'codex',
+                type: AGENT_MESSAGE_PAYLOAD_TYPE,
                 data: {
                     type: 'context_compacted',
                     trigger: 'auto',
@@ -637,31 +446,6 @@ describe('normalizeDecryptedMessage', () => {
                 type: 'compact',
                 trigger: 'auto',
                 preTokens: 1234
-            }
-        })
-    })
-
-    it('normalizes Codex agent-run events for timeline aggregation', () => {
-        const message = makeMessage({
-            role: 'agent',
-            content: {
-                type: 'codex',
-                data: {
-                    type: 'agent-run-start',
-                    cardId: 'spawn-1',
-                    input: { message: 'inspect files' },
-                    status: 'starting'
-                }
-            }
-        })
-
-        expect(normalizeDecryptedMessage(message)).toMatchObject({
-            role: 'event',
-            content: {
-                type: 'agent-run-start',
-                cardId: 'spawn-1',
-                input: { message: 'inspect files' },
-                status: 'starting'
             }
         })
     })

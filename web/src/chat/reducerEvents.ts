@@ -1,42 +1,4 @@
-import type { AgentEvent, AgentEventBlock, ChatBlock, NormalizedMessage } from '@/chat/types'
-
-function parseClaudeUsageLimit(text: string): AgentEvent | null {
-    const reachedMatch = text.match(/^Claude AI usage limit reached\|(\d+)(?:\|([^|]*))?$/)
-    if (reachedMatch) {
-        const timestamp = Number.parseInt(reachedMatch[1], 10)
-        if (Number.isFinite(timestamp)) {
-            return { type: 'limit-reached', endsAt: timestamp, limitType: reachedMatch[2] || '' }
-        }
-    }
-
-    const warningMatch = text.match(/^Claude AI usage limit warning\|(\d+)\|(\d+)\|([^|]*)$/)
-    if (warningMatch) {
-        const timestamp = Number.parseInt(warningMatch[1], 10)
-        const utilization = Number.parseInt(warningMatch[2], 10) / 100
-        const limitType = warningMatch[3] || ''
-        if (Number.isFinite(timestamp) && Number.isFinite(utilization)) {
-            return { type: 'limit-warning', utilization, endsAt: timestamp, limitType }
-        }
-    }
-
-    return null
-}
-
-export function parseMessageAsEvent(msg: NormalizedMessage): AgentEvent | null {
-    if (msg.isSidechain) return null
-    if (msg.role !== 'agent') return null
-
-    for (const content of msg.content) {
-        if (content.type === 'text') {
-            const limitEvent = parseClaudeUsageLimit(content.text)
-            if (limitEvent !== null) {
-                return limitEvent
-            }
-        }
-    }
-
-    return null
-}
+import type { AgentEventBlock, ChatBlock } from '@/chat/types'
 
 export function dedupeAgentEvents(blocks: ChatBlock[]): ChatBlock[] {
     const result: ChatBlock[] = []
