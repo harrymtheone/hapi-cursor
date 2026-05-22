@@ -121,53 +121,9 @@ describe('publisher.emit contract - SyncEventSchema conformance', () => {
             expect(events.length).toBeGreaterThanOrEqual(8)
         })
 
-        it('applyBackgroundTaskDelta emits a session-updated patch with exactly { backgroundTaskCount } data field', () => {
-            const events: SyncEvent[] = []
-            const cache = createSessionCache(events)
-            const session = cache.getOrCreateSession('background-task-session', sessionMetadata, null)
-
-            events.length = 0
-            cache.applyBackgroundTaskDelta(session.id, { started: 1, completed: 0 })
-
-            const update = events.find((event) => event.type === 'session-updated')
-            expect(update).toBeDefined()
-            if (!update || update.type !== 'session-updated') return
-
-            const result = SyncEventSchema.safeParse(update)
-            if (!result.success) {
-                throw new Error(`emit violates SyncEventSchema: ${JSON.stringify(update)} - ${result.error.message}`)
-            }
-            expect(Object.keys(update.data).sort()).toEqual(['backgroundTaskCount'])
-            expect(update.data.backgroundTaskCount).toEqual(expect.any(Number))
-            expect(Number.isFinite(update.data.backgroundTaskCount)).toBe(true)
-        })
-
-        it('applySessionConfig emits session-updated with full Session payload', () => {
-            const events: SyncEvent[] = []
-            const cache = createSessionCache(events)
-            const session = cache.getOrCreateSession('config-session', sessionMetadata, null)
-
-            events.length = 0
-            cache.applySessionConfig(session.id, {
-                permissionMode: 'plan',
-                model: 'cursor-model',
-                modelReasoningEffort: 'medium',
-                effort: 'high'
-            })
-
-            const update = events.find((event) => event.type === 'session-updated')
-            expect(update).toBeDefined()
-            if (!update || update.type !== 'session-updated') return
-
-            const result = SyncEventSchema.safeParse(update)
-            if (!result.success) {
-                throw new Error(`emit violates SyncEventSchema: ${JSON.stringify(update)} - ${result.error.message}`)
-            }
-            if (!('metadata' in update.data)) {
-                throw new Error(`expected full Session payload: ${JSON.stringify(update.data)}`)
-            }
-            expect(update.data.id).toBe(session.id)
-        })
+        // Per-method emit contracts (applyBackgroundTaskDelta, applySessionConfig, etc.)
+        // are now covered by per-service test files. The facade cross-service smoke
+        // case above is the only SessionCache assertion kept here.
     })
 
     describe('MachineCache', () => {
