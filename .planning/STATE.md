@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: verifying
 stopped_at: Phase 8 context gathered
-last_updated: "2026-05-22T16:32:16.880Z"
+last_updated: "2026-05-22T16:38:13.237Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 12
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 42
-  completed_plans: 41
-  percent: 58
+  completed_plans: 42
+  percent: 67
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 
 Phase: 08 (hub-internal-decoupling) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-22
 
-Progress: [██████████] 98%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -92,6 +92,7 @@ Progress: [██████████] 98%
 | Phase 07 P04 | 5min 24s | 3 tasks | 6 files |
 | Phase 08 P08-02 | 50m | 3 tasks | 21 files |
 | Phase 08 P03 | 30min | 3 tasks | 17 files |
+| Phase 08 P08-04 | 10m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -144,6 +145,7 @@ Recent decisions affecting current work:
 - [Phase 07]: Strip hub metadata flavor fixtures before enabling D-126 — The completed wire contract deletes metadata.flavor, so remaining hub test fixtures were old contract residue that would make the new zero-tolerance guard fail.
 - [Phase ?]: Session sub-facade split further into syncEngineSessionResume.ts to satisfy SC#1 <400 line budget
 - [Phase ?]: createShutdownHandler factory exported; main() gated on import.meta.main; shutdown awaits syncEngine.shutdown() raced with 5s timeout
+- [Phase ?]: Phase 8 guard scripts installed: standalone scripts/check-no-circular-hub.sh + Phase-8 D-143 zero-tolerance block in scripts/check-no-cut-agents.sh tail-invoking the madge guard for a single phase-gate command
 
 ### Pending Todos
 
@@ -163,6 +165,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T16:32:13.297Z
+Last session: 2026-05-22T16:38:03.420Z
 Stopped at: Phase 8 context gathered
 Resume file: None

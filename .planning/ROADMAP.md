@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches (completed 2026-05-22)
 - [x] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode (completed 2026-05-22)
 - [ ] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection
-- [ ] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler
+- [x] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler (completed 2026-05-22)
 - [ ] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/`
 - [ ] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters
 - [ ] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases
@@ -163,7 +163,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 08-01-PLAN.md — Slice 1 (REFH-01): SessionCache 4-way split into sessionRepository/Liveness/Config/Merge + thin facade; redistribute tests
 - [x] 08-02-PLAN.md — Slice 2 (REFH-02 + REFH-04): KeepaliveScheduler + 4 timer rewires + SyncEngine 4 sub-facades + SSE SyncEvent swap + SIGINT closure extension
 - [x] 08-03-PLAN.md — Slice 3 (REFH-03): route-helpers middleware + ApiRouteError + app.onError + sessions.ts → sessions/{lifecycle,config,upload,read,index}.ts
-- [ ] 08-04-PLAN.md — Slice 4: check-no-circular-hub.sh + Phase-8 D-143 block appended to check-no-cut-agents.sh; consolidated phase gate
+- [x] 08-04-PLAN.md — Slice 4: check-no-circular-hub.sh + Phase-8 D-143 block appended to check-no-cut-agents.sh; consolidated phase gate
 
 ### Phase 9: Web internal decoupling
 **Goal**: Web circular dependencies are broken, oversized files are decomposed, and duplicated utilities live in `shared/` instead of being copy-pasted across packages.
@@ -225,7 +225,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Flavor consolidation + capability abstraction | 8/8 | Complete   | 2026-05-22 |
 | 6. Agent runtime shared kit + mode hardening | 4/4 | Complete   | 2026-05-22 |
 | 7. Wire contracts unification & SSE patch contract | 1/4 | In Progress|  |
-| 8. Hub internal decoupling | 3/4 | In Progress|  |
+| 8. Hub internal decoupling | 4/4 | Complete   | 2026-05-22 |
 | 9. Web internal decoupling | 0/TBD | Not started | - |
 | 10. Config cleanup | 0/TBD | Not started | - |
 | 11. Test gap fill | 0/TBD | Not started | - |
