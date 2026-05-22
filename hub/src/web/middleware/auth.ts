@@ -1,10 +1,15 @@
 import type { MiddlewareHandler } from 'hono'
 import { z } from 'zod'
 import { jwtVerify } from 'jose'
+import type { Machine, Session, SyncEngine } from '../../sync/syncEngine'
 
 export type WebAppEnv = {
     Variables: {
         userId: number
+        engine: SyncEngine
+        session: Session
+        machine: Machine
+        body: unknown
     }
 }
 

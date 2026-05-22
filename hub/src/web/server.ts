@@ -8,6 +8,7 @@ import { getConfiguration } from '../configuration'
 import { PROTOCOL_VERSION } from '@hapi/protocol'
 import type { SyncEngine } from '../sync/syncEngine'
 import { createAuthMiddleware, type WebAppEnv } from './middleware/auth'
+import { registerApiErrorHandler } from './middleware/apiRouteError'
 import { createAuthRoutes } from './routes/auth'
 import { createEventsRoutes } from './routes/events'
 import { createSessionsRoutes } from './routes/sessions'
@@ -63,6 +64,8 @@ function createWebApp(options: {
     embeddedAssetMap: Map<string, EmbeddedWebAsset> | null
 }): Hono<WebAppEnv> {
     const app = new Hono<WebAppEnv>()
+
+    registerApiErrorHandler(app)
 
     app.use('*', logger())
 
