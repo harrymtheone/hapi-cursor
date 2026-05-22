@@ -128,7 +128,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Unknown permission mode raises a typed error with the offending mode name; ripgrep finds zero TODOs of the form `// Eventually we should error here instead of silently switching`
   4. New tests cover mid-session `bypass + remote` and `bypass + plan` switches plus the unknown-mode error path; existing `bun run test` suite stays green
   5. `bun typecheck` passes; no `cursorLocalLauncher` ↔ `cursorRemoteLauncher` copy-paste detected by ripgrep on permission-mode mapping
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 06-01-PLAN.md — Extract `cli/src/cursor/modes.ts` leaf module + redirect imports; break the 3 madge cycles in `cli/src/cursor`
+- [ ] 06-02-PLAN.md — Add `UnknownPermissionModeError` to `shared/src/modes.ts`; create `cli/src/agent/modeConfig.ts` + unit tests; upgrade `runCursor.ts::resolvePermissionMode` throw class
+- [ ] 06-03-PLAN.md — Converge both launchers onto `modeConfig.permissionModeToCursorArgs`; delete `permissionModeToAgentArgs` + `as string` casts; export `buildAgentArgs`; stamp 4 SC#1 JSDoc anchors
+- [ ] 06-04-PLAN.md — Add mid-session yolo + plan switch tests (remote + local); extend `scripts/check-no-cut-agents.sh` with Phase 6 ripgrep + madge guard; pin `madge` devDep
 
 ### Phase 7: Wire contracts unification & SSE patch contract
 **Goal**: `shared/` is the only source of `Session / Machine / Message / RunnerState` DTOs and SSE event payloads; the web client no longer guesses about the server contract.
