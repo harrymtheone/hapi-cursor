@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Cut multi-user namespace isolation** — Remove `CLI_API_TOKEN:<namespace>` suffix, user platform field, namespace-aware cache keys (completed 2026-05-21)
 - [x] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream (completed 2026-05-21)
 - [x] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches (completed 2026-05-22)
-- [ ] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode
+- [x] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode (completed 2026-05-22)
 - [ ] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection
 - [ ] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler
 - [ ] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/`
@@ -132,7 +132,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 06-01-PLAN.md — Extract `cli/src/cursor/modes.ts` leaf module + redirect imports; break the 3 madge cycles in `cli/src/cursor` (completed 2026-05-22)
 - [x] 06-02-PLAN.md — Add `UnknownPermissionModeError` to `shared/src/modes.ts`; create `cli/src/agent/modeConfig.ts` + unit tests; upgrade `runCursor.ts::resolvePermissionMode` throw class
 - [x] 06-03-PLAN.md — Converge both launchers onto `modeConfig.permissionModeToCursorArgs`; delete `permissionModeToAgentArgs` + `as string` casts; export `buildAgentArgs`; stamp 4 SC#1 JSDoc anchors
-- [ ] 06-04-PLAN.md — Add mid-session yolo + plan switch tests (remote + local); extend `scripts/check-no-cut-agents.sh` with Phase 6 ripgrep + madge guard; pin `madge` devDep
+- [x] 06-04-PLAN.md — Add mid-session yolo + plan switch tests (remote + local); extend `scripts/check-no-cut-agents.sh` with Phase 6 ripgrep + madge guard; pin `madge` devDep (completed 2026-05-22)
 
 ### Phase 7: Wire contracts unification & SSE patch contract
 **Goal**: `shared/` is the only source of `Session / Machine / Message / RunnerState` DTOs and SSE event payloads; the web client no longer guesses about the server contract.
