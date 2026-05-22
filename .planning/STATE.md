@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 Plan 03 complete
-last_updated: "2026-05-22T10:30:00.000Z"
+stopped_at: Phase 5 Plan 04 complete
+last_updated: "2026-05-22T11:00:00.000Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 12
   completed_phases: 4
   total_plans: 30
-  completed_plans: 25
-  percent: 38
+  completed_plans: 26
+  percent: 40
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 05 (flavor-consolidation-capability-abstraction) — EXECUTING
-Plan: 4 of 8
+Plan: 5 of 8
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [████████░░] 83%
+Progress: [████████░░] 87%
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [████████░░] 83%
 | Phase 05 P01 | 5min | 2 tasks | 2 files |
 | Phase 05 P02 | 8min | 2 tasks | 16 files |
 | Phase 05 P03 | 10min | 3 tasks | 27 files |
+| Phase 05 P04 | 25min | 3 tasks | 35 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 05]: Plan 01 promoted FLAVOR_CAPS to Record<AgentFlavor, FlavorCapabilities> with cursor row populated per D-73 + getCapabilities/getCapability lookup helpers; placeholder non-cursor rows preserve legacy hasCapability semantics until Slice 1b (plan 05-07) narrows AgentFlavor.
 - [Phase 05]: Plan 02 purged Codex* renderer surface from web/src/components/ToolCard/ (≈1500 LoC across 3 deleted files + 11 modified) and migrated PermissionFooter from isCodexFamilyFlavor to getCapability(flavor, 'permissionToneCopy'); knownTools.tsx + knownTools.test.tsx purged under Rule 3 (not in plan files_modified but imported codexAgents.ts directly).
 - [Phase 05]: Plan 03 collapsed NewSession + AssistantChat + SessionList web subtrees to cursor-only (~1500 LoC removed across 14 deleted + 13 modified files); narrowed AgentType to 'cursor', dropped CodexCollaborationMode consumers from StatusBar + HappyComposer + SessionChat, collapsed SessionList FLAVOR_BADGES to single cursor row; slice-wide \b(claude|codex|gemini|opencode)\b ripgrep gate green across the four target directories.
+- [Phase 05]: Plan 04 collapsed remaining web non-component layers (chat reducers/normalizers/types, lib utilities/locales, hooks/api client, router default) to cursor-only (~1700 LoC removed across 2 deleted + 33 modified files). Rewrote getContextBudgetTokens against getCapability, deleted useCodexModels + setCollaborationMode + setModelReasoningEffort, narrowed api/client agent + permission unions to cursor + CursorPermissionMode, replaced bare 'codex' payload-type literals with AGENT_MESSAGE_PAYLOAD_TYPE imports; slice-wide ripgrep gate over web/src/ now zero-hit.
 
 ### Pending Todos
 
@@ -132,6 +134,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T10:30:00.000Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-05-22T11:00:00.000Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None

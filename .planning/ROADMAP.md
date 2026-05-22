@@ -112,7 +112,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 05-01-PLAN.md — Slice 1a (shared add): FlavorCapabilities type + Record-shaped FLAVOR_CAPS + lookup helpers + rewritten 23-case flavors.test.ts (SC#4 seed)
 - [x] 05-02-PLAN.md — Slice 2a (web ToolCard): PermissionFooter capability-driven tone, delete Codex* renderer files + registry purge, drop acceptEdits UI
 - [x] 05-03-PLAN.md — Slice 2b (web NewSession/AssistantChat/SessionList): AgentType narrow to 'cursor', delete codex/claude option files, FLAVOR_BADGES single-row
-- [ ] 05-04-PLAN.md — Slice 2c (web chat/lib/hooks/api): capability-driven getContextBudgetTokens, AGENT_MESSAGE_PAYLOAD_TYPE constant adoption, delete useCodexModels + setCollaborationMode
+- [x] 05-04-PLAN.md — Slice 2c (web chat/lib/hooks/api): capability-driven getContextBudgetTokens, AGENT_MESSAGE_PAYLOAD_TYPE constant adoption, delete useCodexModels + setCollaborationMode
 - [ ] 05-05-PLAN.md — Slice 3a (cli): slashCommands capability lookup, runner Cursor default, delete CodexDisplay + Codex skills path, rename Claude-named helpers
 - [ ] 05-06-PLAN.md — Slice 3b (hub): syncEngine degenerate-ternary collapse, hub-route defaults to 'cursor', machines.ts Zod enum narrow, test fixtures Cursor-only
 - [ ] 05-07-PLAN.md — Slice 1b (shared delete — closes the door): AgentFlavor narrow to 'cursor', delete non-cursor *_PERMISSION_MODES + CodexCollaborationMode*, narrow AgentFlavorSchema, delete SessionSchema.collaborationMode
@@ -210,7 +210,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
 | 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
 | 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
-| 5. Flavor consolidation + capability abstraction | 1/8 | In Progress|  |
+| 5. Flavor consolidation + capability abstraction | 4/8 | In Progress|  |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
 | 7. Wire contracts unification & SSE patch contract | 0/TBD | Not started | - |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
