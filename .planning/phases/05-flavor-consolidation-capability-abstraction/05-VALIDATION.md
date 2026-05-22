@@ -1,10 +1,11 @@
 ---
 phase: 5
 slug: flavor-consolidation-capability-abstraction
-status: draft
+status: complete
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-05-22
+completed: 2026-05-22
 ---
 
 # Phase 5 — Validation Strategy
@@ -46,8 +47,8 @@ created: 2026-05-22
 
 ## Wave 0 Requirements
 
-- [ ] `shared/src/flavors.test.ts` — rewrite to capability-table assertions (23 test cases per RESEARCH §Capability Lookup Test)
-- [ ] `scripts/check-no-cut-agents.sh` (or equivalent source-guard) — additive patterns per D-84
+- [x] `shared/src/flavors.test.ts` — rewrite to capability-table assertions (23 test cases per RESEARCH §Capability Lookup Test; 24 after plan 05-08 case 12b)
+- [x] `scripts/check-no-cut-agents.sh` (or equivalent source-guard) — additive patterns per D-84 (Phase-5 identifier + flavor-branch sweeps; plan 05-08)
 
 *Planner: enumerate any other Wave-0 stubs the slicing needs.*
 
