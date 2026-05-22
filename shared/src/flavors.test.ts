@@ -86,8 +86,8 @@ describe('flavor capability table', () => {
     })
 
     // Case 14
-    test("getFlavorLabel('claude') === 'Unknown'", () => {
-        expect(getFlavorLabel('claude')).toBe('Unknown')
+    test("getFlavorLabel('unknown-flavor') === 'Unknown'", () => {
+        expect(getFlavorLabel('unknown-flavor')).toBe('Unknown')
     })
 
     // Case 15
@@ -101,8 +101,8 @@ describe('flavor capability table', () => {
     })
 
     // Case 17
-    test("isKnownFlavor('claude') === false", () => {
-        expect(isKnownFlavor('claude')).toBe(false)
+    test("isKnownFlavor('unknown-flavor') === false", () => {
+        expect(isKnownFlavor('unknown-flavor')).toBe(false)
     })
 
     // Case 18

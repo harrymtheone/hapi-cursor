@@ -21,7 +21,7 @@ export type FlavorCapabilities = {
     readonly contextBudgetTokens: number | null
     readonly userSlashCommandsDir: ((homedir: string) => string | null) | null
     readonly projectSlashCommandsDir: ((projectDir: string) => string | null) | null
-    readonly permissionToneCopy: 'cursor' | 'codex'
+    readonly permissionToneCopy: 'cursor'
 }
 
 // --- Per-flavor capability table (Slice 1b: AgentFlavor narrowed to 'cursor',
