@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { isObject, toSessionSummary } from '@hapi/protocol'
+import { toSessionSummary } from '@hapi/protocol'
+import { SyncEventSchema, type SessionPatch } from '@hapi/protocol/schemas'
 import type {
     Machine,
     MachinesResponse,
@@ -28,9 +29,6 @@ const HEARTBEAT_WATCHDOG_INTERVAL_MS = 10_000
 const RECONNECT_BASE_DELAY_MS = 1_000
 const RECONNECT_MAX_DELAY_MS = 30_000
 const RECONNECT_JITTER_MS = 500
-const INVALIDATION_BATCH_MS = 16
-
-type SessionPatch = Partial<Pick<Session, 'active' | 'thinking' | 'activeAt' | 'updatedAt' | 'model' | 'modelReasoningEffort' | 'effort' | 'permissionMode'>>
 
 function sortSessionSummaries(left: SessionSummary, right: SessionSummary): number {
     if (left.active !== right.active) {
@@ -40,98 +38,6 @@ function sortSessionSummaries(left: SessionSummary, right: SessionSummary): numb
         return right.pendingRequestsCount - left.pendingRequestsCount
     }
     return right.updatedAt - left.updatedAt
-}
-
-function hasRecordShape(value: unknown): value is Record<string, unknown> {
-    return isObject(value)
-}
-
-function isSessionRecord(value: unknown): value is Session {
-    if (!hasRecordShape(value)) {
-        return false
-    }
-    return typeof value.id === 'string'
-        && typeof value.active === 'boolean'
-        && typeof value.activeAt === 'number'
-        && typeof value.updatedAt === 'number'
-        && typeof value.thinking === 'boolean'
-}
-
-function getSessionPatch(value: unknown): SessionPatch | null {
-    if (!hasRecordShape(value)) {
-        return null
-    }
-
-    const patch: SessionPatch = {}
-    let hasKnownPatch = false
-
-    if (typeof value.active === 'boolean') {
-        patch.active = value.active
-        hasKnownPatch = true
-    }
-    if (typeof value.thinking === 'boolean') {
-        patch.thinking = value.thinking
-        hasKnownPatch = true
-    }
-    if (typeof value.activeAt === 'number') {
-        patch.activeAt = value.activeAt
-        hasKnownPatch = true
-    }
-    if (typeof value.updatedAt === 'number') {
-        patch.updatedAt = value.updatedAt
-        hasKnownPatch = true
-    }
-    if (value.model === null || typeof value.model === 'string') {
-        patch.model = value.model
-        hasKnownPatch = true
-    }
-    if (value.modelReasoningEffort === null || typeof value.modelReasoningEffort === 'string') {
-        patch.modelReasoningEffort = value.modelReasoningEffort
-        hasKnownPatch = true
-    }
-    if (value.effort === null || typeof value.effort === 'string') {
-        patch.effort = value.effort
-        hasKnownPatch = true
-    }
-    if (typeof value.permissionMode === 'string') {
-        patch.permissionMode = value.permissionMode as Session['permissionMode']
-        hasKnownPatch = true
-    }
-
-    return hasKnownPatch ? patch : null
-}
-
-function hasUnknownSessionPatchKeys(value: unknown): boolean {
-    if (!hasRecordShape(value)) {
-        return false
-    }
-    const knownKeys = new Set(['active', 'thinking', 'activeAt', 'updatedAt', 'model', 'modelReasoningEffort', 'effort', 'permissionMode'])
-    return Object.keys(value).some((key) => !knownKeys.has(key))
-}
-
-function isMachineMetadata(value: unknown): value is Machine['metadata'] {
-    if (value === null) {
-        return true
-    }
-    if (!hasRecordShape(value)) {
-        return false
-    }
-    return typeof value.host === 'string'
-        && typeof value.platform === 'string'
-        && typeof value.happyCliVersion === 'string'
-}
-
-function isMachineRecord(value: unknown): value is Machine {
-    if (!hasRecordShape(value)) {
-        return false
-    }
-    return typeof value.id === 'string'
-        && typeof value.active === 'boolean'
-        && isMachineMetadata(value.metadata)
-}
-
-function isInactiveMachinePatch(value: unknown): boolean {
-    return hasRecordShape(value) && value.active === false
 }
 
 function getVisibilityState(): VisibilityState {
@@ -186,12 +92,6 @@ export function useSSE(options: {
     const onErrorRef = useRef(options.onError)
     const onToastRef = useRef(options.onToast)
     const eventSourceRef = useRef<EventSource | null>(null)
-    const invalidationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const pendingInvalidationsRef = useRef<{
-        sessions: boolean
-        machines: boolean
-        sessionIds: Set<string>
-    }>({ sessions: false, machines: false, sessionIds: new Set() })
     const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const reconnectAttemptRef = useRef(0)
     const lastActivityAtRef = useRef(0)
@@ -228,13 +128,6 @@ export function useSSE(options: {
         if (!options.enabled) {
             eventSourceRef.current?.close()
             eventSourceRef.current = null
-            if (invalidationTimerRef.current) {
-                clearTimeout(invalidationTimerRef.current)
-                invalidationTimerRef.current = null
-            }
-            pendingInvalidationsRef.current.sessions = false
-            pendingInvalidationsRef.current.machines = false
-            pendingInvalidationsRef.current.sessionIds.clear()
             if (reconnectTimerRef.current) {
                 clearTimeout(reconnectTimerRef.current)
                 reconnectTimerRef.current = null
@@ -289,62 +182,6 @@ export function useSSE(options: {
             }
             setSubscriptionId(null)
             scheduleReconnect()
-        }
-
-        const flushInvalidations = () => {
-            const pending = pendingInvalidationsRef.current
-            if (!pending.sessions && !pending.machines && pending.sessionIds.size === 0) {
-                return
-            }
-
-            const shouldInvalidateSessions = pending.sessions
-            const shouldInvalidateMachines = pending.machines
-            const sessionIds = Array.from(pending.sessionIds)
-
-            pending.sessions = false
-            pending.machines = false
-            pending.sessionIds.clear()
-
-            const tasks: Array<Promise<unknown>> = []
-            if (shouldInvalidateSessions) {
-                tasks.push(queryClient.invalidateQueries({ queryKey: queryKeys.sessions }))
-            }
-            for (const sessionId of sessionIds) {
-                tasks.push(queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId) }))
-            }
-            if (shouldInvalidateMachines) {
-                tasks.push(queryClient.invalidateQueries({ queryKey: queryKeys.machines }))
-            }
-
-            if (tasks.length === 0) {
-                return
-            }
-            void Promise.all(tasks).catch(() => {})
-        }
-
-        const scheduleInvalidationFlush = () => {
-            if (invalidationTimerRef.current) {
-                return
-            }
-            invalidationTimerRef.current = setTimeout(() => {
-                invalidationTimerRef.current = null
-                flushInvalidations()
-            }, INVALIDATION_BATCH_MS)
-        }
-
-        const queueSessionListInvalidation = () => {
-            pendingInvalidationsRef.current.sessions = true
-            scheduleInvalidationFlush()
-        }
-
-        const queueSessionDetailInvalidation = (sessionId: string) => {
-            pendingInvalidationsRef.current.sessionIds.add(sessionId)
-            scheduleInvalidationFlush()
-        }
-
-        const queueMachinesInvalidation = () => {
-            pendingInvalidationsRef.current.machines = true
-            scheduleInvalidationFlush()
         }
 
         const upsertSessionSummary = (session: Session) => {
@@ -507,44 +344,34 @@ export function useSSE(options: {
                 ingestIncomingMessages(event.sessionId, [event.message])
             }
 
-            if (event.type === 'session-added' || event.type === 'session-updated' || event.type === 'session-removed') {
-                if (event.type === 'session-removed') {
-                    removeSessionSummary(event.sessionId)
-                    void queryClient.removeQueries({ queryKey: queryKeys.session(event.sessionId) })
-                    clearMessageWindow(event.sessionId)
-                } else if (isSessionRecord(event.data) && event.data.id === event.sessionId) {
+            if (event.type === 'session-added') {
+                queryClient.setQueryData<SessionResponse>(queryKeys.session(event.sessionId), { session: event.data })
+                upsertSessionSummary(event.data)
+            }
+
+            if (event.type === 'session-updated') {
+                if ('metadata' in event.data) {
                     queryClient.setQueryData<SessionResponse>(queryKeys.session(event.sessionId), { session: event.data })
                     upsertSessionSummary(event.data)
                 } else {
-                    const patch = getSessionPatch(event.data)
-                    if (patch) {
-                        const detailPatched = patchSessionDetail(event.sessionId, patch)
-                        const summaryPatched = patchSessionSummary(event.sessionId, patch)
-
-                        if (!detailPatched) {
-                            queueSessionDetailInvalidation(event.sessionId)
-                        }
-                        if (!summaryPatched) {
-                            queueSessionListInvalidation()
-                        }
-                        if (hasUnknownSessionPatchKeys(event.data)) {
-                            queueSessionDetailInvalidation(event.sessionId)
-                            queueSessionListInvalidation()
-                        }
-                    } else {
-                        queueSessionDetailInvalidation(event.sessionId)
-                        queueSessionListInvalidation()
-                    }
+                    patchSessionDetail(event.sessionId, event.data)
+                    patchSessionSummary(event.sessionId, event.data)
                 }
             }
 
+            if (event.type === 'session-removed') {
+                removeSessionSummary(event.sessionId)
+                void queryClient.removeQueries({ queryKey: queryKeys.session(event.sessionId) })
+                clearMessageWindow(event.sessionId)
+            }
+
             if (event.type === 'machine-updated') {
-                if (isMachineRecord(event.data)) {
-                    upsertMachine(event.data)
-                } else if (event.data === null || isInactiveMachinePatch(event.data)) {
+                if (event.data === null) {
                     removeMachine(event.machineId)
-                } else if (!hasRecordShape(event.data) || typeof event.data.activeAt !== 'number') {
-                    queueMachinesInvalidation()
+                } else if ('id' in event.data) {
+                    upsertMachine(event.data)
+                } else {
+                    removeMachine(event.machineId)
                 }
             }
 
@@ -563,14 +390,13 @@ export function useSSE(options: {
                 return
             }
 
-            if (!isObject(parsed)) {
-                return
-            }
-            if (typeof parsed.type !== 'string') {
+            const result = SyncEventSchema.safeParse(parsed)
+            if (!result.success) {
+                console.error('[useSSE] dropped malformed event', result.error)
                 return
             }
 
-            handleSyncEvent(parsed as SyncEvent)
+            handleSyncEvent(result.data)
         }
 
         eventSource.onmessage = handleMessage
@@ -622,13 +448,6 @@ export function useSSE(options: {
         return () => {
             clearInterval(watchdogTimer)
             document.removeEventListener('visibilitychange', onVisibilityChange)
-            if (invalidationTimerRef.current) {
-                clearTimeout(invalidationTimerRef.current)
-                invalidationTimerRef.current = null
-            }
-            pendingInvalidationsRef.current.sessions = false
-            pendingInvalidationsRef.current.machines = false
-            pendingInvalidationsRef.current.sessionIds.clear()
             if (reconnectTimerRef.current) {
                 clearTimeout(reconnectTimerRef.current)
                 reconnectTimerRef.current = null
