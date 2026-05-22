@@ -108,7 +108,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. `cursor` capability set in `shared/src/flavors.ts` is non-empty and covers the capability slots needed by current Cursor code paths (e.g. permission-mode set, model list source, RPC tools)
   3. Adding a new Cursor capability requires only an entry in `shared/src/flavors.ts` — ripgrep finds zero `if (flavor ===` / `switch (flavor)` comparisons or hardcoded capability gates anywhere in `cli/`, `hub/`, `web/`
   4. `bun typecheck` and `bun run test` both pass; capability lookup helper has a focused unit test
-**Plans**: TBD
+**Plans**: 8 plans
+- [ ] 05-01-PLAN.md — Slice 1a (shared add): FlavorCapabilities type + Record-shaped FLAVOR_CAPS + lookup helpers + rewritten 23-case flavors.test.ts (SC#4 seed)
+- [ ] 05-02-PLAN.md — Slice 2a (web ToolCard): PermissionFooter capability-driven tone, delete Codex* renderer files + registry purge, drop acceptEdits UI
+- [ ] 05-03-PLAN.md — Slice 2b (web NewSession/AssistantChat/SessionList): AgentType narrow to 'cursor', delete codex/claude option files, FLAVOR_BADGES single-row
+- [ ] 05-04-PLAN.md — Slice 2c (web chat/lib/hooks/api): capability-driven getContextBudgetTokens, AGENT_MESSAGE_PAYLOAD_TYPE constant adoption, delete useCodexModels + setCollaborationMode
+- [ ] 05-05-PLAN.md — Slice 3a (cli): slashCommands capability lookup, runner Cursor default, delete CodexDisplay + Codex skills path, rename Claude-named helpers
+- [ ] 05-06-PLAN.md — Slice 3b (hub): syncEngine degenerate-ternary collapse, hub-route defaults to 'cursor', machines.ts Zod enum narrow, test fixtures Cursor-only
+- [ ] 05-07-PLAN.md — Slice 1b (shared delete — closes the door): AgentFlavor narrow to 'cursor', delete non-cursor *_PERMISSION_MODES + CodexCollaborationMode*, narrow AgentFlavorSchema, delete SessionSchema.collaborationMode
+- [ ] 05-08-PLAN.md — Slice 4 (guard + final verification): shrink Phase-5-territory whitelist, line-anchored AGENT_MESSAGE_PAYLOAD_TYPE post-filter, PHASE5_IDENTIFIER_PATTERN sweep, FLAVOR_BRANCH sweep
 
 ### Phase 6: Agent runtime shared kit + mode hardening
 **Goal**: Cursor local and remote launchers share a single runtime kit; the `loop ↔ session ↔ launcher` circular-dependency group is broken; unknown permission modes throw.
@@ -202,7 +210,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
 | 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
 | 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
-| 5. Flavor consolidation + capability abstraction | 0/TBD | Not started | - |
+| 5. Flavor consolidation + capability abstraction | 0/8 | Not started | - |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
 | 7. Wire contracts unification & SSE patch contract | 0/TBD | Not started | - |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
