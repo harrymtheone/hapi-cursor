@@ -86,10 +86,8 @@ describe('flavor capability table', () => {
     })
 
     // Case 14
-    // TODO(plan 05-07-PLAN.md): tighten to getFlavorLabel('claude') === 'Unknown' once
-    // AgentFlavor narrows to 'cursor' and FLAVOR_LABELS collapses to a single cursor row.
-    test("getFlavorLabel('claude') — historical-string fallback (Slice 1b tightens to 'Unknown')", () => {
-        expect(getFlavorLabel('claude')).toBe('Claude')
+    test("getFlavorLabel('claude') === 'Unknown'", () => {
+        expect(getFlavorLabel('claude')).toBe('Unknown')
     })
 
     // Case 15
@@ -103,10 +101,8 @@ describe('flavor capability table', () => {
     })
 
     // Case 17
-    // TODO(plan 05-07-PLAN.md): tighten to isKnownFlavor('claude') === false once
-    // AgentFlavor narrows to the single 'cursor' literal.
-    test("isKnownFlavor('claude') — still true this slice (Slice 1b tightens to false)", () => {
-        expect(isKnownFlavor('claude')).toBe(true)
+    test("isKnownFlavor('claude') === false", () => {
+        expect(isKnownFlavor('claude')).toBe(false)
     })
 
     // Case 18

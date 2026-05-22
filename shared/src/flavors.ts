@@ -1,9 +1,5 @@
 import {
-    CLAUDE_PERMISSION_MODES,
-    CODEX_PERMISSION_MODES,
     CURSOR_PERMISSION_MODES,
-    GEMINI_PERMISSION_MODES,
-    OPENCODE_PERMISSION_MODES,
     type AgentFlavor,
     type PermissionMode,
 } from './modes'
@@ -28,10 +24,8 @@ export type FlavorCapabilities = {
     readonly permissionToneCopy: 'cursor' | 'codex'
 }
 
-// --- Per-flavor capability table (Slice 1a: cursor is the real row;
-// claude/codex/gemini/opencode are placeholder rows that preserve current
-// `hasCapability` semantics until Slice 1b — plan 05-07-PLAN.md — narrows
-// AgentFlavor to 'cursor' and deletes these placeholders) ---
+// --- Per-flavor capability table (Slice 1b: AgentFlavor narrowed to 'cursor',
+// so only the cursor row remains; placeholder rows from Slice 1a deleted) ---
 export const FLAVOR_CAPS: Record<AgentFlavor, FlavorCapabilities> = {
     cursor: {
         permissionModes: CURSOR_PERMISSION_MODES,
@@ -42,51 +36,11 @@ export const FLAVOR_CAPS: Record<AgentFlavor, FlavorCapabilities> = {
         projectSlashCommandsDir: null,
         permissionToneCopy: 'cursor',
     },
-    claude: {
-        permissionModes: CLAUDE_PERMISSION_MODES,
-        supportsModelChange: true,
-        supportsEffort: true,
-        contextBudgetTokens: null,
-        userSlashCommandsDir: null,
-        projectSlashCommandsDir: null,
-        permissionToneCopy: 'codex',
-    },
-    codex: {
-        permissionModes: CODEX_PERMISSION_MODES,
-        supportsModelChange: true,
-        supportsEffort: false,
-        contextBudgetTokens: null,
-        userSlashCommandsDir: null,
-        projectSlashCommandsDir: null,
-        permissionToneCopy: 'codex',
-    },
-    gemini: {
-        permissionModes: GEMINI_PERMISSION_MODES,
-        supportsModelChange: true,
-        supportsEffort: false,
-        contextBudgetTokens: null,
-        userSlashCommandsDir: null,
-        projectSlashCommandsDir: null,
-        permissionToneCopy: 'codex',
-    },
-    opencode: {
-        permissionModes: OPENCODE_PERMISSION_MODES,
-        supportsModelChange: true,
-        supportsEffort: false,
-        contextBudgetTokens: null,
-        userSlashCommandsDir: null,
-        projectSlashCommandsDir: null,
-        permissionToneCopy: 'codex',
-    },
 }
 
 // --- Flavor display names ---
 const FLAVOR_LABELS: Record<AgentFlavor, string> = {
-    claude: 'Claude',
-    gemini: 'Gemini',
-    codex: 'Codex',
     cursor: 'Cursor',
-    opencode: 'OpenCode',
 }
 
 // --- Query functions ---
@@ -139,8 +93,4 @@ export function supportsModelChange(flavor: string | null | undefined): boolean 
 
 export function supportsEffort(flavor: string | null | undefined): boolean {
     return hasCapability(flavor, Capabilities.Effort)
-}
-
-export function isCodexFamilyFlavor(flavor: string | null | undefined): boolean {
-    return flavor === 'codex' || flavor === 'gemini' || flavor === 'opencode'
 }
