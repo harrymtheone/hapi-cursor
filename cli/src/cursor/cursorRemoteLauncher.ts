@@ -13,8 +13,10 @@ import {
 import type { CursorSession } from './session';
 import type { CursorStreamEvent } from './utils/cursorEventConverter';
 import { parseCursorEvent, convertCursorEventToAgentMessage } from './utils/cursorEventConverter';
+import { permissionModeToCursorArgs } from '@/agent/modeConfig';
+import type { PermissionMode } from './modes';
 
-function buildAgentArgs(opts: {
+export function buildAgentArgs(opts: {
     message: string;
     cwd: string;
     sessionId: string | null;
@@ -38,13 +40,6 @@ function buildAgentArgs(opts: {
     }
 
     return args;
-}
-
-function permissionModeToAgentArgs(mode?: string): { mode?: string; yolo?: boolean } {
-    if (mode === 'plan') return { mode: 'plan' };
-    if (mode === 'ask') return { mode: 'ask' };
-    if (mode === 'yolo') return { yolo: true };
-    return {};
 }
 
 class CursorRemoteLauncher extends RemoteLauncherBase {
@@ -94,8 +89,8 @@ class CursorRemoteLauncher extends RemoteLauncherBase {
             }
 
             const { message, mode } = batch;
-            const { mode: agentMode, yolo } = permissionModeToAgentArgs(mode.permissionMode as string);
-            this.applyDisplayMode(mode.permissionMode as string);
+            const { mode: agentMode, yolo } = permissionModeToCursorArgs(mode.permissionMode);
+            this.applyDisplayMode(mode.permissionMode);
             messageBuffer.addMessage(message, 'user');
 
             const args = buildAgentArgs({
@@ -214,7 +209,7 @@ class CursorRemoteLauncher extends RemoteLauncherBase {
         });
     }
 
-    private applyDisplayMode(permissionMode: string | undefined): void {
+    private applyDisplayMode(permissionMode: PermissionMode | undefined): void {
         if (permissionMode && permissionMode !== this.displayPermissionMode) {
             this.displayPermissionMode = permissionMode;
             this.messageBuffer.addMessage(`[MODE:${permissionMode}]`, 'system');
