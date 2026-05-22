@@ -27,6 +27,15 @@ export type AgentSessionBaseOptions<Mode> = {
     effort?: SessionEffort;
 };
 
+/**
+ * @implements SessionContext (Phase 6 SC#1)
+ *
+ * Concept-position anchor for the shared agent-runtime kit: this class is the
+ * SessionContext base in the four-concept shared-kit lattice (SessionContext /
+ * LocalAdapter / RemoteAdapter / LaunchPolicy). The file is intentionally NOT
+ * renamed to `SessionContext.ts` (Phase 6 CONTEXT D-89) to keep the diff
+ * surface minimal; identification is via this JSDoc anchor and grep.
+ */
 export class AgentSessionBase<Mode> {
     readonly path: string;
     readonly logPath: string;

@@ -35,6 +35,14 @@ export type LocalLauncherOptions = {
     switchLogMessage?: string
 }
 
+/**
+ * @implements LocalAdapter (Phase 6 SC#1)
+ *
+ * Concept-position anchor for the shared agent-runtime kit. This class is the
+ * LocalAdapter base in the four-concept shared-kit lattice. The file is
+ * intentionally NOT renamed (Phase 6 CONTEXT D-89); identification is via this
+ * JSDoc anchor and grep.
+ */
 export class BaseLocalLauncher {
     private exitReason: LocalLaunchExitReason | null = null
     private readonly abortController = new AbortController()

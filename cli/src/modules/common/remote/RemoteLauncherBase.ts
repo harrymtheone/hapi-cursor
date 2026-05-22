@@ -29,6 +29,14 @@ type RpcHandlerManagerLike = {
     ): void;
 };
 
+/**
+ * @implements RemoteAdapter (Phase 6 SC#1)
+ *
+ * Concept-position anchor for the shared agent-runtime kit. This class is the
+ * RemoteAdapter base in the four-concept shared-kit lattice. The file is
+ * intentionally NOT renamed (Phase 6 CONTEXT D-89); identification is via this
+ * JSDoc anchor and grep.
+ */
 export abstract class RemoteLauncherBase {
     protected readonly messageBuffer: MessageBuffer;
     protected readonly hasTTY: boolean;
