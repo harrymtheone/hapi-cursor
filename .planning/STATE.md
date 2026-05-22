@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Plan 08-01 complete
-last_updated: "2026-05-22T16:00:00.000Z"
-last_activity: 2026-05-22 -- Plan 08-01 complete (SessionCache decomposition)
+stopped_at: Phase 8 context gathered
+last_updated: "2026-05-22T16:23:38.792Z"
+last_activity: 2026-05-22
 progress:
   total_phases: 12
   completed_phases: 7
   total_plans: 42
-  completed_plans: 38
+  completed_plans: 40
   percent: 58
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 08 (hub-internal-decoupling) — EXECUTING
-Plan: 2 of 4
-Status: Executing Phase 08 — Plan 08-01 complete
-Last activity: 2026-05-22 -- Plan 08-01 complete (SessionCache decomposition)
+Plan: 3 of 4
+Status: Ready to execute
+Last activity: 2026-05-22
 
-Progress: [██████████] 100%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -90,6 +90,7 @@ Progress: [██████████] 100%
 | Phase 07 P02 | 3min 26s | 4 tasks | 3 files |
 | Phase 07 P03 | 11min | 7 tasks | 25 files |
 | Phase 07 P04 | 5min 24s | 3 tasks | 6 files |
+| Phase 08 P08-02 | 50m | 3 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,8 @@ Recent decisions affecting current work:
 - [Phase 07]: Plan 03 collapsed CLI/web wire mirrors onto shared protocol schemas/types, removed remaining CLI writer-side flavor plumbing, and rewrote `useSSE` to parse `SyncEventSchema` directly. Malformed SSE events now log/drop without fallback invalidation; `SessionSummary.backgroundTaskCount` updates list/detail cache directly; `SessionList` no longer renders flavor badges. Full gate `bun typecheck && bun run test` passed (CLI 237, Hub 155, Web 541, guard green).
 - [Phase 07]: Guard checks target declarations/usages while preserving top-level resume-target flavor — The D-126 guard must enforce REFA-03/REFA-04 without flagging legitimate LocalResumeTarget/ResumableSession flavor fields.
 - [Phase 07]: Strip hub metadata flavor fixtures before enabling D-126 — The completed wire contract deletes metadata.flavor, so remaining hub test fixtures were old contract residue that would make the new zero-tolerance guard fail.
+- [Phase ?]: Session sub-facade split further into syncEngineSessionResume.ts to satisfy SC#1 <400 line budget
+- [Phase ?]: createShutdownHandler factory exported; main() gated on import.meta.main; shutdown awaits syncEngine.shutdown() raced with 5s timeout
 
 ### Pending Todos
 
@@ -159,6 +162,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T15:22:28.313Z
+Last session: 2026-05-22T16:22:43.488Z
 Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-hub-internal-decoupling/08-CONTEXT.md
+Resume file: None
