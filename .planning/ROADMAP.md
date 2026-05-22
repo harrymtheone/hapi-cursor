@@ -160,7 +160,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. All `setInterval` / `setTimeout` usage in `hub/src/{sse,sync,socket,notifications}/` goes through a single keepalive scheduler; a test asserts every timer is cleared on `process.exit` (SIGINT case included)
   5. `madge` reports zero circular dependencies inside `hub/src/`; `bun typecheck` and `bun run test` both pass
 **Plans**: 4 plans
-- [ ] 08-01-PLAN.md — Slice 1 (REFH-01): SessionCache 4-way split into sessionRepository/Liveness/Config/Merge + thin facade; redistribute tests
+- [x] 08-01-PLAN.md — Slice 1 (REFH-01): SessionCache 4-way split into sessionRepository/Liveness/Config/Merge + thin facade; redistribute tests
 - [ ] 08-02-PLAN.md — Slice 2 (REFH-02 + REFH-04): KeepaliveScheduler + 4 timer rewires + SyncEngine 4 sub-facades + SSE SyncEvent swap + SIGINT closure extension
 - [ ] 08-03-PLAN.md — Slice 3 (REFH-03): route-helpers middleware + ApiRouteError + app.onError + sessions.ts → sessions/{lifecycle,config,upload,read,index}.ts
 - [ ] 08-04-PLAN.md — Slice 4: check-no-circular-hub.sh + Phase-8 D-143 block appended to check-no-cut-agents.sh; consolidated phase gate
