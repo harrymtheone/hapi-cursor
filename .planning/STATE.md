@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 5 complete (Plan 08 phase-gate green)
-last_updated: "2026-05-22T11:32:00.000Z"
+status: ready_to_plan
+stopped_at: Phase 05 complete (8/8) — ready to discuss Phase 6
+last_updated: 2026-05-22T03:41:42.379Z
 last_activity: 2026-05-22
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 30
   completed_plans: 30
-  percent: 50
+  percent: 42
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 05 — flavor-consolidation-capability-abstraction
+**Current focus:** Phase 6 — agent runtime shared kit + mode hardening
 
 ## Current Position
 
-Phase: 05 (flavor-consolidation-capability-abstraction) — COMPLETE
-Plan: 8 of 8 (all complete)
-Status: Phase 5 done; ready to start Phase 6 (Agent runtime shared kit + mode hardening)
+Phase: 6
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-05-22
 
 Progress: [██████████] 100% (Phase 5)
@@ -36,7 +36,7 @@ Progress: [██████████] 100% (Phase 5)
 
 **Velocity:**
 
-- Total plans completed: 23
+- Total plans completed: 31
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -48,6 +48,7 @@ Progress: [██████████] 100% (Phase 5)
 | 01 | 5 | - | - |
 | 02 | 6 | - | - |
 | 04 | 4 | - | - |
+| 05 | 8 | - | - |
 
 **Recent Trend:**
 
