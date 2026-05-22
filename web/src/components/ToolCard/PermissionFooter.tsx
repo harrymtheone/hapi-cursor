@@ -88,10 +88,9 @@ export function PermissionFooter(props: {
     const [loadingForSession, setLoadingForSession] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    // Capability-driven tone selection. Cursor metadata yields the cursor tone;
-    // any unknown / null flavor also falls back to the cursor tone (D-76 graceful degrade).
-    // The lookup is retained so future flavors can re-introduce alternate copy without code churn.
-    void (getCapability(props.metadata?.flavor, 'permissionToneCopy') ?? 'cursor')
+    // Capability-driven tone selection retained for the day a second flavor lands;
+    // for now the cursor tone is the only renderable path so no runtime branch is needed.
+    // The import of `getCapability` above is the dependency anchor — no runtime call required.
 
     if (!permission) return null
 
