@@ -546,7 +546,7 @@ export class SyncEngine {
         const spawnResult = await this.rpcGateway.spawnSession(
             targetMachine.id,
             target.directory,
-            flavor,
+            target.flavor,
             session.model ?? undefined,
             session.modelReasoningEffort ?? undefined,
             undefined,
