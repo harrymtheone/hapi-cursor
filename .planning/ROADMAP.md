@@ -210,7 +210,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
 | 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
 | 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
-| 5. Flavor consolidation + capability abstraction | 4/8 | In Progress|  |
+| 5. Flavor consolidation + capability abstraction | 7/8 | In Progress|  |
 | 6. Agent runtime shared kit + mode hardening | 0/TBD | Not started | - |
 | 7. Wire contracts unification & SSE patch contract | 0/TBD | Not started | - |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
