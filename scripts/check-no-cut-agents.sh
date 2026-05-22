@@ -13,6 +13,8 @@
 #   * Phase-5 flavor cut       — single residue (`AGENT_MESSAGE_PAYLOAD_TYPE = 'codex'`
 #                                  in shared/src/modes.ts) is the only allowed survivor;
 #                                  pinned via line-anchored post-filter (D-85).
+#                                  Also enforces zero hits for legacy Phase-5 identifiers
+#                                  and `flavor === '<non-cursor-literal>'` branches.
 #
 # Whitelist categories:
 #   * Permanent (Phase-12 deferred) — docs / marketing / NOTICE wording owned
@@ -33,6 +35,9 @@ PHASE3_PATTERN='namespace|:ns'
 PHASE3_SOURCE_DIRS=(cli/src hub/src web/src shared/src)
 PHASE4_HARD_PATTERN='tunwg|HAPI_RELAY_|DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING'
 PHASE4_SWEEP_PATTERN='relay-mode|relayMode|officialWebUrl|app\.hapi\.run|download-tunwg|--relay|--no-relay'
+PHASE5_IDENTIFIER_PATTERN='\bisCodexFamilyFlavor\b|\bCodexCollaborationMode\b|\bgetCodexCollaboration\w*\b|\b(CLAUDE|CODEX|GEMINI|OPENCODE)_PERMISSION_MODES\b'
+PHASE5_BRANCH_PATTERN='flavor\s*===\s*['\''"]'
+PHASE5_SOURCE_DIRS=(cli/src hub/src web/src shared/src)
 WHITELIST=(
   # === Infra (never agent code)
   --glob '!.planning/**'
@@ -115,3 +120,31 @@ if "$RG_BIN" -n "${PHASE4_WHITELIST[@]}" "$PHASE4_SWEEP_PATTERN" .; then
 fi
 
 echo "✅ No Phase-4 deployment-infrastructure / remote-log residue outside whitelist."
+
+# === Phase-5 identifier sweep — legacy capability/permission-mode names must be gone
+if "$RG_BIN" -n "$PHASE5_IDENTIFIER_PATTERN" "${PHASE5_SOURCE_DIRS[@]}"; then
+  echo ""
+  echo "❌ Phase-5 legacy flavor identifier residue found in runtime source scope."
+  echo "   isCodexFamilyFlavor / CodexCollaborationMode / getCodexCollaboration* /"
+  echo "   (CLAUDE|CODEX|GEMINI|OPENCODE)_PERMISSION_MODES are all deleted in Phase 5."
+  echo "   Rewrite the hit at the source (delete the consumer or migrate to"
+  echo "   getCapability / CURSOR_PERMISSION_MODES); do not add a whitelist entry."
+  exit 1
+fi
+echo "✅ No Phase-5 legacy flavor identifiers in source scope."
+
+# === Phase-5 branch sweep — non-cursor `flavor === '<literal>'` branches must be gone
+FLAVOR_BRANCH=$("$RG_BIN" -n "$PHASE5_BRANCH_PATTERN" "${PHASE5_SOURCE_DIRS[@]}" || true)
+# Post-filter:
+#   1. `=== 'cursor'` — the only allowed flavor literal (D-84 #2 narrow exception).
+#   2. `typeof flavor === '<jsruntime-type>'` — JavaScript runtime-type checks, not flavor branches.
+FLAVOR_BRANCH_FILTERED=$(echo "$FLAVOR_BRANCH" | grep -v "=== 'cursor'" | grep -v "typeof flavor ===" || true)
+if [ -n "$FLAVOR_BRANCH_FILTERED" ]; then
+  echo "$FLAVOR_BRANCH_FILTERED"
+  echo ""
+  echo "❌ Non-cursor flavor === '<literal>' branch residue found in runtime source scope."
+  echo "   AgentFlavor narrows to 'cursor' in Phase 5 — non-cursor literal branches"
+  echo "   are dead code. Delete the branch or rewrite via getCapability."
+  exit 1
+fi
+echo "✅ No non-cursor flavor === '<literal>' branches in source scope."
