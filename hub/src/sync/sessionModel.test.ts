@@ -547,10 +547,10 @@ describe('session model', () => {
         }
     })
 
-    // NOTE: Three `.skip`'d Claude resume-from-stored-messages recovery tests
-    // were removed in plan 05-06. The Claude message-recovery code path was
-    // deleted in Phase 1; cursor sessions resume via `cursorSessionId`
-    // metadata directly (covered by the resume test above).
+    // NOTE: Legacy `.skip`'d resume-from-stored-messages recovery tests were
+    // removed in plan 05-06. The legacy message-recovery path was deleted in
+    // Phase 1; cursor sessions resume via `cursorSessionId` metadata directly
+    // (covered by the resume test above).
 
     it('passes the cached permissionMode when respawning a resumed session', async () => {
         const store = new Store(':memory:')
@@ -627,7 +627,7 @@ describe('session model', () => {
 
         try {
             const session = engine.getOrCreateSession(
-                'local-resume-codex',
+                'local-resume-cursor',
                 {
                     path: '/tmp/project',
                     host: 'localhost',
@@ -664,7 +664,7 @@ describe('session model', () => {
         }
     })
 
-    // NOTE: `.skip`'d Claude local-resume-target-from-stored-messages test
+    // NOTE: Legacy `.skip`'d local-resume-target-from-stored-messages test
     // removed in plan 05-06 (dead path; cursor uses `cursorSessionId`).
 
     it('returns resume_unavailable when the local resume target lacks an agent session id', () => {

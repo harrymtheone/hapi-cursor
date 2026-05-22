@@ -22,10 +22,6 @@ const modelReasoningEffortSchema = z.object({
     modelReasoningEffort: z.string().trim().min(1).nullable()
 })
 
-const effortSchema = z.object({
-    effort: z.string().trim().min(1).nullable()
-})
-
 const renameSessionSchema = z.object({
     name: z.string().min(1).max(255)
 })
@@ -146,7 +142,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
 
         const { permissionMode } = parsed.data
         if (permissionMode !== undefined) {
-            const flavor = sessionResult.session.metadata?.flavor ?? 'claude'
+            const flavor = sessionResult.session.metadata?.flavor ?? 'cursor'
             if (!isPermissionModeAllowedForFlavor(permissionMode, flavor)) {
                 return c.json({ error: 'Invalid permission mode for session flavor' }, 400)
             }
@@ -294,7 +290,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        const flavor = sessionResult.session.metadata?.flavor ?? 'claude'
+        const flavor = sessionResult.session.metadata?.flavor ?? 'cursor'
         const mode = parsed.data.mode
 
         const allowedModes = getPermissionModesForFlavor(flavor)
@@ -332,7 +328,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        const flavor = sessionResult.session.metadata?.flavor ?? 'claude'
+        const flavor = sessionResult.session.metadata?.flavor ?? 'cursor'
         if (!supportsModelChange(flavor)) {
             return c.json({ error: 'Model selection is not supported for this session' }, 400)
         }
@@ -341,37 +337,6 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return c.json({ ok: true })
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to apply model'
-            return c.json({ error: message }, 409)
-        }
-    })
-
-    app.post('/sessions/:id/effort', async (c) => {
-        const engine = requireSyncEngine(c, getSyncEngine)
-        if (engine instanceof Response) {
-            return engine
-        }
-
-        const sessionResult = requireSessionFromParam(c, engine, { requireActive: true })
-        if (sessionResult instanceof Response) {
-            return sessionResult
-        }
-
-        const body = await c.req.json().catch(() => null)
-        const parsed = effortSchema.safeParse(body)
-        if (!parsed.success) {
-            return c.json({ error: 'Invalid body' }, 400)
-        }
-
-        const flavor = sessionResult.session.metadata?.flavor ?? 'claude'
-        if (flavor !== 'claude') {
-            return c.json({ error: 'Effort selection is only supported for Claude sessions' }, 400)
-        }
-
-        try {
-            await engine.applySessionConfig(sessionResult.sessionId, { effort: parsed.data.effort })
-            return c.json({ ok: true })
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to apply effort'
             return c.json({ error: message }, 409)
         }
     })
@@ -446,8 +411,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return sessionResult
         }
 
-        // Get agent type from session metadata, default to 'claude'
-        const agent = sessionResult.session.metadata?.flavor ?? 'claude'
+        const agent = sessionResult.session.metadata?.flavor ?? 'cursor'
 
         const metadataCommands = commandsFromMetadataSlashCommands(
             sessionResult.session.metadata?.slashCommands

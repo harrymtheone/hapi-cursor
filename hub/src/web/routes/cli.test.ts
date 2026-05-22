@@ -102,7 +102,7 @@ describe('cli resume routes', () => {
                 type: 'success',
                 target: {
                     sessionId: 'session-1',
-                    flavor: 'claude',
+                    flavor: 'cursor',
                     directory: '/tmp/project',
                     machineId: 'machine-1',
                     active: false,
@@ -121,7 +121,7 @@ describe('cli resume routes', () => {
         expect(await response.json()).toEqual({
             target: {
                 sessionId: 'session-1',
-                flavor: 'claude',
+                flavor: 'cursor',
                 directory: '/tmp/project',
                 machineId: 'machine-1',
                 active: false,

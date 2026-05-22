@@ -96,69 +96,30 @@ describe('sessions routes', () => {
         expect(applySessionConfigCalls).toEqual([])
     })
 
-    it('rejects effort changes for non-Claude sessions', async () => {
-        const { app, applySessionConfigCalls } = createApp(createSession())
-
-        const response = await app.request('/api/sessions/session-1/effort', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ effort: 'high' })
-        })
-
-        expect(response.status).toBe(400)
-        expect(await response.json()).toEqual({
-            error: 'Effort selection is only supported for Claude sessions'
-        })
-        expect(applySessionConfigCalls).toEqual([])
-    })
-
-    it('applies effort changes for Claude sessions', async () => {
-        const session = createSession({
-            metadata: {
-                path: '/tmp/project',
-                host: 'localhost',
-                flavor: 'claude'
-            }
-        })
-        const { app, applySessionConfigCalls } = createApp(session)
-
-        const response = await app.request('/api/sessions/session-1/effort', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ effort: 'max' })
-        })
-
-        expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({ ok: true })
-        expect(applySessionConfigCalls).toEqual([
-            ['session-1', { effort: 'max' }]
-        ])
-    })
-
     it('applies permission mode changes for inactive sessions', async () => {
         const session = createSession({
             active: false,
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'claude' }
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'cursor' }
         })
         const { app, applySessionConfigCalls } = createApp(session)
 
         const response = await app.request('/api/sessions/session-1/permission-mode', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ mode: 'bypassPermissions' })
+            body: JSON.stringify({ mode: 'yolo' })
         })
 
         expect(response.status).toBe(200)
         expect(await response.json()).toEqual({ ok: true })
         expect(applySessionConfigCalls).toEqual([
-            ['session-1', { permissionMode: 'bypassPermissions' }]
+            ['session-1', { permissionMode: 'yolo' }]
         ])
     })
 
     it('passes permissionMode from resume body to resumeSession', async () => {
         const session = createSession({
             active: false,
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'claude' }
+            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'cursor' }
         })
         let capturedResumeOpts: { permissionMode?: string } | undefined
         const { app } = createApp(session, {
@@ -171,11 +132,11 @@ describe('sessions routes', () => {
         const response = await app.request('/api/sessions/session-1/resume', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ permissionMode: 'bypassPermissions' })
+            body: JSON.stringify({ permissionMode: 'yolo' })
         })
 
         expect(response.status).toBe(200)
-        expect(capturedResumeOpts).toEqual({ permissionMode: 'bypassPermissions' })
+        expect(capturedResumeOpts).toEqual({ permissionMode: 'yolo' })
     })
 
     it('falls back to metadata slash commands when RPC listing fails', async () => {
@@ -183,7 +144,7 @@ describe('sessions routes', () => {
             metadata: {
                 path: '/tmp/project',
                 host: 'localhost',
-                flavor: 'claude',
+                flavor: 'cursor',
                 slashCommands: ['help', 'memory', 'status']
             }
         })
@@ -211,7 +172,7 @@ describe('sessions routes', () => {
             metadata: {
                 path: '/tmp/project',
                 host: 'localhost',
-                flavor: 'claude',
+                flavor: 'cursor',
                 slashCommands: ['help', 'memory']
             }
         })
