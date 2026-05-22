@@ -144,7 +144,7 @@ export function computeCanCancel({
  * Floating bar above the composer showing queued (pending invocation) messages.
  * Each item has an edit button (✎) and a cancel button (✕).
  *
- * Edit = client-side cancel + prefill composer with message text (Codex dialect).
+ * Edit = client-side cancel + prefill composer with message text.
  * Cancel = DELETE /sessions/:id/messages/:messageId with optimistic removal.
  */
 /** @internal Exported for unit testing. */

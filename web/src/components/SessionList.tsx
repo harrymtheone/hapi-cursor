@@ -489,26 +489,14 @@ function SessionListSearch(props: {
 }
 
 const FLAVOR_BADGES: Record<string, { label: string; colors: string }> = {
-    claude: {
-        label: 'Cl',
-        colors: 'bg-[#d97706] text-white',
-    },
-    codex: {
-        label: 'Cx',
-        colors: 'bg-[#111827] text-white',
-    },
     cursor: {
         label: 'Cu',
         colors: 'bg-[#0f766e] text-white',
     },
-    gemini: {
-        label: 'Gm',
-        colors: 'bg-[#2563eb] text-white',
-    },
 }
 
 function FlavorIcon({ flavor, className }: { flavor?: string | null; className?: string }) {
-    const badge = FLAVOR_BADGES[(flavor ?? 'claude').trim().toLowerCase()] ?? FLAVOR_BADGES.claude
+    const badge = FLAVOR_BADGES[(flavor ?? 'cursor')] ?? FLAVOR_BADGES.cursor
     return (
         <span
             aria-hidden="true"

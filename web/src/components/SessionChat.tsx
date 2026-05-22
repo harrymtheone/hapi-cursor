@@ -4,7 +4,6 @@ import { AssistantRuntimeProvider } from '@assistant-ui/react'
 import type { ApiClient } from '@/api/client'
 import type {
     AttachmentMetadata,
-    CodexCollaborationMode,
     DecryptedMessage,
     PermissionMode,
     Session,
@@ -30,7 +29,6 @@ import { SessionHeader } from '@/components/SessionHeader'
 import { TeamPanel } from '@/components/TeamPanel'
 import { usePlatform } from '@/hooks/usePlatform'
 import { useSessionActions } from '@/hooks/mutations/useSessionActions'
-import { useCodexModels } from '@/hooks/queries/useCodexModels'
 import { isRemoteTerminalSupported } from '@/utils/terminalSupport'
 
 /**
@@ -74,23 +72,6 @@ function getOutlineTitle(session: Session): string {
     return session.id.slice(0, 8)
 }
 
-function hasAbortableAgentRun(blocks: readonly ChatBlock[]): boolean {
-    for (const block of blocks) {
-        if (block.kind === 'tool-call') {
-            if (
-                block.tool.name === 'CodexAgent'
-                && (block.tool.state === 'running' || block.tool.state === 'pending')
-            ) {
-                return true
-            }
-            if (hasAbortableAgentRun(block.children)) {
-                return true
-            }
-        }
-    }
-    return false
-}
-
 export function SessionChat(props: {
     api: ApiClient
     session: Session
@@ -118,7 +99,7 @@ export function SessionChat(props: {
     availableSlashCommands?: readonly SlashCommand[]
 }) {
     const { haptic } = usePlatform()
-    const { t } = useTranslation()
+    useTranslation()
     const navigate = useNavigate()
     const sessionInactive = !props.session.active
     const terminalSupported = isRemoteTerminalSupported(props.session.metadata)
@@ -129,39 +110,17 @@ export function SessionChat(props: {
     const [outlineOpen, setOutlineOpen] = useState(false)
     const agentFlavor = props.session.metadata?.flavor ?? null
     const controlledByUser = props.session.agentState?.controlledByUser === true
-    const codexCollaborationModeSupported = agentFlavor === 'codex' && !controlledByUser
-    const codexModelsState = useCodexModels({
-        api: props.api,
-        sessionId: props.session.id,
-        enabled: agentFlavor === 'codex' && props.session.active && !controlledByUser
-    })
-    const codexModelOptions = useMemo(() => {
-        if (agentFlavor !== 'codex') {
-            return undefined
-        }
-
-        const options: Array<{ value: string | null; label: string }> = []
-        for (const codexModel of codexModelsState.models) {
-            options.push({
-                value: codexModel.id,
-                label: codexModel.displayName
-            })
-        }
-        return options
-    }, [agentFlavor, codexModelsState.models])
     const {
         abortSession,
         switchSession,
         setPermissionMode,
-        setCollaborationMode,
         setModel,
-        setModelReasoningEffort,
         setEffort
     } = useSessionActions(
         props.api,
         props.session.id,
         agentFlavor,
-        codexCollaborationModeSupported
+        false
     )
 
     // Track session id to clear caches when it changes
@@ -238,10 +197,6 @@ export function SessionChat(props: {
         () => reconcileChatBlocks(reduced.blocks, blocksByIdRef.current),
         [reduced.blocks]
     )
-    const hasRunningChildAgent = useMemo(
-        () => hasAbortableAgentRun(reduced.blocks),
-        [reduced.blocks]
-    )
 
     useEffect(() => {
         blocksByIdRef.current = reconciled.byId
@@ -281,17 +236,6 @@ export function SessionChat(props: {
         }
     }, [setPermissionMode, props.onRefresh, haptic])
 
-    const handleCollaborationModeChange = useCallback(async (mode: CodexCollaborationMode) => {
-        try {
-            await setCollaborationMode(mode)
-            haptic.notification('success')
-            props.onRefresh()
-        } catch (e) {
-            haptic.notification('error')
-            console.error('Failed to set collaboration mode:', e)
-        }
-    }, [setCollaborationMode, props.onRefresh, haptic])
-
     // Model mode change handler
     const handleModelChange = useCallback(async (model: string | null) => {
         try {
@@ -303,17 +247,6 @@ export function SessionChat(props: {
             console.error('Failed to set model:', e)
         }
     }, [setModel, props.onRefresh, haptic])
-
-    const handleModelReasoningEffortChange = useCallback(async (modelReasoningEffort: string | null) => {
-        try {
-            await setModelReasoningEffort(modelReasoningEffort)
-            haptic.notification('success')
-            props.onRefresh()
-        } catch (e) {
-            haptic.notification('error')
-            console.error('Failed to set model reasoning effort:', e)
-        }
-    }, [setModelReasoningEffort, props.onRefresh, haptic])
 
     const handleEffortChange = useCallback(async (effort: string | null) => {
         try {
@@ -402,7 +335,7 @@ export function SessionChat(props: {
         session: props.session,
         blocks: visibleBlocks,
         isSending: props.isSending,
-        isRunning: props.session.thinking || hasRunningChildAgent,
+        isRunning: props.session.thinking,
         onSendMessage: handleSend,
         onAbort: handleAbort,
         attachmentAdapter,
@@ -461,14 +394,6 @@ export function SessionChat(props: {
                         onOutlineOpenChange={setOutlineOpen}
                     />
 
-                    {codexCollaborationModeSupported && codexModelsState.error ? (
-                        <div className="px-3 pb-2">
-                            <div className="mx-auto w-full max-w-content rounded-md bg-[var(--app-subtle-bg)] p-3 text-sm text-red-600">
-                                {t('session.codexModelsLoadFailed')}: {codexModelsState.error}
-                            </div>
-                        </div>
-                    ) : null}
-
                     <div className="px-3">
                         <QueuedMessagesBar
                             sessionId={props.session.id}
@@ -490,14 +415,8 @@ export function SessionChat(props: {
                         permissionMode={props.session.permissionMode}
                         threadGoal={reduced.latestGoal}
                         model={props.session.model}
-                        modelReasoningEffort={agentFlavor === 'codex' ? props.session.modelReasoningEffort : undefined}
                         effort={props.session.effort}
                         agentFlavor={agentFlavor}
-                        availableModelOptions={
-                            agentFlavor === 'codex'
-                                ? codexModelOptions
-                                : undefined
-                        }
                         active={props.session.active}
                         allowSendWhenInactive
                         thinking={props.session.thinking}
@@ -508,16 +427,7 @@ export function SessionChat(props: {
                         contextWindow={reduced.latestUsage?.contextWindow}
                         controlledByUser={controlledByUser}
                         onPermissionModeChange={handlePermissionModeChange}
-                        onModelChange={
-                            agentFlavor === 'codex'
-                                ? (props.session.active && !controlledByUser && !codexModelsState.error ? handleModelChange : undefined)
-                                : handleModelChange
-                        }
-                        onModelReasoningEffortChange={
-                            agentFlavor === 'codex' && props.session.active && !controlledByUser
-                                ? handleModelReasoningEffortChange
-                                : undefined
-                        }
+                        onModelChange={handleModelChange}
                         onEffortChange={handleEffortChange}
                         onSwitchToRemote={handleSwitchToRemote}
                         onTerminal={props.session.active && terminalSupported ? handleViewTerminal : undefined}

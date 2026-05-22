@@ -50,7 +50,7 @@ describe('SessionList directory action', () => {
                 path: '/home/ubuntu',
                 machineId: 'machine-1',
                 name: 'Greeting',
-                flavor: 'codex',
+                flavor: 'cursor',
             }
         })
 
