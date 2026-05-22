@@ -282,3 +282,105 @@ if [ -n "$FLAVOR_WRITES" ]; then
   exit 1
 fi
 echo "✅ Phase-7 wire-contract sweeps clean (D-126)."
+
+# ===== Phase 8 — Hub internal decoupling (D-143) =====
+# Zero-tolerance keywords closing REFH-01..REFH-04:
+#   #1 SSE → SyncEngine reverse import          (SC#2)
+#   #2 SessionCache construction whitelist      (D-129 / D-130)
+#   #3 setInterval/setTimeout outside scheduler (SC#4)
+#   #5 file-size budgets                        (SC#1)
+# #4 (madge zero cycles) is enforced by the tail-invocation of
+# scripts/check-no-circular-hub.sh so a single `bash scripts/check-no-cut-agents.sh`
+# command is the Phase 8 gate.
+PHASE8_SWEEP_DIRS=(hub/src/sse hub/src/sync hub/src/socket hub/src/notifications)
+
+# (#1) D-143 #1 / SC#2 — SSE must not reverse-import SyncEngine.
+PHASE8_SSE_REVIMPORT=$("$RG_BIN" --no-heading -n "from .*['\"]\.\./sync/syncEngine['\"]" hub/src/sse/ 2>/dev/null || true)
+if [ -n "$PHASE8_SSE_REVIMPORT" ]; then
+  echo "$PHASE8_SSE_REVIMPORT"
+  echo ""
+  echo "❌ Phase 8 D-143 #1: hub/src/sse/ imports from ../sync/syncEngine (SC#2 violated)."
+  echo "   Use 'import type { SyncEvent } from \"@hapi/protocol/types\"' instead."
+  exit 1
+fi
+echo "✅ Phase 8 D-143 #1: no SSE → SyncEngine reverse import."
+
+# (#2) D-143 #2 — SessionCache must have exactly 2 source sites:
+#      class declaration (sessionCache.ts) + construction (syncEngine.ts). Tests excluded.
+PHASE8_SC_HITS=$("$RG_BIN" --no-heading -n 'new SessionCache\(|class SessionCache' hub/src/ --glob '!**/*.test.ts' 2>/dev/null || true)
+PHASE8_SC_COUNT=$(echo -n "$PHASE8_SC_HITS" | grep -c '^' || true)
+if [ "$PHASE8_SC_COUNT" -ne 2 ]; then
+  echo "$PHASE8_SC_HITS"
+  echo ""
+  echo "❌ Phase 8 D-143 #2: expected exactly 2 SessionCache source sites (class + construction), found $PHASE8_SC_COUNT."
+  echo "   Whitelist: class in hub/src/sync/sessionCache.ts + 'new SessionCache(' in hub/src/sync/syncEngine.ts."
+  exit 1
+fi
+echo "✅ Phase 8 D-143 #2: SessionCache source sites = 2 (class + construction)."
+
+# (#3) D-143 #3 / SC#4 — direct setInterval/setTimeout in {sse,sync,socket,notifications}
+# is banned except for promise-sleep retries annotated with
+# `// scheduler-exempt: promise-sleep retry` on the same line OR the immediately
+# preceding line. Plan 08-02 placed the comment on the preceding line in
+# hub/src/sync/syncEngineSessionResume.ts:240,253 — both forms accepted.
+PHASE8_TIMER_HITS=$("$RG_BIN" --no-heading -n 'setInterval\(|setTimeout\(' "${PHASE8_SWEEP_DIRS[@]}" --glob '!**/*.test.ts' 2>/dev/null || true)
+PHASE8_TIMER_VIOLATIONS=""
+if [ -n "$PHASE8_TIMER_HITS" ]; then
+  while IFS= read -r match; do
+    [ -z "$match" ] && continue
+    file="${match%%:*}"
+    rest="${match#*:}"
+    line="${rest%%:*}"
+    content="${rest#*:}"
+    if echo "$content" | grep -q 'scheduler-exempt: promise-sleep retry'; then
+      continue
+    fi
+    prev=$((line - 1))
+    if [ "$prev" -ge 1 ]; then
+      prev_content=$(sed -n "${prev}p" "$file" 2>/dev/null || true)
+      if echo "$prev_content" | grep -q 'scheduler-exempt: promise-sleep retry'; then
+        continue
+      fi
+    fi
+    PHASE8_TIMER_VIOLATIONS+="$match"$'\n'
+  done <<< "$PHASE8_TIMER_HITS"
+fi
+if [ -n "$PHASE8_TIMER_VIOLATIONS" ]; then
+  printf '%s' "$PHASE8_TIMER_VIOLATIONS"
+  echo ""
+  echo "❌ Phase 8 D-143 #3: direct setInterval/setTimeout in hub/src/{sse,sync,socket,notifications}/ outside scheduler (SC#4 violated)."
+  echo "   Fix: route through hub/src/utils/scheduler.ts (everyMs / afterMs);"
+  echo "   or, for promise-sleep retries, annotate the line (or preceding line)"
+  echo "   with '// scheduler-exempt: promise-sleep retry'."
+  exit 1
+fi
+echo "✅ Phase 8 D-143 #3: setInterval/setTimeout in {sse,sync,socket,notifications}/ either inside scheduler or whitelisted promise-sleep retries."
+
+# (#5) D-143 #5 / SC#1 — file-size budgets for Phase-8-split files.
+# Scope per SC#1 (ROADMAP) + D-144: only files actually split in this phase are
+# constrained — sessionCache + 4 sessionXxxService + syncEngine + 6 sub-facades.
+# Tests excluded. messageService.ts / rpcGateway.ts / teams.ts etc. are explicitly
+# out of scope (D-144: "本 phase 不动 messageService.ts ...").
+PHASE8_OVERSIZED_SYNC=$(find hub/src/sync -maxdepth 1 \( -name 'session*.ts' -o -name 'syncEngine*.ts' \) ! -name '*.test.ts' -exec wc -l {} \; 2>/dev/null | awk '$1 >= 400 { print }')
+if [ -n "$PHASE8_OVERSIZED_SYNC" ]; then
+  echo "$PHASE8_OVERSIZED_SYNC"
+  echo ""
+  echo "❌ Phase 8 D-143 #5: Phase-8-split file in hub/src/sync/ ≥ 400 lines (SC#1 violated)."
+  echo "   Split further into a sub-facade or service file."
+  exit 1
+fi
+PHASE8_OVERSIZED_ROUTES=$(find hub/src/web/routes/sessions -maxdepth 1 -name '*.ts' ! -name '*.test.ts' -exec wc -l {} \; 2>/dev/null | awk '$1 >= 250 { print }')
+if [ -n "$PHASE8_OVERSIZED_ROUTES" ]; then
+  echo "$PHASE8_OVERSIZED_ROUTES"
+  echo ""
+  echo "❌ Phase 8 D-143 #5: file in hub/src/web/routes/sessions/ ≥ 250 lines (SC#1 violated)."
+  echo "   Split further along lifecycle / config / upload / read boundaries."
+  exit 1
+fi
+echo "✅ Phase 8 D-143 #5: file-size budgets honored (sync < 400, routes/sessions < 250)."
+
+# (#4) D-143 #4 / SC#5 — tail-invocation of the madge guard so this script is
+# a single phase-gate command.
+bash "$(dirname "$0")/check-no-circular-hub.sh"
+
+echo "✅ Phase 8 guard PASS (D-143 #1–#5 + madge zero cycles)."
