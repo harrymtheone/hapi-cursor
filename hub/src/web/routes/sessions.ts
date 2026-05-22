@@ -142,8 +142,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
 
         const { permissionMode } = parsed.data
         if (permissionMode !== undefined) {
-            const flavor = sessionResult.session.metadata?.flavor ?? 'cursor'
-            if (!isPermissionModeAllowedForFlavor(permissionMode, flavor)) {
+            if (!isPermissionModeAllowedForFlavor(permissionMode, 'cursor')) {
                 return c.json({ error: 'Invalid permission mode for session flavor' }, 400)
             }
         }
@@ -290,15 +289,14 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        const flavor = sessionResult.session.metadata?.flavor ?? 'cursor'
         const mode = parsed.data.mode
 
-        const allowedModes = getPermissionModesForFlavor(flavor)
+        const allowedModes = getPermissionModesForFlavor('cursor')
         if (allowedModes.length === 0) {
             return c.json({ error: 'Permission mode not supported for session flavor' }, 400)
         }
 
-        if (!isPermissionModeAllowedForFlavor(mode, flavor)) {
+        if (!isPermissionModeAllowedForFlavor(mode, 'cursor')) {
             return c.json({ error: 'Invalid permission mode for session flavor' }, 400)
         }
 
@@ -328,8 +326,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return c.json({ error: 'Invalid body' }, 400)
         }
 
-        const flavor = sessionResult.session.metadata?.flavor ?? 'cursor'
-        if (!supportsModelChange(flavor)) {
+        if (!supportsModelChange('cursor')) {
             return c.json({ error: 'Model selection is not supported for this session' }, 400)
         }
         try {
@@ -411,7 +408,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return sessionResult
         }
 
-        const agent = sessionResult.session.metadata?.flavor ?? 'cursor'
+        const agent = 'cursor'
 
         const metadataCommands = commandsFromMetadataSlashCommands(
             sessionResult.session.metadata?.slashCommands

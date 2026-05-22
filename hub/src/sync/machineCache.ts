@@ -1,7 +1,11 @@
 import { z } from 'zod'
+import type { Machine } from '@hapi/protocol/types'
+import { RunnerStateSchema } from '@hapi/protocol/schemas'
 import type { Store } from '../store'
 import { clampAliveTime } from './aliveTime'
 import { EventPublisher } from './eventPublisher'
+
+export type { Machine }
 
 const machineMetadataSchema = z.object({
     host: z.string().optional(),
@@ -14,28 +18,6 @@ const machineMetadataSchema = z.object({
     workspaceRoot: z.string().optional(),
     workspaceRoots: z.array(z.string()).optional()
 })
-
-export interface Machine {
-    id: string
-    seq: number
-    createdAt: number
-    updatedAt: number
-    active: boolean
-    activeAt: number
-    metadata: {
-        host: string
-        platform: string
-        happyCliVersion: string
-        displayName?: string
-        homeDir?: string
-        happyHomeDir?: string
-        happyLibDir?: string
-        workspaceRoots?: string[]
-    } | null
-    metadataVersion: number
-    runnerState: unknown | null
-    runnerStateVersion: number
-}
 
 export class MachineCache {
     private readonly machines: Map<string, Machine> = new Map()
@@ -84,9 +66,9 @@ export class MachineCache {
             const platform = typeof data.platform === 'string' ? data.platform : 'unknown'
             const happyCliVersion = typeof data.happyCliVersion === 'string' ? data.happyCliVersion : 'unknown'
             const displayName = typeof data.displayName === 'string' ? data.displayName : undefined
-            const homeDir = typeof data.homeDir === 'string' ? data.homeDir : undefined
-            const happyHomeDir = typeof data.happyHomeDir === 'string' ? data.happyHomeDir : undefined
-            const happyLibDir = typeof data.happyLibDir === 'string' ? data.happyLibDir : undefined
+            const homeDir = typeof data.homeDir === 'string' ? data.homeDir : 'unknown'
+            const happyHomeDir = typeof data.happyHomeDir === 'string' ? data.happyHomeDir : 'unknown'
+            const happyLibDir = typeof data.happyLibDir === 'string' ? data.happyLibDir : 'unknown'
             const workspaceRoots = Array.from(new Set(
                 Array.isArray(data.workspaceRoots)
                     ? data.workspaceRoots.filter((path): path is string => typeof path === 'string' && path.trim().length > 0)
@@ -119,7 +101,11 @@ export class MachineCache {
             activeAt: useStoredActivity ? storedActiveAt : (existingActiveAt || storedActiveAt),
             metadata,
             metadataVersion: stored.metadataVersion,
-            runnerState: stored.runnerState,
+            runnerState: (() => {
+                if (stored.runnerState == null) return null
+                const parsed = RunnerStateSchema.safeParse(stored.runnerState)
+                return parsed.success ? parsed.data : null
+            })(),
             runnerStateVersion: stored.runnerStateVersion
         }
 

@@ -92,12 +92,12 @@ describe('NotificationHub', () => {
         })
 
         engine.setSession(firstSession)
-        engine.emit({ type: 'session-updated', sessionId: firstSession.id })
+        engine.emit({ type: 'session-updated', sessionId: firstSession.id, data: {} })
         await sleep(25)
 
         expect(channel.permissionSessions).toHaveLength(1)
 
-        engine.emit({ type: 'session-updated', sessionId: firstSession.id })
+        engine.emit({ type: 'session-updated', sessionId: firstSession.id, data: {} })
         await sleep(25)
 
         expect(channel.permissionSessions).toHaveLength(1)
@@ -112,7 +112,7 @@ describe('NotificationHub', () => {
         })
 
         engine.setSession(secondSession)
-        engine.emit({ type: 'session-updated', sessionId: secondSession.id })
+        engine.emit({ type: 'session-updated', sessionId: secondSession.id, data: {} })
         await sleep(25)
 
         expect(channel.permissionSessions).toHaveLength(2)

@@ -61,7 +61,6 @@ function createSession(): Session {
             path: '/tmp/project',
             host: 'localhost',
             machineId: 'machine-1',
-            flavor: 'cursor',
             cursorSessionId: 'cursor-thread-1'
         },
         metadataVersion: 1,
@@ -110,7 +109,6 @@ describe('bootstrapExistingSession', () => {
             'hapi-session-1',
             expect.objectContaining({
                 path: '/tmp/project',
-                flavor: 'cursor',
                 startedBy: 'terminal',
                 startedFromRunner: false,
                 machineId: 'machine-1'

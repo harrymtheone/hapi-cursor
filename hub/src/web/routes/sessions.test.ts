@@ -80,8 +80,7 @@ describe('sessions routes', () => {
         const session = createSession({
             metadata: {
                 path: '/tmp/project',
-                host: 'localhost',
-                flavor: 'cursor'
+                host: 'localhost'
             }
         })
         const { app, applySessionConfigCalls } = createApp(session)
@@ -99,7 +98,7 @@ describe('sessions routes', () => {
     it('applies permission mode changes for inactive sessions', async () => {
         const session = createSession({
             active: false,
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'cursor' }
+            metadata: { path: '/tmp/project', host: 'localhost' }
         })
         const { app, applySessionConfigCalls } = createApp(session)
 
@@ -119,7 +118,7 @@ describe('sessions routes', () => {
     it('passes permissionMode from resume body to resumeSession', async () => {
         const session = createSession({
             active: false,
-            metadata: { path: '/tmp/project', host: 'localhost', flavor: 'cursor' }
+            metadata: { path: '/tmp/project', host: 'localhost' }
         })
         let capturedResumeOpts: { permissionMode?: string } | undefined
         const { app } = createApp(session, {
@@ -144,7 +143,6 @@ describe('sessions routes', () => {
             metadata: {
                 path: '/tmp/project',
                 host: 'localhost',
-                flavor: 'cursor',
                 slashCommands: ['help', 'memory', 'status']
             }
         })
@@ -172,7 +170,6 @@ describe('sessions routes', () => {
             metadata: {
                 path: '/tmp/project',
                 host: 'localhost',
-                flavor: 'cursor',
                 slashCommands: ['help', 'memory']
             }
         })

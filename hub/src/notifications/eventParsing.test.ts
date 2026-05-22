@@ -70,7 +70,8 @@ describe('extractMessageEventType', () => {
     it('returns null for non-message events', () => {
         const event: SyncEvent = {
             type: 'session-updated',
-            sessionId: 'session-1'
+            sessionId: 'session-1',
+            data: {}
         }
 
         expect(extractMessageEventType(event)).toBeNull()

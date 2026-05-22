@@ -337,7 +337,7 @@ function SessionPage() {
     })
 
     // Get agent type from session metadata for slash commands
-    const agentType = session?.metadata?.flavor ?? 'cursor'
+    const agentType = 'cursor'
     const {
         commands: slashCommands,
         getSuggestions: getSlashSuggestions,

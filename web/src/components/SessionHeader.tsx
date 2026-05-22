@@ -108,7 +108,7 @@ export function SessionHeader(props: {
     const { archiveSession, renameSession, deleteSession, isPending } = useSessionActions(
         api,
         session.id,
-        session.metadata?.flavor ?? null
+        'cursor'
     )
 
     const handleDelete = async () => {
@@ -157,7 +157,7 @@ export function SessionHeader(props: {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--app-hint)]">
                             <span className="inline-flex items-center gap-1">
                                 <span aria-hidden="true">❖</span>
-                                {session.metadata?.flavor?.trim() || 'unknown'}
+                                cursor
                             </span>
                             {modelLabel ? (
                                 <span>

@@ -108,7 +108,7 @@ export function SessionChat(props: {
     const visibleGroupsRef = useRef<ToolGroupBlock[]>([])
     const [forceScrollToken, setForceScrollToken] = useState(0)
     const [outlineOpen, setOutlineOpen] = useState(false)
-    const agentFlavor = props.session.metadata?.flavor ?? null
+    const agentFlavor = 'cursor'
     const controlledByUser = props.session.agentState?.controlledByUser === true
     const {
         abortSession,

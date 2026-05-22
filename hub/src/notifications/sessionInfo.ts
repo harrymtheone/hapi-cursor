@@ -1,4 +1,3 @@
-import { getFlavorLabel, isKnownFlavor } from '@hapi/protocol'
 import type { Session } from '../sync/syncEngine'
 
 export function getSessionName(session: Session): string {
@@ -11,8 +10,6 @@ export function getSessionName(session: Session): string {
     return session.id.slice(0, 8)
 }
 
-export function getAgentName(session: Session): string {
-    const flavor = session.metadata?.flavor
-    if (!flavor || !isKnownFlavor(flavor)) return 'Agent'
-    return getFlavorLabel(flavor)
+export function getAgentName(_session: Session): string {
+    return 'Cursor'
 }

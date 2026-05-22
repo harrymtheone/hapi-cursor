@@ -77,7 +77,6 @@ export function buildSessionMetadata(options: {
         startedBy: options.startedBy,
         lifecycleState: 'running',
         lifecycleStateSince: now,
-        flavor: options.flavor,
         capabilities: {
             terminal: true
         },

@@ -37,7 +37,7 @@ describe('SSEManager relevance filtering', () => {
             sendHeartbeat: () => {}
         })
 
-        manager.broadcast({ type: 'session-updated', sessionId: 's1' })
+        manager.broadcast({ type: 'session-updated', sessionId: 's1', data: {} })
 
         expect(receivedAll).toHaveLength(1)
         expect(receivedSession).toHaveLength(1)

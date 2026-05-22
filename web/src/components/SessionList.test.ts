@@ -89,7 +89,6 @@ describe('session list search helpers', () => {
             metadata: {
                 path: '/work/hapi',
                 name: 'Fix Bot Review',
-                flavor: 'cursor',
                 machineId: 'machine-1'
             }
         })
