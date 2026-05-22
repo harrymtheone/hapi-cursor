@@ -25,8 +25,8 @@ export type FlavorCapabilities = {
      * Permission-prompt tone copy variant. Currently single-inhabitant (`'cursor'`)
      * because Phase 5 narrowed `AgentFlavor` to `'cursor'`. Kept as a capability
      * slot (rather than deleted per D-74) as a `@deferred CURS-*` forward-extensibility
-     * hook: re-introduce alternate values (e.g. `'codex'`) when a second flavor
-     * lands and the permission UI needs to branch tone/copy on flavor. Until then
+     * hook: re-introduce alternate values when a second flavor lands and the
+     * permission UI needs to branch tone/copy on flavor. Until then
      * the slot is intentionally constant — see `flavors.test.ts` regression for
      * the cursor inhabitant and WR-01/WR-03 in `05-REVIEW.md` for context.
      */
