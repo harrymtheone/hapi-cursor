@@ -135,10 +135,20 @@ echo "✅ No Phase-5 legacy flavor identifiers in source scope."
 
 # === Phase-5 branch sweep — non-cursor `flavor === '<literal>'` branches must be gone
 FLAVOR_BRANCH=$("$RG_BIN" -n "$PHASE5_BRANCH_PATTERN" "${PHASE5_SOURCE_DIRS[@]}" || true)
-# Post-filter:
-#   1. `=== 'cursor'` — the only allowed flavor literal (D-84 #2 narrow exception).
-#   2. `typeof flavor === '<jsruntime-type>'` — JavaScript runtime-type checks, not flavor branches.
-FLAVOR_BRANCH_FILTERED=$(echo "$FLAVOR_BRANCH" | grep -v "=== 'cursor'" | grep -v "typeof flavor ===" || true)
+# Post-filter (substring removal, not whole-line drop — guards against combined-
+# condition masking where e.g. `flavor === 'gemini' && other === 'cursor'` would
+# otherwise be suppressed by a whole-line `grep -v "=== 'cursor'"`):
+#   1. Strip `=== 'cursor'` / `=== "cursor"` substrings (D-84 #2 narrow exception).
+#   2. Strip `typeof flavor === '<jsruntime-type>'` substrings (JS runtime-type
+#      checks, not flavor branches).
+# Then re-match the sweep pattern against the residue so any surviving
+# `flavor === '<non-cursor>'` still trips the gate.
+FLAVOR_BRANCH_FILTERED=$(
+  echo "$FLAVOR_BRANCH" \
+    | sed -E "s/typeof flavor === ['\"][a-z]+['\"]//g; s/=== ['\"]cursor['\"]//g" \
+    | grep -E "flavor[[:space:]]*===[[:space:]]*['\"]" \
+    || true
+)
 if [ -n "$FLAVOR_BRANCH_FILTERED" ]; then
   echo "$FLAVOR_BRANCH_FILTERED"
   echo ""
