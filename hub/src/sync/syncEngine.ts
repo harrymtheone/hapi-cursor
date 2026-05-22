@@ -505,9 +505,19 @@ export class SyncEngine {
 
         const target = targetResult.target
         const metadata = session.metadata!
-        const flavor = target.flavor
-        if (flavor !== 'cursor') {
-            return { type: 'error', message: `Sessions of flavor "${flavor}" are no longer supported`, code: 'resume_failed' }
+        // Defense-in-depth (T-05-06-02): historical SQLite rows may carry a
+        // non-cursor `metadata.flavor` (MetadataSchema.flavor stays
+        // z.string().nullish() per RESEARCH §"Wire-layer narrow safety" §1)
+        // even though resolveFlavor() pins fresh resumes to 'cursor'. Read the
+        // historical-tampered field directly so the guard is actually exercised
+        // — `target.flavor` is statically `'cursor'` and would never trip.
+        const historicalFlavor = metadata.flavor
+        if (historicalFlavor != null && historicalFlavor !== 'cursor') {
+            return {
+                type: 'error',
+                message: `Sessions of flavor "${historicalFlavor}" are no longer supported`,
+                code: 'resume_failed',
+            }
         }
         const resumeToken = target.agentSessionId
 
