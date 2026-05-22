@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Cut external integration channels** — Delete Telegram bot, ElevenLabs voice route, ServerChan push channel (completed 2026-05-21)
 - [x] **Phase 3: Cut multi-user namespace isolation** — Remove `CLI_API_TOKEN:<namespace>` suffix, user platform field, namespace-aware cache keys (completed 2026-05-21)
 - [x] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream (completed 2026-05-21)
-- [ ] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches
+- [x] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches (completed 2026-05-22)
 - [ ] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode
 - [ ] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection
 - [ ] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler
@@ -116,7 +116,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 05-05-PLAN.md — Slice 3a (cli): slashCommands capability lookup, runner Cursor default, delete CodexDisplay + Codex skills path, rename Claude-named helpers
 - [x] 05-06-PLAN.md — Slice 3b (hub): syncEngine degenerate-ternary collapse, hub-route defaults to 'cursor', machines.ts Zod enum narrow, test fixtures Cursor-only
 - [x] 05-07-PLAN.md — Slice 1b (shared delete — closes the door): AgentFlavor narrow to 'cursor', delete non-cursor *_PERMISSION_MODES + CodexCollaborationMode*, narrow AgentFlavorSchema, delete SessionSchema.collaborationMode
-- [ ] 05-08-PLAN.md — Slice 4 (guard + final verification): shrink Phase-5-territory whitelist, line-anchored AGENT_MESSAGE_PAYLOAD_TYPE post-filter, PHASE5_IDENTIFIER_PATTERN sweep, FLAVOR_BRANCH sweep
+- [x] 05-08-PLAN.md — Slice 4 (guard + final verification): shrink Phase-5-territory whitelist, line-anchored AGENT_MESSAGE_PAYLOAD_TYPE post-filter, PHASE5_IDENTIFIER_PATTERN sweep, FLAVOR_BRANCH sweep
 
 ### Phase 6: Agent runtime shared kit + mode hardening
 **Goal**: Cursor local and remote launchers share a single runtime kit; the `loop ↔ session ↔ launcher` circular-dependency group is broken; unknown permission modes throw.
