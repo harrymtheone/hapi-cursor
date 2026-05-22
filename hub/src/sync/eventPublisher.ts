@@ -1,3 +1,4 @@
+import { SyncEventSchema } from '@hapi/protocol/schemas'
 import type { SyncEvent } from '@hapi/protocol/types'
 import type { SSEManager } from '../sse/sseManager'
 
@@ -15,6 +16,13 @@ export class EventPublisher {
     }
 
     emit(event: SyncEvent): void {
+        if (process.env.NODE_ENV !== 'production') {
+            const result = SyncEventSchema.safeParse(event)
+            if (!result.success) {
+                console.error('[eventPublisher] emit violates SyncEventSchema:', JSON.stringify(event), result.error.message)
+            }
+        }
+
         for (const listener of this.listeners) {
             try {
                 listener(event)
