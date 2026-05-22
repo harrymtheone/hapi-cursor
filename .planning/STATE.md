@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 Plan 05 complete
-last_updated: "2026-05-22T11:01:00.000Z"
+stopped_at: Phase 5 Plan 06 complete
+last_updated: "2026-05-22T11:14:00.000Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 12
   completed_phases: 4
   total_plans: 30
-  completed_plans: 27
-  percent: 42
+  completed_plans: 28
+  percent: 44
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 05 (flavor-consolidation-capability-abstraction) — EXECUTING
-Plan: 6 of 8
+Plan: 7 of 8
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -76,6 +76,7 @@ Progress: [█████████░] 90%
 | Phase 05 P03 | 10min | 3 tasks | 27 files |
 | Phase 05 P04 | 25min | 3 tasks | 35 files |
 | Phase 05 P05 | 8min | 3 tasks | 24 files |
+| Phase 05 P06 | 12min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,7 @@ Recent decisions affecting current work:
 - [Phase 05]: Plan 02 purged Codex* renderer surface from web/src/components/ToolCard/ (≈1500 LoC across 3 deleted files + 11 modified) and migrated PermissionFooter from isCodexFamilyFlavor to getCapability(flavor, 'permissionToneCopy'); knownTools.tsx + knownTools.test.tsx purged under Rule 3 (not in plan files_modified but imported codexAgents.ts directly).
 - [Phase 05]: Plan 03 collapsed NewSession + AssistantChat + SessionList web subtrees to cursor-only (~1500 LoC removed across 14 deleted + 13 modified files); narrowed AgentType to 'cursor', dropped CodexCollaborationMode consumers from StatusBar + HappyComposer + SessionChat, collapsed SessionList FLAVOR_BADGES to single cursor row; slice-wide \b(claude|codex|gemini|opencode)\b ripgrep gate green across the four target directories.
 - [Phase 05]: Plan 04 collapsed remaining web non-component layers (chat reducers/normalizers/types, lib utilities/locales, hooks/api client, router default) to cursor-only (~1700 LoC removed across 2 deleted + 33 modified files). Rewrote getContextBudgetTokens against getCapability, deleted useCodexModels + setCollaborationMode + setModelReasoningEffort, narrowed api/client agent + permission unions to cursor + CursorPermissionMode, replaced bare 'codex' payload-type literals with AGENT_MESSAGE_PAYLOAD_TYPE imports; slice-wide ripgrep gate over web/src/ now zero-hit.
+- [Phase 05]: Plan 06 collapsed hub/src to cursor-only (~11 files modified): syncEngine.resolveFlavor returns 'cursor' constant, resolveAgentResumeId collapses to cursorSessionId, spawnSession default param narrowed to 'cursor'; rpcGateway agent param narrowed; deleted extractTodosFromClaudeOutput (dead — cursor uses AGENT_MESSAGE_PAYLOAD_TYPE); web/routes/sessions/permissions/machines defaults collapsed to 'cursor'; deleted /sessions/:id/effort endpoint (Claude-only); machines.ts Zod spawn agent narrowed to z.literal('cursor'); test fixtures rewritten to cursor + AGENT_MESSAGE_PAYLOAD_TYPE; removed 4 `.skip`'d Claude resume-recovery tests. Slice gate `rg -ni '\\b(claude|codex|gemini|opencode)\\b' hub/src/` zero hits.
 - [Phase 05]: Plan 05 collapsed cli/src to cursor-only (~24 files, 1 deleted: ui/ink/CodexDisplay.tsx). slashCommands.ts/skills.ts rewritten as capability-driven (getCapability for user/project dirs; ~/.agents/skills only); runner/run.ts spawns 'cursor' binary as constant + drops --effort + drops CLAUDE_CODE_OAUTH_TOKEN env path; api/types.ts free of CodexCollaborationMode (cascaded to api.ts/apiSession.ts/sessionBase.ts/2 test fixtures); renamed sendClaudeSessionMessage → sendAgentSessionMessage and formatAttachmentsForClaude → formatAttachmentsForAgent. All phase-1-whitelisted cli files (agent/serverUtils/*, ui/logger.ts, ui/ink/RemoteModeDisplay.tsx, runner/README.md) scrubbed; `rg -ni '\\b(claude|codex|gemini|opencode)\\b' cli/src/` now zero-hit.
 
 ### Pending Todos
@@ -136,6 +138,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T11:01:00.000Z
-Stopped at: Completed 05-05-PLAN.md
+Last session: 2026-05-22T11:14:00.000Z
+Stopped at: Completed 05-06-PLAN.md
 Resume file: None
