@@ -1,4 +1,4 @@
-import { getCodexCollaborationModeOptions, getPermissionModeOptionsForFlavor } from '@hapi/protocol'
+import { getPermissionModeOptionsForFlavor } from '@hapi/protocol'
 import { ComposerPrimitive, useAssistantApi, useAssistantState } from '@assistant-ui/react'
 import {
     type ChangeEvent as ReactChangeEvent,
@@ -12,7 +12,7 @@ import {
     useRef,
     useState
 } from 'react'
-import type { AgentState, CodexCollaborationMode, PermissionMode, ThreadGoal } from '@/types/api'
+import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { useActiveWord } from '@/hooks/useActiveWord'
 import { useActiveSuggestions } from '@/hooks/useActiveSuggestions'
@@ -31,8 +31,6 @@ import type { PendingSchedule } from '@/components/AssistantChat/ScheduleTimePic
 import { AttachmentItem } from '@/components/AssistantChat/AttachmentItem'
 import { useTranslation } from '@/lib/use-translation'
 import { getModelOptionsForFlavor, getNextModelForFlavor } from './modelOptions'
-import { getClaudeComposerEffortOptions } from './claudeEffortOptions'
-import { getCodexComposerReasoningEffortOptions } from './codexReasoningEffortOptions'
 
 export interface TextInputState {
     text: string
@@ -45,7 +43,6 @@ export function HappyComposer(props: {
     sessionId?: string
     disabled?: boolean
     permissionMode?: PermissionMode
-    collaborationMode?: CodexCollaborationMode
     threadGoal?: ThreadGoal | null
     model?: string | null
     modelReasoningEffort?: string | null
@@ -61,7 +58,6 @@ export function HappyComposer(props: {
     controlledByUser?: boolean
     agentFlavor?: string | null
     availableModelOptions?: Array<{ value: string | null; label: string }>
-    onCollaborationModeChange?: (mode: CodexCollaborationMode) => void
     onPermissionModeChange?: (mode: PermissionMode) => void
     onModelChange?: (model: string | null) => void
     onModelReasoningEffortChange?: (modelReasoningEffort: string | null) => void
@@ -81,7 +77,6 @@ export function HappyComposer(props: {
         sessionId,
         disabled = false,
         permissionMode: rawPermissionMode,
-        collaborationMode: rawCollaborationMode,
         threadGoal,
         model: rawModel,
         modelReasoningEffort: rawModelReasoningEffort,
@@ -97,7 +92,6 @@ export function HappyComposer(props: {
         controlledByUser = false,
         agentFlavor,
         availableModelOptions,
-        onCollaborationModeChange,
         onPermissionModeChange,
         onModelChange,
         onModelReasoningEffortChange,
@@ -114,7 +108,6 @@ export function HappyComposer(props: {
 
     // Use ?? so missing values fall back to default (destructuring defaults only handle undefined)
     const permissionMode = rawPermissionMode ?? 'default'
-    const collaborationMode = rawCollaborationMode ?? 'default'
     const model = rawModel ?? null
     const modelReasoningEffort = rawModelReasoningEffort ?? null
     const effort = rawEffort ?? null
@@ -279,21 +272,9 @@ export function HappyComposer(props: {
         () => getPermissionModeOptionsForFlavor(agentFlavor),
         [agentFlavor]
     )
-    const collaborationModeOptions = useMemo(
-        () => agentFlavor === 'codex' ? getCodexCollaborationModeOptions() : [],
-        [agentFlavor]
-    )
     const modelOptions = useMemo(
         () => getModelOptionsForFlavor(agentFlavor, model, availableModelOptions),
         [agentFlavor, model, availableModelOptions]
-    )
-    const codexReasoningEffortOptions = useMemo(
-        () => agentFlavor === 'codex' ? getCodexComposerReasoningEffortOptions(modelReasoningEffort) : [],
-        [agentFlavor, modelReasoningEffort]
-    )
-    const claudeEffortOptions = useMemo(
-        () => getClaudeComposerEffortOptions(effort),
-        [effort]
     )
     const permissionModes = useMemo(
         () => permissionModeOptions.map((option) => option.mode),
@@ -471,13 +452,6 @@ export function HappyComposer(props: {
         haptic('light')
     }, [onPermissionModeChange, controlsDisabled, haptic])
 
-    const handleCollaborationChange = useCallback((mode: CodexCollaborationMode) => {
-        if (!onCollaborationModeChange || controlsDisabled) return
-        onCollaborationModeChange(mode)
-        setShowSettings(false)
-        haptic('light')
-    }, [onCollaborationModeChange, controlsDisabled, haptic])
-
     const handleModelChange = useCallback((nextModel: string | null) => {
         if (!onModelChange || controlsDisabled) return
         onModelChange(nextModel)
@@ -485,31 +459,11 @@ export function HappyComposer(props: {
         haptic('light')
     }, [onModelChange, controlsDisabled, haptic])
 
-    const handleModelReasoningEffortChange = useCallback((nextModelReasoningEffort: string | null) => {
-        if (!onModelReasoningEffortChange || controlsDisabled) return
-        onModelReasoningEffortChange(nextModelReasoningEffort)
-        setShowSettings(false)
-        haptic('light')
-    }, [onModelReasoningEffortChange, controlsDisabled, haptic])
-
-    const handleEffortChange = useCallback((nextEffort: string | null) => {
-        if (!onEffortChange || controlsDisabled) return
-        onEffortChange(nextEffort)
-        setShowSettings(false)
-        haptic('light')
-    }, [onEffortChange, controlsDisabled, haptic])
-
-    const showCollaborationSettings = Boolean(onCollaborationModeChange && collaborationModeOptions.length > 0)
     const showPermissionSettings = Boolean(onPermissionModeChange && permissionModeOptions.length > 0)
     const showModelSettings = Boolean(onModelChange && supportsModelChange(agentFlavor) && modelOptions.length > 0)
-    const showModelReasoningEffortSettings = Boolean(onModelReasoningEffortChange && codexReasoningEffortOptions.length > 0)
-    const showEffortSettings = Boolean(onEffortChange && supportsEffort(agentFlavor))
     const showSettingsButton = Boolean(
-        showCollaborationSettings
-        || showPermissionSettings
+        showPermissionSettings
         || showModelSettings
-        || showModelReasoningEffortSettings
-        || showEffortSettings
     )
     const showAbortButton = true
 
@@ -523,51 +477,10 @@ export function HappyComposer(props: {
     }, [api])
 
     const overlays = useMemo(() => {
-        if (showSettings && (showCollaborationSettings || showPermissionSettings || showModelSettings || showModelReasoningEffortSettings || showEffortSettings)) {
+        if (showSettings && (showPermissionSettings || showModelSettings)) {
             return (
                 <div className="absolute bottom-[100%] mb-2 w-full">
                     <FloatingOverlay maxHeight={320}>
-                        {showCollaborationSettings ? (
-                            <div className="py-2">
-                                <div className="px-3 pb-1 text-xs font-semibold text-[var(--app-hint)]">
-                                    {t('misc.collaborationMode')}
-                                </div>
-                                {collaborationModeOptions.map((option) => (
-                                    <button
-                                        key={option.mode}
-                                        type="button"
-                                        disabled={controlsDisabled}
-                                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                            controlsDisabled
-                                                ? 'cursor-not-allowed opacity-50'
-                                                : 'cursor-pointer hover:bg-[var(--app-secondary-bg)]'
-                                        }`}
-                                        onClick={() => handleCollaborationChange(option.mode)}
-                                        onMouseDown={(e) => e.preventDefault()}
-                                    >
-                                        <div
-                                            className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                                                collaborationMode === option.mode
-                                                    ? 'border-[var(--app-link)]'
-                                                    : 'border-[var(--app-hint)]'
-                                            }`}
-                                        >
-                                            {collaborationMode === option.mode && (
-                                                <div className="h-2 w-2 rounded-full bg-[var(--app-link)]" />
-                                            )}
-                                        </div>
-                                        <span className={collaborationMode === option.mode ? 'text-[var(--app-link)]' : ''}>
-                                            {option.label}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : null}
-
-                        {showCollaborationSettings && (showPermissionSettings || showModelSettings || showModelReasoningEffortSettings || showEffortSettings) ? (
-                            <div className="mx-3 h-px bg-[var(--app-divider)]" />
-                        ) : null}
-
                         {showPermissionSettings ? (
                             <div className="py-2">
                                 <div className="px-3 pb-1 text-xs font-semibold text-[var(--app-hint)]">
@@ -605,7 +518,7 @@ export function HappyComposer(props: {
                             </div>
                         ) : null}
 
-                        {(showCollaborationSettings || showPermissionSettings) && (showModelSettings || showModelReasoningEffortSettings || showEffortSettings) ? (
+                        {showPermissionSettings && showModelSettings ? (
                             <div className="mx-3 h-px bg-[var(--app-divider)]" />
                         ) : null}
 
@@ -645,88 +558,6 @@ export function HappyComposer(props: {
                                 ))}
                             </div>
                         ) : null}
-
-                        {(showModelSettings || showModelReasoningEffortSettings) && showEffortSettings ? (
-                            <div className="mx-3 h-px bg-[var(--app-divider)]" />
-                        ) : null}
-
-                        {showModelReasoningEffortSettings ? (
-                            <div className="py-2">
-                                <div className="px-3 pb-1 text-xs font-semibold text-[var(--app-hint)]">
-                                    {t('misc.reasoningEffort')}
-                                </div>
-                                {codexReasoningEffortOptions.map((option) => (
-                                    <button
-                                        key={option.value ?? 'default'}
-                                        type="button"
-                                        disabled={controlsDisabled}
-                                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                            controlsDisabled
-                                                ? 'cursor-not-allowed opacity-50'
-                                                : 'cursor-pointer hover:bg-[var(--app-secondary-bg)]'
-                                        }`}
-                                        onClick={() => handleModelReasoningEffortChange(option.value)}
-                                        onMouseDown={(e) => e.preventDefault()}
-                                    >
-                                        <div
-                                            className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                                                modelReasoningEffort === option.value
-                                                    ? 'border-[var(--app-link)]'
-                                                    : 'border-[var(--app-hint)]'
-                                            }`}
-                                        >
-                                            {modelReasoningEffort === option.value && (
-                                                <div className="h-2 w-2 rounded-full bg-[var(--app-link)]" />
-                                            )}
-                                        </div>
-                                        <span className={modelReasoningEffort === option.value ? 'text-[var(--app-link)]' : ''}>
-                                            {option.label}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : null}
-
-                        {showModelReasoningEffortSettings && showEffortSettings ? (
-                            <div className="mx-3 h-px bg-[var(--app-divider)]" />
-                        ) : null}
-
-                        {showEffortSettings ? (
-                            <div className="py-2">
-                                <div className="px-3 pb-1 text-xs font-semibold text-[var(--app-hint)]">
-                                    {t('misc.effort')}
-                                </div>
-                                {claudeEffortOptions.map((option) => (
-                                    <button
-                                        key={option.value ?? 'auto'}
-                                        type="button"
-                                        disabled={controlsDisabled}
-                                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                            controlsDisabled
-                                                ? 'cursor-not-allowed opacity-50'
-                                                : 'cursor-pointer hover:bg-[var(--app-secondary-bg)]'
-                                        }`}
-                                        onClick={() => handleEffortChange(option.value)}
-                                        onMouseDown={(e) => e.preventDefault()}
-                                    >
-                                        <div
-                                            className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                                                effort === option.value
-                                                    ? 'border-[var(--app-link)]'
-                                                    : 'border-[var(--app-hint)]'
-                                            }`}
-                                        >
-                                            {effort === option.value && (
-                                                <div className="h-2 w-2 rounded-full bg-[var(--app-link)]" />
-                                            )}
-                                        </div>
-                                        <span className={effort === option.value ? 'text-[var(--app-link)]' : ''}>
-                                            {option.label}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : null}
                     </FloatingOverlay>
                 </div>
             )
@@ -749,29 +580,17 @@ export function HappyComposer(props: {
         return null
     }, [
         showSettings,
-        showCollaborationSettings,
         showPermissionSettings,
         showModelSettings,
-        showModelReasoningEffortSettings,
-        showEffortSettings,
         modelOptions,
-        codexReasoningEffortOptions,
-        claudeEffortOptions,
         suggestions,
         selectedIndex,
         controlsDisabled,
-        collaborationMode,
         permissionMode,
         model,
-        modelReasoningEffort,
-        effort,
-        collaborationModeOptions,
         permissionModeOptions,
-        handleCollaborationChange,
         handlePermissionChange,
         handleModelChange,
-        handleModelReasoningEffortChange,
-        handleEffortChange,
         handleSuggestionSelect,
         t
     ])
@@ -791,10 +610,7 @@ export function HappyComposer(props: {
                         contextCacheRead={contextCacheRead}
                         contextWindow={contextWindow}
                         model={model}
-                        modelReasoningEffort={modelReasoningEffort}
                         permissionMode={permissionMode}
-                        collaborationMode={collaborationMode}
-                        threadGoal={threadGoal}
                         agentFlavor={agentFlavor}
                     />
 

@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { getModelOptionsForFlavor, getNextModelForFlavor } from './modelOptions'
 
 describe('getModelOptionsForFlavor', () => {
-    it('returns Claude composer model options as the default fallback', () => {
-        const options = getModelOptionsForFlavor('claude')
-        expect(options[0]).toEqual({ value: null, label: 'Default' })
-        expect(options.some((o) => o.value === 'sonnet')).toBe(true)
-        expect(options.some((o) => o.value === 'opus')).toBe(true)
+    it('returns an empty list when no custom options are provided', () => {
+        expect(getModelOptionsForFlavor('cursor')).toEqual([])
     })
 
     it('includes the current custom model when it is missing from explicit options', () => {
@@ -21,9 +18,8 @@ describe('getModelOptionsForFlavor', () => {
 })
 
 describe('getNextModelForFlavor', () => {
-    it('cycles Claude composer models by default', () => {
-        const next = getNextModelForFlavor('claude', null)
-        expect(next).not.toBeNull()
+    it('returns null when no custom options are provided', () => {
+        expect(getNextModelForFlavor('cursor', null)).toBeNull()
     })
 
     it('cycles explicit model options', () => {

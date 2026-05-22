@@ -1,20 +1,18 @@
 import {
-    getCodexCollaborationModeLabel,
     getPermissionModeLabel,
     getPermissionModeTone,
     isPermissionModeAllowedForFlavor
 } from '@hapi/protocol'
 import type { PermissionModeTone } from '@hapi/protocol'
 import { useMemo } from 'react'
-import type { AgentState, CodexCollaborationMode, PermissionMode } from '@/types/api'
-import type { ThreadGoal } from '@/types/api'
+import type { AgentState, PermissionMode } from '@/types/api'
 import { getContextBudgetTokens } from '@/chat/modelConfig'
 import { useTranslation } from '@/lib/use-translation'
 
 // Vibing messages for thinking state
 const VIBING_MESSAGES = [
     "Accomplishing", "Actioning", "Actualizing", "Baking", "Booping", "Brewing",
-    "Calculating", "Cerebrating", "Channelling", "Churning", "Clauding", "Coalescing",
+    "Calculating", "Cerebrating", "Channelling", "Churning", "Coalescing",
     "Cogitating", "Computing", "Combobulating", "Concocting", "Conjuring", "Considering",
     "Contemplating", "Cooking", "Crafting", "Creating", "Crunching", "Deciphering",
     "Deliberating", "Determining", "Discombobulating", "Divining", "Doing", "Effecting",
@@ -111,22 +109,6 @@ function formatTokenCount(value: number): string {
     return String(value)
 }
 
-function formatCodexReasoningLabel(effort?: string | null): string {
-    const normalized = effort?.trim().toLowerCase()
-    if (!normalized || normalized === 'default') return 'reasoning default'
-    return `reasoning ${normalized}`
-}
-
-function isCodexFastMode(model?: string | null, effort?: string | null): boolean {
-    const normalizedEffort = effort?.trim().toLowerCase()
-    if (normalizedEffort === 'none' || normalizedEffort === 'minimal' || normalizedEffort === 'low') {
-        return true
-    }
-
-    const normalizedModel = model?.trim().toLowerCase() ?? ''
-    return normalizedModel.includes('mini') || normalizedModel.includes('fast')
-}
-
 export function StatusBar(props: {
     active: boolean
     thinking: boolean
@@ -136,10 +118,7 @@ export function StatusBar(props: {
     contextCacheRead?: number
     contextWindow?: number | null
     model?: string | null
-    modelReasoningEffort?: string | null
     permissionMode?: PermissionMode
-    collaborationMode?: CodexCollaborationMode
-    threadGoal?: ThreadGoal | null
     agentFlavor?: string | null
 }) {
     const { t } = useTranslation()
@@ -186,23 +165,6 @@ export function StatusBar(props: {
     const permissionModeLabel = displayPermissionMode ? getPermissionModeLabel(displayPermissionMode) : null
     const permissionModeTone = displayPermissionMode ? getPermissionModeTone(displayPermissionMode) : null
     const permissionModeColor = permissionModeTone ? PERMISSION_TONE_CLASSES[permissionModeTone] : 'text-[var(--app-hint)]'
-    const displayCollaborationMode = props.agentFlavor === 'codex' && props.collaborationMode === 'plan'
-        ? props.collaborationMode
-        : null
-    const collaborationModeLabel = displayCollaborationMode
-        ? getCodexCollaborationModeLabel(displayCollaborationMode)
-        : null
-    const codexReasoningLabel = props.agentFlavor === 'codex'
-        ? formatCodexReasoningLabel(props.modelReasoningEffort)
-        : null
-    const codexFastMode = props.agentFlavor === 'codex'
-        ? isCodexFastMode(props.model, props.modelReasoningEffort)
-        : false
-    const goalLabel = props.agentFlavor === 'codex' && props.threadGoal
-        ? props.threadGoal.status === 'active'
-            ? 'goal'
-            : `goal ${props.threadGoal.status === 'budgetLimited' ? 'limited' : props.threadGoal.status}`
-        : null
 
     return (
         <div className="flex min-w-0 items-center justify-between gap-2 px-2 pb-1">
@@ -233,26 +195,6 @@ export function StatusBar(props: {
             </div>
 
             <div className="flex min-w-0 shrink-0 items-center gap-2">
-                {codexReasoningLabel ? (
-                    <span className="whitespace-nowrap text-xs text-[var(--app-hint)]">
-                        {codexReasoningLabel}
-                    </span>
-                ) : null}
-                {codexFastMode ? (
-                    <span className="whitespace-nowrap text-xs text-[#34C759]">
-                        fast
-                    </span>
-                ) : null}
-                {goalLabel ? (
-                    <span className="whitespace-nowrap text-xs text-[var(--app-link)]">
-                        {goalLabel}
-                    </span>
-                ) : null}
-                {collaborationModeLabel ? (
-                    <span className="whitespace-nowrap text-xs text-blue-500">
-                        {collaborationModeLabel}
-                    </span>
-                ) : null}
                 {displayPermissionMode ? (
                     <span className={`whitespace-nowrap text-xs ${permissionModeColor}`}>
                         {permissionModeLabel}

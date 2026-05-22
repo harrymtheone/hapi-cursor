@@ -488,7 +488,6 @@ export function SessionChat(props: {
                         onSchedule={setPendingSchedule}
                         onClearSchedule={() => setPendingSchedule(null)}
                         permissionMode={props.session.permissionMode}
-                        collaborationMode={codexCollaborationModeSupported ? props.session.collaborationMode : undefined}
                         threadGoal={reduced.latestGoal}
                         model={props.session.model}
                         modelReasoningEffort={agentFlavor === 'codex' ? props.session.modelReasoningEffort : undefined}
@@ -508,11 +507,6 @@ export function SessionChat(props: {
                         contextCacheRead={reduced.latestUsage?.cacheRead}
                         contextWindow={reduced.latestUsage?.contextWindow}
                         controlledByUser={controlledByUser}
-                        onCollaborationModeChange={
-                            codexCollaborationModeSupported && props.session.active && !controlledByUser
-                                ? handleCollaborationModeChange
-                                : undefined
-                        }
                         onPermissionModeChange={handlePermissionModeChange}
                         onModelChange={
                             agentFlavor === 'codex'
