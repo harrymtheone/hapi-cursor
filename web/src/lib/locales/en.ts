@@ -125,12 +125,6 @@ export default {
   'newSession.model': 'Model',
   'newSession.effort': 'Effort',
   'newSession.model.optional': 'optional',
-  'newSession.model.loadFailed': 'Failed to load Codex models',
-  'newSession.opencodeModel.loading': 'Discovering OpenCode models…',
-  'newSession.opencodeModel.loadFailed': 'Failed to load OpenCode models',
-  'newSession.opencodeModel.retry': 'Retry',
-  'newSession.opencodeModel.empty': 'No OpenCode models discovered for this directory',
-  'newSession.opencodeModel.default': 'Default',
   'newSession.reasoningEffort': 'Reasoning effort',
   'newSession.yolo': 'YOLO mode',
   'newSession.yolo.title': 'Bypass approvals and sandbox',
@@ -150,7 +144,6 @@ export default {
   'session.directoryMissingSimple': 'Directory does not exist. Creating the session will create it automatically.',
   'session.directoryMissingSimpleConfirm': 'Directory does not exist. Click again to create it automatically.',
   'session.directoryMissingWorktree': 'Worktree sessions require an existing repository directory.',
-  'session.codexModelsLoadFailed': 'Failed to load Codex models',
   'session.createAndCreateDirectory': 'Create and make directory',
 
   // Machine
@@ -163,12 +156,6 @@ export default {
   'chat.settings': 'Settings',
   'chat.terminal': 'Terminal',
   'chat.switchRemote': 'Switch to remote mode',
-
-  // Codex review
-  'codexReview.title': 'Codex review',
-  'codexReview.findings': '{count} findings',
-  'codexReview.confidence': 'Confidence {value}',
-  'codexReview.location.missing': 'No location',
 
   // Terminal
   'terminal.commandName': 'Command',
@@ -327,8 +314,6 @@ export default {
   'composer.scheduleErrorTooFar': 'Maximum schedule time is 7 days.',
   'queuedMessages.scheduledFor': 'Scheduled for {time}',
   'queuedMessages.editAlreadyInvoked': "Message already sent — it can't be edited",
-  'composer.codexSlashUnsupported.title': 'Codex command unavailable',
-  'composer.codexSlashUnsupported.body': 'HAPI remote mode does not yet run built-in Codex slash commands like {command}. Use natural language instead, or run it in the local Codex TUI.',
 
   // Banners
   'offline.title': 'Offline',

@@ -109,21 +109,21 @@ describe('aggregateResponseGroups', () => {
                 localId: 'L1',
                 invokedAt: 100,
                 durationMs: 1234,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 10, output_tokens: 20, service_tier: 'standard' }
             }),
             toolCall('t1', { localId: 'L1' }),
             toolCall('t2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 5, output_tokens: 7, service_tier: 'standard' }
             }),
             agentText('a3', {
                 localId: 'L3',
                 invokedAt: 300,
                 durationMs: 5678,
-                model: 'claude-haiku-4-5-20251001',
+                model: 'cursor-model-y',
                 usage: { input_tokens: 3, output_tokens: 11, service_tier: 'standard' }
             })
         ]
@@ -135,9 +135,9 @@ describe('aggregateResponseGroups', () => {
         // input/output sums across the three distinct localIds.
         expect(meta?.usage?.input_tokens).toBe(10 + 5 + 3)
         expect(meta?.usage?.output_tokens).toBe(20 + 7 + 11)
-        // Model dedup preserves first-seen order. "claude-sonnet-4-6" appears
+        // Model dedup preserves first-seen order. "cursor-model-x" appears
         // twice (L1, L2) and must not be duplicated.
-        expect(meta?.model).toBe('claude-sonnet-4-6, claude-haiku-4-5-20251001')
+        expect(meta?.model).toBe('cursor-model-x, cursor-model-y')
         // Invoke time = first turn (regression guard for the user-reported
         // disappearance after PR #555).
         expect(meta?.invokedAt).toBe(100)
@@ -159,7 +159,7 @@ describe('aggregateResponseGroups', () => {
                 localId: 'L1',
                 invokedAt: 42,
                 durationMs: 999,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 3, output_tokens: 19, service_tier: 'standard' }
             }),
             toolCall('t1', { localId: 'L1' })
@@ -177,7 +177,7 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 10, output_tokens: 20, service_tier: 'standard' }
             }),
             toolCall('t1', { localId: 'L1' }),
@@ -185,13 +185,13 @@ describe('aggregateResponseGroups', () => {
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 4, output_tokens: 8, service_tier: 'standard' }
             }),
             agentText('a3', {
                 localId: 'L3',
                 invokedAt: 300,
-                model: 'claude-haiku-4-5-20251001',
+                model: 'cursor-model-y',
                 usage: { input_tokens: 5, output_tokens: 7, service_tier: 'standard' }
             })
         ]
@@ -204,7 +204,7 @@ describe('aggregateResponseGroups', () => {
         expect(meta2?.turnCount).toBe(2)
         expect(meta2?.usage?.input_tokens).toBe(9)
         expect(meta2?.usage?.output_tokens).toBe(15)
-        expect(meta2?.model).toBe('claude-sonnet-4-6, claude-haiku-4-5-20251001')
+        expect(meta2?.model).toBe('cursor-model-x, cursor-model-y')
         expect(meta2?.invokedAt).toBe(200)
     })
 
@@ -214,25 +214,25 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 1, output_tokens: 1, service_tier: 'standard' }
             }),
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-haiku-4-5-20251001',
+                model: 'cursor-model-y',
                 usage: { input_tokens: 1, output_tokens: 1, service_tier: 'standard' }
             })
         ]
 
         const aggregates = aggregateResponseGroups(blocks)
         const meta = aggregates.get('a1')
-        expect(meta?.model).toBe('claude-sonnet-4-6, claude-haiku-4-5-20251001')
+        expect(meta?.model).toBe('cursor-model-x, cursor-model-y')
     })
 
     it('5. falls back to a (model, usage) fingerprint to count turns when localId is null', () => {
-        // Claude code spawn sessions today never stamp `localId`; all
-        // blocks emitted in one Claude SDK message carry an identical
+        // Legacy spawn sessions never stamp `localId`; all
+        // blocks emitted in one agent SDK message carry an identical
         // `usage` object instead. We dedup by that fingerprint so a
         // single turn does not over-count when its blocks repeat.
         const turn1Usage = { input_tokens: 1, output_tokens: 2, service_tier: 'standard' as const }
@@ -241,12 +241,12 @@ describe('aggregateResponseGroups', () => {
         const blocks: VisibleChatBlock[] = [
             userText('u1'),
             // turn 1: thinking + tool_use share one usage object
-            agentText('a1', { localId: null, invokedAt: 100, model: 'claude-sonnet-4-6', usage: turn1Usage }),
-            toolCall('t1', { localId: null, invokedAt: 105, model: 'claude-sonnet-4-6', usage: turn1Usage }),
+            agentText('a1', { localId: null, invokedAt: 100, model: 'cursor-model-x', usage: turn1Usage }),
+            toolCall('t1', { localId: null, invokedAt: 105, model: 'cursor-model-x', usage: turn1Usage }),
             // turn 2: a different usage object -> new turn
-            agentText('a2', { localId: null, invokedAt: 200, model: 'claude-sonnet-4-6', usage: turn2Usage }),
+            agentText('a2', { localId: null, invokedAt: 200, model: 'cursor-model-x', usage: turn2Usage }),
             // turn 3: a different model + usage -> new turn
-            agentText('a3', { localId: null, invokedAt: 300, model: 'claude-haiku-4-5-20251001', usage: turn3Usage })
+            agentText('a3', { localId: null, invokedAt: 300, model: 'cursor-model-y', usage: turn3Usage })
         ]
 
         const aggregates = aggregateResponseGroups(blocks)
@@ -255,11 +255,11 @@ describe('aggregateResponseGroups', () => {
         // sum across the three distinct turns
         expect(meta?.usage?.input_tokens).toBe(21)
         expect(meta?.usage?.output_tokens).toBe(42)
-        expect(meta?.model).toBe('claude-sonnet-4-6, claude-haiku-4-5-20251001')
+        expect(meta?.model).toBe('cursor-model-x, cursor-model-y')
     })
 
     it('5a. fingerprint dedup is ordering-based: identical adjacent blocks count as one turn, identical non-adjacent blocks count as separate turns', () => {
-        // Each Claude SDK message emits multiple blocks that share an
+        // Each agent SDK message emits multiple blocks that share an
         // identical usage object — adjacent blocks must collapse to one
         // turn. But two distinct SDK messages occasionally happen to
         // produce the same (model, usage) fingerprint when separated by
@@ -271,12 +271,12 @@ describe('aggregateResponseGroups', () => {
         const blocks: VisibleChatBlock[] = [
             userText('u1'),
             // Turn 1 emits two blocks sharing the same usage fingerprint.
-            agentText('a1', { localId: null, invokedAt: 100, model: 'claude-sonnet-4-6', usage: sharedUsage }),
-            toolCall('t1', { localId: null, invokedAt: 101, model: 'claude-sonnet-4-6', usage: sharedUsage }),
+            agentText('a1', { localId: null, invokedAt: 100, model: 'cursor-model-x', usage: sharedUsage }),
+            toolCall('t1', { localId: null, invokedAt: 101, model: 'cursor-model-x', usage: sharedUsage }),
             // Turn 2: different fingerprint.
-            agentText('a2', { localId: null, invokedAt: 200, model: 'claude-sonnet-4-6', usage: middleUsage }),
+            agentText('a2', { localId: null, invokedAt: 200, model: 'cursor-model-x', usage: middleUsage }),
             // Turn 3 happens to repeat turn 1's (model, usage) fingerprint.
-            agentText('a3', { localId: null, invokedAt: 300, model: 'claude-sonnet-4-6', usage: sharedUsage })
+            agentText('a3', { localId: null, invokedAt: 300, model: 'cursor-model-x', usage: sharedUsage })
         ]
 
         const aggregates = aggregateResponseGroups(blocks)
@@ -299,12 +299,12 @@ describe('aggregateResponseGroups', () => {
         const turn2Usage = { input_tokens: 1, output_tokens: 5, service_tier: 'standard' as const }
         const blocks: VisibleChatBlock[] = [
             userText('u1'),
-            agentText('a1', { localId: null, invokedAt: 100, model: 'claude-sonnet-4-6', usage: turn1Usage }),
-            toolCall('t1', { localId: null, invokedAt: 101, model: 'claude-sonnet-4-6', usage: turn1Usage }),
+            agentText('a1', { localId: null, invokedAt: 100, model: 'cursor-model-x', usage: turn1Usage }),
+            toolCall('t1', { localId: null, invokedAt: 101, model: 'cursor-model-x', usage: turn1Usage }),
             // tool_result chunk: no model, no usage
             agentText('a2_result', { localId: null, invokedAt: 102 }),
             // final turn with a different usage
-            agentText('a3_final', { localId: null, invokedAt: 200, model: 'claude-sonnet-4-6', usage: turn2Usage })
+            agentText('a3_final', { localId: null, invokedAt: 200, model: 'cursor-model-x', usage: turn2Usage })
         ]
 
         const aggregates = aggregateResponseGroups(blocks)
@@ -320,7 +320,7 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 10, output_tokens: 20, service_tier: 'standard' }
             }),
             // limit-reached splits the library's chunk; the next assistant
@@ -329,13 +329,13 @@ describe('aggregateResponseGroups', () => {
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 4, output_tokens: 8, service_tier: 'standard' }
             }),
             agentText('a3', {
                 localId: 'L3',
                 invokedAt: 300,
-                model: 'claude-haiku-4-5-20251001',
+                model: 'cursor-model-y',
                 usage: { input_tokens: 1, output_tokens: 1, service_tier: 'standard' }
             })
         ]
@@ -360,13 +360,13 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 1, output_tokens: 2, service_tier: 'standard' }
             }),
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 3, output_tokens: 4, service_tier: 'standard' }
             })
         ]
@@ -385,15 +385,15 @@ describe('aggregateResponseGroups', () => {
         // to one turn — the group is not its own turn boundary.
         const turn1Usage = { input_tokens: 7, output_tokens: 11, service_tier: 'standard' as const }
         const turn2Usage = { input_tokens: 2, output_tokens: 9, service_tier: 'standard' as const }
-        const tool1 = toolCall('t1', { localId: 'L1', invokedAt: 100, model: 'claude-sonnet-4-6', usage: turn1Usage })
-        const tool2 = toolCall('t2', { localId: 'L1', invokedAt: 105, model: 'claude-sonnet-4-6', usage: turn1Usage })
+        const tool1 = toolCall('t1', { localId: 'L1', invokedAt: 100, model: 'cursor-model-x', usage: turn1Usage })
+        const tool2 = toolCall('t2', { localId: 'L1', invokedAt: 105, model: 'cursor-model-x', usage: turn1Usage })
         const blocks: VisibleChatBlock[] = [
             userText('u1'),
             toolGroup('g1', [tool1, tool2]),
             agentText('a1', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: turn2Usage
             })
         ]
@@ -417,13 +417,13 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 1, output_tokens: 2, service_tier: 'standard' }
             }),
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 3, output_tokens: 4, service_tier: 'standard' }
             })
         ]
@@ -443,8 +443,8 @@ describe('aggregateResponseGroups', () => {
         // `tool-group` block may wrap tool-calls from two distinct turns.
         const turn1Usage = { input_tokens: 7, output_tokens: 11, service_tier: 'standard' as const }
         const turn2Usage = { input_tokens: 2, output_tokens: 9, service_tier: 'standard' as const }
-        const tool1 = toolCall('t1', { localId: 'L1', invokedAt: 100, model: 'claude-sonnet-4-6', usage: turn1Usage })
-        const tool2 = toolCall('t2', { localId: 'L2', invokedAt: 110, model: 'claude-haiku-4-5-20251001', usage: turn2Usage })
+        const tool1 = toolCall('t1', { localId: 'L1', invokedAt: 100, model: 'cursor-model-x', usage: turn1Usage })
+        const tool2 = toolCall('t2', { localId: 'L2', invokedAt: 110, model: 'cursor-model-y', usage: turn2Usage })
         const blocks: VisibleChatBlock[] = [
             userText('u1'),
             toolGroup('g1', [tool1, tool2])
@@ -455,7 +455,7 @@ describe('aggregateResponseGroups', () => {
         expect(meta?.turnCount).toBe(2)
         expect(meta?.usage?.input_tokens).toBe(7 + 2)
         expect(meta?.usage?.output_tokens).toBe(11 + 9)
-        expect(meta?.model).toBe('claude-sonnet-4-6, claude-haiku-4-5-20251001')
+        expect(meta?.model).toBe('cursor-model-x, cursor-model-y')
         expect(meta?.invokedAt).toBe(100)
     })
 
@@ -467,8 +467,8 @@ describe('aggregateResponseGroups', () => {
         const usage = { input_tokens: 3, output_tokens: 5, service_tier: 'standard' as const }
         const blocks: VisibleChatBlock[] = [
             userText('u1'),
-            agentText('a1', { localId: null, createdAt: 1000, invokedAt: 100, model: 'claude-sonnet-4-6', usage }),
-            agentText('a2', { localId: null, createdAt: 2000, invokedAt: 200, model: 'claude-sonnet-4-6', usage })
+            agentText('a1', { localId: null, createdAt: 1000, invokedAt: 100, model: 'cursor-model-x', usage }),
+            agentText('a2', { localId: null, createdAt: 2000, invokedAt: 200, model: 'cursor-model-x', usage })
         ]
 
         const aggregates = aggregateResponseGroups(blocks)
@@ -488,13 +488,13 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 1, output_tokens: 2, service_tier: 'standard' }
             }),
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: { input_tokens: 3, output_tokens: 4, service_tier: 'standard' }
             })
         ]
@@ -514,7 +514,7 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: {
                     input_tokens: 1,
                     output_tokens: 2,
@@ -526,7 +526,7 @@ describe('aggregateResponseGroups', () => {
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: {
                     input_tokens: 3,
                     output_tokens: 4,
@@ -551,7 +551,7 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: {
                     input_tokens: 1,
                     output_tokens: 2,
@@ -562,7 +562,7 @@ describe('aggregateResponseGroups', () => {
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: {
                     input_tokens: 3,
                     output_tokens: 4,
@@ -586,7 +586,7 @@ describe('aggregateResponseGroups', () => {
             agentText('a1', {
                 localId: 'L1',
                 invokedAt: 100,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: {
                     input_tokens: 1,
                     output_tokens: 2,
@@ -598,7 +598,7 @@ describe('aggregateResponseGroups', () => {
             agentText('a2', {
                 localId: 'L2',
                 invokedAt: 200,
-                model: 'claude-sonnet-4-6',
+                model: 'cursor-model-x',
                 usage: {
                     input_tokens: 3,
                     output_tokens: 4,

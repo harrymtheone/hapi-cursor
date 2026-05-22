@@ -2,6 +2,7 @@ import type { ApiClient } from '@/api/client'
 import type { DecryptedMessage, MessageStatus, MessagesResponse } from '@/types/api'
 import { normalizeDecryptedMessage } from '@/chat/normalize'
 import { isQueuedForInvocation, isUserMessage, mergeMessages } from '@/lib/messages'
+import { AGENT_MESSAGE_PAYLOAD_TYPE } from '@hapi/protocol'
 
 export type MessageWindowState = {
     sessionId: string
@@ -423,7 +424,7 @@ function deriveOldestPosition(messages: DecryptedMessage[]): { at: number; seq: 
         : null
 }
 
-function isCodexAgentRunMessage(message: DecryptedMessage): boolean {
+function isAgentRunMessage(message: DecryptedMessage): boolean {
     const content = message.content
     if (!content || typeof content !== 'object') return false
     const outer = content as { role?: unknown; content?: unknown }
@@ -431,7 +432,7 @@ function isCodexAgentRunMessage(message: DecryptedMessage): boolean {
     const inner = outer.content
     if (!inner || typeof inner !== 'object') return false
     const payload = inner as { type?: unknown; data?: unknown }
-    if (payload.type !== 'codex') return false
+    if (payload.type !== AGENT_MESSAGE_PAYLOAD_TYPE) return false
     const data = payload.data
     if (!data || typeof data !== 'object') return false
     const eventType = (data as { type?: unknown }).type
@@ -446,7 +447,7 @@ function countRegularMessages(messages: DecryptedMessage[]): number {
     for (const message of messages) {
         if (seen.has(message.id)) continue
         seen.add(message.id)
-        if (!isCodexAgentRunMessage(message)) {
+        if (!isAgentRunMessage(message)) {
             count += 1
         }
     }
@@ -467,7 +468,7 @@ async function backfillColdLoadMessages(
     let combined = first
     let regularCount = countRegularMessages(combined.messages)
 
-    // On a cold reload the hub's latest page can be filled entirely by Codex
+    // On a cold reload the hub's latest page can be filled entirely by
     // child-agent trace updates. The live path protects regular/root messages
     // with a separate client budget, but that cannot help if those messages were
     // never fetched. Walk older pages until the initial window has a small root
@@ -598,8 +599,8 @@ function trimPreservingQueued(
     const queued = messages.filter(isQueuedForInvocation)
     const queuedIds = new Set(queued.map((message) => message.id))
     const nonQueued = messages.filter((message) => !queuedIds.has(message.id))
-    const agentRun = nonQueued.filter(isCodexAgentRunMessage)
-    const regular = nonQueued.filter((message) => !isCodexAgentRunMessage(message))
+    const agentRun = nonQueued.filter(isAgentRunMessage)
+    const regular = nonQueued.filter((message) => !isAgentRunMessage(message))
     const budget = Math.max(0, limit - queued.length)
     const regularTrim = sliceForTrim(regular, budget, mode)
     const agentRunTrim = sliceForTrim(agentRun, AGENT_RUN_WINDOW_SIZE, mode)

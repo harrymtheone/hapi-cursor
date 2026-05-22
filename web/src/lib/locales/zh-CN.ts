@@ -127,12 +127,6 @@ export default {
   'newSession.model': '模型',
   'newSession.effort': '思考强度',
   'newSession.model.optional': '可选',
-  'newSession.model.loadFailed': '加载 Codex 模型失败',
-  'newSession.opencodeModel.loading': '正在发现 OpenCode 模型…',
-  'newSession.opencodeModel.loadFailed': '加载 OpenCode 模型失败',
-  'newSession.opencodeModel.retry': '重试',
-  'newSession.opencodeModel.empty': '未在此目录发现 OpenCode 模型',
-  'newSession.opencodeModel.default': '默认',
   'newSession.reasoningEffort': '推理强度',
   'newSession.yolo': 'YOLO 模式',
   'newSession.yolo.title': '跳过审批和沙箱',
@@ -152,7 +146,6 @@ export default {
   'session.directoryMissingSimple': '目录不存在，创建会话时将自动创建。',
   'session.directoryMissingSimpleConfirm': '目录不存在。再次点击按钮将自动新建该目录。',
   'session.directoryMissingWorktree': 'worktree 需要已存在的仓库目录。',
-  'session.codexModelsLoadFailed': '加载 Codex 模型失败',
   'session.createAndCreateDirectory': '创建并新建目录',
 
   // Machine
@@ -165,12 +158,6 @@ export default {
   'chat.settings': '设置',
   'chat.terminal': '终端',
   'chat.switchRemote': '切换到远程模式',
-
-  // Codex review
-  'codexReview.title': 'Codex review',
-  'codexReview.findings': '{count} 条发现',
-  'codexReview.confidence': '置信度 {value}',
-  'codexReview.location.missing': '无位置',
 
   // Terminal
   'terminal.commandName': '命令',
@@ -329,8 +316,6 @@ export default {
   'composer.scheduleErrorTooFar': '最多只能定时 7 天。',
   'queuedMessages.scheduledFor': '定时发送: {time}',
   'queuedMessages.editAlreadyInvoked': '消息已发送，无法编辑',
-  'composer.codexSlashUnsupported.title': '无法执行 Codex 命令',
-  'composer.codexSlashUnsupported.body': 'HAPI 远程模式暂不支持 {command} 这类 Codex 内建 slash command，请改用自然语言，或在本地 Codex TUI 中执行。',
 
   // Banners
   'offline.title': '离线',

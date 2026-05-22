@@ -69,7 +69,7 @@ type TurnSource = {
     createdAt: number
 }
 
-// Return one turn source per claude-SDK message that the visible block
+// Return one turn source per agent-SDK message that the visible block
 // represents. `tool-group` is a derived view: `buildVisibleChatBlocks` merges
 // adjacent eligible tool-calls without checking that they share a turn, so
 // each underlying tool-call contributes its own source. Other assistant-role
@@ -105,8 +105,8 @@ function turnSourcesFromBlock(block: VisibleChatBlock): TurnSource[] {
 
 /**
  * Fallback turn key for environments where the CLI does not stamp a
- * non-null `localId` on each turn's blocks (e.g. claude code spawn
- * sessions today). The key combines `(model, usage totals, createdAt)`:
+ * non-null `localId` on each turn's blocks (e.g. legacy spawn sessions).
+ * The key combines `(model, usage totals, createdAt)`:
  * the reducer copies `msg.createdAt` onto every derived `ChatBlock`, so
  * blocks from the same SDK message share createdAt and collapse to one
  * turn, while blocks from different SDK messages stay distinct even
@@ -178,7 +178,7 @@ export function aggregateResponseGroups(
     // Ordering-based turn dedup: we compare each block's turn key against
     // the immediately previous turn's key. A `Set` of all seen keys would
     // collapse a third turn whose `(model, usage)` fingerprint happens to
-    // match a non-adjacent earlier turn — claude code spawn sessions
+    // match a non-adjacent earlier turn — legacy spawn sessions
     // legitimately produce repeated fingerprints when token totals
     // coincide, and merging them under-counts the visible turn count.
     let prevTurnKey: string | null = null
@@ -220,7 +220,7 @@ export function aggregateResponseGroups(
 
         for (const turn of turnSourcesFromBlock(block)) {
             // Prefer the CLI-stamped `localId` when present. When it is null
-            // (today's claude code spawn flow) fall back to a fingerprint
+            // (legacy spawn flow) fall back to a fingerprint
             // built from `(model, usage totals, createdAt)` — see
             // `turnFingerprint` for the createdAt rationale.
             const turnKey = turn.localId !== null

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { AGENT_MESSAGE_PAYLOAD_TYPE } from '@hapi/protocol'
 import type { ApiClient } from '@/api/client'
 import type { DecryptedMessage, MessageStatus } from '@/types/api'
 import {
@@ -70,7 +71,7 @@ function makeAgentMessage(props: {
         content: {
             role: 'agent',
             content: {
-                type: 'codex',
+                type: AGENT_MESSAGE_PAYLOAD_TYPE,
                 data: {
                     type: 'message',
                     message: props.text ?? 'agent text'
@@ -96,7 +97,7 @@ function makeAgentRunMessage(props: {
         content: {
             role: 'agent',
             content: {
-                type: 'codex',
+                type: AGENT_MESSAGE_PAYLOAD_TYPE,
                 data: {
                     type: eventType,
                     cardId: 'spawn-1',
@@ -458,7 +459,7 @@ describe('message-window-store visible trimming', () => {
         clearMessageWindow(SESSION_ID)
     })
 
-    it('does not evict main conversation messages when Codex subagent events flood the window', () => {
+    it('does not evict main conversation messages when subagent events flood the window', () => {
         const baseTime = 1_700_000_000_000
         const messages: DecryptedMessage[] = [
             makeUserMessage({
@@ -504,7 +505,7 @@ describe('message-window-store visible trimming', () => {
         expect(state.oldestSeq).toBe(2)
     })
 
-    it('backfills cold latest load when the newest page is filled by Codex subagent events', async () => {
+    it('backfills cold latest load when the newest page is filled by subagent events', async () => {
         const baseTime = 1_700_000_200_000
         const latestAgentRuns: DecryptedMessage[] = []
         for (let i = 0; i < 50; i += 1) {
