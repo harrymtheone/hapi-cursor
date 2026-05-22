@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
-stopped_at: Phase 07 complete (4/4) — ready to discuss Phase 8
-last_updated: 2026-05-22T15:08:01.694Z
+status: planning
+stopped_at: Phase 8 context gathered
+last_updated: "2026-05-22T15:22:28.317Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 12
@@ -159,6 +159,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T14:30:15.509Z
-Stopped at: Completed 07-04-PLAN.md
-Resume file: None
+Last session: 2026-05-22T15:22:28.313Z
+Stopped at: Phase 8 context gathered
+Resume file: .planning/phases/08-hub-internal-decoupling/08-CONTEXT.md
