@@ -1,12 +1,5 @@
-/**
- * @description The legacy payload type identifier used for all generic agent messages.
- * Changing this value will affect the communication schema between CLI, Hub, and Web.
- * A migration plan is required if this literal is ever modified.
- *
- * NOTE: wire-protocol legacy literal — owned by Phase 7; do not change.
- * The Phase 5 source guard's post-filter pins on this anchor line (D-81).
- */
-export const AGENT_MESSAGE_PAYLOAD_TYPE = 'codex' as const
+/** wire-tag for cursor agent message envelope */
+export const AGENT_MESSAGE_PAYLOAD_TYPE = 'cursor' as const
 
 export const CURSOR_PERMISSION_MODES = ['default', 'plan', 'ask', 'yolo'] as const
 export type CursorPermissionMode = typeof CURSOR_PERMISSION_MODES[number]

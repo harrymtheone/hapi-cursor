@@ -46,7 +46,6 @@ export const MetadataSchema = z.object({
     lifecycleStateSince: z.number().optional(),
     archivedBy: z.string().optional(),
     archiveReason: z.string().optional(),
-    flavor: z.string().nullish(),
     capabilities: SessionCapabilitiesSchema.optional(),
     worktree: WorktreeMetadataSchema.optional()
 })
@@ -179,6 +178,105 @@ export const DecryptedMessageSchema = z.object({
 
 export type DecryptedMessage = z.infer<typeof DecryptedMessageSchema>
 
+export const MachineMetadataSchema = z.object({
+    host: z.string(),
+    platform: z.string(),
+    happyCliVersion: z.string(),
+    displayName: z.string().optional(),
+    homeDir: z.string(),
+    happyHomeDir: z.string(),
+    happyLibDir: z.string(),
+    workspaceRoot: z.string().optional(),
+    workspaceRoots: z.array(z.string()).optional()
+}).transform(({ workspaceRoot, workspaceRoots, ...rest }) => {
+    const normalizedWorkspaceRoots = Array.from(new Set(
+        Array.isArray(workspaceRoots)
+            ? workspaceRoots.filter((path): path is string => typeof path === 'string' && path.trim().length > 0)
+            : workspaceRoot
+                ? [workspaceRoot]
+                : []
+    ))
+
+    return {
+        ...rest,
+        workspaceRoots: normalizedWorkspaceRoots.length > 0 ? normalizedWorkspaceRoots : undefined
+    }
+})
+
+export type MachineMetadata = z.infer<typeof MachineMetadataSchema>
+
+export const RunnerStateSchema = z.object({
+    status: z.union([z.enum(['running', 'shutting-down']), z.string()]),
+    pid: z.number().optional(),
+    httpPort: z.number().optional(),
+    startedAt: z.number().optional(),
+    shutdownRequestedAt: z.number().optional(),
+    shutdownSource: z.union([z.enum(['mobile-app', 'cli', 'os-signal', 'unknown']), z.string()]).optional(),
+    lastSpawnError: z.object({
+        message: z.string(),
+        pid: z.number().optional(),
+        exitCode: z.number().nullable().optional(),
+        signal: z.string().nullable().optional(),
+        at: z.number()
+    }).nullable().optional()
+})
+
+export type RunnerState = z.infer<typeof RunnerStateSchema>
+
+export const MachineSchema = z.object({
+    id: z.string(),
+    seq: z.number(),
+    createdAt: z.number(),
+    updatedAt: z.number(),
+    active: z.boolean(),
+    activeAt: z.number(),
+    metadata: MachineMetadataSchema.nullable(),
+    metadataVersion: z.number(),
+    runnerState: RunnerStateSchema.nullable(),
+    runnerStateVersion: z.number()
+})
+
+export type Machine = z.infer<typeof MachineSchema>
+
+export const MessageMetaSchema = z.object({
+    sentFrom: z.string().optional(),
+    fallbackModel: z.string().nullable().optional(),
+    customSystemPrompt: z.string().nullable().optional(),
+    appendSystemPrompt: z.string().nullable().optional(),
+    allowedTools: z.array(z.string()).nullable().optional(),
+    disallowedTools: z.array(z.string()).nullable().optional()
+})
+
+export type MessageMeta = z.infer<typeof MessageMetaSchema>
+
+export const UserMessageSchema = z.object({
+    role: z.literal('user'),
+    content: z.object({
+        type: z.literal('text'),
+        text: z.string(),
+        attachments: z.array(AttachmentMetadataSchema).optional()
+    }),
+    localKey: z.string().optional(),
+    meta: MessageMetaSchema.optional()
+})
+
+export type UserMessage = z.infer<typeof UserMessageSchema>
+
+export const AgentMessageSchema = z.object({
+    role: z.literal('agent'),
+    content: z.object({
+        type: z.literal('output'),
+        data: z.unknown()
+    }),
+    meta: MessageMetaSchema.optional()
+})
+
+export type AgentMessage = z.infer<typeof AgentMessageSchema>
+
+export const MessageContentSchema = z.union([UserMessageSchema, AgentMessageSchema])
+
+export type MessageContent = z.infer<typeof MessageContentSchema>
+
 export const SessionSchema = z.object({
     id: z.string(),
     seq: z.number(),
@@ -203,6 +301,27 @@ export const SessionSchema = z.object({
 
 export type Session = z.infer<typeof SessionSchema>
 
+export const SessionPatchSchema = z.object({
+    active: z.boolean().optional(),
+    activeAt: z.number().optional(),
+    thinking: z.boolean().optional(),
+    updatedAt: z.number().optional(),
+    permissionMode: PermissionModeSchema.optional(),
+    model: z.string().nullable().optional(),
+    modelReasoningEffort: z.string().nullable().optional(),
+    effort: z.string().nullable().optional(),
+    backgroundTaskCount: z.number().optional()
+}).strict()
+
+export type SessionPatch = z.infer<typeof SessionPatchSchema>
+
+export const MachinePatchSchema = z.object({
+    active: z.literal(false),
+    activeAt: z.number().optional()
+}).strict()
+
+export type MachinePatch = z.infer<typeof MachinePatchSchema>
+
 const SessionChangedSchema = z.object({
     sessionId: z.string()
 })
@@ -214,11 +333,11 @@ const MachineChangedSchema = z.object({
 export const SyncEventSchema = z.discriminatedUnion('type', [
     SessionChangedSchema.extend({
         type: z.literal('session-added'),
-        data: z.unknown().optional()
+        data: SessionSchema
     }),
     SessionChangedSchema.extend({
         type: z.literal('session-updated'),
-        data: z.unknown().optional()
+        data: z.union([SessionSchema, SessionPatchSchema])
     }),
     z.object({
         type: z.literal('session-removed'),
@@ -237,7 +356,7 @@ export const SyncEventSchema = z.discriminatedUnion('type', [
     }),
     MachineChangedSchema.extend({
         type: z.literal('machine-updated'),
-        data: z.unknown().optional()
+        data: z.union([MachineSchema, MachinePatchSchema, z.null()])
     }),
     z.object({
         type: z.literal('toast'),
