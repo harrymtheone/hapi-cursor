@@ -143,7 +143,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. `hasUnknownSessionPatchKeys()` and any heuristic patch-key detection are removed from `web/src/hooks/useSSE.ts`; SSE events emit either a full `SessionSummary`/`MachineSummary` or a strict patch schema defined in `shared/` (the chosen path is documented in code)
   3. Front-end SSE event handlers consume the canonical schema directly; TanStack Query cache updates derive from the schema without any "fallback to refetch list" branch
   4. `bun typecheck` and `bun run test` both pass; new tests exercise the SSE handler against a strictly typed event stream
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 07-01-PLAN.md — Slice 1: shared schema lift (Machine/RunnerState/Message/Patch) + SyncEventSchema tighten + AGENT_MESSAGE_PAYLOAD_TYPE='cursor' + MetadataSchema.flavor delete + schemas.test.ts
+- [ ] 07-02-PLAN.md — Slice 2: hub broadcast conformance + machineCache type collapse + syncEngine flavor-defense delete + sessionCache.test.ts contract test
+- [ ] 07-03-PLAN.md — Slice 3: cli + web type-duplicate cleanup + useSSE rewrite (delete 7 narrows + invalidation queue) + useSSE.test.tsx (backgroundTaskCount regression)
+- [ ] 07-04-PLAN.md — Slice 4: scripts/check-no-cut-agents.sh D-126 additions + D-124 whitelist removal + final ripgrep zero-hit phase gate
 
 ### Phase 8: Hub internal decoupling
 **Goal**: Hub sync layer is decomposed into single-responsibility services; SSE no longer reverse-depends on `SyncEngine`; every recurring timer goes through a shared scheduler that is fully cleared on shutdown.
