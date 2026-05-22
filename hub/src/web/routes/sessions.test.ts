@@ -9,7 +9,6 @@ function createSession(overrides?: Partial<Session>): Session {
     const baseMetadata = {
         path: '/tmp/project',
         host: 'localhost',
-        flavor: 'cursor' as const
     }
     const base = {
         id: 'session-1',

@@ -8,7 +8,7 @@ function createSession(overrides: Partial<Session> = {}): Session {
         id: 'session-task-toast',
         name: 'Demo task',
         active: true,
-        metadata: { flavor: 'cursor', name: 'Demo task' },
+        metadata: { name: 'Demo task' },
         ...overrides
     } as Session
 }

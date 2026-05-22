@@ -31,7 +31,7 @@ describe('alive incremental events', () => {
         try {
             const session = sessionCache.getOrCreateSession(
                 'owner-only-session',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                { path: '/tmp/project', host: 'localhost' },
                 null
             )
             const machine = machineCache.getOrCreateMachine(
@@ -41,7 +41,7 @@ describe('alive incremental events', () => {
             )
             const engineSession = engine.getOrCreateSession(
                 'owner-only-engine-session',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                { path: '/tmp/project', host: 'localhost' },
                 null
             )
             const engineMachine = engine.getOrCreateMachine(
@@ -144,7 +144,7 @@ describe('alive incremental events', () => {
         try {
             const session = engine.getOrCreateSession(
                 'session-send-thinking',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                { path: '/tmp/project', host: 'localhost' },
                 { requests: {}, completedRequests: {} }
             )
 
@@ -189,7 +189,7 @@ describe('alive incremental events', () => {
 
         const session = cache.getOrCreateSession(
             'session-queued-thinking-inactive',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             { requests: {}, completedRequests: {} }
         )
 
@@ -217,7 +217,7 @@ describe('alive incremental events', () => {
 
         const session = cache.getOrCreateSession(
             'session-queued-thinking-grace',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             { requests: {}, completedRequests: {} }
         )
 
@@ -245,7 +245,7 @@ describe('alive incremental events', () => {
 
         const session = cache.getOrCreateSession(
             'session-queued-thinking-expire',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             { requests: {}, completedRequests: {} }
         )
 
@@ -272,7 +272,7 @@ describe('alive incremental events', () => {
 
         const session = cache.getOrCreateSession(
             'session-queued-thinking-clock-skew',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             { requests: {}, completedRequests: {} }
         )
 

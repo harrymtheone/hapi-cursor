@@ -211,3 +211,74 @@ if [ "$PHASE6_ANCHOR_COUNT" -lt 4 ]; then
   exit 1
 fi
 echo "✅ Phase-6 SC#1 concept tags present (count=$PHASE6_ANCHOR_COUNT)."
+
+# === Phase-7 wire-contract sweeps — D-126
+PHASE7_SOURCE_DIRS=(cli/src hub/src web/src shared/src)
+
+# (#1) useSSE heuristic narrower must not return after REFA-04 strict patch schema.
+if "$RG_BIN" -n '\bhasUnknownSessionPatchKeys\b' "${PHASE7_SOURCE_DIRS[@]}"; then
+  echo ""
+  echo "❌ Phase-7 hasUnknownSessionPatchKeys residue found (REFA-04)."
+  echo "   useSSE must consume SyncEventSchema directly without heuristic refetch fallback."
+  exit 1
+fi
+echo "✅ No Phase-7 hasUnknownSessionPatchKeys residue in source scope."
+
+# (#2) getSessionPatch was the local ad-hoc patch extractor; web hooks must use shared schema.
+if "$RG_BIN" -n '\bgetSessionPatch\b' web/src/hooks; then
+  echo ""
+  echo "❌ Phase-7 getSessionPatch residue found in web/src/hooks/ (REFA-04)."
+  echo "   Use SyncEventSchema's discriminator and strict SessionPatchSchema instead."
+  exit 1
+fi
+echo "✅ No Phase-7 getSessionPatch residue in web hooks."
+
+# (#3) Machine type declarations must remain single-sourced in shared/.
+DUP_MACHINE=$("$RG_BIN" -n '^\s*(export\s+)?interface\s+Machine\b|^\s*export\s+type\s+Machine\s*=' \
+  cli/src hub/src web/src \
+  | grep -v -E 'hub/src/sync/machineCache\.ts:.*export type \{ Machine \}' \
+  || true)
+if [ -n "$DUP_MACHINE" ]; then
+  echo "$DUP_MACHINE"
+  echo ""
+  echo "❌ Phase-7 duplicate Machine declaration found (REFA-03)."
+  echo "   Machine must be imported from @hapi/protocol/shared contracts."
+  exit 1
+fi
+echo "✅ No duplicate Phase-7 Machine declarations outside shared/."
+
+# (#4) RunnerState/MachineMetadata schema declarations must remain in shared/src/schemas.ts.
+DUP_SCHEMA=$("$RG_BIN" -n '\b(RunnerStateSchema|MachineMetadataSchema)\s*=\s*z\.object\b|^\s*export\s+const\s+(RunnerStateSchema|MachineMetadataSchema)\b' \
+  cli/src web/src \
+  | grep -v "from '@hapi/protocol" \
+  || true)
+if [ -n "$DUP_SCHEMA" ]; then
+  echo "$DUP_SCHEMA"
+  echo ""
+  echo "❌ Phase-7 duplicate RunnerStateSchema/MachineMetadataSchema declaration found (REFA-03)."
+  echo "   Schema declarations must live only in shared/src/schemas.ts."
+  exit 1
+fi
+echo "✅ No duplicate Phase-7 RunnerState/MachineMetadata schema declarations outside shared/."
+
+# (#5) The legacy codex wire literal is fully retired after D-124.
+if "$RG_BIN" -n "['\"]codex['\"]" "${PHASE7_SOURCE_DIRS[@]}"; then
+  echo ""
+  echo "❌ Phase-7 'codex' literal residue found (D-124 / REFA-03)."
+  echo "   AGENT_MESSAGE_PAYLOAD_TYPE is cursor-only; delete the literal at source."
+  exit 1
+fi
+echo "✅ No Phase-7 'codex' literals in source scope."
+
+# (#6) metadata.flavor writes are deleted; top-level resume-target flavor is still legitimate.
+FLAVOR_WRITES=$("$RG_BIN" -n "flavor:\s*['\"]|\.flavor\s*=" cli/src hub/src \
+  | grep -v -E '(LocalResumeTarget|ResumableSession|resume\.ts|resume\.test\.ts|hub/src/web/routes/cli\.test\.ts)' \
+  || true)
+if [ -n "$FLAVOR_WRITES" ]; then
+  echo "$FLAVOR_WRITES"
+  echo ""
+  echo "❌ Phase-7 metadata.flavor write residue found (REFA-03)."
+  echo "   Delete metadata.flavor; only top-level resume-target flavor survives."
+  exit 1
+fi
+echo "✅ Phase-7 wire-contract sweeps clean (D-126)."

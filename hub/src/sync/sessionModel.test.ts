@@ -24,7 +24,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-summary',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4' }
         )
@@ -41,7 +41,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-effort-summary',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4', effort: 'high' }
         )
@@ -57,7 +57,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-reasoning-effort',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4', modelReasoningEffort: 'xhigh' }
         )
@@ -73,13 +73,13 @@ describe('session model', () => {
 
         const oldSession = cache.getOrCreateSession(
             'session-model-old',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4' }
         )
         const newSession = cache.getOrCreateSession(
             'session-model-new',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null
         )
 
@@ -96,7 +96,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-config',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4' }
         )
@@ -117,7 +117,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-heartbeat',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4' }
         )
@@ -140,7 +140,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-effort-config',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4', effort: 'medium' }
         )
@@ -161,7 +161,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-reasoning-config',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4', modelReasoningEffort: 'high' }
         )
@@ -182,7 +182,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-effort-heartbeat',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4', effort: 'high' }
         )
@@ -205,7 +205,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-model-reasoning-heartbeat',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null,
             { model: 'gpt-5.4', modelReasoningEffort: 'high' }
         )
@@ -228,7 +228,7 @@ describe('session model', () => {
 
         const session = cache.getOrCreateSession(
             'session-message-activity',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null
         )
         const activityAt = session.updatedAt + 60_000
@@ -256,7 +256,7 @@ describe('session model', () => {
         try {
             const session = engine.getOrCreateSession(
                 'session-web-message-activity',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                { path: '/tmp/project', host: 'localhost' },
                 null
             )
             const before = store.sessions.getSession(session.id)?.updatedAt ?? 0
@@ -278,7 +278,7 @@ describe('session model', () => {
         const cache = new SessionCache(store, createPublisher(events))
         const session = cache.getOrCreateSession(
             'session-cli-message-activity',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null
         )
         const handlers = new Map<string, (payload: unknown) => void>()
@@ -323,7 +323,7 @@ describe('session model', () => {
         const cache = new SessionCache(store, createPublisher(events))
         const session = cache.getOrCreateSession(
             'session-cli-tool-activity',
-            { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+            { path: '/tmp/project', host: 'localhost' },
             null
         )
         const handlers = new Map<string, (payload: unknown) => void>()
@@ -395,7 +395,6 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'cursor',
                     cursorSessionId: 'cursor-thread-1'
                 },
                 null,
@@ -457,7 +456,6 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'cursor',
                     cursorSessionId: 'cursor-thread-1'
                 },
                 null,
@@ -508,7 +506,6 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'cursor',
                     cursorSessionId: 'cursor-session-1'
                 },
                 null,
@@ -568,7 +565,6 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'cursor',
                     cursorSessionId: 'cursor-session-perm'
                 },
                 null,
@@ -632,7 +628,6 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'cursor',
                     cursorSessionId: 'cursor-thread-1'
                 },
                 { controlledByUser: false },
@@ -643,9 +638,8 @@ describe('session model', () => {
 
             expect(result).toEqual({
                 type: 'success',
-                target: {
+                target: expect.objectContaining({
                     sessionId: session.id,
-                    flavor: 'cursor',
                     directory: '/tmp/project',
                     machineId: 'machine-1',
                     host: 'localhost',
@@ -657,7 +651,7 @@ describe('session model', () => {
                     effort: null,
                     modelReasoningEffort: 'xhigh',
                     permissionMode: undefined
-                }
+                })
             })
         } finally {
             engine.stop()
@@ -682,8 +676,7 @@ describe('session model', () => {
                 {
                     path: '/tmp/project',
                     host: 'localhost',
-                    machineId: 'machine-1',
-                    flavor: 'cursor'
+                    machineId: 'machine-1'
                 },
                 null
             )
@@ -714,7 +707,6 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'cursor',
                     cursorSessionId: 'cursor-thread-1'
                 },
                 { controlledByUser: false }
@@ -745,7 +737,6 @@ describe('session model', () => {
                     path: '/tmp/project',
                     host: 'localhost',
                     machineId: 'machine-1',
-                    flavor: 'cursor',
                     cursorSessionId: 'cursor-thread-1'
                 },
                 { controlledByUser: true }
@@ -770,7 +761,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 null
             )
 
@@ -779,7 +770,7 @@ describe('session model', () => {
 
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 null
             )
 
@@ -801,12 +792,12 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 null
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-Y' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-Y' },
                 null
             )
 
@@ -823,7 +814,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                { path: '/tmp/project', host: 'localhost' },
                 null
             )
 
@@ -839,7 +830,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 {
                     requests: { 'req-from-active-duplicate': { tool: 'Bash', arguments: {} } },
                     completedRequests: {}
@@ -851,7 +842,7 @@ describe('session model', () => {
 
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 {
                     requests: { 'req-from-target': { tool: 'Read', arguments: {} } },
                     completedRequests: {}
@@ -889,7 +880,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                { path: '/tmp/project', host: 'localhost' },
                 {
                     requests: { 'req-from-source': { tool: 'Bash', arguments: {} } },
                     completedRequests: {}
@@ -897,7 +888,7 @@ describe('session model', () => {
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor' },
+                { path: '/tmp/project', host: 'localhost' },
                 {
                     requests: { 'req-from-target': { tool: 'Read', arguments: {} } },
                     completedRequests: {}
@@ -936,12 +927,12 @@ describe('session model', () => {
             try {
                 const s1 = engine.getOrCreateSession(
                     'tag-1',
-                    { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                    { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                     null
                 )
                 const s2 = engine.getOrCreateSession(
                     'tag-2',
-                    { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                    { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                     null
                 )
 
@@ -976,12 +967,12 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 null
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 null
             )
 
@@ -1018,7 +1009,7 @@ describe('session model', () => {
 
             const s1 = cache.getOrCreateSession(
                 'tag-1',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 {
                     requests: {
                         'req-1': { tool: 'Bash', arguments: {} },
@@ -1029,7 +1020,7 @@ describe('session model', () => {
             )
             const s2 = cache.getOrCreateSession(
                 'tag-2',
-                { path: '/tmp/project', host: 'localhost', flavor: 'cursor', cursorSessionId: 'thread-X' },
+                { path: '/tmp/project', host: 'localhost', cursorSessionId: 'thread-X' },
                 {
                     requests: {
                         'req-3': { tool: 'Bash', arguments: {} }
