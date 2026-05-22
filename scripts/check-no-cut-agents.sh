@@ -158,3 +158,60 @@ if [ -n "$FLAVOR_BRANCH_FILTERED" ]; then
   exit 1
 fi
 echo "✅ No non-cursor flavor === '<literal>' branches in source scope."
+
+# === Phase-6 ripgrep sweeps + madge guard — D-108
+# (#1) permissionModeToAgentArgs — duplicate-helper zero-tolerance across runtime trees.
+PHASE6_DUPLICATE_HELPER='\bpermissionModeToAgentArgs\b'
+PHASE6_LAUNCHER_CAST_PATTERN='permissionMode as string'
+PHASE6_LAUNCHER_FILES=(cli/src/cursor/cursorLocalLauncher.ts cli/src/cursor/cursorRemoteLauncher.ts)
+PHASE6_SOURCE_DIRS=(cli/src shared/src hub/src web/src)
+
+if "$RG_BIN" -n "$PHASE6_DUPLICATE_HELPER" "${PHASE6_SOURCE_DIRS[@]}"; then
+  echo ""
+  echo "❌ Phase-6 duplicate helper permissionModeToAgentArgs still present."
+  echo "   Use cli/src/agent/modeConfig.permissionModeToCursorArgs instead."
+  exit 1
+fi
+echo "✅ No Phase-6 duplicate permissionModeToAgentArgs in source scope."
+
+# (#2) `permissionMode as string` — zero hits in launcher files
+if "$RG_BIN" -n "$PHASE6_LAUNCHER_CAST_PATTERN" "${PHASE6_LAUNCHER_FILES[@]}"; then
+  echo ""
+  echo "❌ Phase-6 'permissionMode as string' cast residue in launcher files."
+  echo "   modeConfig.permissionModeToCursorArgs accepts PermissionMode | undefined directly."
+  exit 1
+fi
+echo "✅ No Phase-6 'permissionMode as string' casts in launcher files."
+
+# (#3) permissionModeToCursorArgs definition lives only in cli/src/agent/modeConfig.ts
+PHASE6_DEF_HITS=$("$RG_BIN" -n '^export function permissionModeToCursorArgs|^function permissionModeToCursorArgs' \
+  "${PHASE6_SOURCE_DIRS[@]}" | grep -v 'cli/src/agent/modeConfig\.ts' || true)
+if [ -n "$PHASE6_DEF_HITS" ]; then
+  echo "$PHASE6_DEF_HITS"
+  echo ""
+  echo "❌ Phase-6 permissionModeToCursorArgs defined outside cli/src/agent/modeConfig.ts."
+  echo "   The canonical definition must live in cli/src/agent/modeConfig.ts only;"
+  echo "   all other call sites must import from there."
+  exit 1
+fi
+echo "✅ permissionModeToCursorArgs defined only in cli/src/agent/modeConfig.ts."
+
+# (#4) madge --circular exit-code guard — Pitfall 1: --extensions ts,tsx is mandatory.
+if ! npx --no-install madge --circular --extensions ts,tsx cli/src/cursor > /dev/null 2>&1; then
+  echo ""
+  echo "❌ Phase-6 madge circular dependency found in cli/src/cursor."
+  echo "   Run: npx madge --circular --extensions ts,tsx cli/src/cursor"
+  echo "   Most likely cause: a new import from cli/src/cursor/modes.ts to loop/session/launcher."
+  exit 1
+fi
+echo "✅ No circular dependencies in cli/src/cursor (madge)."
+
+# (#5) JSDoc concept-position anchor count — D-90 (SessionContext / LocalAdapter / RemoteAdapter / LaunchPolicy)
+PHASE6_ANCHOR_COUNT=$("$RG_BIN" -c '@implements (SessionContext|LocalAdapter|RemoteAdapter|LaunchPolicy) \(Phase 6 SC#1\)' cli/src \
+  | awk -F: '{s+=$2} END {print s+0}')
+if [ "$PHASE6_ANCHOR_COUNT" -lt 4 ]; then
+  echo "❌ Phase-6 SC#1 JSDoc concept tags missing (found $PHASE6_ANCHOR_COUNT, need ≥ 4)."
+  echo "   Required anchors on sessionBase / BaseLocalLauncher / RemoteLauncherBase / localLaunchPolicy."
+  exit 1
+fi
+echo "✅ Phase-6 SC#1 concept tags present (count=$PHASE6_ANCHOR_COUNT)."
