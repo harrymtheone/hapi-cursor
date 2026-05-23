@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/` (completed 2026-05-23)
 - [x] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters (completed 2026-05-23)
 - [x] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases (completed 2026-05-23)
-- [ ] **Phase 12: Docs cleanup & milestone verification** — Cursor-only README/AGENTS/docs; delete `website/`; full `bun typecheck` + `bun run test` + `madge` + ripgrep absence + manual Tailscale scenario (in progress)
+- [x] **Phase 12: Docs cleanup & milestone verification** — Cursor-only README/AGENTS/docs; delete `website/`; full `bun typecheck` + `bun run test` + `madge` + ripgrep absence + manual Tailscale scenario (completed 2026-05-23)
 
 ## Phase Details
 
@@ -222,7 +222,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `madge` reports zero circular dependencies across `cli/`, `hub/`, and `web/` (intra-package and cross-package)
   4. ripgrep finds zero matches for `claude` / `codex` / `gemini` / `opencode` / `telegram` / `serverchan` / `elevenlabs` / `tunwg` / `namespace` in non-historical files (whitelist: `.planning/codebase/` snapshots, `CHANGELOG.md`, git history)
   5. Manual Tailscale + Cursor scenario passes end-to-end: local `hapi runner` + hub running; phone on Tailscale opens the Web PWA, creates a new Cursor session, completes one round of interaction, the hub is killed and restarted, session state recovers, and the next round of interaction continues successfully
-**Plans**: TBD
+**Plans**: 4 plans
+- [x] 12-01-PLAN.md — CUT-12 docs surface contraction: delete website/, docs/, refactor.md; trim workspaces; Phase-12 guard block (completed 2026-05-23)
+- [x] 12-02-PLAN.md — README + AGENTS.md rewrite from zero (Cursor-only); contract whitelist after rewrite (completed 2026-05-23)
+- [x] 12-03-PLAN.md — Root `madge:check` script + `.github/workflows/verify.yml` (push + PR gate) (completed 2026-05-23)
+- [x] 12-04-PLAN.md — Milestone 1 verification: automated gates + coverage snapshot + manual Tailscale scenario + ROADMAP reconcile + sign-off (completed 2026-05-23)
 
 ## Progress
 
@@ -242,7 +246,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 9. Web internal decoupling | 4/4 | Complete   | 2026-05-23 |
 | 10. Config cleanup | 4/4 | Complete    | 2026-05-23 |
 | 11. Test gap fill | 5/5 | Complete   | 2026-05-23 |
-| 12. Docs cleanup & milestone verification | 3/4 | In Progress | - |
+| 12. Docs cleanup & milestone verification | 4/4 | Complete   | 2026-05-23 |
 
 ---
 *Roadmap created: 2026-05-20 (Milestone 1 — Refactor & Slim-Down)*

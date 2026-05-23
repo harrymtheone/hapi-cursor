@@ -226,4 +226,20 @@ No new SC failures from Task 4 reconciliation. No coverage regressions from Task
 
 ## Sign-off
 
-_pending Task 5 (verdict written after Task 4 ROADMAP reconcile + Task 3 manual scenario complete)_
+**Verdict: ✅ PASS — Milestone 1 (Refactor & Slim-Down) signed off.**
+
+Rationale: all 5 Phase 12 success criteria met.
+
+- **SC#1 — Cursor-only docs surface:** validated by 12-01 (deleted `website/`, `docs/`, `refactor.md`) and 12-02 (rewrote root README, AGENTS.md, cli/hub/web READMEs from zero). Phase-12 guard block in `scripts/check-no-cut-agents.sh` keeps the contraction durable. Closing commit at sign-off: `e492044`.
+- **SC#2 — `bun typecheck` + `bun run test` green; lint state explicit:** Automated gates section above shows typecheck exit 0 and `bun run test` exit 0 (1122 active tests across Vitest cli + Vitest web + bun:test hub + guard). Lint intentionally not configured — flagged as `M2-BL-01` and called out inline per D-08.
+- **SC#3 — `madge` reports zero cycles across cli / hub / web:** Automated gates section: `bun run madge:check` exit 0 over `cli/src hub/src web/src` (632 files, 0 cycles).
+- **SC#4 — Ripgrep absence sweep over 9 keywords:** Automated gates section: each of `claude / codex / gemini / opencode / telegram / serverchan / elevenlabs / tunwg / namespace` returned 0 file-hits under the documented whitelist (`.planning/codebase/**`, `CHANGELOG.md`, `.git/**`, `.planning/phases/**`, `AGENTS.md` reminder-line carve-out).
+- **SC#5 — Manual Tailscale + Cursor + phone scenario:** PASS on 2026-05-23 16:24 +08:00 by operator Harry. All 9 D-05 steps green (✅), with kill mechanism = `Ctrl-C / SIGINT`, hub bound to `0.0.0.0:3006` reachable at `http://10.126.126.1:3006`, session state (history + machine list) recovered after hub restart. Evidence: 9 files under `manual-tailscale/`. Commit: `e492044`.
+
+Coverage non-regression (D-09, informational not gating): held vs Phase 11 — `hub/src/web/routes/auth.ts` 100/100 / `hub/src/sse/sseManager.ts` 79.82/57.14 unchanged. Three scopes (cli + web + `web/src/hooks/useSSE.ts`) remain `unavailable` because `@vitest/coverage-v8` is still not installed — same condition as Phase 11 baseline; recorded as `M2-BL-03` in Outstanding.
+
+ROADMAP reconciliation (D-12): closed all stale `[ ]` checkboxes on Phase 7/8/9/11 plans against commit history. Zero new SC gaps surfaced.
+
+Outstanding items (`M2-BL-01..10`) are pure-deferred future-Milestone-2 candidates — none block Milestone 1 closure.
+
+**Closing statement:** Milestone 1 (Refactor & Slim-Down) is complete. The codebase is Cursor-only, single-user-Tailscale-only, with automated gates (typecheck / test / madge / ripgrep guard / CI workflow) keeping the cuts durable, and one validated real-phone end-to-end scenario. Milestone 2 (Cursor incremental features) starts from this baseline.
