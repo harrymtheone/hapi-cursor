@@ -1,45 +1,17 @@
-import { getPermissionModeOptionsForFlavor } from '@hapi/protocol'
-import { ComposerPrimitive, useAssistantApi, useAssistantState } from '@assistant-ui/react'
-import {
-    type ChangeEvent as ReactChangeEvent,
-    type ClipboardEvent as ReactClipboardEvent,
-    type FormEvent as ReactFormEvent,
-    type KeyboardEvent as ReactKeyboardEvent,
-    type SyntheticEvent as ReactSyntheticEvent,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState
-} from 'react'
+import { ComposerPrimitive } from '@assistant-ui/react'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
-import { useActiveWord } from '@/hooks/useActiveWord'
-import { useActiveSuggestions } from '@/hooks/useActiveSuggestions'
-import { applySuggestion } from '@/utils/applySuggestion'
-import { usePlatform } from '@/hooks/usePlatform'
-import { usePWAInstall } from '@/hooks/usePWAInstall'
-import { supportsEffort, supportsModelChange } from '@hapi/protocol'
-import { markSkillUsed } from '@/lib/recent-skills'
-import { useComposerDraft } from '@/hooks/useComposerDraft'
-import { useComposerEnterBehavior } from '@/hooks/useComposerEnterBehavior'
-import { FloatingOverlay } from '@/components/ChatInput/FloatingOverlay'
-import { Autocomplete } from '@/components/ChatInput/Autocomplete'
 import { StatusBar } from '@/components/AssistantChat/StatusBar'
 import { ComposerButtons } from '@/components/AssistantChat/ComposerButtons'
 import type { PendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
 import { AttachmentItem } from '@/components/AssistantChat/AttachmentItem'
-import { useTranslation } from '@/lib/use-translation'
-import { getModelOptionsForFlavor, getNextModelForFlavor } from './modelOptions'
+import { useHappyComposerState } from './useHappyComposerState'
+import { useHappyComposerHandlers } from './useHappyComposerHandlers'
+import { HappyComposerOverlays } from './HappyComposerOverlays'
 
-export interface TextInputState {
-    text: string
-    selection: { start: number; end: number }
-}
+export type { TextInputState } from './useHappyComposerState'
 
-const defaultSuggestionHandler = async (): Promise<Suggestion[]> => []
-
-export function HappyComposer(props: {
+export interface HappyComposerProps {
     sessionId?: string
     disabled?: boolean
     permissionMode?: PermissionMode
@@ -67,551 +39,88 @@ export function HappyComposer(props: {
     terminalUnsupported?: boolean
     autocompletePrefixes?: string[]
     autocompleteSuggestions?: (query: string) => Promise<Suggestion[]>
-    // Schedule props (lifted from internal state when provided)
     pendingSchedule?: PendingSchedule | null
     onSchedule?: (pending: PendingSchedule) => void
     onClearSchedule?: () => void
-}) {
-    const { t } = useTranslation()
+}
+
+export function HappyComposer(props: HappyComposerProps) {
+    const state = useHappyComposerState(props)
+    const handlers = useHappyComposerHandlers(state, {
+        onPermissionModeChange: props.onPermissionModeChange,
+        onModelChange: props.onModelChange,
+        onSwitchToRemote: props.onSwitchToRemote,
+        agentFlavor: props.agentFlavor,
+        availableModelOptions: props.availableModelOptions,
+    })
+
     const {
-        sessionId,
-        disabled = false,
-        permissionMode: rawPermissionMode,
-        threadGoal,
-        model: rawModel,
-        modelReasoningEffort: rawModelReasoningEffort,
-        effort: rawEffort,
-        active = true,
-        allowSendWhenInactive = false,
-        thinking = false,
-        agentState,
-        backgroundTaskCount,
-        contextSize,
-        contextCacheRead,
-        contextWindow,
-        controlledByUser = false,
-        agentFlavor,
-        availableModelOptions,
-        onPermissionModeChange,
-        onModelChange,
-        onModelReasoningEffortChange,
-        onEffortChange,
-        onSwitchToRemote,
-        onTerminal,
-        terminalUnsupported = false,
-        autocompletePrefixes = ['@', '/', '$'],
-        autocompleteSuggestions = defaultSuggestionHandler,
-        pendingSchedule: pendingScheduleProp,
-        onSchedule: onScheduleProp,
-        onClearSchedule: onClearScheduleProp
-    } = props
-
-    // Use ?? so missing values fall back to default (destructuring defaults only handle undefined)
-    const permissionMode = rawPermissionMode ?? 'default'
-    const model = rawModel ?? null
-    const modelReasoningEffort = rawModelReasoningEffort ?? null
-    const effort = rawEffort ?? null
-
-    const api = useAssistantApi()
-    const { composerEnterBehavior } = useComposerEnterBehavior()
-    const composerText = useAssistantState(({ composer }) => composer.text)
-    const attachments = useAssistantState(({ composer }) => composer.attachments)
-    const threadIsRunning = useAssistantState(({ thread }) => thread.isRunning)
-    const threadIsDisabled = useAssistantState(({ thread }) => thread.isDisabled)
-
-    const controlsDisabled = disabled || (!active && !allowSendWhenInactive) || threadIsDisabled
-    const trimmed = composerText.trim()
-    const hasText = trimmed.length > 0
-    const hasAttachments = attachments.length > 0
-    const attachmentsReady = !hasAttachments || attachments.every((attachment) => {
-        if (attachment.status.type === 'complete') {
-            return true
-        }
-        if (attachment.status.type !== 'requires-action') {
-            return false
-        }
-        const path = (attachment as { path?: string }).path
-        return typeof path === 'string' && path.length > 0
-    })
-    const canSend = (hasText || hasAttachments) && attachmentsReady && !controlsDisabled
-
-    const [inputState, setInputState] = useState<TextInputState>({
-        text: '',
-        selection: { start: 0, end: 0 }
-    })
-    const [showSettings, setShowSettings] = useState(false)
-    const [isAborting, setIsAborting] = useState(false)
-    const [isSwitching, setIsSwitching] = useState(false)
-    const [showContinueHint, setShowContinueHint] = useState(false)
-    // pendingSchedule is controlled externally when onSchedule prop is provided; otherwise local state
-    const [pendingScheduleLocal, setPendingScheduleLocal] = useState<PendingSchedule | null>(null)
-    const isControlled = onScheduleProp !== undefined
-    const pendingSchedule = isControlled ? (pendingScheduleProp ?? null) : pendingScheduleLocal
-    const setPendingSchedule = isControlled ? onScheduleProp : setPendingScheduleLocal
-
-    const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const prevControlledByUser = useRef(controlledByUser)
-
-    useComposerDraft(sessionId, composerText, (text) => api.composer().setText(text))
-
-    useEffect(() => {
-        setInputState((prev) => {
-            if (prev.text === composerText) return prev
-            // When syncing from composerText, update selection to end of text
-            // This ensures activeWord detection works correctly
-            const newPos = composerText.length
-            return { text: composerText, selection: { start: newPos, end: newPos } }
-        })
-    }, [composerText])
-
-    // Track one-time "continue" hint after switching from local to remote.
-    useEffect(() => {
-        if (prevControlledByUser.current === true && controlledByUser === false) {
-            setShowContinueHint(true)
-        }
-        if (controlledByUser) {
-            setShowContinueHint(false)
-        }
-        prevControlledByUser.current = controlledByUser
-    }, [controlledByUser])
-
-    const { haptic: platformHaptic, isTouch } = usePlatform()
-    const { isStandalone, isIOS } = usePWAInstall()
-    const isIOSPWA = isIOS && isStandalone
-    const bottomPaddingClass = isIOSPWA ? 'pb-0' : 'pb-3'
-    const activeWord = useActiveWord(inputState.text, inputState.selection, autocompletePrefixes)
-    const [suggestions, selectedIndex, moveUp, moveDown, clearSuggestions] = useActiveSuggestions(
-        activeWord,
-        autocompleteSuggestions,
-        { clampSelection: true, wrapAround: true }
-    )
-
-    const haptic = useCallback((type: 'light' | 'success' | 'error' = 'light') => {
-        if (type === 'light') {
-            platformHaptic.impact('light')
-        } else if (type === 'success') {
-            platformHaptic.notification('success')
-        } else {
-            platformHaptic.notification('error')
-        }
-    }, [platformHaptic])
-
-    const handleSuggestionSelect = useCallback((index: number) => {
-        const suggestion = suggestions[index]
-        if (!suggestion || !textareaRef.current) return
-        if (suggestion.text.startsWith('$')) {
-            markSkillUsed(suggestion.text.slice(1))
-        }
-
-        const result = applySuggestion(
-            inputState.text,
-            inputState.selection,
-            suggestion.text,
-            autocompletePrefixes,
-            true
-        )
-
-        api.composer().setText(result.text)
-        setInputState({
-            text: result.text,
-            selection: { start: result.cursorPosition, end: result.cursorPosition }
-        })
-
-        setTimeout(() => {
-            const el = textareaRef.current
-            if (!el) return
-            el.setSelectionRange(result.cursorPosition, result.cursorPosition)
-            try {
-                el.focus({ preventScroll: true })
-            } catch {
-                el.focus()
-            }
-        }, 0)
-
-        haptic('light')
-    }, [api, suggestions, inputState, autocompletePrefixes, haptic])
-
-    const abortDisabled = controlsDisabled || isAborting || !threadIsRunning
-    const switchDisabled = controlsDisabled || isSwitching || !controlledByUser
-    const showSwitchButton = Boolean(controlledByUser && onSwitchToRemote)
-    const showTerminalButton = Boolean(onTerminal || terminalUnsupported)
-    const terminalDisabled = controlsDisabled || terminalUnsupported
-    const terminalLabel = terminalUnsupported ? t('terminal.unsupportedWindows') : t('composer.terminal')
-
-    useEffect(() => {
-        if (!isAborting) return
-        if (threadIsRunning) return
-        setIsAborting(false)
-    }, [isAborting, threadIsRunning])
-
-    useEffect(() => {
-        if (!isSwitching) return
-        if (controlledByUser) return
-        setIsSwitching(false)
-    }, [isSwitching, controlledByUser])
-
-    const handleAbort = useCallback(() => {
-        if (abortDisabled) return
-        haptic('error')
-        setIsAborting(true)
-        api.thread().cancelRun()
-    }, [abortDisabled, api, haptic])
-
-    const handleSwitch = useCallback(async () => {
-        if (switchDisabled || !onSwitchToRemote) return
-        haptic('light')
-        setIsSwitching(true)
-        try {
-            await onSwitchToRemote()
-        } catch {
-            setIsSwitching(false)
-        }
-    }, [switchDisabled, onSwitchToRemote, haptic])
-
-    const permissionModeOptions = useMemo(
-        () => getPermissionModeOptionsForFlavor(agentFlavor),
-        [agentFlavor]
-    )
-    const modelOptions = useMemo(
-        () => getModelOptionsForFlavor(agentFlavor, model, availableModelOptions),
-        [agentFlavor, model, availableModelOptions]
-    )
-    const permissionModes = useMemo(
-        () => permissionModeOptions.map((option) => option.mode),
-        [permissionModeOptions]
-    )
-
-    const handleKeyDown = useCallback((e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
-        const key = e.key
-
-        // Avoid intercepting IME composition keystrokes (Enter, arrows, etc.)
-        if (e.nativeEvent.isComposing) {
-            return
-        }
-
-        // Shift+Enter inserts a newline (standard behavior)
-        if (key === 'Enter' && e.shiftKey) {
-            return // let default textarea behavior handle newline
-        }
-
-        // Enter with suggestions visible: select the suggestion
-        if (key === 'Enter' && suggestions.length > 0) {
-            e.preventDefault()
-            const indexToSelect = selectedIndex >= 0 ? selectedIndex : 0
-            handleSuggestionSelect(indexToSelect)
-            return
-        }
-
-        // Only plain Enter (no modifiers) sends; other modifier combos are ignored
-        if (key === 'Enter') {
-            if (composerEnterBehavior === 'newline') {
-                if ((e.ctrlKey || e.metaKey) && !e.altKey && canSend) {
-                    e.preventDefault()
-                    api.composer().send()
-                    setShowContinueHint(false)
-                }
-                return
-            }
-            e.preventDefault()
-            if (!e.ctrlKey && !e.altKey && !e.metaKey && canSend) {
-                api.composer().send()
-                setShowContinueHint(false)
-            }
-            return
-        }
-
-        if (suggestions.length > 0) {
-            if (key === 'ArrowUp') {
-                e.preventDefault()
-                moveUp()
-                return
-            }
-            if (key === 'ArrowDown') {
-                e.preventDefault()
-                moveDown()
-                return
-            }
-            if ((key === 'Tab') && !e.shiftKey) {
-                e.preventDefault()
-                const indexToSelect = selectedIndex >= 0 ? selectedIndex : 0
-                handleSuggestionSelect(indexToSelect)
-                return
-            }
-            if (key === 'Escape') {
-                e.preventDefault()
-                clearSuggestions()
-                return
-            }
-        }
-
-        if (key === 'Escape' && threadIsRunning) {
-            e.preventDefault()
-            handleAbort()
-            return
-        }
-
-        if (key === 'Tab' && e.shiftKey && onPermissionModeChange && permissionModes.length > 0) {
-            e.preventDefault()
-            const currentIndex = permissionModes.indexOf(permissionMode)
-            const nextIndex = (currentIndex + 1) % permissionModes.length
-            const nextMode = permissionModes[nextIndex] ?? 'default'
-            onPermissionModeChange(nextMode)
-            haptic('light')
-        }
-    }, [
+        t,
+        attachments,
+        controlsDisabled,
+        hasAttachments,
+        canSend,
+        showSettings,
+        showContinueHint,
+        pendingSchedule,
+        setPendingSchedule,
+        setPendingScheduleLocal,
+        isControlled,
+        textareaRef,
+        isTouch,
+        bottomPaddingClass,
         suggestions,
         selectedIndex,
-        moveUp,
-        moveDown,
-        clearSuggestions,
-        handleSuggestionSelect,
-        threadIsRunning,
-        handleAbort,
-        onPermissionModeChange,
         permissionMode,
-        permissionModes,
-        canSend,
-        api,
-        haptic,
-        composerEnterBehavior
-    ])
-
-    useEffect(() => {
-        const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
-            if (e.key === 'm' && (e.metaKey || e.ctrlKey) && onModelChange && supportsModelChange(agentFlavor)) {
-                e.preventDefault()
-                onModelChange(getNextModelForFlavor(agentFlavor, model, availableModelOptions))
-                haptic('light')
-            }
-        }
-
-        window.addEventListener('keydown', handleGlobalKeyDown)
-        return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-    }, [model, onModelChange, haptic, agentFlavor, availableModelOptions])
-
-    const handleChange = useCallback((e: ReactChangeEvent<HTMLTextAreaElement>) => {
-        const selection = {
-            start: e.target.selectionStart,
-            end: e.target.selectionEnd
-        }
-        setInputState({ text: e.target.value, selection })
-    }, [])
-
-    const handleSelect = useCallback((e: ReactSyntheticEvent<HTMLTextAreaElement>) => {
-        const target = e.target as HTMLTextAreaElement
-        setInputState(prev => ({
-            ...prev,
-            selection: { start: target.selectionStart, end: target.selectionEnd }
-        }))
-    }, [])
-
-    const handlePaste = useCallback(async (e: ReactClipboardEvent<HTMLTextAreaElement>) => {
-        const files = Array.from(e.clipboardData?.files || [])
-        const imageFiles = files.filter(file => file.type.startsWith('image/'))
-
-        if (imageFiles.length === 0) return
-
-        // The backend rejects scheduledAt + attachments (per-CLI upload dir is
-        // torn down before a mature emit could read the files). The button-based
-        // attachment flow is disabled by ComposerButtons.hasAttachments, but the
-        // paste path bypasses that — guard here so a pasted image while a
-        // schedule is active cannot produce a submission the hub will reject.
-        if (pendingSchedule != null) {
-            e.preventDefault()
-            return
-        }
-
-        e.preventDefault()
-
-        try {
-            for (const file of imageFiles) {
-                await api.composer().addAttachment(file)
-            }
-        } catch (error) {
-            console.error('Error adding pasted image:', error)
-        }
-    }, [api, pendingSchedule])
-
-    const handleSettingsToggle = useCallback(() => {
-        haptic('light')
-        setShowSettings(prev => !prev)
-    }, [haptic])
-
-    const handleSubmit = useCallback((event?: ReactFormEvent<HTMLFormElement>) => {
-        if (event && !attachmentsReady) {
-            event.preventDefault()
-            return
-        }
-        setShowContinueHint(false)
-    }, [attachmentsReady])
-
-    const handlePermissionChange = useCallback((mode: PermissionMode) => {
-        if (!onPermissionModeChange || controlsDisabled) return
-        onPermissionModeChange(mode)
-        setShowSettings(false)
-        haptic('light')
-    }, [onPermissionModeChange, controlsDisabled, haptic])
-
-    const handleModelChange = useCallback((nextModel: string | null) => {
-        if (!onModelChange || controlsDisabled) return
-        onModelChange(nextModel)
-        setShowSettings(false)
-        haptic('light')
-    }, [onModelChange, controlsDisabled, haptic])
-
-    const showPermissionSettings = Boolean(onPermissionModeChange && permissionModeOptions.length > 0)
-    const showModelSettings = Boolean(onModelChange && supportsModelChange(agentFlavor) && modelOptions.length > 0)
-    const showSettingsButton = Boolean(
-        showPermissionSettings
-        || showModelSettings
-    )
-    const showAbortButton = true
-
-    const handleSend = useCallback(() => {
-        api.composer().send()
-        // SessionChat owns clearing the schedule — it clears only after awaiting
-        // the send hook's accepted result, which covers both pre-mutation guards
-        // and async inactive-session resume failure. Clearing here unconditionally
-        // would race ahead of that check and drop the user's schedule on every
-        // rejected send path.
-    }, [api])
-
-    const overlays = useMemo(() => {
-        if (showSettings && (showPermissionSettings || showModelSettings)) {
-            return (
-                <div className="absolute bottom-[100%] mb-2 w-full">
-                    <FloatingOverlay maxHeight={320}>
-                        {showPermissionSettings ? (
-                            <div className="py-2">
-                                <div className="px-3 pb-1 text-xs font-semibold text-[var(--app-hint)]">
-                                    {t('misc.permissionMode')}
-                                </div>
-                                {permissionModeOptions.map((option) => (
-                                    <button
-                                        key={option.mode}
-                                        type="button"
-                                        disabled={controlsDisabled}
-                                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                            controlsDisabled
-                                                ? 'cursor-not-allowed opacity-50'
-                                                : 'cursor-pointer hover:bg-[var(--app-secondary-bg)]'
-                                        }`}
-                                        onClick={() => handlePermissionChange(option.mode)}
-                                        onMouseDown={(e) => e.preventDefault()}
-                                    >
-                                        <div
-                                            className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                                                permissionMode === option.mode
-                                                    ? 'border-[var(--app-link)]'
-                                                    : 'border-[var(--app-hint)]'
-                                            }`}
-                                        >
-                                            {permissionMode === option.mode && (
-                                                <div className="h-2 w-2 rounded-full bg-[var(--app-link)]" />
-                                            )}
-                                        </div>
-                                        <span className={permissionMode === option.mode ? 'text-[var(--app-link)]' : ''}>
-                                            {option.label}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : null}
-
-                        {showPermissionSettings && showModelSettings ? (
-                            <div className="mx-3 h-px bg-[var(--app-divider)]" />
-                        ) : null}
-
-                        {showModelSettings ? (
-                            <div className="py-2">
-                                <div className="px-3 pb-1 text-xs font-semibold text-[var(--app-hint)]">
-                                    {t('misc.model')}
-                                </div>
-                                {modelOptions.map((option) => (
-                                    <button
-                                        key={option.value ?? 'auto'}
-                                        type="button"
-                                        disabled={controlsDisabled}
-                                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                            controlsDisabled
-                                                ? 'cursor-not-allowed opacity-50'
-                                                : 'cursor-pointer hover:bg-[var(--app-secondary-bg)]'
-                                        }`}
-                                        onClick={() => handleModelChange(option.value)}
-                                        onMouseDown={(e) => e.preventDefault()}
-                                    >
-                                        <div
-                                            className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                                                model === option.value
-                                                    ? 'border-[var(--app-link)]'
-                                                    : 'border-[var(--app-hint)]'
-                                            }`}
-                                        >
-                                            {model === option.value && (
-                                                <div className="h-2 w-2 rounded-full bg-[var(--app-link)]" />
-                                            )}
-                                        </div>
-                                        <span className={model === option.value ? 'text-[var(--app-link)]' : ''}>
-                                            {option.label}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : null}
-                    </FloatingOverlay>
-                </div>
-            )
-        }
-
-        if (suggestions.length > 0) {
-            return (
-                <div className="absolute bottom-[100%] mb-2 w-full">
-                    <FloatingOverlay>
-                        <Autocomplete
-                            suggestions={suggestions}
-                            selectedIndex={selectedIndex}
-                            onSelect={(index) => handleSuggestionSelect(index)}
-                        />
-                    </FloatingOverlay>
-                </div>
-            )
-        }
-
-        return null
-    }, [
-        showSettings,
+        permissionModeOptions,
+        model,
+        modelOptions,
         showPermissionSettings,
         showModelSettings,
-        modelOptions,
-        suggestions,
-        selectedIndex,
-        controlsDisabled,
-        permissionMode,
-        model,
-        permissionModeOptions,
-        handlePermissionChange,
-        handleModelChange,
-        handleSuggestionSelect,
-        t
-    ])
+        showSettingsButton,
+        showAbortButton,
+        showSwitchButton,
+        showTerminalButton,
+        terminalDisabled,
+        terminalLabel,
+        abortDisabled,
+        switchDisabled,
+        isAborting,
+        isSwitching,
+    } = state
 
     return (
         <div className={`px-3 ${bottomPaddingClass} pt-2 bg-[var(--app-bg)]`}>
             <div className="mx-auto w-full max-w-content">
-                <ComposerPrimitive.Root className="relative" onSubmit={handleSubmit}>
-                    {overlays}
+                <ComposerPrimitive.Root className="relative" onSubmit={handlers.handleSubmit}>
+                    <HappyComposerOverlays
+                        showSettings={showSettings}
+                        showPermissionSettings={showPermissionSettings}
+                        showModelSettings={showModelSettings}
+                        permissionMode={permissionMode}
+                        permissionModeOptions={permissionModeOptions}
+                        model={model}
+                        modelOptions={modelOptions}
+                        suggestions={suggestions}
+                        selectedIndex={selectedIndex}
+                        controlsDisabled={controlsDisabled}
+                        onPermissionChange={handlers.handlePermissionChange}
+                        onModelChange={handlers.handleModelChange}
+                        onSuggestionSelect={handlers.handleSuggestionSelect}
+                        t={t}
+                    />
 
                     <StatusBar
-                        active={active}
-                        thinking={thinking}
-                        agentState={agentState}
-                        backgroundTaskCount={backgroundTaskCount}
-                        contextSize={contextSize}
-                        contextCacheRead={contextCacheRead}
-                        contextWindow={contextWindow}
+                        active={props.active ?? true}
+                        thinking={props.thinking ?? false}
+                        agentState={props.agentState ?? null}
+                        backgroundTaskCount={props.backgroundTaskCount}
+                        contextSize={props.contextSize}
+                        contextCacheRead={props.contextCacheRead}
+                        contextWindow={props.contextWindow}
                         model={model}
                         permissionMode={permissionMode}
-                        agentFlavor={agentFlavor}
+                        agentFlavor={props.agentFlavor}
                     />
 
                     <div className="overflow-hidden rounded-[20px] bg-[var(--app-secondary-bg)]">
@@ -630,10 +139,10 @@ export function HappyComposer(props: {
                                 maxRows={5}
                                 submitOnEnter={false}
                                 cancelOnEscape={false}
-                                onChange={handleChange}
-                                onSelect={handleSelect}
-                                onKeyDown={handleKeyDown}
-                                onPaste={handlePaste}
+                                onChange={handlers.handleChange}
+                                onSelect={handlers.handleSelect}
+                                onKeyDown={handlers.handleKeyDown}
+                                onPaste={handlers.handlePaste}
                                 className="flex-1 resize-none bg-transparent text-base leading-snug text-[var(--app-fg)] placeholder-[var(--app-hint)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                             />
                         </div>
@@ -642,23 +151,23 @@ export function HappyComposer(props: {
                             canSend={canSend}
                             controlsDisabled={controlsDisabled}
                             showSettingsButton={showSettingsButton}
-                            onSettingsToggle={handleSettingsToggle}
+                            onSettingsToggle={handlers.handleSettingsToggle}
                             showTerminalButton={showTerminalButton}
                             terminalDisabled={terminalDisabled}
                             terminalLabel={terminalLabel}
-                            onTerminal={onTerminal ?? (() => {})}
+                            onTerminal={props.onTerminal ?? (() => {})}
                             showAbortButton={showAbortButton}
                             abortDisabled={abortDisabled}
                             isAborting={isAborting}
-                            onAbort={handleAbort}
+                            onAbort={handlers.handleAbort}
                             showSwitchButton={showSwitchButton}
                             switchDisabled={switchDisabled}
                             isSwitching={isSwitching}
-                            onSwitch={handleSwitch}
-                            onSend={handleSend}
+                            onSwitch={handlers.handleSwitch}
+                            onSend={handlers.handleSend}
                             pendingSchedule={pendingSchedule}
                             onSchedule={setPendingSchedule}
-                            onClearSchedule={isControlled ? onClearScheduleProp : () => setPendingScheduleLocal(null)}
+                            onClearSchedule={isControlled ? props.onClearSchedule : () => setPendingScheduleLocal(null)}
                             hasAttachments={hasAttachments}
                         />
                     </div>
