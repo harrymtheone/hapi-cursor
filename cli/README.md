@@ -1,147 +1,91 @@
 # hapi CLI
 
-Run Cursor Agent sessions from your terminal and control them remotely through the hapi hub.
+`hapi` — Cursor Agent wrapper, background runner, and hub launcher for HAPI Cursor Edition. Starts Cursor Agent sessions, registers them with the hub, and exposes a long-running daemon for multi-session and remote workflows.
 
-## What it does
-
-- Starts Cursor Agent sessions and registers them with hapi-hub.
-- Provides an MCP stdio bridge for external tools.
-- Manages a background runner for long-running sessions.
-- Includes diagnostics and auth helpers.
-
-## Typical flow
-
-1. Start the hub and set env vars (see ../hub/README.md).
-2. Set the same CLI_API_TOKEN on this machine or run `hapi auth login`.
-3. Run `hapi` to start a session.
-4. Use the web app or Telegram Mini App to monitor and control.
-
-## Commands
-
-### Session commands
-
-- `hapi` - Start a Cursor Agent session. See `src/cursor/runCursor.ts`.
-  Supports `hapi cursor resume <chatId>`, `hapi cursor --continue`, `--mode plan|ask`, `--yolo`, `--model`.
-  Local and remote modes supported; remote uses `agent -p` with stream-json.
-- `hapi resume [sessionId]` - List resumable sessions for this machine or resume one locally.
-
-### Resume a remote session locally
-
-```bash
-hapi resume
-hapi resume <session-id>
-```
-
-`hapi resume` lists resumable sessions for the current machine. `hapi resume <session-id>` hands off an active remote session and opens the same HAPI session in the local terminal.
-
-### Authentication
-
-- `hapi auth status` - Show authentication configuration and token source.
-- `hapi auth login` - Interactively enter and save CLI_API_TOKEN.
-- `hapi auth logout` - Clear saved credentials.
-
-See `src/commands/auth.ts`.
-
-### Runner management
-
-- `hapi runner start` - Start runner as detached process.
-- `hapi runner stop` - Stop runner gracefully.
-- `hapi runner status` - Show runner diagnostics.
-- `hapi runner list` - List active sessions managed by runner.
-- `hapi runner stop-session <sessionId>` - Terminate specific session.
-- `hapi runner logs` - Print path to latest runner log file.
-
-Both `start` and `start-sync` accept repeatable `--workspace-root <path>` (or `--workspace-root=<path>`). When set:
-
-- The web `/browse` page surfaces scoped file trees rooted at those paths.
-- The runner refuses `list-directory` and `spawn-session` requests for paths outside the configured roots.
-- `~` and `~/foo` are expanded.
-
-Omitting the flag keeps the legacy behavior: no scoping, no `/browse` feature.
-
-See `src/runner/run.ts`.
-
-### Diagnostics
-
-- `hapi doctor` - Show full diagnostics (version, runner status, logs, processes).
-- `hapi doctor clean` - Kill runaway HAPI processes.
-
-See `src/ui/doctor.ts`.
-
-### Other
-
-- `hapi mcp` - Start MCP stdio bridge.
-- `hapi hub` - Start the bundled hub (single binary workflow).
-- `hapi server` - Alias for `hapi hub`.
-
-## Configuration
-
-See `src/configuration.ts` for all options.
-
-### Required
-
-- `CLI_API_TOKEN` - Shared secret; must match the hub. Can be set via env or `~/.hapi/settings.json` (env wins).
-- `HAPI_API_URL` - Hub base URL (default: http://localhost:3006).
-
-### Optional
-
-- `HAPI_HOME` - Config/data directory (default: ~/.hapi).
-- `HAPI_EXPERIMENTAL` - Enable experimental features (true/1/yes).
-- `HAPI_EXTRA_HEADERS_JSON` - JSON object of extra headers to send on CLI → hub requests, e.g. `{"Cookie":"CF_Authorization=..."}`.
-- `HAPI_HTTP_MCP_URL` - Default MCP target for `hapi mcp`.
-
-### Runner
-
-- `HAPI_RUNNER_HEARTBEAT_INTERVAL` - Heartbeat interval in ms (default: 60000).
-- `HAPI_RUNNER_HTTP_TIMEOUT` - HTTP timeout for runner control in ms (default: 10000).
-
-### Worktree (set by runner)
-
-- `HAPI_WORKTREE_BASE_PATH` - Base repository path.
-- `HAPI_WORKTREE_BRANCH` - Current branch name.
-- `HAPI_WORKTREE_NAME` - Worktree name.
-- `HAPI_WORKTREE_PATH` - Full worktree path.
-- `HAPI_WORKTREE_CREATED_AT` - Creation timestamp (ms).
-
-## Storage
-
-Data is stored in `~/.hapi/` (or `$HAPI_HOME`):
-
-- `settings.json` - User settings (machineId, token, onboarding flag). See `src/persistence.ts`.
-- `runner.state.json` - Runner state (pid, port, version, heartbeat).
-- `logs/` - Log files.
-
-## Requirements
-
-- Cursor Agent CLI installed (`agent` on PATH). Install: `curl https://cursor.com/install -fsS | bash` (macOS/Linux), `irm 'https://cursor.com/install?win32=true' | iex` (Windows).
-- Bun for building from source.
-
-## Build from source
+## Install / Build
 
 From the repo root:
 
 ```bash
-bun install
-bun run build:cli
-bun run build:cli:exe
+bun install                                # installs the workspace
+bun run --cwd cli build:exe                # bun-compiled single-platform executable
+bun run --cwd cli build:exe:allinone       # single exe with embedded hub + web assets
 ```
 
-For an all-in-one binary that also embeds the web app:
+The `bin/hapi.cjs` shim is the Node entry point published to npm; the bun-compiled
+executable produced by `build:exe*` is the deployable artifact.
+
+During development, run the CLI straight from source:
 
 ```bash
-bun run build:single-exe
+cd cli
+bun run dev                                # equivalent to `bun src/index.ts`
+bun run dev cursor                         # start a Cursor session
+bun run dev hub --host 0.0.0.0 --port 3006 # launch the hub in-process
+bun run dev runner                         # background runner daemon
 ```
 
-## Source structure
+## Commands
 
-- `src/api/` - Bot communication (Socket.IO + REST).
-- `src/cursor/` - Cursor Agent integration.
-- `src/runner/` - Background service.
-- `src/commands/` - CLI command handlers.
-- `src/ui/` - User interface and diagnostics.
-- `src/modules/` - Tool implementations (ripgrep, difftastic, git).
+`cli/src/commands/registry.ts` registers the following subcommands. Running
+`hapi` with no subcommand falls through to `cursor`.
 
-## Related docs
+| Command          | Source                                  | Role                                                            |
+| ---------------- | --------------------------------------- | --------------------------------------------------------------- |
+| `hapi auth`      | `cli/src/commands/auth.ts`              | Login / logout / device-pair against a hub.                      |
+| `hapi connect`   | `cli/src/commands/connect.ts`           | Pair this machine with a hub using a one-time code.              |
+| `hapi cursor`    | `cli/src/commands/cursor.ts`            | Start a Cursor Agent session (default when no subcommand).       |
+| `hapi hub`       | `cli/src/commands/hub.ts`               | Launch the hub in-process (passes `--host` / `--port` to env).   |
+| `hapi runner`    | `cli/src/commands/runner.ts`            | Start / stop / inspect the background runner daemon.             |
+| `hapi resume`    | `cli/src/commands/resume.ts`            | Resume a previous session by id.                                 |
+| `hapi doctor`    | `cli/src/commands/doctor.ts`            | Print environment diagnostics.                                   |
+| `hapi notify`    | `cli/src/commands/notify.ts`            | Send a push notification through the hub.                        |
 
-- `../hub/README.md`
-- `../web/README.md`
+`hapi -v` / `--version` prints the CLI version.
+
+## `bun run` scripts
+
+Sourced verbatim from `cli/package.json`.
+
+| Script                     | Command                                                      | Purpose                                              |
+| -------------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
+| `postinstall`              | `node -e "...chmodSync('bin/hapi.cjs', 0o755)..."`           | Make the published bin shim executable.              |
+| `typecheck`                | `tsc --noEmit`                                               | Strict TS check of `cli/src/`.                       |
+| `build:exe`                | `bun run scripts/build-executable.ts`                        | Bun-compiled single-platform executable.             |
+| `build:exe:all`            | `bun run scripts/build-executable.ts --all`                  | Cross-platform executables (all targets).            |
+| `build:exe:allinone`       | `bun run scripts/build-executable.ts --with-web-assets`      | Single exe with embedded hub + web assets.           |
+| `build:exe:allinone:all`   | `bun run scripts/build-executable.ts --with-web-assets --all`| Cross-platform all-in-one executables.               |
+| `prepare-npm-packages`     | `bun run scripts/prepare-npm-packages.ts`                    | Stage per-platform npm artifacts under `cli/npm/`.   |
+| `prepack`                  | `bun run prepare-npm-packages`                               | Pre-publish hook.                                    |
+| `tools:unpack`             | `bun run scripts/unpack-tools.ts`                            | Unpack vendored tool binaries (ripgrep) for tests.   |
+| `update-homebrew-formula`  | `bun run scripts/update-homebrew-formula.ts`                 | Bump the Homebrew tap formula.                       |
+| `test`                     | `bun run tools:unpack && vitest run`                         | Run the Vitest suite (after unpacking tools).        |
+| `test:win`                 | `vitest run`                                                 | Windows test entry (skips `tools:unpack`).           |
+| `dev`                      | `bun src/index.ts`                                           | Run the CLI directly from source.                    |
+| `dev:local-server`         | `bun --env-file .env.dev-local-server src/index.ts`          | Dev run against a locally-running hub.               |
+| `dev:integration-test-env` | `bun --env-file .env.integration-test src/index.ts`          | Dev run with the integration-test env file.          |
+| `release-all`              | `bun run scripts/release-all.ts`                             | Cut a coordinated release across npm artifacts.      |
+
+## Key modules
+
+| Path                        | Role                                                                 |
+| --------------------------- | -------------------------------------------------------------------- |
+| `src/index.ts`              | Bin entry — calls `runCli()`.                                        |
+| `src/commands/`             | One file per subcommand + `registry.ts` (dispatch table).            |
+| `src/commands/runCli.ts`    | Argv parsing, auth bootstrap, config load, command dispatch.         |
+| `src/configuration.ts`      | Frozen `Config` loader (env > settings.json > defaults).             |
+| `src/agent/`                | Cross-cursor base classes — `sessionBase`, `loopBase`, mode matrix.  |
+| `src/cursor/`               | Cursor-specific launcher, loop, session, mode adapter.               |
+| `src/runner/`               | Background daemon — `run.ts`, `controlServer.ts`, `controlClient.ts`.|
+| `src/api/`                  | Socket.IO + REST client against the hub.                             |
+| `src/ui/`                   | Ink terminal UI + diagnostics (`doctor.ts`, `logger.ts`).            |
+
+## Tests
+
+```bash
+cd cli && bun run test
+```
+
+Runs Vitest after unpacking vendored tool binaries (ripgrep, difftastic).
+Co-located `*.test.ts` per repo convention. Cross-runner rule: `cli/` is
+Vitest-only — do not import from `bun:test` here.
