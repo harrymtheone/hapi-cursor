@@ -1,15 +1,3 @@
-/**
- * Sync Engine for HAPI hub
- *
- * Plan 08-02 (D-132): SyncEngine is now a thin composition facade over four
- * sub-facades — SyncEngineSession, SyncEngineMachine, SyncEngineMessage,
- * SyncEngineRpc. External callers (routes, socket handlers, NotificationHub)
- * see no signature change; every public method is a direct delegate (D-134).
- *
- * Lifecycle owner: this facade still wires construction, owns the EventPublisher,
- * and exposes `subscribe` + `shutdown` (renamed from `stop` per D-132).
- */
-
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
 import type { CursorModelDiscoveryResult, CursorRuntimeConfigApplyResult, DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
