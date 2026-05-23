@@ -24,11 +24,12 @@ type VisibilityState = 'visible' | 'hidden'
 
 type ToastEvent = Extract<SyncEvent, { type: 'toast' }>
 
-const HEARTBEAT_STALE_MS = 90_000
-const HEARTBEAT_WATCHDOG_INTERVAL_MS = 10_000
-const RECONNECT_BASE_DELAY_MS = 1_000
-const RECONNECT_MAX_DELAY_MS = 30_000
-const RECONNECT_JITTER_MS = 500
+// D-190: exported for REFT-02 testability — values unchanged
+export const HEARTBEAT_STALE_MS = 90_000
+export const HEARTBEAT_WATCHDOG_INTERVAL_MS = 10_000
+export const RECONNECT_BASE_DELAY_MS = 1_000
+export const RECONNECT_MAX_DELAY_MS = 30_000
+export const RECONNECT_JITTER_MS = 500
 
 function sortSessionSummaries(left: SessionSummary, right: SessionSummary): number {
     if (left.active !== right.active) {
