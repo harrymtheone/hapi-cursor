@@ -107,3 +107,23 @@
 - CI 覆盖率门禁 —— Phase 12 verification 决定
 - `useSSE.ts` 抽出可测性常量 —— 仅在 D-182 触发时做最小 export-only 改动
 - 共享 `test-utils/` 包 —— `assertNoSecretLeak` 首次只服务 REFT-03，跨包共享留待后续
+
+---
+
+## Phase 10 Coverage Baseline (captured 2026-05-23)
+
+Captured from: `main` @ 9c58af9
+Capture mode: worktree (clean — `/tmp/hapi-baseline-cov` worktree created at detached HEAD `9c58af9`, removed on completion; active checkout untouched)
+
+| Scope | Line Coverage | Source command |
+|-------|---------------|----------------|
+| cli/src/cursor/ | unavailable — `@vitest/coverage-v8` not installed in `cli/package.json` (`MISSING DEPENDENCY` from `vitest run --coverage`) | `cd cli && bun run vitest run --coverage --coverage.reporter=text --coverage.include='src/cursor/**'` |
+| cli/src/agent/ | unavailable — `@vitest/coverage-v8` not installed in `cli/package.json` (`MISSING DEPENDENCY` from `vitest run --coverage`) | `cd cli && bun run vitest run --coverage --coverage.reporter=text --coverage.include='src/agent/**'` |
+| hub/src/web/routes/auth.ts | 18.18% lines (0.00% funcs) — uncovered lines 12–47 | `cd hub && bun test --coverage` |
+| hub/src/sse/ | 79.82% lines (57.14% funcs) — only file is `sseManager.ts`; uncovered lines 63–67, 108, 114–118, 127–131, 136–141 | `cd hub && bun test --coverage` |
+| web/src/hooks/useSSE.ts | unavailable — `@vitest/coverage-v8` not installed in `web/package.json` (`MISSING DEPENDENCY` from `vitest run --coverage`) | `cd web && bun run vitest run --coverage --coverage.reporter=text --coverage.include='src/hooks/useSSE.ts'` |
+
+Notes:
+- hub coverage uses `bun:test`'s built-in coverage (TESTING.md § Coverage notes hub has no preconfigured provider) — numbers are the `% Lines` / `% Funcs` columns from its text report. Per D-188, no CI gate is added; numbers are advisory only.
+- cli + web both declare `provider: 'v8'` in their `vitest.config.ts` but do NOT include `@vitest/coverage-v8` as a dependency on `main` @ 9c58af9. Installing the missing package was out of scope (would mutate `main` install state and was not the planned action). Per RESEARCH § Open Question #3 fallback: "If any scope's number cannot be obtained, write `unavailable — <reason>`. Plan 11-05 will then declare Phase 11 numbers the new baseline."
+- Plan 11-05 (SC#4 non-regression check) MUST treat the three `unavailable` scopes as "Phase 11 numbers become the new baseline" rather than asserting non-regression against a missing baseline. The two captured hub scopes (`auth.ts` 18.18%, `sseManager.ts` 79.82%) DO have a real baseline and must not regress.
