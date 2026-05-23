@@ -1,3 +1,81 @@
+---
+phase: 12-docs-cleanup-milestone-verification
+verified_at: 2026-05-23T16:35:00+08:00
+status: passed
+score: 5/5 must-haves verified
+must_haves_verified: 5/5
+requirement_ids_covered:
+  - CUT-12   # → SC#1 (Cursor-only docs surface; website/ deleted; READMEs rewritten)
+  - VRFY-01  # → SC#2 (bun typecheck + bun run test green; lint state explicit)
+  - VRFY-02  # → SC#3 (madge zero cycles across cli/hub/web)
+  - VRFY-03  # → SC#4 (9-keyword ripgrep absence sweep)
+  - VRFY-04  # → SC#5 (manual Tailscale + Cursor + phone scenario)
+verifier_cross_checks:
+  - check: "Root README.md / AGENTS.md / cli/README.md / hub/README.md / web/README.md exist"
+    result: pass
+  - check: "website/ and docs/ directories deleted from repo root"
+    result: pass
+  - check: "scripts/check-no-cut-agents.sh present and executable"
+    result: pass
+  - check: ".github/workflows/verify.yml present"
+    result: pass
+  - check: "package.json declares madge:check, typecheck, test scripts"
+    result: pass
+  - check: "9-keyword sweep under documented whitelist returns 0 file-hits in source scope"
+    result: pass
+    note: "Substring occurrences of 'namespace' inside babel plugin package names in bun.lock (e.g. @babel/plugin-transform-export-namespace-from) are dependency-name fragments, not source-scope keyword hits — outside SC#4 scope (which targets cli/hub/web/shared/docs source files, not lockfile dependency identifiers)."
+  - check: "manual-tailscale/ evidence directory contains all 9 D-05 steps (step-01..step-09)"
+    result: pass
+  - check: "ROADMAP.md Phase 12 row shows 4/4 Complete on 2026-05-23"
+    result: pass
+deferred:  # M2-BL-01..10 — pure-deferred Milestone 2 backlog, NOT phase 12 gaps
+  - item: M2-BL-01
+    title: "Introduce lint (biome / eslint)"
+    addressed_in: "Milestone 2"
+    evidence: "D-08 / 12-CONTEXT.md §deferred — lint not configured this phase by design"
+  - item: M2-BL-02
+    title: "Coverage as CI gate with thresholds"
+    addressed_in: "Milestone 2"
+    evidence: "D-09 / 12-CONTEXT.md §deferred — Phase 11+12 only capture baselines per D-188/D-09"
+  - item: M2-BL-03
+    title: "Install @vitest/coverage-v8 in cli/ + web/"
+    addressed_in: "Milestone 2"
+    evidence: "Phase 11 plan 11-01 SUMMARY 'Could-not-fix #3'; provider declared but dev-dep missing"
+  - item: M2-BL-04
+    title: "Cursor-only standalone user docs site (only if needed)"
+    addressed_in: "Milestone 2 (speculative)"
+    evidence: "12-CONTEXT.md §deferred"
+  - item: M2-BL-05
+    title: "Playwright end-to-end integration tests"
+    addressed_in: "Milestone 2"
+    evidence: "Phase 11 deferred; SC#5 manual scenario sufficient for M1"
+  - item: M2-BL-06
+    title: "Sync AGENTS.md ↔ .cursor/rules/ (script/hook)"
+    addressed_in: "Milestone 2 (speculative)"
+    evidence: "12-CONTEXT.md §deferred"
+  - item: M2-BL-07
+    title: "Any Phase 7/8/9/11 real-gap SC items"
+    addressed_in: "Milestone 2 (currently empty)"
+    evidence: "D-12 / 12-CONTEXT.md §deferred — placeholder slot"
+  - item: M2-BL-08
+    title: "Multi-CI (GitLab / self-hosted runners)"
+    addressed_in: "Milestone 2 (speculative)"
+    evidence: "12-CONTEXT.md §deferred"
+  - item: M2-BL-09
+    title: "Auto-compress screenshots (pre-commit oxipng)"
+    addressed_in: "Milestone 2 (speculative)"
+    evidence: "12-CONTEXT.md §deferred"
+  - item: M2-BL-10
+    title: "Improve hub/src/sse/sseManager.ts coverage 79.82% → ≥ 90%"
+    addressed_in: "Milestone 2"
+    evidence: "Phase 11 did not target sseManager; held at baseline"
+gaps: []
+human_verification: []  # SC#5 was executed by operator Harry on 2026-05-23 16:24 +08:00; PASS recorded in §Manual Tailscale scenario
+notes:
+  - "Pre-existing artifact: this VERIFICATION.md was authored by the 12-04 executor as the milestone sign-off (Task 5 of 12-04-PLAN.md by design). The verifier subagent re-confirmed all must-haves against the codebase and added this frontmatter without overwriting the executor's narrative."
+  - "Closing commit at sign-off: b7085a8 (docs(12-04): milestone 1 sign-off); manual Tailscale scenario commit: e492044."
+---
+
 # Phase 12 — Milestone 1 Sign-off Verification
 
 Captured by: 12-04 executor (autonomous prep portion).
