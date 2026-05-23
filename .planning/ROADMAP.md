@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection
 - [ ] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler
 - [ ] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/`
-- [ ] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters
+- [x] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters (completed 2026-05-23)
 - [ ] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases
 - [ ] **Phase 12: Docs cleanup & milestone verification** — Cursor-only README/AGENTS/docs; delete `website/`; full `bun typecheck` + `bun run test` + `madge` + ripgrep absence + manual Tailscale scenario
 
@@ -192,9 +192,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. `bun typecheck` and `bun run test` both pass; a new test verifies that mutating a returned config object throws in strict mode
 **Plans**: 4 plans
 - [x] 10-01-PLAN.md — Slice 1: residue + Wave-0 test scaffolds + Phase-10 guard block stub (delete `hapi server` alias + RETIRED_COMMANDS resolver guard, fix WEBAPP_* env-rename bug in `cli/src/commands/hub.ts`, seed configuration.test.ts skeletons + Store schema-mismatch tests, add Phase-10 guard block with alias + migration-v* checks active)
-- [ ] 10-02-PLAN.md — Slice 2: Hub `loadConfig()` + DI cutover (single coordinated wave per HIGH-risk note: rewrite `hub/src/configuration.ts` as frozen factory, add `rejectOldEnvVars`, cut over all 7 Hub consumers — jwtSecret/ownerId/web-server/socket-server/cli+auth routes — preserve `constantTimeEquals` at 3 sites)
-- [ ] 10-03-PLAN.md — Slice 3: CLI `loadConfig()` + bootstrap-then-freeze + DI cutover (rewrite `cli/src/configuration.ts`, delete `apiUrlInit.ts`, refactor `tokenInit.ts` → `bootstrapToken`, parameterize `persistence.ts`, cut over ~30 CLI consumers, convert 4 singleton-mocking tests to `makeConfig` factory, integration regression for `hapi hub --host/--port`)
-- [ ] 10-04-PLAN.md — Slice 4: `cli/src/lib.ts` public-library export swap + SQLite final cleanup + finalize Phase-10 guard (D-166 lib.ts breaking change, D-173 Store error wording + test assertion, D-174 SCHEMA_VERSION decision recorded, flip all 5 guard sub-checks to active, close phase gate)
+- [x] 10-02-PLAN.md — Slice 2: Hub `loadConfig()` + DI cutover (single coordinated wave per HIGH-risk note: rewrite `hub/src/configuration.ts` as frozen factory, add `rejectOldEnvVars`, cut over all 7 Hub consumers — jwtSecret/ownerId/web-server/socket-server/cli+auth routes — preserve `constantTimeEquals` at 3 sites)
+- [x] 10-03-PLAN.md — Slice 3: CLI `loadConfig()` + bootstrap-then-freeze + DI cutover (rewrite `cli/src/configuration.ts`, delete `apiUrlInit.ts`, refactor `tokenInit.ts` → `bootstrapToken`, parameterize `persistence.ts`, cut over ~30 CLI consumers, convert 4 singleton-mocking tests to `makeConfig` factory, integration regression for `hapi hub --host/--port`)
+- [x] 10-04-PLAN.md — Slice 4: `cli/src/lib.ts` public-library export swap + SQLite final cleanup + finalize Phase-10 guard (D-166 lib.ts breaking change, D-173 Store error wording + test assertion, D-174 SCHEMA_VERSION decision recorded, flip all 5 guard sub-checks to active, close phase gate)
 
 ### Phase 11: Test gap fill
 **Goal**: Cursor permission contract, SSE reconnect invariants, and auth route negative cases are covered by automated tests.
@@ -235,7 +235,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. Wire contracts unification & SSE patch contract | 1/4 | In Progress|  |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
 | 9. Web internal decoupling | 0/TBD | Not started | - |
-| 10. Config cleanup | 1/4 | In Progress|  |
+| 10. Config cleanup | 4/4 | Complete    | 2026-05-23 |
 | 11. Test gap fill | 0/TBD | Not started | - |
 | 12. Docs cleanup & milestone verification | 0/TBD | Not started | - |
 
