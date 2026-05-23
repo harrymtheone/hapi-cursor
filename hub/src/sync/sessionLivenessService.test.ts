@@ -108,6 +108,28 @@ describe('SessionLivenessService', () => {
         }
     })
 
+    it('markMessageQueued clears stale completion marker when new work starts', () => {
+        const events: SyncEvent[] = []
+        const { repo, liveness } = createServices(events)
+        const session = repo.getOrCreateSession('queue-clears-completed', sessionMetadata, null)
+        liveness.handleSessionAlive({ sid: session.id, time: Date.now(), thinking: false })
+        liveness.recordSessionActivity(session.id, session.updatedAt + 1_000, { kind: 'turn-completed' })
+
+        events.length = 0
+        liveness.markMessageQueued(session.id, session.updatedAt + 2_000)
+
+        const update = events.find((e) => e.type === 'session-updated')
+        expect(update).toBeDefined()
+        if (update && update.type === 'session-updated') {
+            expect(update.data).toEqual(expect.objectContaining({
+                thinking: true,
+                statusKind: 'thinking',
+                completionMarker: null,
+                errorMarker: null
+            }))
+        }
+    })
+
     it('expireInactive flips overdue sessions to inactive and returns their ids', () => {
         const events: SyncEvent[] = []
         const { repo, liveness } = createServices(events)
@@ -133,5 +155,28 @@ describe('SessionLivenessService', () => {
         expect(repo.getSession(session.id)?.updatedAt).toBeGreaterThanOrEqual(future)
         const update = events.find((e) => e.type === 'session-updated')
         expect(update).toBeDefined()
+    })
+
+    it('recordSessionActivity emits completion marker patch for ready turn completion', () => {
+        const events: SyncEvent[] = []
+        const { repo, liveness } = createServices(events)
+        const session = repo.getOrCreateSession('activity-ready-1', sessionMetadata, null)
+        liveness.handleSessionAlive({ sid: session.id, time: Date.now(), thinking: true })
+        const future = session.updatedAt + 10_000
+
+        events.length = 0
+        liveness.recordSessionActivity(session.id, future, { kind: 'turn-completed' })
+
+        const update = events.find((e) => e.type === 'session-updated')
+        expect(update).toBeDefined()
+        if (update && update.type === 'session-updated') {
+            expect(update.data).toEqual(expect.objectContaining({
+                updatedAt: future,
+                thinking: false,
+                statusKind: 'completed',
+                completionMarker: future,
+                errorMarker: null
+            }))
+        }
     })
 })
