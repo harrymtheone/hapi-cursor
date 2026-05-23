@@ -33,7 +33,18 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
   2. User can start a Cursor session with selected model and effort, then see those values persisted in session metadata.
   3. User can request an in-session model switch and see whether it applied, is pending, failed, or applies on the next run based on real CLI runtime behavior.
   4. User can scan each session's status, model, and effort from the mobile session list as live strict patches arrive.
-**Plans**: TBD
+**Plans**: 10 plans
+Plans:
+- [x] 01-01-PLAN.md — Shared Cursor runtime config schemas and contracts
+- [x] 01-02-PLAN.md — CLI launch model and effort wiring
+- [x] 01-03-PLAN.md — Machine-scoped Cursor model discovery
+- [x] 01-04-PLAN.md — Hub model discovery route and RPC wiring
+- [x] 01-05-PLAN.md — Selected runtime config launch rejection handling
+- [x] 01-06-PLAN.md — Web model switch state propagation
+- [x] 01-07-PLAN.md — Composer runtime model status UI
+- [x] 01-08-PLAN.md — Compact session-list status indicators
+- [x] 01-09-PLAN.md — Gap closure: live composer runtime switch options
+- [ ] 01-10-PLAN.md — Gap closure: idle and completion status markers
 **UI hint**: yes
 
 ### Phase 2: Skills Visibility and Session Policy
@@ -116,7 +127,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 8/8 | Complete   | 2026-05-23 |
+| 1. Cursor Runtime Config Contract | 9/10 | In Progress|  |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
