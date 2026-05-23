@@ -14,17 +14,18 @@ HAPI Cursor Edition 是一个**本地优先、单用户**的远程控制平台�
 
 12 phases / 60 plans / 33 v1 requirements / 318 commits / ≈ −12k LOC net delivered: 4 non-Cursor agent runtimes deleted, Telegram + voice + ServerChan + tunwg + namespace surfaces removed, hub + web internals decomposed to 0 circular deps, frozen-config + DI replacing mutable singletons, REFT test gaps closed, push-gated CI (`.github/workflows/verify.yml`) durable. Manual Tailscale + phone E2E PASS on commit `e492044`. See `MILESTONES.md` for full archive.
 
-## Next Milestone Goals
+## Current Milestone: v1.1 Cursor mobile features
 
-**v1.1 — Cursor mobile incremental features** (start via `/gsd-new-milestone`):
+**Goal:** Make the phone/tablet PWA feel closer to the desktop Cursor IDE for day-to-day agent control.
 
+**Target features:**
 - Cursor 会话内模型切换（CURS-01）
 - Skills 集成 + 会话级开关（CURS-02）
 - MCP servers 列表 + 会话级 toggle（CURS-03）
 - session 列表显示 Cursor agent 状态 / effort / 模型名（CURS-04）
 - cursor-ide-browser MCP 截图在移动端展示（CURS-05）
 
-Plus carry-forward backlog M2-BL-01..10 (`.planning/phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`).
+Plus carry-forward backlog M2-BL-01..10 (`.planning/milestones/v1.0-phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`).
 
 ## Requirements
 
@@ -79,7 +80,7 @@ Plus carry-forward backlog M2-BL-01..10 (`.planning/phases/12-docs-cleanup-miles
 
 ### Active
 
-<!-- v1.0 milestone shipped 2026-05-23. v1.1 (Milestone 2 — Cursor mobile features) scope to be defined via /gsd-new-milestone. Candidate items: -->
+<!-- v1.1 (Milestone 2 — Cursor mobile features) active scope. Final REQ-IDs are defined in REQUIREMENTS.md. -->
 
 - [ ] **CURS-01**：Cursor 会话内模型切换（sonnet / opus / composer / auto），模型列表通过本机 Cursor CLI 动态获取
 - [ ] **CURS-02**：Skills 集成（默认跟随 Cursor IDE 自动生效；会话级开关单个 skill）
@@ -87,7 +88,7 @@ Plus carry-forward backlog M2-BL-01..10 (`.planning/phases/12-docs-cleanup-miles
 - [ ] **CURS-04**：Cursor agent 状态 / effort / 模型名在 session 列表可见
 - [ ] **CURS-05**：cursor-ide-browser MCP 截图在移动端可视
 
-**Milestone 1 → Milestone 2 carry-forward backlog (M2-BL-01..10):** 见 `.planning/phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`
+**Milestone 1 → Milestone 2 carry-forward backlog (M2-BL-01..10):** 见 `.planning/milestones/v1.0-phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`
 
 ### Out of Scope
 
@@ -181,7 +182,7 @@ Plus carry-forward backlog M2-BL-01..10 (`.planning/phases/12-docs-cleanup-miles
 - **Security**：Tailscale 内网信任模型——单 `CLI_API_TOKEN` 足够；不引入 token rotation、namespace 隔离、rate limiting 等多用户必需特性
 - **Performance**：单人使用，无并发压力——不为多用户场景做缓存/分片优化
 - **Code quality**：典型「不计较 token / 时间成本，只要清晰正确」——Milestone 1 完成时要求 0 循环依赖、typecheck/test/lint 全绿、超大文件拆分到位
-- **Process**：通过 GSD 工作流推进；当前 milestone 1 = 重构 + 瘦身；后续 milestone 2 = Cursor 增量编码
+- **Process**：通过 GSD 工作流推进；当前 milestone 2 = Cursor mobile features；v1.0 重构 + 瘦身已归档
 
 ## Key Decisions
 
@@ -220,4 +221,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-23 after v1.0 milestone (Refactor & Slim-Down) shipped — full PROJECT.md evolution review complete: Active reqs → Validated, Out of Scope reasoning revalidated, Key Decisions outcomes scored (12 ✓ Good + 1 ⚠️ Revisit)*
+*Last updated: 2026-05-23 after starting v1.1 milestone (Cursor mobile features) — Current Milestone updated, Active scope promoted from candidate list, carry-forward archive links corrected*

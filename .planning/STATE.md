@@ -1,35 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Refactor & Slim-Down
-status: shipped
-stopped_at: v1.0 milestone archived; awaiting /gsd-new-milestone
-last_updated: "2026-05-23T08:55:00.000Z"
+milestone: v1.1
+milestone_name: Cursor mobile features
+status: planning
+last_updated: "2026-05-23T09:14:41.765Z"
 last_activity: 2026-05-23
 progress:
-  total_phases: 12
-  completed_phases: 12
-  total_plans: 60
-  completed_plans: 60
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-23 after v1.0 close)
+See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** v1.0 archived to `.planning/milestones/v1.0-*` — ready for `/gsd-new-milestone` to start v1.1 (Cursor mobile features)
+**Current focus:** v1.1 Cursor mobile features — defining requirements for mobile model switching, skills, MCP controls, session metadata, and browser MCP screenshots
 
 ## Current Position
 
-Milestone: v1.0 — SHIPPED & ARCHIVED 2026-05-23 (tag `v1.0`)
-Tag commit: `8821d2e` chore: archive v1.0 phase directories to milestones/v1.0-phases/
-Last activity: 2026-05-23
-
-Progress: [██████████] 100% (12/12 phases, 60/60 plans, 33/33 v1 requirements)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-23 — Milestone v1.1 started
 
 ## Accumulated Context
 
