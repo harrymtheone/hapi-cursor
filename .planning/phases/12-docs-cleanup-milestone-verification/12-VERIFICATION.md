@@ -185,7 +185,22 @@ SC gap findings during reconciliation: **none.** Every confirmed-complete plan h
 
 ## Outstanding (Milestone 2 backlog)
 
-_pending Task 5_
+Pre-declared deferral list (12-CONTEXT.md §deferred) plus zero new gaps surfaced by Tasks 1-4. Each item carries a stable `M2-BL-NN` identifier so Milestone 2's first planning pass can pick them up directly.
+
+| ID | Item | Source | Rationale |
+| --- | --- | --- | --- |
+| M2-BL-01 | Introduce lint (biome / eslint) | D-08 / CONTEXT §deferred | Lint not configured this phase by design; explicitly out-of-scope of "cleanup + verify". Pair with M2-BL-02 in a dedicated Milestone 2 phase. → Milestone 2 |
+| M2-BL-02 | Coverage as a CI gate (with thresholds) | D-09 / CONTEXT §deferred | Phase 11 + Phase 12 only capture baselines per D-188 / D-09. Designing gate thresholds is a fresh modeling exercise. → Milestone 2 |
+| M2-BL-03 | Install `@vitest/coverage-v8` in `cli/` + `web/` | Coverage snapshot above (3 scopes `unavailable`) | Phase 11 plan 11-01 SUMMARY "Could-not-fix #3" explicitly deferred this; v8 provider is declared in both `vitest.config.ts` files but the dev-dep is missing. → Milestone 2 (precedes M2-BL-02) |
+| M2-BL-04 | Cursor-only standalone user docs site (only if needed) | CONTEXT §deferred | `docs/` was deleted in 12-01. If Milestone 2 produces enough onboarding material to need a site, scope a separate phase then. → Milestone 2 (speculative) |
+| M2-BL-05 | Playwright end-to-end integration tests | CONTEXT §deferred | Phase 11 deferred; Phase 12 SC#5 manual Tailscale scenario is sufficient coverage for this milestone. Wiring playwright + a real EventSource is its own engineering scope. → Milestone 2 |
+| M2-BL-06 | Sync `AGENTS.md` ↔ `.cursor/rules/` (script / hook) | CONTEXT §deferred | Today they're loosely complementary. Re-evaluate only if rule drift becomes painful. → Milestone 2 (speculative) |
+| M2-BL-07 | Any Phase 7/8/9/11 real-gap SC items | D-12 / CONTEXT §deferred | None surfaced during this verification — placeholder so a future re-audit feeds back into this slot. → Milestone 2 (currently empty) |
+| M2-BL-08 | Multi-CI (GitLab / self-hosted runners) | CONTEXT §deferred | Single-user + GitHub-hosted suffices. Re-evaluate only on host migration. → Milestone 2 (speculative) |
+| M2-BL-09 | Auto-compress screenshots (pre-commit `oxipng`) | CONTEXT §deferred | Only worth doing if manual Tailscale scenario gets executed regularly. One-off compression manual now. → Milestone 2 (speculative) |
+| M2-BL-10 | Improve `hub/src/sse/sseManager.ts` coverage from 79.82% → ≥ 90% | Coverage snapshot above (lines 63–67, 108, 114–118, 127–131, 136–141 uncovered) | Phase 11 explicitly did not target sseManager; held at baseline. Worth a dedicated Milestone 2 test slice once useSSE backoff tests have a colocated stable foundation (Phase 11 11-04). → Milestone 2 |
+
+No new SC failures from Task 4 reconciliation. No coverage regressions from Task 2. Outstanding list is pure-deferred, not blocker.
 
 ## Sign-off
 
