@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 9 Plan 1 complete
-last_updated: "2026-05-23T00:15:30Z"
-last_activity: 2026-05-23 -- Phase 09 Plan 1 completed (util dedup + createApiQuery + ToolCard integration test + web madge guard)
+last_updated: "2026-05-23T00:33:08.934Z"
+last_activity: 2026-05-23
 progress:
   total_phases: 12
   completed_phases: 8
   total_plans: 46
-  completed_plans: 43
-  percent: 70
+  completed_plans: 44
+  percent: 67
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 09 (web-internal-decoupling) — EXECUTING
-Plan: 2 of 4
-Status: Executing Phase 09
-Last activity: 2026-05-23 -- Phase 09 Plan 1 completed (util dedup + createApiQuery + ToolCard integration test + web madge guard)
+Plan: 3 of 4
+Status: Ready to execute
+Last activity: 2026-05-23
 
-Progress: [██████████] 100%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -95,6 +95,7 @@ Progress: [██████████] 100%
 | Phase 08 P03 | 30min | 3 tasks | 17 files |
 | Phase 08 P08-04 | 10m | 2 tasks | 2 files |
 | Phase 09 P09-01 | 4min | 5 tasks | 14 files |
+| Phase 09 P02 | 18 | 4 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -152,6 +153,7 @@ Recent decisions affecting current work:
 - [Phase 09]: Plan 1 abstracts createApiQuery factory in web/src/hooks/queries/_factory.ts now that 3 shape-A consumers exist (useSessions/useSession/useMachines); shape-A' and shape-B hooks remain unmigrated per Slice-1 scope.
 - [Phase 09]: Plan 1 introduces table-driven ToolCard.integration.test.tsx asserting every Object.keys(knownTools) entry renders without hitting the unknown-fallback testid + negative-control sentinel; anchor lives on knownTools.tsx WrenchIcon path wrapped in a span (icons.tsx only forwards className).
 - [Phase 09]: Plan 1 adds scripts/check-no-circular-web.sh mirroring the Phase-8 hub guard; madge reports 0 cycles inside web/src/.
+- [Phase ?]: Phase 09 Plan 2: message-window-store split into 5 sub-modules + 28-line facade; SessionList split into 4 hooks + 4 sub-components + icons support; public surfaces preserved verbatim, pre-existing tests pass unmodified.
 
 ### Pending Todos
 
@@ -171,6 +173,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T00:15:30Z
+Last session: 2026-05-23T00:32:55.487Z
 Stopped at: Phase 9 Plan 1 complete
-Resume file: .planning/phases/09-web-internal-decoupling/09-02-PLAN.md
+Resume file: None
