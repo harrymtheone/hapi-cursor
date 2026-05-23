@@ -400,8 +400,8 @@ describe('useSSE handleSyncEvent', () => {
  *   D-180  test seam: globalThis.EventSource monkey-patch (kept).
  *   D-181  assert FINAL TanStack Query cache state — never intermediate patch shape.
  *   D-182  fake timers drive backoff windows.
- *   D-183  Phase-7 safety: no assertions on setQueryData arg shape or
- *          hasUnknownSessionPatchKeys; only on getQueryData() equality.
+ *   D-183  Phase-7 safety: no assertions on setQueryData arg shape or the
+ *          deleted patch-shape heuristic; only on getQueryData() equality.
  *   D-190  the only production change permitted in Phase 11 is exporting the
  *          five backoff constants in useSSE.ts (already done in Plan 11-04 Task 1).
  *

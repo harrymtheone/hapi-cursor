@@ -579,4 +579,54 @@ if [ -n "$PHASE10_SINGLETON" ]; then
 fi
 echo "✅ Phase 10 #5: no configuration singleton imports outside whitelist."
 
+# ===== Phase 11 — REFT guards =====
+# Zero-tolerance keywords closing REFT-01..REFT-03:
+#   #1 hardcoded `permissionMode === '<literal>'` branches outside cli/src/cursor/
+#      and cli/src/agent/ (REFT-01: matrix is the single source of truth).
+#   #2 `bun:test` imported from cli/ or web/, or `vitest` imported from hub/ or
+#      shared/ (TESTING.md cross-runner anti-pattern, REFT-01..REFT-03).
+#   #3 `permissionModeToCursorArgs` must still live only in cli/src/agent/modeConfig.ts
+#      (already enforced by Phase 6 (#3); Phase 11 leaves it alone — no duplicate
+#      guard here.)
+PHASE11_BRANCH_PATTERN='permissionMode\s*===\s*['\''"]'
+PHASE11_SOURCE_DIRS=(cli/src hub/src web/src shared/src)
+
+# (#1) Hardcoded permissionMode literal comparisons must not appear outside the
+# two legitimate homes (cli/src/agent/, cli/src/cursor/) or test files.
+PHASE11_BRANCH_HITS=$("$RG_BIN" -n "$PHASE11_BRANCH_PATTERN" \
+  "${PHASE11_SOURCE_DIRS[@]}" \
+  --glob '!**/*.test.ts' --glob '!**/*.test.tsx' \
+  --glob '!cli/src/agent/**' --glob '!cli/src/cursor/**' \
+  2>/dev/null || true)
+if [ -n "$PHASE11_BRANCH_HITS" ]; then
+  echo "$PHASE11_BRANCH_HITS"
+  echo ""
+  echo "❌ Phase 11 REFT-01: hardcoded permissionMode === '<literal>' outside cli/src/{agent,cursor}/."
+  echo "   Route the decision through permissionModeToCursorArgs (cli/src/agent/modeConfig.ts)"
+  echo "   or getCapability(...) so the matrix test in permissionMatrix.test.ts owns the contract."
+  exit 1
+fi
+echo "✅ Phase 11 #1: no permissionMode === '<literal>' branches outside cli/src/{agent,cursor}/."
+
+# (#2) Cross-runner import sanity. cli/ + web/ run under Vitest only; hub/ +
+# shared/ run under bun:test only. Mixing breaks test discovery and produces
+# silent green passes.
+PHASE11_BAD_BUNTEST=$("$RG_BIN" -n "from\s+['\"]bun:test['\"]" cli/src web/src 2>/dev/null || true)
+if [ -n "$PHASE11_BAD_BUNTEST" ]; then
+  echo "$PHASE11_BAD_BUNTEST"
+  echo ""
+  echo "❌ Phase 11 #2: 'bun:test' imported in cli/ or web/ (must use Vitest)."
+  exit 1
+fi
+PHASE11_BAD_VITEST=$("$RG_BIN" -n "from\s+['\"]vitest['\"]" hub/src shared/src 2>/dev/null || true)
+if [ -n "$PHASE11_BAD_VITEST" ]; then
+  echo "$PHASE11_BAD_VITEST"
+  echo ""
+  echo "❌ Phase 11 #2: 'vitest' imported in hub/ or shared/ (must use bun:test)."
+  exit 1
+fi
+echo "✅ Phase 11 #2: test-runner imports respect package boundaries."
+
+echo "✅ Phase 11 guard PASS (REFT-01..03)."
+
 echo "✅ Phase 10 guard PASS."
