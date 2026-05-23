@@ -76,6 +76,11 @@ PHASE4_WHITELIST=(
 
   # === Phase-04 guard self-reference
   --glob '!scripts/check-no-cut-agents.sh'
+
+  # === Phase-12 12-02 carve-out (D-02): AGENTS.md §Rules carries a single
+  # "Don't reintroduce: ... tunwg ..." reminder line that literally lists the 9
+  # cut tokens — agent-facing nav guide, not a runtime consumer.
+  --glob '!AGENTS.md'
 )
 
 # === Phase-1/2/5 main sweep
@@ -637,18 +642,16 @@ echo "✅ Phase 11 guard PASS (REFT-01..03)."
 #   #4 top-level directory names `website` or `docs` in any tracked package.json `workspaces` array
 #
 # Whitelist (CUT-12 SC#4): .planning/** + CHANGELOG.md + .git/** + this guard script.
-# Top-level marketing/docs files (README.md, AGENTS.md, CLAUDE.md, CONTRIBUTING.md)
-# are deferred to 12-02 (README rewrite pass per D-11). After 12-02 lands they will
-# be removed from this whitelist so reintroducing the deleted anchors trips the gate.
+# 12-01 temporarily whitelisted top-level README.md / AGENTS.md / CLAUDE.md /
+# CONTRIBUTING.md so the slice-end gate could be green before the docs rewrite.
+# Plan 12-02 rewrote those files from zero and confirmed none reference the
+# deleted docs/website surfaces — the whitelist entries are now removed so any
+# reintroduction trips the gate.
 PHASE12_WHITELIST=(
   --glob '!.planning/**'
   --glob '!.git/**'
   --glob '!CHANGELOG.md'
   --glob '!scripts/check-no-cut-agents.sh'
-  --glob '!README.md'
-  --glob '!AGENTS.md'
-  --glob '!CLAUDE.md'
-  --glob '!CONTRIBUTING.md'
 )
 
 # (#1) CUT-12 — no `website/` path literal in tracked source.
