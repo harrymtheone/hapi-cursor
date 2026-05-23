@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-05-23T05:55:00.000Z"
+stopped_at: Completed 12-03-PLAN.md
+last_updated: "2026-05-23T06:00:00.000Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 12
   completed_phases: 11
-  total_plans: 59
-  completed_plans: 58
+  total_plans: 60
+  completed_plans: 59
   percent: 98
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-05-20)
 ## Current Position
 
 Phase: 12 (docs-cleanup-milestone-verification) — EXECUTING
-Plan: 3 of 4
-Status: 12-02 complete, ready for 12-03
+Plan: 4 of 4
+Status: 12-03 complete, ready for 12-04
 Last activity: 2026-05-23
 
 Progress: [██████████] 98%
@@ -108,6 +108,7 @@ Progress: [██████████] 98%
 | Phase 11 P05 | 8min | 2 tasks | 3 files |
 | Phase 12 P01 | 8min | 3 tasks | 3 files |
 | Phase 12 P02 | 22min | 5 tasks | 6 files |
+| Phase 12 P03 | ~10min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -176,6 +177,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 11]: Plan 05 closes phase — guard appended (REFT-01 + cross-runner); coverage non-regression GREEN (auth.ts 18.18->100.00, sseManager held 79.82); v8-coverage scopes declared new unavailable baseline
 - [Phase ?]: [Phase 12]: Plan 01 (CUT-12) deleted website/docs/refactor.md atomically; trimmed root workspaces to [cli,shared,hub,web]; appended Phase-12 4-sub-check guard with temporary README/AGENTS/CLAUDE/CONTRIBUTING whitelist deferred to 12-02 README rewrite.
 - [Phase 12]: Plan 02 (CUT-12) rewrote all 5 doc surfaces from zero (README.md, AGENTS.md, cli/README.md, hub/README.md, web/README.md = 364 lines total); AGENTS.md ≤100 lines honoured (49). Phase-12 whitelist for top-level docs files dropped — reintroducing docs/guide / refactor.md / website/ anchors in any top-level README now trips guard at source. PHASE4_WHITELIST extended with AGENTS.md so the §Rules "Don't reintroduce" reminder line (containing tunwg literal) doesn't trip Phase-04 hard-pattern sweep. `bun typecheck && bun run test` all green (cli Vitest 253, hub bun:test 239, web Vitest).
+- [Phase 12]: Plan 03 (VRFY-01/02/03) added root `madge:check` script + `.github/workflows/verify.yml` (push + pull_request → checkout@v4 → setup-bun@v1 pinned to 1.3.14 → install/typecheck/test/madge/guard). Bun version sourced from `cli/package.json` `packageManager: bun@1.3.14` (matches local). Root madge invocation reuses the `--exclude '(^\\.\\./|web/dist)'` regex from per-phase `check-no-circular-{hub,web}.sh` (Rule-3 fix: literal D-10 string pulled in 63 bundler-only cycles from `web/dist/assets/mermaid.core-*`; the per-phase guards already filter these — root script now mirrors them). PR observation step deferred per `<pr_observation_note>` (no `gh` auth in executor env) — to be appended to 12-03-SUMMARY.md when user/12-04 pushes `main`. Full local gate green at end of plan.
 
 ### Pending Todos
 
@@ -195,6 +197,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T05:55:00.000Z
-Stopped at: Completed 12-02-PLAN.md
+Last session: 2026-05-23T06:00:00.000Z
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None
