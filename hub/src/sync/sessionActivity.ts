@@ -36,19 +36,25 @@ function isReadyEventContent(content: unknown): boolean {
     return data?.type === 'ready'
 }
 
-export function shouldRecordSessionActivity(content: unknown): boolean {
+export type SessionActivity = { kind: 'message' } | { kind: 'turn-completed' }
+
+export function classifySessionActivity(content: unknown): SessionActivity | null {
     const message = unwrapRoleWrappedRecordEnvelope(content)
     if (!message) {
-        return false
+        return null
     }
 
     if (message.role === 'user') {
-        return hasHumanTextContent(message.content)
+        return hasHumanTextContent(message.content) ? { kind: 'message' } : null
     }
 
     if (message.role !== 'agent') {
-        return false
+        return null
     }
 
-    return isReadyEventContent(message.content)
+    return isReadyEventContent(message.content) ? { kind: 'turn-completed' } : null
+}
+
+export function shouldRecordSessionActivity(content: unknown): boolean {
+    return classifySessionActivity(content) !== null
 }

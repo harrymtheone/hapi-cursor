@@ -46,7 +46,7 @@ function getPatchedStatusKind(
     next: Pick<SessionSummary, 'active' | 'thinking' | 'backgroundTaskCount' | 'pendingRequestsCount'>,
     patch: SessionPatch
 ): SessionSummary['statusKind'] {
-    if (Object.prototype.hasOwnProperty.call(patch, 'statusKind')) {
+    if (Object.prototype.hasOwnProperty.call(patch, 'statusKind') && patch.statusKind !== undefined) {
         return patch.statusKind
     }
     if (next.thinking) return 'thinking'

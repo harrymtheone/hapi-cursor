@@ -5,6 +5,7 @@ import { SessionConfigService } from './sessionConfigService'
 import { SessionLivenessService } from './sessionLivenessService'
 import { SessionMergeService } from './sessionMergeService'
 import { SessionRepository } from './sessionRepository'
+import type { SessionActivity } from './sessionActivity'
 
 /**
  * Facade: see sessionRepository / sessionLivenessService / sessionConfigService /
@@ -87,8 +88,8 @@ export class SessionCache {
         this.liveness.applyBackgroundTaskDelta(sessionId, delta)
     }
 
-    recordSessionActivity(sessionId: string, updatedAt: number): void {
-        this.liveness.recordSessionActivity(sessionId, updatedAt)
+    recordSessionActivity(sessionId: string, updatedAt: number, activity?: SessionActivity): void {
+        this.liveness.recordSessionActivity(sessionId, updatedAt, activity)
     }
 
     handleSessionEnd(payload: { sid: string; time: number }): void {

@@ -2,6 +2,7 @@ import type { PermissionMode } from '@hapi/protocol/types'
 import type { Store, StoredMachine, StoredSession } from '../../../store'
 import type { RpcRegistry } from '../../rpcRegistry'
 import type { SyncEvent } from '../../../sync/syncEngine'
+import type { SessionActivity } from '../../../sync/sessionActivity'
 import type { TerminalRegistry } from '../../terminalRegistry'
 import type { CliSocketWithData, SocketServer } from '../../socketTypes'
 import type { AccessErrorReason, AccessResult } from './types'
@@ -41,7 +42,7 @@ export type CliHandlersDeps = {
     onMachineAlive?: (payload: MachineAlivePayload) => void
     onWebappEvent?: (event: SyncEvent) => void
     onBackgroundTaskDelta?: (sessionId: string, delta: { started: number; completed: number }) => void
-    onSessionActivity?: (sessionId: string, updatedAt: number) => void
+    onSessionActivity?: (sessionId: string, updatedAt: number, activity: SessionActivity) => void
     onSweepImmediateQueued?: (sessionId: string, now: number) => void
 }
 

@@ -2,6 +2,7 @@ import type { PermissionMode } from '@hapi/protocol/types'
 import { clampAliveTime } from './aliveTime'
 import { EventPublisher } from './eventPublisher'
 import { SessionRepository } from './sessionRepository'
+import type { SessionActivity } from './sessionActivity'
 
 const QUEUED_MESSAGE_THINKING_GRACE_MS = 15_000
 
@@ -136,7 +137,10 @@ export class SessionLivenessService {
                 sessionId: session.id,
                 data: {
                     thinking: true,
-                    updatedAt: session.updatedAt
+                    updatedAt: session.updatedAt,
+                    statusKind: 'thinking',
+                    completionMarker: null,
+                    errorMarker: null
                 }
             })
         }
@@ -158,7 +162,7 @@ export class SessionLivenessService {
         })
     }
 
-    recordSessionActivity(sessionId: string, updatedAt: number): void {
+    recordSessionActivity(sessionId: string, updatedAt: number, activity: SessionActivity = { kind: 'message' }): void {
         if (!Number.isFinite(updatedAt)) {
             return
         }
@@ -184,10 +188,23 @@ export class SessionLivenessService {
         }
 
         session.updatedAt = Math.max(session.updatedAt, nextUpdatedAt)
+        if (activity.kind === 'turn-completed') {
+            session.thinking = false
+            session.thinkingAt = nextUpdatedAt
+            this.repository.pendingThinkingUntilBySessionId.delete(session.id)
+        }
         this.publisher.emit({
             type: 'session-updated',
             sessionId,
-            data: { updatedAt: session.updatedAt }
+            data: activity.kind === 'turn-completed'
+                ? {
+                    updatedAt: session.updatedAt,
+                    thinking: false,
+                    statusKind: 'completed',
+                    completionMarker: session.updatedAt,
+                    errorMarker: null
+                }
+                : { updatedAt: session.updatedAt }
         })
     }
 

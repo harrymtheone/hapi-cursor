@@ -8,10 +8,10 @@ import type { SyncEvent } from '../../../sync/syncEngine'
 import { extractTodoWriteTodosFromMessageContent } from '../../../sync/todos'
 import { extractTeamStateFromMessageContent, applyTeamStateDelta } from '../../../sync/teams'
 import { extractBackgroundTaskDelta } from '../../../sync/backgroundTasks'
-import { shouldRecordSessionActivity } from '../../../sync/sessionActivity'
 import type { CliSocketWithData } from '../../socketTypes'
 import type { SessionEndReason } from '@hapi/protocol'
 import type { AccessErrorReason, AccessResult } from './types'
+import { classifySessionActivity, type SessionActivity } from '../../../sync/sessionActivity'
 
 type SessionAlivePayload = {
     sid: string
@@ -63,7 +63,7 @@ export type SessionHandlersDeps = {
     onSessionEnd?: (payload: SessionEndPayload) => void
     onWebappEvent?: (event: SyncEvent) => void
     onBackgroundTaskDelta?: (sessionId: string, delta: { started: number; completed: number }) => void
-    onSessionActivity?: (sessionId: string, updatedAt: number) => void
+    onSessionActivity?: (sessionId: string, updatedAt: number, activity: SessionActivity) => void
     /** Delegates session-end immediate-queue sweep to the MessageService layer. */
     onSweepImmediateQueued?: (sessionId: string, now: number) => void
 }
@@ -102,8 +102,9 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
         }
 
         const msg = store.messages.addMessage(sid, content, localId)
-        if (shouldRecordSessionActivity(content)) {
-            onSessionActivity?.(sid, msg.createdAt)
+        const sessionActivity = classifySessionActivity(content)
+        if (sessionActivity) {
+            onSessionActivity?.(sid, msg.createdAt, sessionActivity)
         }
 
         const todos = extractTodoWriteTodosFromMessageContent(content)
@@ -282,7 +283,7 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
         const invokedAt = Date.now()
         try {
             store.messages.markMessagesInvoked(data.sid, localIds, invokedAt)
-            onSessionActivity?.(data.sid, invokedAt)
+            onSessionActivity?.(data.sid, invokedAt, { kind: 'message' })
             // Emit only after the DB write succeeds. Otherwise a transient SQLite
             // failure would broadcast an `invokedAt` that was never persisted —
             // live clients would hide the queued rows while a refresh / secondary

@@ -2,6 +2,7 @@ import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
 import type { CursorModelDiscoveryResult, CursorRuntimeConfigApplyResult, DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
 import type { Store, CancelQueuedMessageResult } from '../store'
+import type { SessionActivity } from './sessionActivity'
 import type { RpcRegistry } from '../socket/rpcRegistry'
 import type { SSEManager } from '../sse/sseManager'
 import type { KeepaliveScheduler } from '../utils/scheduler'
@@ -61,7 +62,7 @@ export class SyncEngine {
             store,
             io,
             this.eventPublisher,
-            (sessionId, updatedAt) => this.recordSessionActivity(sessionId, updatedAt)
+            (sessionId, updatedAt) => this.recordSessionActivity(sessionId, updatedAt, { kind: 'message' })
         )
         const rpcGateway = new RpcGateway(io, rpcRegistry)
 
@@ -156,8 +157,8 @@ export class SyncEngine {
         this.session.handleBackgroundTaskDelta(sessionId, delta)
     }
 
-    recordSessionActivity(sessionId: string, updatedAt: number): void {
-        this.session.recordSessionActivity(sessionId, updatedAt)
+    recordSessionActivity(sessionId: string, updatedAt: number, activity?: SessionActivity): void {
+        this.session.recordSessionActivity(sessionId, updatedAt, activity)
     }
 
     handleMachineAlive(payload: { machineId: string; time: number }): void {

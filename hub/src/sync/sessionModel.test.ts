@@ -284,7 +284,7 @@ describe('session model', () => {
             null
         )
         const handlers = new Map<string, (payload: unknown) => void>()
-        const activity: Array<{ sessionId: string; updatedAt: number; kind: string | undefined }> = []
+        const activity: Array<{ sessionId: string; updatedAt: number; kind: { kind: string } | undefined }> = []
 
         registerSessionHandlers({
             on: (event: string, handler: (payload: unknown) => void) => {
@@ -298,7 +298,7 @@ describe('session model', () => {
                 return stored ? { ok: true, value: stored } : { ok: false, reason: 'not-found' }
             },
             emitAccessError: () => {},
-            onSessionActivity: (sessionId, updatedAt, kind?: string) => {
+            onSessionActivity: (sessionId, updatedAt, kind?: { kind: string }) => {
                 activity.push({ sessionId, updatedAt, kind })
             }
         })
@@ -317,7 +317,7 @@ describe('session model', () => {
         expect(activity).toHaveLength(1)
         expect(activity[0].sessionId).toBe(session.id)
         expect(activity[0].updatedAt).toBe(store.messages.getMessages(session.id, 1)[0]?.createdAt)
-        expect(activity[0].kind).toBe('turn-completed')
+        expect(activity[0].kind).toEqual({ kind: 'turn-completed' })
     })
 
     it('does not report session activity for CLI tool messages', () => {

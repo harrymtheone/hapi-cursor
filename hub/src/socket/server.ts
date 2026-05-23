@@ -9,6 +9,7 @@ import { registerCliHandlers } from './handlers/cli'
 import { registerTerminalHandlers } from './handlers/terminal'
 import { RpcRegistry } from './rpcRegistry'
 import type { SyncEvent } from '../sync/syncEngine'
+import type { SessionActivity } from '../sync/sessionActivity'
 import type { KeepaliveScheduler } from '../utils/scheduler'
 import { TerminalRegistry } from './terminalRegistry'
 import type { CliSocketWithData, SocketData, SocketServer } from './socketTypes'
@@ -41,7 +42,7 @@ export type SocketServerDeps = {
     onSessionEnd?: (payload: { sid: string; time: number }) => void
     onMachineAlive?: (payload: { machineId: string; time: number }) => void
     onBackgroundTaskDelta?: (sessionId: string, delta: { started: number; completed: number }) => void
-    onSessionActivity?: (sessionId: string, updatedAt: number) => void
+    onSessionActivity?: (sessionId: string, updatedAt: number, activity: SessionActivity) => void
     onSweepImmediateQueued?: (sessionId: string, now: number) => void
 }
 

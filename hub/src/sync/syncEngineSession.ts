@@ -20,6 +20,7 @@ import type { MachineCache } from './machineCache'
 import type { MessageService } from './messageService'
 import type { RpcGateway } from './rpcGateway'
 import type { SessionCache } from './sessionCache'
+import type { SessionActivity } from './sessionActivity'
 import type { KeepaliveScheduler, SchedulerHandle } from '../utils/scheduler'
 import { SyncEngineSessionResume } from './syncEngineSessionResume'
 import type { LocalHandoffResult, LocalResumeTargetResult, ResumeSessionResult } from './syncEngineSessionTypes'
@@ -145,8 +146,8 @@ export class SyncEngineSession {
         this.sessionCache.applyBackgroundTaskDelta(sessionId, delta)
     }
 
-    recordSessionActivity(sessionId: string, updatedAt: number): void {
-        this.sessionCache.recordSessionActivity(sessionId, updatedAt)
+    recordSessionActivity(sessionId: string, updatedAt: number, activity?: SessionActivity): void {
+        this.sessionCache.recordSessionActivity(sessionId, updatedAt, activity)
     }
 
     expireInactive(): void {
