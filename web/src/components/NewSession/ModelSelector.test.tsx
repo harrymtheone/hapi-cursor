@@ -1,6 +1,6 @@
 import type { CursorModelDiscoveryResult } from '@hapi/protocol/types'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { I18nProvider } from '@/lib/i18n-context'
 import { ModelSelector } from './ModelSelector'
 
@@ -19,6 +19,8 @@ function renderSelector(props: Partial<Parameters<typeof ModelSelector>[0]> = {}
 }
 
 describe('ModelSelector', () => {
+    afterEach(() => cleanup())
+
     it('keeps auto visible while discovery is loading', () => {
         renderSelector({ isLoading: true })
 
