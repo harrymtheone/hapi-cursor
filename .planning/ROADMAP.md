@@ -27,7 +27,7 @@
 
 ### 📋 v1.1 (Planned)
 
-Next milestone to be defined via `/gsd-new-milestone`. Candidate scope (Milestone 2 — Cursor mobile incremental features): CURS-01 in-session model switching, CURS-02 Skills integration, CURS-03 MCP servers toggle, CURS-04 session list agent state, CURS-05 cursor-ide-browser screenshot view. Carry-forward backlog: M2-BL-01..10 (see `phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`).
+Next milestone to be defined via `/gsd-new-milestone`. Candidate scope (Milestone 2 — Cursor mobile incremental features): CURS-01 in-session model switching, CURS-02 Skills integration, CURS-03 MCP servers toggle, CURS-04 session list agent state, CURS-05 cursor-ide-browser screenshot view. Carry-forward backlog: M2-BL-01..10 (see `milestones/v1.0-phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`).
 
 ## Progress
 

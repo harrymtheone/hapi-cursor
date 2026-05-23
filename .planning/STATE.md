@@ -202,4 +202,4 @@ Items acknowledged and carried forward from previous milestone close:
 
 Last session: 2026-05-23T08:30:00.000Z
 Stopped at: Milestone 1 complete
-Resume file: .planning/phases/12-docs-cleanup-milestone-verification/12-VERIFICATION.md
+Resume file: .planning/milestones/v1.0-phases/12-docs-cleanup-milestone-verification/12-VERIFICATION.md

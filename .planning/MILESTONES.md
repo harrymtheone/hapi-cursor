@@ -26,7 +26,7 @@ Shipped milestones for HAPI Cursor Edition. Full archives live in `.planning/mil
 5. **0 circular dependencies** across `cli/` + `hub/` + `web/` (intra-package and cross-package) — enforced by `madge:check` in push-gated `.github/workflows/verify.yml` and per-phase `check-no-circular-{hub,web}.sh` guards
 6. **Test coverage closure** — Cursor permission-mode → CLI flag contract matrix (type-exhaustive + per-row deep-equal), SSE reconnect / patch-loss convergence test (bounded backoff + TanStack cache), auth route + middleware negative cases (16 tests, `assertNoSecretLeak` helper)
 7. **Documentation rewrite** — `README.md` / `AGENTS.md` / `cli/README.md` / `hub/README.md` / `web/README.md` rewritten from zero as Cursor-only Tailscale quickstart (364 lines total, AGENTS.md ≤ 100); `website/` + `docs/` deleted; repo-wide ripgrep guard (`scripts/check-no-cut-agents.sh`) enforces zero-residue of `claude|codex|gemini|opencode|telegram|serverchan|elevenlabs|tunwg|namespace` outside whitelisted paths
-8. **End-to-end Tailscale verification PASS** — manual phone scenario (new Cursor session → 1 round → kill hub → restart → state recovers → continue) on commit `e492044` (see `.planning/phases/12-docs-cleanup-milestone-verification/12-VERIFICATION.md`)
+8. **End-to-end Tailscale verification PASS** — manual phone scenario (new Cursor session → 1 round → kill hub → restart → state recovers → continue) on commit `e492044` (see `.planning/milestones/v1.0-phases/12-docs-cleanup-milestone-verification/12-VERIFICATION.md`)
 
 **Archive:**
 
@@ -37,7 +37,7 @@ Shipped milestones for HAPI Cursor Edition. Full archives live in `.planning/mil
 
 **Carry-forward to Milestone 2:**
 
-- M2-BL-01..10 backlog items (see `.planning/phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`)
+- M2-BL-01..10 backlog items (see `.planning/milestones/v1.0-phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`)
 - `reducerTimeline.ts` decomposition (925 LOC) — non-blocking
 - Cursor permission-mode helper promotion to `shared/` — non-blocking
 - Lint enforcement in CI — non-blocking
