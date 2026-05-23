@@ -28,6 +28,14 @@ export class SessionConfigService {
             return
         }
 
+        const hasConfigFields = config.permissionMode !== undefined
+            || config.model !== undefined
+            || config.modelReasoningEffort !== undefined
+            || config.effort !== undefined
+        if (!hasConfigFields) {
+            return
+        }
+
         if (config.permissionMode !== undefined) {
             session.permissionMode = config.permissionMode
         }

@@ -11,7 +11,7 @@
  */
 
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
-import type { DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
+import type { CursorRuntimeConfigApplyResult, DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
 import type { Store, CancelQueuedMessageResult } from '../store'
 import type { RpcRegistry } from '../socket/rpcRegistry'
@@ -265,8 +265,8 @@ export class SyncEngine {
             modelReasoningEffort?: string | null
             effort?: string | null
         }
-    ): Promise<void> {
-        await this.session.applySessionConfig(sessionId, config)
+    ): Promise<CursorRuntimeConfigApplyResult> {
+        return await this.session.applySessionConfig(sessionId, config)
     }
 
     async spawnSession(

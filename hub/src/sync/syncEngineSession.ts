@@ -13,7 +13,8 @@
  * into `syncEngineSessionResume.ts` to satisfy the SC#1 < 400 line budget.
  */
 import type { ResumableSession } from '@hapi/protocol'
-import type { PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
+import type { CursorRuntimeConfigApplyResult, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
+import { CursorRuntimeConfigApplyResultSchema } from '@hapi/protocol/schemas'
 import type { EventPublisher } from './eventPublisher'
 import type { MachineCache } from './machineCache'
 import type { MessageService } from './messageService'
@@ -181,31 +182,56 @@ export class SyncEngineSession {
             modelReasoningEffort?: string | null
             effort?: string | null
         }
-    ): Promise<void> {
+    ): Promise<CursorRuntimeConfigApplyResult> {
         const session = this.sessionCache.getSession(sessionId)
+        const hasRuntimeConfigRequest = config.model !== undefined
+            || config.modelReasoningEffort !== undefined
+            || config.effort !== undefined
         if (!session?.active) {
             // For inactive sessions, update the in-memory cache directly without
             // an RPC call — the CLI is not running yet. The updated value will be
             // passed to the spawned process when the session is resumed.
             this.sessionCache.applySessionConfig(sessionId, config)
-            return
+            return CursorRuntimeConfigApplyResultSchema.parse({
+                status: hasRuntimeConfigRequest ? 'applies-next-run' : 'applied',
+                model: config.model !== undefined ? config.model : session?.model ?? null,
+                modelReasoningEffort: config.modelReasoningEffort !== undefined
+                    ? config.modelReasoningEffort
+                    : session?.modelReasoningEffort ?? null,
+                effort: config.effort !== undefined ? config.effort : session?.effort ?? null,
+                ...(hasRuntimeConfigRequest ? { reason: 'unknown' } : {})
+            })
         }
 
         const result = await this.rpcGateway.requestSessionConfig(sessionId, config)
         if (!result || typeof result !== 'object') {
             throw new Error('Invalid response from session config RPC')
         }
-        const applied = (result as { applied?: {
-            permissionMode?: Session['permissionMode']
-            model?: Session['model']
-            modelReasoningEffort?: Session['modelReasoningEffort']
-            effort?: Session['effort']
-        } }).applied
-        if (!applied || typeof applied !== 'object') {
-            throw new Error('Missing applied session config')
+
+        const parsed = CursorRuntimeConfigApplyResultSchema.safeParse(result)
+        if (parsed.success) {
+            if (parsed.data.status === 'applied' || parsed.data.status === 'applies-next-run') {
+                this.sessionCache.applySessionConfig(sessionId, {
+                    model: parsed.data.model,
+                    modelReasoningEffort: parsed.data.modelReasoningEffort,
+                    effort: parsed.data.effort
+                })
+            }
+            return parsed.data
         }
 
-        this.sessionCache.applySessionConfig(sessionId, applied)
+        const applied = (result as { applied?: { permissionMode?: Session['permissionMode'] } }).applied
+        if (applied?.permissionMode !== undefined) {
+            this.sessionCache.applySessionConfig(sessionId, { permissionMode: applied.permissionMode })
+            return CursorRuntimeConfigApplyResultSchema.parse({
+                status: 'applied',
+                model: session.model ?? null,
+                modelReasoningEffort: session.modelReasoningEffort ?? null,
+                effort: session.effort ?? null
+            })
+        }
+
+        throw new Error('Missing applied session config')
     }
 
     resolveLocalResumeTarget(sessionId: string, _scope?: string): LocalResumeTargetResult {

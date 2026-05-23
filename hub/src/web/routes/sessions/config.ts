@@ -1,11 +1,11 @@
-import { getPermissionModesForFlavor, isPermissionModeAllowedForFlavor, supportsModelChange } from '@hapi/protocol'
+import { getPermissionModesForFlavor, isPermissionModeAllowedForFlavor } from '@hapi/protocol'
 import { PermissionModeSchema } from '@hapi/protocol/schemas'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { SyncEngine } from '../../../sync/syncEngine'
 import { ApiRouteError } from '../../middleware/apiRouteError'
 import type { WebAppEnv } from '../../middleware/auth'
-import { parseJsonBody, withActiveSession, withEngine, withSession } from '../../middleware/route-helpers'
+import { parseJsonBody, withEngine, withSession } from '../../middleware/route-helpers'
 
 const permissionModeSchema = z.object({
     mode: PermissionModeSchema
@@ -51,18 +51,15 @@ export function createConfigRoutes(
     app.post(
         '/sessions/:id/model',
         withEngine(getSyncEngine),
-        withActiveSession(),
+        withSession(),
         parseJsonBody(modelSchema),
         async (c) => {
             const session = c.get('session')
             const body = c.get('body') as z.infer<typeof modelSchema>
 
-            if (!supportsModelChange('cursor')) {
-                throw new ApiRouteError(400, 'model-change-unsupported', undefined, 'Model selection is not supported for this session')
-            }
             try {
-                await c.get('engine').applySessionConfig(session.id, { model: body.model })
-                return c.json({ ok: true })
+                const result = await c.get('engine').applySessionConfig(session.id, { model: body.model })
+                return c.json(result)
             } catch (error) {
                 const message = error instanceof Error ? error.message : 'Failed to apply model'
                 throw new ApiRouteError(409, 'apply-config-failed', undefined, message)
