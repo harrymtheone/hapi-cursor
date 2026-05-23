@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: milestone_complete
-stopped_at: Milestone complete (Phase 12 was final phase)
-last_updated: 2026-05-23T08:37:10.745Z
+milestone_name: Refactor & Slim-Down
+status: shipped
+stopped_at: v1.0 milestone archived; awaiting /gsd-new-milestone
+last_updated: "2026-05-23T08:40:00.000Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 12
   completed_phases: 12
   total_plans: 60
-  completed_plans: 59
+  completed_plans: 60
   percent: 100
 ---
 
@@ -21,13 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Milestone complete
+**Current focus:** v1.0 archived to `.planning/milestones/` — ready for `/gsd-new-milestone` to start v1.1 (Cursor mobile features)
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
-Status: Milestone complete
+Milestone: v1.0 — SHIPPED & ARCHIVED 2026-05-23
+Phase: 12 (docs-cleanup-milestone-verification) — COMPLETE
+Plan: 12-04 — Complete
+Tag: v1.0
 Last activity: 2026-05-23
 
 Progress: [██████████] 100%
@@ -36,7 +37,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 60
+- Total plans completed: 56
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -55,7 +56,6 @@ Progress: [██████████] 100%
 | 09 | 4 | - | - |
 | 10 | 4 | - | - |
 | 11 | 5 | - | - |
-| 12 | 4 | - | - |
 
 **Recent Trend:**
 

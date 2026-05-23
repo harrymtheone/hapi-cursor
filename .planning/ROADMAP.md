@@ -1,252 +1,51 @@
-# Roadmap: HAPI Cursor Edition — Milestone 1 (Refactor & Slim-Down)
+# Roadmap: HAPI Cursor Edition
 
-## Overview
+## Milestones
 
-Milestone 1 is a pure refactor + cleanup milestone on a brownfield fork. The journey: first **shrink** the codebase by deleting four non-Cursor agent runtimes and three external integration surfaces (Telegram bot, ElevenLabs voice, ServerChan push), then **collapse** multi-user namespacing and deployment-tunnel infrastructure that single-user Tailscale usage doesn't need, then **rebuild** the abstractions that Milestone 2 (Cursor incremental features) will depend on — a populated flavor capability table, a shared agent runtime kit, a single wire-contract source in `shared/`, a decomposed hub sync layer, decomposed web components, immutable config, and a focused test suite. The milestone closes with documentation cleanup and end-to-end verification on a real Tailscale + phone session.
-
-Phases execute sequentially. Big deletions go first so every downstream refactor touches a smaller surface. Verification is the final gate — `bun typecheck`, `bun run test`, `madge` cycle scans, ripgrep absence checks, and one manual Tailscale scenario.
+- ✅ **v1.0 Refactor & Slim-Down** — Phases 1–12 (shipped 2026-05-23) — see [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
+- 📋 **v1.1 Cursor mobile features** — TBD (start with `/gsd-new-milestone`)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+<details>
+<summary>✅ v1.0 Refactor & Slim-Down (Phases 1–12) — SHIPPED 2026-05-23</summary>
 
-Decimal phases appear between their surrounding integers in numeric order.
+- [x] Phase 1: Cut non-Cursor agents (5/5 plans) — completed 2026-05-20
+- [x] Phase 2: Cut external integration channels (6/6 plans) — completed 2026-05-21
+- [x] Phase 3: Cut multi-user namespace isolation (7/7 plans) — completed 2026-05-21
+- [x] Phase 4: Cut deployment infrastructure (4/4 plans) — completed 2026-05-21
+- [x] Phase 5: Flavor consolidation + capability abstraction (8/8 plans) — completed 2026-05-22
+- [x] Phase 6: Agent runtime shared kit + mode hardening (4/4 plans) — completed 2026-05-22
+- [x] Phase 7: Wire contracts unification & SSE patch contract (4/4 plans) — completed 2026-05-22
+- [x] Phase 8: Hub internal decoupling (4/4 plans) — completed 2026-05-23
+- [x] Phase 9: Web internal decoupling (4/4 plans) — completed 2026-05-23
+- [x] Phase 10: Config cleanup (4/4 plans) — completed 2026-05-23
+- [x] Phase 11: Test gap fill (5/5 plans) — completed 2026-05-23
+- [x] Phase 12: Docs cleanup & milestone verification (4/4 plans) — completed 2026-05-23
 
-- [x] **Phase 1: Cut non-Cursor agents** — Delete Claude / Codex / Gemini+ACP / OpenCode runtimes, hooks, commands, and CI (completed 2026-05-20)
-- [x] **Phase 2: Cut external integration channels** — Delete Telegram bot, ElevenLabs voice route, ServerChan push channel (completed 2026-05-21)
-- [x] **Phase 3: Cut multi-user namespace isolation** — Remove `CLI_API_TOKEN:<namespace>` suffix, user platform field, namespace-aware cache keys (completed 2026-05-21)
-- [x] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream (completed 2026-05-21)
-- [x] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches (completed 2026-05-22)
-- [x] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode (completed 2026-05-22)
-- [x] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection (completed 2026-05-22)
-- [x] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler (completed 2026-05-23)
-- [x] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/` (completed 2026-05-23)
-- [x] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters (completed 2026-05-23)
-- [x] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases (completed 2026-05-23)
-- [x] **Phase 12: Docs cleanup & milestone verification** — Cursor-only README/AGENTS/docs; delete `website/`; full `bun typecheck` + `bun run test` + `madge` + ripgrep absence + manual Tailscale scenario (completed 2026-05-23)
+</details>
 
-## Phase Details
+### 📋 v1.1 (Planned)
 
-### Phase 1: Cut non-Cursor agents
-**Goal**: Repository contains only Cursor-agent code; Claude, Codex, Gemini (+ACP), and OpenCode runtimes are fully removed.
-**Depends on**: Nothing (first phase)
-**Requirements**: CUT-01, CUT-02, CUT-03, CUT-04
-**Success Criteria** (what must be TRUE):
-  1. `bun typecheck` and `bun run test` both pass after deleting `cli/src/claude/`, `cli/src/codex/`, `cli/src/gemini/`, `cli/src/opencode/`, and `cli/src/agent/backends/`
-  2. ripgrep across `cli/`, `hub/`, `web/`, `shared/` finds zero matches for `claude` / `codex` / `gemini` / `opencode` outside whitelisted paths. **Whitelist for Phase 1:** `.planning/codebase/`, `CHANGELOG.md`, and `shared/src/flavors.ts` (the `AgentFlavor` union literal is Phase-5-owned territory — see Phase 5 SC#1 for the final narrowing to `'cursor'`). If research/planning surfaces additional `shared/` files whose flavor literals are structurally tied to the union type (e.g. `shared/src/modes.ts`, `shared/src/models.ts`), they may be added to this whitelist in the phase PLAN with an explicit Phase-5 hand-off note.
-  3. `cli/src/commands/registry.ts` no longer references `claudeCommand` / `codexCommand` / `geminiCommand` / `opencodeCommand`; default subcommand resolves to Cursor
-  4. GitHub workflow files `codex-pr-review.yml` and `codex-mention-response.yml` are removed; Claude `hookForwarder` and `cli/src/codex/happyMcpStdioBridge.ts` are removed
-  5. `package.json` files no longer declare `@anthropic-ai/*` or any non-Cursor agent SDK dependency; `bun.lock` regenerated
-**Plans**: 5 plans
-- [x] 01-01-PLAN.md — Wave 0 (A1/A2/A4/Q3 + ripgrep guard scaffold) + CUT-01 Claude removal
-- [x] 01-02-PLAN.md — CUT-02 Codex removal + GitHub workflows + wire-symbol renames
-- [x] 01-03-PLAN.md — CUT-03 Gemini + ACP backend + dead shared abstractions
-- [x] 01-04-PLAN.md — CUT-04 OpenCode removal
-- [x] 01-05-PLAN.md — Final cleanup: registry.ts fallback, codexSlashCommands rename, tighten ripgrep whitelist, bun.lock regen
-
-### Phase 2: Cut external integration channels
-**Goal**: Telegram bot, ElevenLabs voice route, and ServerChan push channel are fully removed from hub, web, and shared.
-**Depends on**: Phase 1
-**Requirements**: CUT-06, CUT-07, CUT-08
-**Success Criteria** (what must be TRUE):
-  1. `bun typecheck` and `bun run test` both pass after deleting `hub/src/telegram/`, `hub/src/web/telegramInitData.ts`, `hub/src/web/routes/bind.ts`, `hub/src/web/routes/voice.ts`, `hub/src/serverchan/`, `web/src/realtime/`, `shared/src/voice.ts`
-  2. ripgrep finds zero matches for `telegram` / `serverchan` / `elevenlabs` / `grammy` across `cli/`, `hub/`, `web/`, `shared/` outside whitelisted history paths
-  3. `package.json` files no longer declare `grammy` or `@elevenlabs/react`; the notification channel array in `hub/src/index.ts` no longer references Telegram or ServerChan channels
-  4. Env vars `TELEGRAM_BOT_TOKEN` / `TELEGRAM_NOTIFICATION` / `SERVERCHAN_SENDKEY` / `SERVERCHAN_NOTIFICATION` are not read anywhere in the codebase
-  5. `/api/auth` no longer accepts a Telegram `initData` path; `bun run test` covers only the access-token authentication branch
-**Plans**: 6 plans
-- [x] 02-01-PLAN.md — CUT-06 hub-side: delete hub/src/telegram/, telegramInitData, bind, auth schema collapse, grammy dep, settings TELEGRAM_* fields
-- [x] 02-02-PLAN.md — CUT-06 web-side: delete useTelegram, collapse useAuthSource/useAuth/usePlatform, strip Telegram WebApp from main/router/sw/App + components + i18n + CSS
-- [x] 02-03-PLAN.md — CUT-07: delete hub voice route, web/src/realtime/, voice-context, shared/src/voice.ts, @elevenlabs/react dep, settings Voice Assistant section, voice i18n keys
-- [x] 02-04-PLAN.md — CUT-08: delete hub/src/serverchan/, ServerChan channel registration, settings serverChan* fields
-- [x] 02-05-PLAN.md — Final cleanup: CLI residuals (TerminalManager + notify), hub banner scrub, extend ripgrep guard PATTERN with telegram|serverchan|elevenlabs|grammy, bun.lock regen
-- [x] 02-06-PLAN.md — VERIFICATION gap closure: HI-01 fetchVoiceToken, HI-02 /api/bind auth bypass, HI-03 web/src/lib/languages.ts
-
-### Phase 3: Cut multi-user namespace isolation
-**Goal**: Hub treats every CLI/web connection as belonging to one user; the namespace concept is removed from auth, sockets, store, and caches.
-**Depends on**: Phase 2
-**Requirements**: CUT-09
-**Success Criteria** (what must be TRUE):
-  1. `bun typecheck` and `bun run test` both pass after dropping namespace from `parseAccessToken`, socket handshake (`socket.data.namespace`), JWT payload (`ns` field), and every store/cache method signature
-  2. ripgrep finds zero matches for `namespace` / `:ns` in `cli/src/`, `hub/src/`, `web/src/`, `shared/src/` outside whitelisted history paths
-  3. `CLI_API_TOKEN` parsing no longer splits on `:`; the token is treated as a single opaque secret
-  4. SQLite store queries no longer scope rows by `namespace`; the `users` table `platform` column is removed via an offline migration tool entry; in-memory cache keys no longer include namespace
-  5. `bun run test` exercises auth + session + machine flows without any namespace test fixture
-**Plans**: 7 plans
-- [x] 03-01-PLAN.md — Opaque token parsing/config and `/api/cli/*` bearer token comparison
-- [x] 03-02-PLAN.md — Namespace-free store/cache/SyncEngine facades while old internals temporarily coexist
-- [x] 03-03-PLAN.md — Atomic web auth/routes plus EventPublisher/SSE/SyncEngine namespace contract cleanup
-- [x] 03-04-PLAN.md — Atomic Socket.IO server/data/CLI handler cleanup plus visibility and push delivery
-- [x] 03-05-PLAN.md — Shared Session/SyncEvent/socket contracts plus CLI/web mirrors without namespace
-- [x] 03-06-PLAN.md — Runtime schema v10, user-store deletion, namespace-free store SQL, and offline v9-to-v10 migration
-- [x] 03-07-PLAN.md — Final `namespace|:ns` source guard and full validation gate
-
-### Phase 4: Cut deployment infrastructure
-**Goal**: Hub no longer ships a built-in WireGuard/TLS tunnel binary or an upstream remote-log upload channel.
-**Depends on**: Phase 3
-**Requirements**: CUT-10, CUT-11
-**Success Criteria** (what must be TRUE):
-  1. `bun typecheck` and `bun run test` both pass after deleting `hub/src/tunnel/`, `hub/tools/tunwg/`, `hub/scripts/download-tunwg.ts`, and `web/src/lib/relay-mode*`
-  2. ripgrep finds zero matches for `tunwg` / `HAPI_RELAY_` / `DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING` across the repo (whitelist: `.planning/codebase/`, `CHANGELOG.md`)
-  3. `cli/src/ui/logger.ts` no longer forwards logs to `HAPI_API_URL`; `cli/src/ui/doctor.ts` no longer surfaces the remote-log toggle
-  4. `bun run build:single-exe` succeeds without any tunwg download or extraction step; QR-code rendering for tunnel URL removed from `hub/src/index.ts`
-  5. Documentation references to relay/tunnel features removed from inline JSDoc and code comments (deferred prose docs handled in Phase 12)
-**Plans**: 4 plans
-- [x] 04-01-PLAN.md — Tunnel and hosted relay-web runtime deletion
-- [x] 04-02-PLAN.md — Relay config/settings/env convergence
-- [x] 04-03-PLAN.md — Remote logging and doctor cleanup
-- [x] 04-04-PLAN.md — Build/runtime assets, lockfile, guard, and final gate
-
-### Phase 5: Flavor consolidation + capability abstraction
-**Goal**: `shared/src/flavors.ts` describes Cursor as the only flavor with an extensible, populated capability set; every capability check reads from this table.
-**Depends on**: Phase 4 (and structurally Phase 1)
-**Requirements**: CUT-05, REFA-01
-**Success Criteria** (what must be TRUE):
-  1. `AgentFlavor` type narrows to the literal `'cursor'`; ripgrep finds zero references to `'claude' | 'codex' | 'gemini' | 'opencode'` or to capability rows for those flavors
-  2. `cursor` capability set in `shared/src/flavors.ts` is non-empty and covers the capability slots needed by current Cursor code paths (e.g. permission-mode set, model list source, RPC tools)
-  3. Adding a new Cursor capability requires only an entry in `shared/src/flavors.ts` — ripgrep finds zero `if (flavor ===` / `switch (flavor)` comparisons or hardcoded capability gates anywhere in `cli/`, `hub/`, `web/`
-  4. `bun typecheck` and `bun run test` both pass; capability lookup helper has a focused unit test
-**Plans**: 8 plans
-- [x] 05-01-PLAN.md — Slice 1a (shared add): FlavorCapabilities type + Record-shaped FLAVOR_CAPS + lookup helpers + rewritten 23-case flavors.test.ts (SC#4 seed)
-- [x] 05-02-PLAN.md — Slice 2a (web ToolCard): PermissionFooter capability-driven tone, delete Codex* renderer files + registry purge, drop acceptEdits UI
-- [x] 05-03-PLAN.md — Slice 2b (web NewSession/AssistantChat/SessionList): AgentType narrow to 'cursor', delete codex/claude option files, FLAVOR_BADGES single-row
-- [x] 05-04-PLAN.md — Slice 2c (web chat/lib/hooks/api): capability-driven getContextBudgetTokens, AGENT_MESSAGE_PAYLOAD_TYPE constant adoption, delete useCodexModels + setCollaborationMode
-- [x] 05-05-PLAN.md — Slice 3a (cli): slashCommands capability lookup, runner Cursor default, delete CodexDisplay + Codex skills path, rename Claude-named helpers
-- [x] 05-06-PLAN.md — Slice 3b (hub): syncEngine degenerate-ternary collapse, hub-route defaults to 'cursor', machines.ts Zod enum narrow, test fixtures Cursor-only
-- [x] 05-07-PLAN.md — Slice 1b (shared delete — closes the door): AgentFlavor narrow to 'cursor', delete non-cursor *_PERMISSION_MODES + CodexCollaborationMode*, narrow AgentFlavorSchema, delete SessionSchema.collaborationMode
-- [x] 05-08-PLAN.md — Slice 4 (guard + final verification): shrink Phase-5-territory whitelist, line-anchored AGENT_MESSAGE_PAYLOAD_TYPE post-filter, PHASE5_IDENTIFIER_PATTERN sweep, FLAVOR_BRANCH sweep
-
-### Phase 6: Agent runtime shared kit + mode hardening
-**Goal**: Cursor local and remote launchers share a single runtime kit; the `loop ↔ session ↔ launcher` circular-dependency group is broken; unknown permission modes throw.
-**Depends on**: Phase 5
-**Requirements**: REFA-02, REFA-05
-**Success Criteria** (what must be TRUE):
-  1. `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy` exist as a shared module under `cli/src/agent/`; `cursorLocalLauncher` and `cursorRemoteLauncher` import from it instead of duplicating permission-mode mapping
-  2. `madge` (or equivalent) reports zero circular dependencies in `cli/src/cursor/`; mode types live in a dedicated `modes.ts` module that does not import from `loop.ts` / `session.ts` / launcher files
-  3. Unknown permission mode raises a typed error with the offending mode name; ripgrep finds zero TODOs of the form `// Eventually we should error here instead of silently switching`
-  4. New tests cover mid-session `bypass + remote` and `bypass + plan` switches plus the unknown-mode error path; existing `bun run test` suite stays green
-  5. `bun typecheck` passes; no `cursorLocalLauncher` ↔ `cursorRemoteLauncher` copy-paste detected by ripgrep on permission-mode mapping
-**Plans**: 4 plans
-- [x] 06-01-PLAN.md — Extract `cli/src/cursor/modes.ts` leaf module + redirect imports; break the 3 madge cycles in `cli/src/cursor` (completed 2026-05-22)
-- [x] 06-02-PLAN.md — Add `UnknownPermissionModeError` to `shared/src/modes.ts`; create `cli/src/agent/modeConfig.ts` + unit tests; upgrade `runCursor.ts::resolvePermissionMode` throw class
-- [x] 06-03-PLAN.md — Converge both launchers onto `modeConfig.permissionModeToCursorArgs`; delete `permissionModeToAgentArgs` + `as string` casts; export `buildAgentArgs`; stamp 4 SC#1 JSDoc anchors
-- [x] 06-04-PLAN.md — Add mid-session yolo + plan switch tests (remote + local); extend `scripts/check-no-cut-agents.sh` with Phase 6 ripgrep + madge guard; pin `madge` devDep (completed 2026-05-22)
-
-### Phase 7: Wire contracts unification & SSE patch contract
-**Goal**: `shared/` is the only source of `Session / Machine / Message / RunnerState` DTOs and SSE event payloads; the web client no longer guesses about the server contract.
-**Depends on**: Phase 6
-**Requirements**: REFA-03, REFA-04
-**Success Criteria** (what must be TRUE):
-  1. `Session`, `Machine`, `Message`, `RunnerState`, and their Zod schemas are defined exactly once, in `shared/src/schemas.ts`; ripgrep finds zero duplicate interface/type declarations in `cli/src/api/types.ts`, `web/src/types/api.ts`, `hub/src/web/routes/`, or `hub/src/sync/sessionCache.ts`
-  2. `hasUnknownSessionPatchKeys()` and any heuristic patch-key detection are removed from `web/src/hooks/useSSE.ts`; SSE events emit either a full `SessionSummary`/`MachineSummary` or a strict patch schema defined in `shared/` (the chosen path is documented in code)
-  3. Front-end SSE event handlers consume the canonical schema directly; TanStack Query cache updates derive from the schema without any "fallback to refetch list" branch
-  4. `bun typecheck` and `bun run test` both pass; new tests exercise the SSE handler against a strictly typed event stream
-**Plans**: 4 plans
-- [x] 07-01-PLAN.md — Slice 1: shared schema lift (Machine/RunnerState/Message/Patch) + SyncEventSchema tighten + AGENT_MESSAGE_PAYLOAD_TYPE='cursor' + MetadataSchema.flavor delete + schemas.test.ts
-- [x] 07-02-PLAN.md — Slice 2: hub broadcast conformance + machineCache type collapse + syncEngine flavor-defense delete + sessionCache.test.ts contract test (completed 2026-05-22)
-- [x] 07-03-PLAN.md — Slice 3: cli + web type-duplicate cleanup + useSSE rewrite (delete 7 narrows + invalidation queue) + useSSE.test.tsx (backgroundTaskCount regression) (completed 2026-05-22)
-- [x] 07-04-PLAN.md — Slice 4: scripts/check-no-cut-agents.sh D-126 additions + D-124 whitelist removal + final ripgrep zero-hit phase gate (completed 2026-05-22)
-
-### Phase 8: Hub internal decoupling
-**Goal**: Hub sync layer is decomposed into single-responsibility services; SSE no longer reverse-depends on `SyncEngine`; every recurring timer goes through a shared scheduler that is fully cleared on shutdown.
-**Depends on**: Phase 7
-**Requirements**: REFH-01, REFH-02, REFH-03, REFH-04
-**Success Criteria** (what must be TRUE):
-  1. `SessionCache` (was 796 lines) is replaced by `sessionRepository / sessionLivenessService / sessionConfigService / sessionMergeService`; `SyncEngine` (was 854 lines) is decomposed; no file in `hub/src/sync/` exceeds ~400 lines
-  2. `hub/src/sse/` imports only from `shared/` for event types — ripgrep finds zero `import { SyncEngine }` or `import .* from '@/sync/syncEngine'` inside `hub/src/sse/`
-  3. `hub/src/web/routes/sessions.ts` is split by responsibility (lifecycle / config / upload / read-only); every route file uses `parseJsonBody(schema) / withEngine / withSession / withActiveSession / withMachine` helpers and surfaces errors as a unified `ApiRouteError`
-  4. All `setInterval` / `setTimeout` usage in `hub/src/{sse,sync,socket,notifications}/` goes through a single keepalive scheduler; a test asserts every timer is cleared on `process.exit` (SIGINT case included)
-  5. `madge` reports zero circular dependencies inside `hub/src/`; `bun typecheck` and `bun run test` both pass
-**Plans**: 4 plans
-- [x] 08-01-PLAN.md — Slice 1 (REFH-01): SessionCache 4-way split into sessionRepository/Liveness/Config/Merge + thin facade; redistribute tests
-- [x] 08-02-PLAN.md — Slice 2 (REFH-02 + REFH-04): KeepaliveScheduler + 4 timer rewires + SyncEngine 4 sub-facades + SSE SyncEvent swap + SIGINT closure extension (completed 2026-05-23)
-- [x] 08-03-PLAN.md — Slice 3 (REFH-03): route-helpers middleware + ApiRouteError + app.onError + sessions.ts → sessions/{lifecycle,config,upload,read,index}.ts (completed 2026-05-23)
-- [x] 08-04-PLAN.md — Slice 4: check-no-circular-hub.sh + Phase-8 D-143 block appended to check-no-cut-agents.sh; consolidated phase gate (completed 2026-05-23)
-
-### Phase 9: Web internal decoupling
-**Goal**: Web circular dependencies are broken, oversized files are decomposed, and duplicated utilities live in `shared/` instead of being copy-pasted across packages.
-**Depends on**: Phase 8
-**Requirements**: REFW-01, REFW-02, REFW-03
-**Success Criteria** (what must be TRUE):
-  1. `madge` reports zero cycles inside `web/src/components/ToolCard/`; an integration test asserts every known tool in `knownTools.tsx` resolves to a renderer (no missing-view fallback)
-  2. None of `SessionList.tsx`, `message-window-store.ts`, `reducerTimeline.ts`, `routes/settings/index.tsx`, or `AssistantChat/HappyComposer.tsx` exceeds ~500 lines after decomposition; each split unit has a focused colocated test
-  3. Levenshtein distance, base64 size estimation, Cursor permission-mode mapping, and the `createApiQuery` hook factory live in `shared/`; ripgrep finds zero duplicate implementations in `cli/` or `web/`
-  4. `madge` reports zero cycles inside `web/src/`; `bun typecheck` and `bun run test` both pass
-**Plans**: 4 plans
-- [x] 09-01-PLAN.md — Slice 1: util dedup (estimateBase64Bytes → shared, levenshteinDistance → web/lib, createApiQuery factory) + check-no-circular-web.sh + ToolCard.integration.test.tsx + knownTools.tsx fallback testid
-- [x] 09-02-PLAN.md — Slice 2: message-window-store → facade + 5 sub-modules; SessionList.tsx → orchestrator + 4 hooks + 4 sub-components
-- [x] 09-03-PLAN.md — Slice 3: settings/index.tsx → orchestrator + _sections; HappyComposer.tsx → orchestrator + 2 hooks + overlays; _results.tsx → dispatcher + results/{Bash,LineList,Read}Result.tsx + _resultHelpers.tsx
-- [x] 09-04-PLAN.md — Slice 4: append Phase 9 D-158 sweep block to check-no-cut-agents.sh; tail-invoke check-no-circular-web.sh; full phase gate green (completed 2026-05-23)
-**UI hint**: yes
-
-### Phase 10: Config cleanup
-**Goal**: Backward-compat config aliases, the `hapi server` command alias, and all runtime SQLite migration paths are dropped; both CLI and Hub expose config as a frozen value loaded once at startup.
-**Depends on**: Phase 9
-**Requirements**: REFC-01, REFC-02
-**Success Criteria** (what must be TRUE):
-  1. ripgrep finds zero matches for `serverUrl` / `webapp(Url|Host|Origin)` legacy field reads, zero `hapi server` command alias, and zero callsites of `_setApiUrl()` / `_setCliApiToken()` / `_setExtraHeaders()` in `cli/` or `hub/`
-  2. SQLite store rejects schema-version mismatches at startup with an explicit error pointing users to an offline migration tool; runtime `migration-vN.ts` source files are removed (their tests stay only if they cover the offline tool)
-  3. CLI `loadConfig()` and Hub `loadConfig()` each return a `Readonly<...>` (or `Object.freeze`d) result; consumers receive config via dependency injection — no module-level mutable singleton remains
-  4. `bun typecheck` and `bun run test` both pass; a new test verifies that mutating a returned config object throws in strict mode
-**Plans**: 4 plans
-- [x] 10-01-PLAN.md — Slice 1: residue + Wave-0 test scaffolds + Phase-10 guard block stub (delete `hapi server` alias + RETIRED_COMMANDS resolver guard, fix WEBAPP_* env-rename bug in `cli/src/commands/hub.ts`, seed configuration.test.ts skeletons + Store schema-mismatch tests, add Phase-10 guard block with alias + migration-v* checks active)
-- [x] 10-02-PLAN.md — Slice 2: Hub `loadConfig()` + DI cutover (single coordinated wave per HIGH-risk note: rewrite `hub/src/configuration.ts` as frozen factory, add `rejectOldEnvVars`, cut over all 7 Hub consumers — jwtSecret/ownerId/web-server/socket-server/cli+auth routes — preserve `constantTimeEquals` at 3 sites)
-- [x] 10-03-PLAN.md — Slice 3: CLI `loadConfig()` + bootstrap-then-freeze + DI cutover (rewrite `cli/src/configuration.ts`, delete `apiUrlInit.ts`, refactor `tokenInit.ts` → `bootstrapToken`, parameterize `persistence.ts`, cut over ~30 CLI consumers, convert 4 singleton-mocking tests to `makeConfig` factory, integration regression for `hapi hub --host/--port`)
-- [x] 10-04-PLAN.md — Slice 4: `cli/src/lib.ts` public-library export swap + SQLite final cleanup + finalize Phase-10 guard (D-166 lib.ts breaking change, D-173 Store error wording + test assertion, D-174 SCHEMA_VERSION decision recorded, flip all 5 guard sub-checks to active, close phase gate)
-
-### Phase 11: Test gap fill
-**Goal**: Cursor permission contract, SSE reconnect invariants, and auth route negative cases are covered by automated tests.
-**Depends on**: Phase 10
-**Requirements**: REFT-01, REFT-02, REFT-03
-**Success Criteria** (what must be TRUE):
-  1. A single Cursor permission contract matrix test asserts every `PermissionMode → Cursor CLI flag` row; adding a new mode without a matrix row fails the test
-  2. A new SSE reconnect / patch-loss invariant test simulates dropped events plus reconnection; the front-end query cache converges to the authoritative server state within a bounded retry budget
-  3. Auth route negative-case tests cover bad token, expired JWT, replayed JWT, and empty body — every case returns the expected 4xx status without leaking secrets in the response body or logs
-  4. `bun run test` is green; coverage for `cli/src/cursor/`, `hub/src/web/routes/auth.ts`, `hub/src/sse/`, and `web/src/hooks/useSSE.ts` does not regress versus Phase 10
-**Plans**: 5 plans
-- [x] 11-01-PLAN.md — Phase 10 coverage baseline capture from `main` for the five Phase 11 SUT scopes (orchestrator override 2026-05-23)
-- [x] 11-02-PLAN.md — REFT-01: `cli/src/agent/permissionMatrix.test.ts` (type-exhaustive + runtime key cross-check + per-row deep-equal; D-176/D-177/D-178)
-- [x] 11-03-PLAN.md — REFT-03: `assertNoSecretLeak` helper + `hub/src/web/routes/auth.test.ts` + `hub/src/web/middleware/auth.test.ts` (two-layer split, no replay-detection per D-184; orchestrator override drops `uid != ownerId` case)
-- [x] 11-04-PLAN.md — REFT-02: minimal `export` of useSSE backoff constants (D-190 carve-out) + reconnect convergence describe block (bounded-window + cache-converges; no MAX_RETRIES per RESEARCH § M2) (completed 2026-05-23)
-- [x] 11-05-PLAN.md — Phase 11 guard block append (D-179) + Phase 11 coverage capture + non-regression diff vs Phase 10 baseline + full phase gate (D-188/D-189) (completed 2026-05-23)
-
-### Phase 12: Docs cleanup & milestone verification
-**Goal**: Documentation reflects the Cursor-only post-cut codebase, and all Milestone 1 acceptance checks pass end-to-end.
-**Depends on**: Phase 11
-**Requirements**: CUT-12, VRFY-01, VRFY-02, VRFY-03, VRFY-04
-**Success Criteria** (what must be TRUE):
-  1. Root `README.md`, `AGENTS.md`, `cli/README.md`, `hub/README.md`, `web/README.md` describe Cursor as the only supported agent — no Claude / Codex / Gemini / OpenCode mentions; `website/` directory is deleted; `docs/` retains only Cursor-relevant pages
-  2. `bun typecheck` and `bun run test` are both green; lint is green if a linter is configured (lint is currently not enforced — surface that fact in the verification report)
-  3. `madge` reports zero circular dependencies across `cli/`, `hub/`, and `web/` (intra-package and cross-package)
-  4. ripgrep finds zero matches for `claude` / `codex` / `gemini` / `opencode` / `telegram` / `serverchan` / `elevenlabs` / `tunwg` / `namespace` in non-historical files (whitelist: `.planning/codebase/` snapshots, `CHANGELOG.md`, git history)
-  5. Manual Tailscale + Cursor scenario passes end-to-end: local `hapi runner` + hub running; phone on Tailscale opens the Web PWA, creates a new Cursor session, completes one round of interaction, the hub is killed and restarted, session state recovers, and the next round of interaction continues successfully
-**Plans**: 4 plans
-- [x] 12-01-PLAN.md — CUT-12 docs surface contraction: delete website/, docs/, refactor.md; trim workspaces; Phase-12 guard block (completed 2026-05-23)
-- [x] 12-02-PLAN.md — README + AGENTS.md rewrite from zero (Cursor-only); contract whitelist after rewrite (completed 2026-05-23)
-- [x] 12-03-PLAN.md — Root `madge:check` script + `.github/workflows/verify.yml` (push + PR gate) (completed 2026-05-23)
-- [x] 12-04-PLAN.md — Milestone 1 verification: automated gates + coverage snapshot + manual Tailscale scenario + ROADMAP reconcile + sign-off (completed 2026-05-23)
+Next milestone to be defined via `/gsd-new-milestone`. Candidate scope (Milestone 2 — Cursor mobile incremental features): CURS-01 in-session model switching, CURS-02 Skills integration, CURS-03 MCP servers toggle, CURS-04 session list agent state, CURS-05 cursor-ide-browser screenshot view. Carry-forward backlog: M2-BL-01..10 (see `phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`).
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Cut non-Cursor agents | 5/5 | Complete   | 2026-05-20 |
-| 2. Cut external integration channels | 6/6 | Complete   | 2026-05-21 |
-| 3. Cut multi-user namespace isolation | 7/7 | Complete   | 2026-05-21 |
-| 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
-| 5. Flavor consolidation + capability abstraction | 8/8 | Complete   | 2026-05-22 |
-| 6. Agent runtime shared kit + mode hardening | 4/4 | Complete   | 2026-05-22 |
-| 7. Wire contracts unification & SSE patch contract | 4/4 | Complete   | 2026-05-22 |
-| 8. Hub internal decoupling | 4/4 | Complete   | 2026-05-23 |
-| 9. Web internal decoupling | 4/4 | Complete   | 2026-05-23 |
-| 10. Config cleanup | 4/4 | Complete    | 2026-05-23 |
-| 11. Test gap fill | 5/5 | Complete   | 2026-05-23 |
-| 12. Docs cleanup & milestone verification | 4/4 | Complete    | 2026-05-23 |
+| Phase                                              | Milestone | Plans | Status   | Completed  |
+| -------------------------------------------------- | --------- | ----- | -------- | ---------- |
+| 1. Cut non-Cursor agents                           | v1.0      | 5/5   | Complete | 2026-05-20 |
+| 2. Cut external integration channels               | v1.0      | 6/6   | Complete | 2026-05-21 |
+| 3. Cut multi-user namespace isolation              | v1.0      | 7/7   | Complete | 2026-05-21 |
+| 4. Cut deployment infrastructure                   | v1.0      | 4/4   | Complete | 2026-05-21 |
+| 5. Flavor consolidation + capability abstraction   | v1.0      | 8/8   | Complete | 2026-05-22 |
+| 6. Agent runtime shared kit + mode hardening       | v1.0      | 4/4   | Complete | 2026-05-22 |
+| 7. Wire contracts unification & SSE patch contract | v1.0      | 4/4   | Complete | 2026-05-22 |
+| 8. Hub internal decoupling                         | v1.0      | 4/4   | Complete | 2026-05-23 |
+| 9. Web internal decoupling                         | v1.0      | 4/4   | Complete | 2026-05-23 |
+| 10. Config cleanup                                 | v1.0      | 4/4   | Complete | 2026-05-23 |
+| 11. Test gap fill                                  | v1.0      | 5/5   | Complete | 2026-05-23 |
+| 12. Docs cleanup & milestone verification          | v1.0      | 4/4   | Complete | 2026-05-23 |
 
 ---
-*Roadmap created: 2026-05-20 (Milestone 1 — Refactor & Slim-Down)*
+
+_Roadmap created: 2026-05-20 — v1.0 milestone shipped: 2026-05-23_
