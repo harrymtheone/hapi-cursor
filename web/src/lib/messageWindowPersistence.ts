@@ -3,6 +3,7 @@ import {
     buildState,
     createState,
     peekInternalState,
+    registerMessageWindowPersistence,
     type InternalState,
 } from './messageWindowState'
 
@@ -109,6 +110,9 @@ export function schedulePersist(sessionId: string): void {
     }
     persistTimerId = setTimeout(flushPersistedStates, PERSIST_THROTTLE_MS)
 }
+
+// eslint-disable-next-line @typescript-eslint/no-use-before-define
+registerMessageWindowPersistence({ schedulePersist, hydrateState })
 
 export function hydrateState(sessionId: string): InternalState | null {
     if (!isSessionStorageAvailable()) {

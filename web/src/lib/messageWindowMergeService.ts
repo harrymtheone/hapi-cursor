@@ -12,7 +12,7 @@ import {
     cursorUpdatesAfterAppendTrim,
     trimPending,
     trimVisibleWithDropped,
-} from './messageWindowPaginationService'
+} from './messageWindowTrim'
 
 export function filterPendingAgainstVisible(pending: DecryptedMessage[], visible: DecryptedMessage[]): DecryptedMessage[] {
     if (pending.length === 0 || visible.length === 0) {

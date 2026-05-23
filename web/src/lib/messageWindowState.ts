@@ -1,6 +1,17 @@
 import type { DecryptedMessage } from '@/types/api'
 import { normalizeDecryptedMessage } from '@/chat/normalize'
-import { schedulePersist, hydrateState } from './messageWindowPersistence'
+
+// Persistence hooks registered by messageWindowPersistence at module load.
+// Indirection breaks the state ↔ persistence import cycle (D-158 #7 / madge guard).
+type PersistenceHooks = {
+    schedulePersist: (sessionId: string) => void
+    hydrateState: (sessionId: string) => InternalStateLike | null
+}
+type InternalStateLike = unknown
+let persistenceHooks: PersistenceHooks | null = null
+export function registerMessageWindowPersistence(hooks: PersistenceHooks): void {
+    persistenceHooks = hooks
+}
 
 export type MessageWindowState = {
     sessionId: string
@@ -168,7 +179,7 @@ function getState(sessionId: string): InternalState {
     if (existing) {
         return existing
     }
-    const created = hydrateState(sessionId) ?? createState(sessionId)
+    const created = (persistenceHooks?.hydrateState(sessionId) as InternalState | null | undefined) ?? createState(sessionId)
     states.set(sessionId, created)
     return created
 }
@@ -188,7 +199,7 @@ function notifyImmediate(sessionId: string): void {
 
 function setState(sessionId: string, next: InternalState, immediate?: boolean): void {
     states.set(sessionId, next)
-    schedulePersist(sessionId)
+    persistenceHooks?.schedulePersist(sessionId)
     if (immediate) {
         notifyImmediate(sessionId)
     } else {
