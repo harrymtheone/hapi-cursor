@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 12 context gathered
-last_updated: "2026-05-23T05:36:56.424Z"
-last_activity: 2026-05-23 -- Phase 12 planning complete
+last_updated: "2026-05-23T05:45:52.043Z"
+last_activity: 2026-05-23
 progress:
   total_phases: 12
   completed_phases: 11
   total_plans: 59
-  completed_plans: 55
+  completed_plans: 56
   percent: 92
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 12 — docs cleanup & milestone verification
+**Current focus:** Phase 12 — docs-cleanup-milestone-verification
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
+Phase: 12 (docs-cleanup-milestone-verification) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-05-23 -- Phase 12 planning complete
+Last activity: 2026-05-23
 
-Progress: [██████████] 100%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -106,6 +106,7 @@ Progress: [██████████] 100%
 | Phase 11 P02 | 5min | 1 tasks | 2 files |
 | Phase 11 P03 | 8min | 3 tasks | 3 files |
 | Phase 11 P05 | 8min | 2 tasks | 3 files |
+| Phase 12 P01 | 8min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -172,6 +173,7 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 10 baseline: hub auth.ts 18.18%, sseManager.ts 79.82%; cli+web scopes unavailable on main (missing @vitest/coverage-v8) — plan 11-05 sets new baseline for those three
 - [Phase ?]: [Phase 11]: Plan 03 closes REFT-03 with 16 tests (6 route + 10 middleware) and shared assertNoSecretLeak helper; wrong-alg fixture uses HS512 re-sign; orchestrator overrides (empty-string accessToken -> 401, drop uid != ownerId case, replace with no-uid-payload case) applied.
 - [Phase ?]: [Phase 11]: Plan 05 closes phase — guard appended (REFT-01 + cross-runner); coverage non-regression GREEN (auth.ts 18.18->100.00, sseManager held 79.82); v8-coverage scopes declared new unavailable baseline
+- [Phase ?]: [Phase 12]: Plan 01 (CUT-12) deleted website/docs/refactor.md atomically; trimmed root workspaces to [cli,shared,hub,web]; appended Phase-12 4-sub-check guard with temporary README/AGENTS/CLAUDE/CONTRIBUTING whitelist deferred to 12-02 README rewrite.
 
 ### Pending Todos
 
@@ -191,6 +193,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T05:23:28.144Z
+Last session: 2026-05-23T05:45:37.387Z
 Stopped at: Phase 12 context gathered
-Resume file: .planning/phases/12-docs-cleanup-milestone-verification/12-CONTEXT.md
+Resume file: None
