@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-05-23T15:42:19.674Z"
+stopped_at: Completed 01-08-PLAN.md
+last_updated: "2026-05-23T15:52:22.819Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 8
-  completed_plans: 7
-  percent: 0
+  completed_plans: 8
+  percent: 20
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 1 of 5 (Cursor Runtime Config Contract)
-Plan: 7 of 8 in current phase
+Plan: 8 of 8 in current phase
 Status: Ready to execute
 Last activity: 2026-05-23
 
-Progress: [█████████░] 88%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 88%
 | Phase 01 P04 | 6min | 2 tasks | 8 files |
 | Phase 01 P06 | 10min | 2 tasks | 9 files |
 | Phase 01 P07 | 6min | 2 tasks | 8 files |
+| Phase 01 P08 | 8min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Use runtimeModelSwitchSupported as the authoritative hot-switch capability gate for composer model selector access.
 - [Phase 01]: Keep the composer model box read-only by default and open selector only when runtime support, approved options, and idle state are all true.
 - [Phase 01]: Preserve failed model switch retry targets in composer switch state instead of adding timeline events.
+- [Phase 01]: [Phase 01]: Derive session-list attention state from shared statusKind/completionMarker/errorMarker summary fields. — Session rows need a compact live status source while model/effort remain composer-adjacent.
+- [Phase 01]: [Phase 01]: Keep completed-session read state local to Web and keyed by session id plus completion marker. — Read state is local UI state, and the marker key lets later completed results become unread again.
+- [Phase 01]: [Phase 01]: Merge strict SSE status marker patches directly into TanStack summary caches without adding malformed-event refetch fallback. — Preserves strict patch rejection while keeping runtime status fields live.
 
 ### Pending Todos
 
@@ -115,8 +119,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:41:32.925Z
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-05-23T15:51:49.933Z
+Stopped at: Completed 01-08-PLAN.md
 Resume file: None
 
 ---
