@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler
 - [ ] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/`
 - [x] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters (completed 2026-05-23)
-- [ ] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases
+- [x] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases (completed 2026-05-23)
 - [ ] **Phase 12: Docs cleanup & milestone verification** — Cursor-only README/AGENTS/docs; delete `website/`; full `bun typecheck` + `bun run test` + `madge` + ripgrep absence + manual Tailscale scenario
 
 ## Phase Details
@@ -210,7 +210,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 11-02-PLAN.md — REFT-01: `cli/src/agent/permissionMatrix.test.ts` (type-exhaustive + runtime key cross-check + per-row deep-equal; D-176/D-177/D-178)
 - [x] 11-03-PLAN.md — REFT-03: `assertNoSecretLeak` helper + `hub/src/web/routes/auth.test.ts` + `hub/src/web/middleware/auth.test.ts` (two-layer split, no replay-detection per D-184; orchestrator override drops `uid != ownerId` case)
 - [x] 11-04-PLAN.md — REFT-02: minimal `export` of useSSE backoff constants (D-190 carve-out) + reconnect convergence describe block (bounded-window + cache-converges; no MAX_RETRIES per RESEARCH § M2)
-- [ ] 11-05-PLAN.md — Phase 11 guard block append (D-179) + Phase 11 coverage capture + non-regression diff vs Phase 10 baseline + full phase gate (D-188/D-189)
+- [x] 11-05-PLAN.md — Phase 11 guard block append (D-179) + Phase 11 coverage capture + non-regression diff vs Phase 10 baseline + full phase gate (D-188/D-189)
 
 ### Phase 12: Docs cleanup & milestone verification
 **Goal**: Documentation reflects the Cursor-only post-cut codebase, and all Milestone 1 acceptance checks pass end-to-end.
@@ -241,7 +241,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
 | 9. Web internal decoupling | 0/TBD | Not started | - |
 | 10. Config cleanup | 4/4 | Complete    | 2026-05-23 |
-| 11. Test gap fill | 4/5 | In Progress|  |
+| 11. Test gap fill | 5/5 | Complete   | 2026-05-23 |
 | 12. Docs cleanup & milestone verification | 0/TBD | Not started | - |
 
 ---
