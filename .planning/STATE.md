@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Phase 1 UI-SPEC approved
-last_updated: "2026-05-23T14:43:51.984Z"
-last_activity: 2026-05-23 -- Phase 1 planning complete
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-05-23T14:49:55.978Z"
+last_activity: 2026-05-23 -- Completed 01-01-PLAN.md
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 8
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 13
 ---
 
 # Project State
@@ -26,25 +26,25 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 1 of 5 (Cursor Runtime Config Contract)
-Plan: TBD in current phase
+Plan: 2 of 8 in current phase
 Status: Ready to execute
-Last activity: 2026-05-23 -- Phase 1 planning complete
+Last activity: 2026-05-23 -- Completed 01-01-PLAN.md
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 13%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: n/a
-- Total execution time: 0.0 hours
+- Total plans completed: 1
+- Average duration: 2min
+- Total execution time: 0.03 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Cursor Runtime Config Contract | TBD | - | - |
+| 1. Cursor Runtime Config Contract | 1/8 | 2min | 2min |
 | 2. Skills Visibility and Session Policy | TBD | - | - |
 | 3. MCP Inventory and Session Policy | TBD | - | - |
 | 4. Mobile Screenshot Display | TBD | - | - |
@@ -52,8 +52,8 @@ Progress: [░░░░░░░░░░] 0%
 
 **Recent Trend:**
 
-- Last 5 plans: none
-- Trend: n/a
+- Last 5 plans: 01-01 (2min)
+- Trend: baseline
 
 *Updated after each plan completion*
 
@@ -69,6 +69,8 @@ Recent decisions affecting current work:
 - Runtime config comes first so model/effort/session metadata is real before policy and UI surfaces depend on it.
 - Skills and MCP are separate phases because their discovery, enforcement, and safety risks differ.
 - Integration/quality requirements close the milestone in Phase 5 after feature slices exist.
+- [Phase 01]: Use enumerated safe runtime config failure reasons so raw Cursor CLI stderr cannot enter normal UI contracts.
+- [Phase 01]: Keep Cursor model ids as unconstrained non-empty strings instead of shipping a static model catalog.
 
 ### Pending Todos
 
@@ -91,9 +93,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T10:04:30.087Z
-Stopped at: Phase 1 UI-SPEC approved
-Resume file: .planning/phases/01-cursor-runtime-config-contract/01-UI-SPEC.md
+Last session: 2026-05-23T14:49:55.975Z
+Stopped at: Completed 01-01-PLAN.md
+Resume file: None
 
 ---
 

@@ -10,10 +10,10 @@ Requirements for v1.1. Each maps to exactly one roadmap phase.
 
 ### Runtime & Models
 
-- [ ] **CURS-01**: User can discover available Cursor models from the local Cursor CLI before launch, with a clear failure state.
+- [x] **CURS-01**: User can discover available Cursor models from the local Cursor CLI before launch, with a clear failure state.
 - [ ] **CURS-02**: User can start a Cursor session with selected model/effort and see those values persisted in session metadata.
-- [ ] **CURS-03**: User can request an in-session model switch and see applied, pending, failed, or applies-next-run state backed by real CLI runtime behavior.
-- [ ] **CURS-04**: User can scan session status, model, and effort from the mobile session list, updated live through strict patches.
+- [x] **CURS-03**: User can request an in-session model switch and see applied, pending, failed, or applies-next-run state backed by real CLI runtime behavior.
+- [x] **CURS-04**: User can scan session status, model, and effort from the mobile session list, updated live through strict patches.
 
 ### Skills
 
@@ -90,10 +90,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CURS-01 | Phase 1 | Pending |
+| CURS-01 | Phase 1 | Complete |
 | CURS-02 | Phase 1 | Pending |
-| CURS-03 | Phase 1 | Pending |
-| CURS-04 | Phase 1 | Pending |
+| CURS-03 | Phase 1 | Complete |
+| CURS-04 | Phase 1 | Complete |
 | SKIL-01 | Phase 2 | Pending |
 | SKIL-02 | Phase 2 | Pending |
 | SKIL-03 | Phase 2 | Pending |
