@@ -24,7 +24,8 @@ function createMachine(id: string): Machine {
             displayName: 'Devbox',
             homeDir: '/home/harry',
             happyHomeDir: '/home/harry/.hapi',
-            happyLibDir: '/home/harry/.hapi/lib'
+            happyLibDir: '/home/harry/.hapi/lib',
+            workspaceRoots: undefined
         }
     }
 }

@@ -2,6 +2,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, ty
 import type { ApiClient } from '@/api/client'
 import type { Machine } from '@/types/api'
 import { usePlatform } from '@/hooks/usePlatform'
+import { useCursorModels } from '@/hooks/useCursorModels'
 import { useMachinePathsExists } from '@/hooks/useMachinePathsExists'
 import { useSpawnSession } from '@/hooks/mutations/useSpawnSession'
 import { useSessions } from '@/hooks/queries/useSessions'
@@ -46,6 +47,12 @@ export function NewSession(props: {
     const [directoryCreationConfirmed, setDirectoryCreationConfirmed] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const worktreeInputRef = useRef<HTMLInputElement>(null)
+    const {
+        result: cursorModelsResult,
+        isLoading: isCursorModelsLoading,
+        error: cursorModelsError,
+        retry: retryCursorModels
+    } = useCursorModels(props.api, machineId, Boolean(machineId))
 
     useEffect(() => {
         if (sessionType === 'worktree') {
@@ -304,6 +311,12 @@ export function NewSession(props: {
                 agent="cursor"
                 model={model}
                 isDisabled={isFormDisabled}
+                isLoading={isCursorModelsLoading}
+                discoveryResult={cursorModelsResult}
+                discoveryError={cursorModelsError}
+                onRetryDiscovery={() => {
+                    void retryCursorModels()
+                }}
                 onModelChange={setModel}
             />
             <YoloToggle
