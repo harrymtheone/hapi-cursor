@@ -629,4 +629,75 @@ echo "✅ Phase 11 #2: test-runner imports respect package boundaries."
 
 echo "✅ Phase 11 guard PASS (REFT-01..03)."
 
+# ===== Phase 12 — Docs-surface contraction (CUT-12) =====
+# Zero-tolerance keywords closing CUT-12 (D-03 删 > 改 + D-11 fail-closed pattern):
+#   #1 path literal `website/` anywhere in tracked source
+#   #2 path literals `docs/guide` and `docs/superpowers` (live anchors in the deleted VitePress site)
+#   #3 bare filename `refactor.md` (deleted scratchpad)
+#   #4 top-level directory names `website` or `docs` in any tracked package.json `workspaces` array
+#
+# Whitelist (CUT-12 SC#4): .planning/** + CHANGELOG.md + .git/** + this guard script.
+# Top-level marketing/docs files (README.md, AGENTS.md, CLAUDE.md, CONTRIBUTING.md)
+# are deferred to 12-02 (README rewrite pass per D-11). After 12-02 lands they will
+# be removed from this whitelist so reintroducing the deleted anchors trips the gate.
+PHASE12_WHITELIST=(
+  --glob '!.planning/**'
+  --glob '!.git/**'
+  --glob '!CHANGELOG.md'
+  --glob '!scripts/check-no-cut-agents.sh'
+  --glob '!README.md'
+  --glob '!AGENTS.md'
+  --glob '!CLAUDE.md'
+  --glob '!CONTRIBUTING.md'
+)
+
+# (#1) CUT-12 — no `website/` path literal in tracked source.
+PHASE12_WEBSITE_HITS=$("$RG_BIN" -n "${PHASE12_WHITELIST[@]}" 'website/' . 2>/dev/null || true)
+if [ -n "$PHASE12_WEBSITE_HITS" ]; then
+  echo "$PHASE12_WEBSITE_HITS"
+  echo ""
+  echo "❌ Phase 12 #1: 'website/' path literal found outside whitelist (CUT-12)."
+  echo "   The marketing site was deleted in 12-01 — rewrite the link at source."
+  exit 1
+fi
+echo "✅ Phase 12 #1: no 'website/' path literals outside whitelist."
+
+# (#2) CUT-12 — no `docs/guide` or `docs/superpowers` path literals in tracked source.
+PHASE12_DOCS_HITS=$("$RG_BIN" -n "${PHASE12_WHITELIST[@]}" '(docs/guide|docs/superpowers)' . 2>/dev/null || true)
+if [ -n "$PHASE12_DOCS_HITS" ]; then
+  echo "$PHASE12_DOCS_HITS"
+  echo ""
+  echo "❌ Phase 12 #2: 'docs/guide' or 'docs/superpowers' anchor found outside whitelist (CUT-12)."
+  echo "   The VitePress docs tree was deleted in 12-01 — rewrite the link at source."
+  exit 1
+fi
+echo "✅ Phase 12 #2: no docs/guide or docs/superpowers anchors outside whitelist."
+
+# (#3) CUT-12 — no `refactor.md` filename references in tracked source.
+PHASE12_REFACTOR_HITS=$("$RG_BIN" -n "${PHASE12_WHITELIST[@]}" 'refactor\.md' . 2>/dev/null || true)
+if [ -n "$PHASE12_REFACTOR_HITS" ]; then
+  echo "$PHASE12_REFACTOR_HITS"
+  echo ""
+  echo "❌ Phase 12 #3: 'refactor.md' filename found outside whitelist (CUT-12)."
+  echo "   The root scratchpad was deleted in 12-01."
+  exit 1
+fi
+echo "✅ Phase 12 #3: no refactor.md references outside whitelist."
+
+# (#4) CUT-12 — no `"website"` / `"docs"` entry in any tracked package.json workspaces array.
+# Multiline-aware pattern: matches "workspaces" key followed (within 200 chars) by "website" or "docs".
+PHASE12_WORKSPACE_HITS=$("$RG_BIN" -n -U --multiline-dotall "${PHASE12_WHITELIST[@]}" \
+  -g '**/package.json' \
+  '"workspaces".{0,200}"(website|docs)"' . 2>/dev/null || true)
+if [ -n "$PHASE12_WORKSPACE_HITS" ]; then
+  echo "$PHASE12_WORKSPACE_HITS"
+  echo ""
+  echo "❌ Phase 12 #4: a tracked package.json still lists 'website' or 'docs' in its workspaces array."
+  echo "   Root workspaces must be exactly [cli, shared, hub, web] (CUT-12 / D-03)."
+  exit 1
+fi
+echo "✅ Phase 12 #4: no website/docs workspace entries in tracked package.json files."
+
+echo "✅ Phase 12 guard PASS (CUT-12 docs surface)."
+
 echo "✅ Phase 10 guard PASS."
