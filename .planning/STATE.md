@@ -94,9 +94,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Use runtimeModelSwitchSupported as the authoritative hot-switch capability gate for composer model selector access.
 - [Phase 01]: Keep the composer model box read-only by default and open selector only when runtime support, approved options, and idle state are all true.
 - [Phase 01]: Preserve failed model switch retry targets in composer switch state instead of adding timeline events.
-- [Phase 01]: [Phase 01]: Derive session-list attention state from shared statusKind/completionMarker/errorMarker summary fields. — Session rows need a compact live status source while model/effort remain composer-adjacent.
-- [Phase 01]: [Phase 01]: Keep completed-session read state local to Web and keyed by session id plus completion marker. — Read state is local UI state, and the marker key lets later completed results become unread again.
-- [Phase 01]: [Phase 01]: Merge strict SSE status marker patches directly into TanStack summary caches without adding malformed-event refetch fallback. — Preserves strict patch rejection while keeping runtime status fields live.
+- [Phase 01]: Derive session-list attention state from shared statusKind/completionMarker/errorMarker summary fields. — Session rows need a compact live status source while model/effort remain composer-adjacent.
+- [Phase 01]: Keep completed-session read state local to Web and keyed by session id plus completion marker. — Read state is local UI state, and the marker key lets later completed results become unread again.
+- [Phase 01]: Merge strict SSE status marker patches directly into TanStack summary caches without adding malformed-event refetch fallback. — Preserves strict patch rejection while keeping runtime status fields live.
 
 ### Pending Todos
 
