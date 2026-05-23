@@ -2,6 +2,7 @@ import type {
     AttachmentMetadata,
     AuthResponse,
     DeleteUploadResponse,
+    CursorModelDiscoveryResult,
     ListDirectoryResponse,
     FileReadResponse,
     FileSearchResponse,
@@ -395,6 +396,12 @@ export class ApiClient {
 
     async getMachines(): Promise<MachinesResponse> {
         return await this.request<MachinesResponse>('/api/machines')
+    }
+
+    async getCursorModels(machineId: string): Promise<CursorModelDiscoveryResult> {
+        return await this.request<CursorModelDiscoveryResult>(
+            `/api/machines/${encodeURIComponent(machineId)}/cursor/models`
+        )
     }
 
     async listMachineDirectory(

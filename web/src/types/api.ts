@@ -6,6 +6,7 @@ import type {
 export type {
     AgentState,
     AttachmentMetadata,
+    CursorModelDiscoveryResult,
     Machine,
     MachinesResponse,
     MessagesResponse,

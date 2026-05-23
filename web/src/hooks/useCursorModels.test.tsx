@@ -1,6 +1,6 @@
 import type { CursorModelDiscoveryResult } from '@hapi/protocol/types'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ApiClient } from '@/api/client'
 import { useCursorModels } from './useCursorModels'
 
@@ -20,9 +20,15 @@ function createApi(results: Array<CursorModelDiscoveryResult | Error>) {
 }
 
 describe('useCursorModels', () => {
+    let now = 1_000
+
     beforeEach(() => {
-        vi.useFakeTimers()
-        vi.setSystemTime(1_000)
+        now = 1_000
+        vi.spyOn(Date, 'now').mockImplementation(() => now)
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
     })
 
     it('uses cached discovery results without a second API call', async () => {
@@ -65,7 +71,7 @@ describe('useCursorModels', () => {
             expect(result.current.result).toEqual(firstResult)
         })
 
-        vi.setSystemTime(2_000)
+        now = 2_000
         await act(async () => {
             await result.current.retry()
         })
