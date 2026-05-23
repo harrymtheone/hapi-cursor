@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode (completed 2026-05-22)
 - [ ] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection
 - [ ] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler
-- [ ] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/`
+- [x] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/` (completed 2026-05-23)
 - [ ] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters
 - [ ] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases
 - [ ] **Phase 12: Docs cleanup & milestone verification** — Cursor-only README/AGENTS/docs; delete `website/`; full `bun typecheck` + `bun run test` + `madge` + ripgrep absence + manual Tailscale scenario
@@ -178,7 +178,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 09-01-PLAN.md — Slice 1: util dedup (estimateBase64Bytes → shared, levenshteinDistance → web/lib, createApiQuery factory) + check-no-circular-web.sh + ToolCard.integration.test.tsx + knownTools.tsx fallback testid
 - [x] 09-02-PLAN.md — Slice 2: message-window-store → facade + 5 sub-modules; SessionList.tsx → orchestrator + 4 hooks + 4 sub-components
 - [x] 09-03-PLAN.md — Slice 3: settings/index.tsx → orchestrator + _sections; HappyComposer.tsx → orchestrator + 2 hooks + overlays; _results.tsx → dispatcher + results/{Bash,LineList,Read}Result.tsx + _resultHelpers.tsx
-- [ ] 09-04-PLAN.md — Slice 4: append Phase 9 D-158 sweep block to check-no-cut-agents.sh; tail-invoke check-no-circular-web.sh; full phase gate green
+- [x] 09-04-PLAN.md — Slice 4: append Phase 9 D-158 sweep block to check-no-cut-agents.sh; tail-invoke check-no-circular-web.sh; full phase gate green
 **UI hint**: yes
 
 ### Phase 10: Config cleanup
@@ -230,7 +230,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Agent runtime shared kit + mode hardening | 4/4 | Complete   | 2026-05-22 |
 | 7. Wire contracts unification & SSE patch contract | 1/4 | In Progress|  |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
-| 9. Web internal decoupling | 0/TBD | Not started | - |
+| 9. Web internal decoupling | 4/4 | Complete   | 2026-05-23 |
 | 10. Config cleanup | 0/TBD | Not started | - |
 | 11. Test gap fill | 0/TBD | Not started | - |
 | 12. Docs cleanup & milestone verification | 0/TBD | Not started | - |
