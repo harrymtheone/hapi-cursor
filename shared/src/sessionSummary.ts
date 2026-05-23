@@ -1,5 +1,7 @@
 import type { Session, WorktreeMetadata } from './schemas'
 
+export type SessionSummaryStatusKind = 'running' | 'thinking' | 'waiting' | 'error' | 'completed' | 'idle'
+
 export type SessionSummaryMetadata = {
     name?: string
     path: string
@@ -21,10 +23,25 @@ export type SessionSummary = {
     backgroundTaskCount: number
     model: string | null
     effort: string | null
+    statusKind: SessionSummaryStatusKind
+    completionMarker: number | null
+    errorMarker: number | null
+}
+
+function getSessionStatusKind(session: Session, pendingRequestsCount: number): SessionSummaryStatusKind {
+    if (session.thinking) return 'thinking'
+    if (pendingRequestsCount > 0) return 'waiting'
+    if (session.active || (session.backgroundTaskCount ?? 0) > 0) return 'running'
+    if (session.endReason === 'error') return 'error'
+    if (session.endReason === 'completed') return 'completed'
+    return 'idle'
 }
 
 export function toSessionSummary(session: Session): SessionSummary {
     const pendingRequestsCount = session.agentState?.requests ? Object.keys(session.agentState.requests).length : 0
+    const statusKind = getSessionStatusKind(session, pendingRequestsCount)
+    const completionMarker = statusKind === 'completed' ? session.updatedAt : null
+    const errorMarker = statusKind === 'error' ? session.updatedAt : null
 
     const metadata: SessionSummaryMetadata | null = session.metadata ? {
         name: session.metadata.name,
@@ -51,6 +68,9 @@ export function toSessionSummary(session: Session): SessionSummary {
         pendingRequestsCount,
         backgroundTaskCount: session.backgroundTaskCount ?? 0,
         model: session.model,
-        effort: session.effort
+        effort: session.effort,
+        statusKind,
+        completionMarker,
+        errorMarker
     }
 }

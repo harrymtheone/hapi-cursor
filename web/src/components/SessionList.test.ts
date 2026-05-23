@@ -14,6 +14,9 @@ function makeSession(overrides: Partial<SessionSummary> & { id: string }): Sessi
         backgroundTaskCount: 0,
         model: null,
         effort: null,
+        statusKind: 'idle',
+        completionMarker: null,
+        errorMarker: null,
         ...overrides
     }
 }

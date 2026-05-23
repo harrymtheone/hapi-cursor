@@ -339,6 +339,8 @@ export const CursorRuntimeConfigApplyResultSchema = z.discriminatedUnion('status
 
 export type CursorRuntimeConfigApplyResult = z.infer<typeof CursorRuntimeConfigApplyResultSchema>
 
+const SessionSummaryStatusKindSchema = z.enum(['running', 'thinking', 'waiting', 'error', 'completed', 'idle'])
+
 export const SessionSchema = z.object({
     id: z.string(),
     seq: z.number(),
@@ -358,7 +360,8 @@ export const SessionSchema = z.object({
     model: z.string().nullable().optional().default(null),
     modelReasoningEffort: z.string().nullable().optional().default(null),
     effort: z.string().nullable().optional().default(null),
-    permissionMode: PermissionModeSchema.optional()
+    permissionMode: PermissionModeSchema.optional(),
+    endReason: SessionEndReasonSchema.optional()
 })
 
 export type Session = z.infer<typeof SessionSchema>
@@ -372,7 +375,10 @@ export const SessionPatchSchema = z.object({
     model: z.string().nullable().optional(),
     modelReasoningEffort: z.string().nullable().optional(),
     effort: z.string().nullable().optional(),
-    backgroundTaskCount: z.number().optional()
+    backgroundTaskCount: z.number().optional(),
+    statusKind: SessionSummaryStatusKindSchema.optional(),
+    completionMarker: z.number().nullable().optional(),
+    errorMarker: z.number().nullable().optional()
 }).strict()
 
 export type SessionPatch = z.infer<typeof SessionPatchSchema>

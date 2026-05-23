@@ -59,6 +59,7 @@ export default {
   'session.item.pending': 'pending',
   'session.item.thinking': 'thinking',
   'session.status.running': 'Running',
+  'session.status.thinking': 'Thinking',
   'session.status.waiting': 'Waiting',
   'session.status.error': 'Error',
   'session.status.unreadComplete': 'Unread result',

@@ -59,6 +59,7 @@ export default {
   'session.item.pending': '待处理',
   'session.item.thinking': '思考中',
   'session.status.running': '运行中',
+  'session.status.thinking': '思考中',
   'session.status.waiting': '等待中',
   'session.status.error': '错误',
   'session.status.unreadComplete': '有未读结果',

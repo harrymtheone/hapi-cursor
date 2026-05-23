@@ -107,6 +107,9 @@ function createSummary(overrides: Partial<SessionSummary> = {}): SessionSummary 
         backgroundTaskCount: 0,
         model: 'cursor-model',
         effort: null,
+        statusKind: 'running',
+        completionMarker: null,
+        errorMarker: null,
         ...overrides,
     }
 }

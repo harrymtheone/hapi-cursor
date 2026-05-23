@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from 'react'
 import type { SessionSummary } from '@/types/api'
 import type { ApiClient } from '@/api/client'
 import { cn } from '@/lib/utils'
@@ -81,6 +82,33 @@ export function SessionList(props: {
         sessionPreviewLimit,
     })
     useSessionListKeyboard()
+    const [viewedCompletionMarkers, setViewedCompletionMarkers] = useState<Record<string, number>>({})
+
+    const markCompletionViewed = useCallback((session: SessionSummary) => {
+        const marker = session.completionMarker
+        if (session.statusKind !== 'completed' || marker === null) {
+            return
+        }
+        setViewedCompletionMarkers((previous) => {
+            if (previous[session.id] === marker) {
+                return previous
+            }
+            return {
+                ...previous,
+                [session.id]: marker
+            }
+        })
+    }, [])
+
+    useEffect(() => {
+        if (!selectedSessionId) {
+            return
+        }
+        const selectedSession = props.sessions.find((session) => session.id === selectedSessionId)
+        if (selectedSession) {
+            markCompletionViewed(selectedSession)
+        }
+    }, [markCompletionViewed, props.sessions, selectedSessionId])
 
     const getVisibleGroupSessions = (group: SessionGroup): SessionSummary[] => {
         return getVisibleSessionPreview(
@@ -187,16 +215,24 @@ export function SessionList(props: {
                                                 <div className="collapsible-panel" data-open={!isCollapsed || undefined}>
                                                     <div className="collapsible-inner">
                                                     <div className="flex flex-col gap-0.5 ml-3 pl-1 pr-1 py-1">
-                                                        {visibleGroupSessions.map((s) => (
-                                                            <SessionListItem
-                                                                key={s.id}
-                                                                session={s}
-                                                                onSelect={props.onSelect}
-                                                                showPath={false}
-                                                                api={api}
-                                                                selected={s.id === selectedSessionId}
-                                                            />
-                                                        ))}
+                                                        {visibleGroupSessions.map((s) => {
+                                                            const completionViewed = s.completionMarker !== null
+                                                                && viewedCompletionMarkers[s.id] === s.completionMarker
+                                                            return (
+                                                                <SessionListItem
+                                                                    key={s.id}
+                                                                    session={s}
+                                                                    onSelect={(sessionId) => {
+                                                                        markCompletionViewed(s)
+                                                                        props.onSelect(sessionId)
+                                                                    }}
+                                                                    showPath={false}
+                                                                    api={api}
+                                                                    selected={s.id === selectedSessionId}
+                                                                    completionViewed={completionViewed}
+                                                                />
+                                                            )
+                                                        })}
                                                         {!isSearching && group.sessions.length > sessionPreviewLimit && (sessionGroupExpanded || hiddenSessionCount > 0) ? (
                                                             <button
                                                                 type="button"

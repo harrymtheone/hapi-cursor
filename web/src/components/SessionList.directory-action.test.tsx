@@ -127,7 +127,11 @@ describe('SessionList directory action', () => {
         )
 
         expect(screen.getByLabelText('Unread result')).toBeInTheDocument()
-        fireEvent.click(screen.getByText('Completed result'))
+        const sessionButton = screen.getByText('Completed result').closest('button')
+        expect(sessionButton).not.toBeNull()
+        fireEvent.mouseDown(sessionButton!)
+        fireEvent.mouseUp(sessionButton!)
+        fireEvent.click(sessionButton!)
 
         expect(onSelect).toHaveBeenCalledWith('completed-session')
         expect(screen.getByLabelText('Viewed')).toBeInTheDocument()

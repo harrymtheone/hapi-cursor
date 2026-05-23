@@ -65,6 +65,51 @@ function getTodoProgress(session: SessionSummary): { completed: number; total: n
     return session.todoProgress
 }
 
+function getStatusLabelKey(session: SessionSummary, completionViewed: boolean): string {
+    if (session.statusKind === 'thinking') return 'session.status.thinking'
+    if (session.statusKind === 'running') return 'session.status.running'
+    if (session.statusKind === 'waiting') return 'session.status.waiting'
+    if (session.statusKind === 'error') return 'session.status.error'
+    if (session.statusKind === 'completed' && session.completionMarker !== null && !completionViewed) {
+        return 'session.status.unreadComplete'
+    }
+    return 'session.status.viewed'
+}
+
+function SessionStatusIndicator(props: {
+    session: SessionSummary
+    completionViewed: boolean
+    label: string
+}) {
+    const { session, completionViewed, label } = props
+    if (session.statusKind === 'running' || session.statusKind === 'thinking') {
+        return (
+            <span aria-label={label} title={label} className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-[var(--app-hint)]">
+                <LoaderIcon className="h-3.5 w-3.5 animate-spin-slow" />
+            </span>
+        )
+    }
+
+    const isUnreadComplete = session.statusKind === 'completed'
+        && session.completionMarker !== null
+        && !completionViewed
+    const colorClass = session.statusKind === 'waiting'
+        ? 'bg-[#FF9500]'
+        : session.statusKind === 'error'
+            ? 'bg-[var(--app-badge-error-text)]'
+            : isUnreadComplete
+                ? 'bg-[var(--app-badge-success-text)]'
+                : 'bg-[var(--app-hint)] opacity-70'
+
+    return (
+        <span
+            aria-label={label}
+            title={label}
+            className={`h-2 w-2 shrink-0 rounded-full ${colorClass}`}
+        />
+    )
+}
+
 export function formatRelativeTime(
     value: number,
     t: (key: string, params?: Record<string, string | number>) => string
@@ -88,9 +133,10 @@ export function SessionListItem(props: {
     showPath?: boolean
     api: ApiClient | null
     selected?: boolean
+    completionViewed?: boolean
 }) {
     const { t } = useTranslation()
-    const { session: s, onSelect, showPath = true, api, selected = false } = props
+    const { session: s, onSelect, showPath = true, api, selected = false, completionViewed = false } = props
     const { haptic } = usePlatform()
     const [menuOpen, setMenuOpen] = useState(false)
     const [menuAnchorPoint, setMenuAnchorPoint] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -120,6 +166,7 @@ export function SessionListItem(props: {
 
     const sessionName = getSessionTitle(s)
     const todoProgress = getTodoProgress(s)
+    const statusLabel = t(getStatusLabelKey(s, completionViewed))
     return (
         <>
             <button
@@ -131,23 +178,16 @@ export function SessionListItem(props: {
             >
                 <div className={`flex items-center justify-between gap-3 ${!s.active ? 'opacity-50' : ''}`}>
                     <div className="flex items-center gap-2 min-w-0">
+                        <SessionStatusIndicator session={s} completionViewed={completionViewed} label={statusLabel} />
                         <div className={`truncate text-sm font-medium ${s.active ? 'text-[var(--app-fg)]' : 'text-[var(--app-hint)]'}`}>
                             {sessionName}
                         </div>
-                        {s.active && s.thinking ? (
-                            <LoaderIcon className="h-3.5 w-3.5 shrink-0 text-[var(--app-hint)] animate-spin-slow" />
-                        ) : null}
                     </div>
                     <div className="flex items-center gap-2 shrink-0 text-xs">
                         {todoProgress ? (
                             <span className="flex items-center gap-1 text-[var(--app-hint)]">
                                 <BulbIcon className="h-3 w-3" />
                                 {todoProgress.completed}/{todoProgress.total}
-                            </span>
-                        ) : null}
-                        {s.pendingRequestsCount > 0 ? (
-                            <span className="text-[var(--app-badge-warning-text)]">
-                                {t('session.item.pending')} {s.pendingRequestsCount}
                             </span>
                         ) : null}
                         <span className="text-[var(--app-hint)]">
