@@ -49,10 +49,10 @@ Phase-specific layout contracts:
 
 | Surface | Contract |
 |---------|----------|
-| New-session runtime selector | Keep the existing section rhythm: `px-3 py-3`, `gap-1.5`, `text-sm` control height from `py-2`. Discovery loading/error/retry content stays inside the selector section, not as a global banner. |
-| Composer model info box | Place model/effort status adjacent to the existing composer status bar/model control area, above or inside the `HappyComposer` shell, never in the chat timeline. Preserve composer outer padding `px-3 pt-2 pb-*` and rounded `20px` input shell. |
-| Floating model selector | Use the existing `FloatingOverlay` pattern above the composer with max height 320px. Rows use `px-3 py-2`, `gap-2`, `text-sm`, and hover/selected styles from the current permission/model overlay. |
-| Session list indicators | Add a compact leading or trailing indicator inside the existing row; do not add a second text line for model/effort. Row density remains `px-2.5 py-2`, `gap-1`, title `text-sm`, path `text-xs`. |
+| New-session runtime selector | Keep the existing section rhythm with `px-4 py-4`, `gap-2`, and `text-sm` control height from `py-2`. Discovery loading/error/retry content stays inside the selector section, not as a global banner. |
+| Composer model info box | Place model/effort status adjacent to the existing composer status bar/model control area, above or inside the `HappyComposer` shell, never in the chat timeline. Preserve composer outer padding with `px-4 pt-2 pb-*` and the existing rounded input shell. |
+| Floating model selector | Use the existing `FloatingOverlay` pattern above the composer with max height 320px. Rows use `px-4 py-2`, `gap-2`, `text-sm`, and hover/selected styles from the current permission/model overlay. |
+| Session list indicators | Add a compact leading or trailing indicator inside the existing row; do not add a second text line for model/effort. Row density remains `px-2 py-2`, `gap-1`, title `text-sm`, path `text-xs`. |
 
 ---
 
@@ -60,20 +60,20 @@ Phase-specific layout contracts:
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
+| Caption | 12px | 400 or 600 | 1.3 |
+| Detail | 14px | 400 or 600 | 1.4 |
 | Body | 16px | 400 | 1.5 |
-| Label | 12px | 600 | 1.3 |
 | Heading | 20px | 600 | 1.2 |
-| Display | 28px | 600 | 1.2 |
 
-Use exactly two weights in new UI: regular 400 and semibold 600. Raw Cursor model ids are code-like values: render at 14px in the selector and composer info box, with system monospace only when the surrounding UI needs to distinguish raw ids from prose. Do not abbreviate or rename model ids; the raw id is the primary label.
+Use exactly two weights in new UI: regular 400 and semibold 600. Tailwind classes must map to those weights only: `font-normal` or `font-semibold`. Raw Cursor model ids are code-like values: render at 14px in the selector and composer info box, with system monospace only when the surrounding UI needs to distinguish raw ids from prose. Do not abbreviate or rename model ids; the raw id is the primary label.
 
 Phase-specific text hierarchy:
 
 | Surface | Contract |
 |---------|----------|
-| Selector label | `text-xs font-medium text-[var(--app-hint)]`; include optional/auto clarification as normal-weight helper text. |
-| Model rows | Raw model id at `text-sm font-medium`; optional discovered label/capability hint at `text-xs text-[var(--app-hint)]`. |
-| Composer model info | Current model id at `text-xs` or `text-sm` depending available width; runtime state label at `text-[10px]` or `text-xs`. |
+| Selector label | `text-xs font-semibold text-[var(--app-hint)]`; include optional/auto clarification as normal-weight helper text. |
+| Model rows | Raw model id at `text-sm font-semibold`; optional discovered label/capability hint at `text-xs text-[var(--app-hint)]`. |
+| Composer model info | Current model id at `text-xs` or `text-sm` depending available width; runtime state label at `text-xs`. |
 | Session list status label | Visually hidden or accessible through `aria-label`/title. Visible text is allowed only for an error short hint. |
 
 ---
@@ -88,6 +88,15 @@ Phase-specific text hierarchy:
 | Destructive | `var(--app-badge-error-text)` fallback `#b91c1c` / dark `#fca5a5` | Discovery/launch/switch failure text and destructive actions only |
 
 Accent reserved for: selected model radio indicator, model selector focus ring, retry link/button emphasis, primary "Start session" action, and proven clickable hot-switch affordance. Do not color all runtime labels with accent.
+
+Primary surface focal points:
+
+| Surface | Focal Point |
+|---------|-------------|
+| New-session runtime selector | The selected raw model id or `Auto (unspecified)` value is the visual anchor; loading, error, and retry content remain secondary below it. |
+| Composer runtime box | The current raw model id is the visual anchor; apply status, safe reason, and retry affordance remain secondary within the same box. |
+| Floating model selector | The selected radio indicator and raw model id form the row focal point; labels and capability hints remain secondary. |
+| Session list | The compact attention indicator is the only runtime/status focal point; model and effort text are not visible in the row. |
 
 Status colors:
 
