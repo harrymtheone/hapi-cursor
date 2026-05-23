@@ -384,3 +384,113 @@ echo "✅ Phase 8 D-143 #5: file-size budgets honored (sync < 400, routes/sessio
 bash "$(dirname "$0")/check-no-circular-hub.sh"
 
 echo "✅ Phase 8 guard PASS (D-143 #1–#5 + madge zero cycles)."
+
+# ===== Phase 9 — Web internal decoupling (D-158) =====
+# Zero-tolerance keywords closing REFW-01..REFW-03:
+#   #1 levenshteinDistance dedup        (SC#3 / D-155)
+#   #2 estimateBase64Bytes dedup        (SC#3)
+#   #3 file-size red lines              (SC#2 / D-145 / D-157)
+#   #4 messageWindow* sub-module budget (D-149)
+#   #5 fallback testid anchor + reverse-assert (D-148)
+#   #6 createApiQuery factory + ≥ 3 users (D-147)
+#   #7 madge zero cycles (tail-invocation of check-no-circular-web.sh) (SC#1 / SC#4)
+PHASE9_WEB_SCOPE=(web/src)
+PHASE9_NON_WEB=(cli/src hub/src shared/src)
+
+# (#1) D-158 #1 — levenshteinDistance: exactly 1 hit in web/src/lib/fuzzyMatch.ts, 0 elsewhere
+PHASE9_LEV_HITS=$("$RG_BIN" -n '\bfunction levenshteinDistance\b|\bfunction levenshtein\b' "${PHASE9_WEB_SCOPE[@]}" 2>/dev/null || true)
+PHASE9_LEV_COUNT=$(echo -n "$PHASE9_LEV_HITS" | grep -c '^' || true)
+if [ "$PHASE9_LEV_COUNT" -ne 1 ] || ! echo "$PHASE9_LEV_HITS" | grep -q 'web/src/lib/fuzzyMatch\.ts'; then
+  echo "$PHASE9_LEV_HITS"
+  echo "❌ Phase 9 D-158 #1: levenshteinDistance must be defined exactly once in web/src/lib/fuzzyMatch.ts."
+  exit 1
+fi
+if "$RG_BIN" -n '\bfunction levenshteinDistance\b|\bfunction levenshtein\b' "${PHASE9_NON_WEB[@]}" 2>/dev/null; then
+  echo "❌ Phase 9 D-158 #1: levenshteinDistance leaked outside web/src/ (REFW-03 + D-155 boundary violated)."
+  exit 1
+fi
+echo "✅ Phase 9 D-158 #1: levenshteinDistance lives only in web/src/lib/fuzzyMatch.ts."
+
+# (#2) D-158 #2 — estimateBase64Bytes: exactly 1 hit in shared/src/uploads.ts, 0 elsewhere
+PHASE9_B64_HITS=$("$RG_BIN" -n '\bfunction estimateBase64Bytes\b' shared/src 2>/dev/null || true)
+PHASE9_B64_COUNT=$(echo -n "$PHASE9_B64_HITS" | grep -c '^' || true)
+if [ "$PHASE9_B64_COUNT" -ne 1 ] || ! echo "$PHASE9_B64_HITS" | grep -q 'shared/src/uploads\.ts'; then
+  echo "$PHASE9_B64_HITS"
+  echo "❌ Phase 9 D-158 #2: estimateBase64Bytes must be defined exactly once in shared/src/uploads.ts."
+  exit 1
+fi
+if "$RG_BIN" -n '\bfunction estimateBase64Bytes\b' cli/src hub/src web/src 2>/dev/null; then
+  echo "❌ Phase 9 D-158 #2: estimateBase64Bytes leaked outside shared/src/ (REFW-03 violated)."
+  exit 1
+fi
+echo "✅ Phase 9 D-158 #2: estimateBase64Bytes lives only in shared/src/uploads.ts."
+
+# (#3) D-158 #3 — file-size red lines for Phase-9-split files + verify-only targets
+PHASE9_OVERSIZED=$(
+  wc -l \
+    web/src/components/SessionList.tsx \
+    web/src/lib/message-window-store.ts \
+    web/src/routes/settings/index.tsx \
+    web/src/components/AssistantChat/HappyComposer.tsx \
+    web/src/components/ToolCard/views/_results.tsx \
+    web/src/chat/reducerTimeline.ts \
+    web/src/components/ToolCard/ToolCard.tsx \
+    web/src/components/ToolCard/knownTools.tsx \
+    web/src/components/ToolCard/views/_all.tsx \
+    2>/dev/null | awk '
+      /reducerTimeline\.ts/  { if ($1 >= 500) print }
+      /SessionList\.tsx/      { if ($1 >= 500) print }
+      /message-window-store\.ts/ { if ($1 >= 500) print }
+      /settings\/index\.tsx/  { if ($1 >= 500) print }
+      /HappyComposer\.tsx/    { if ($1 >= 500) print }
+      /_results\.tsx/         { if ($1 >= 500) print }
+      /ToolCard\.tsx/         { if ($1 >= 500) print }
+      /knownTools\.tsx/       { if ($1 >= 500) print }
+      /_all\.tsx/             { if ($1 >= 200) print }
+    ')
+if [ -n "$PHASE9_OVERSIZED" ]; then
+  echo "$PHASE9_OVERSIZED"
+  echo "❌ Phase 9 D-158 #3: file-size red-line breached. See ROADMAP SC#2 + D-145 + D-157."
+  exit 1
+fi
+echo "✅ Phase 9 D-158 #3: file-size budgets honored."
+
+# (#4) D-158 #4 — messageWindow* sub-module budgets (< 400 each, D-149)
+PHASE9_STORE_OVERSIZED=$(find web/src/lib -maxdepth 1 -name 'messageWindow*.ts' ! -name '*.test.ts' -exec wc -l {} \; 2>/dev/null | awk '$1 >= 400 { print }')
+if [ -n "$PHASE9_STORE_OVERSIZED" ]; then
+  echo "$PHASE9_STORE_OVERSIZED"
+  echo "❌ Phase 9 D-158 #4: message-window sub-module ≥ 400 lines (D-149 violated)."
+  exit 1
+fi
+echo "✅ Phase 9 D-158 #4: message-window sub-modules each < 400."
+
+# (#5) D-158 #5 — fallback testid present in knownTools.tsx (NOT _results.tsx — see RESEARCH Pitfall 3)
+PHASE9_TESTID_HITS=$("$RG_BIN" -c 'data-testid="tool-card-unknown-fallback"' web/src/components/ToolCard/knownTools.tsx 2>/dev/null || echo 0)
+if [ "$PHASE9_TESTID_HITS" -ne 1 ]; then
+  echo "❌ Phase 9 D-158 #5: data-testid=\"tool-card-unknown-fallback\" must appear exactly once in knownTools.tsx (found $PHASE9_TESTID_HITS)."
+  exit 1
+fi
+# Reverse-assert that integration test uses queryByTestId on the anchor
+if ! "$RG_BIN" -q 'queryByTestId\([^)]*tool-card-unknown-fallback' web/src/components/ToolCard/ToolCard.integration.test.tsx 2>/dev/null; then
+  echo "❌ Phase 9 D-158 #5: ToolCard.integration.test.tsx must reverse-assert queryByTestId('tool-card-unknown-fallback')."
+  exit 1
+fi
+echo "✅ Phase 9 D-158 #5: fallback testid anchored in knownTools.tsx + reverse-asserted in integration test."
+
+# (#6) D-158 #6 — createApiQuery factory + ≥ 3 importer files (D-147)
+PHASE9_FACTORY_DEF=$("$RG_BIN" -c '^export function createApiQuery\b' web/src/hooks/queries/_factory.ts 2>/dev/null || echo 0)
+if [ "$PHASE9_FACTORY_DEF" -ne 1 ]; then
+  echo "❌ Phase 9 D-158 #6: createApiQuery must be defined exactly once in web/src/hooks/queries/_factory.ts."
+  exit 1
+fi
+PHASE9_FACTORY_USERS=$("$RG_BIN" -l 'createApiQuery' web/src/hooks/queries/ --glob '!_factory.ts' --glob '!*.test.*' 2>/dev/null | wc -l)
+if [ "$PHASE9_FACTORY_USERS" -lt 3 ]; then
+  echo "❌ Phase 9 D-158 #6: createApiQuery must have ≥ 3 importer files in web/src/hooks/queries/ (found $PHASE9_FACTORY_USERS)."
+  exit 1
+fi
+echo "✅ Phase 9 D-158 #6: createApiQuery defined once + ≥ 3 users."
+
+# (#7) D-158 #7 — tail-invocation of madge cycle guard (single phase-gate command)
+bash "$(dirname "$0")/check-no-circular-web.sh"
+
+echo "✅ Phase 9 guard PASS (D-158 #1–#6 + madge zero cycles)."
