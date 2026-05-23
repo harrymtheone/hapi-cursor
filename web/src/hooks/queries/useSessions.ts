@@ -1,7 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
 import type { ApiClient } from '@/api/client'
 import type { SessionSummary } from '@/types/api'
 import { queryKeys } from '@/lib/query-keys'
+import { createApiQuery } from './_factory'
+
+type SessionsResponse = Awaited<ReturnType<ApiClient['getSessions']>>
+
+const useSessionsQuery = createApiQuery<SessionsResponse, SessionSummary[], []>({
+    queryKey: () => queryKeys.sessions,
+    queryFn: (api) => api.getSessions(),
+    select: (data) => data?.sessions ?? [],
+    errorMessage: 'Failed to load sessions',
+})
 
 export function useSessions(api: ApiClient | null): {
     sessions: SessionSummary[]
@@ -9,21 +18,6 @@ export function useSessions(api: ApiClient | null): {
     error: string | null
     refetch: () => Promise<unknown>
 } {
-    const query = useQuery({
-        queryKey: queryKeys.sessions,
-        queryFn: async () => {
-            if (!api) {
-                throw new Error('API unavailable')
-            }
-            return await api.getSessions()
-        },
-        enabled: Boolean(api),
-    })
-
-    return {
-        sessions: query.data?.sessions ?? [],
-        isLoading: query.isLoading,
-        error: query.error instanceof Error ? query.error.message : query.error ? 'Failed to load sessions' : null,
-        refetch: query.refetch,
-    }
+    const { data, isLoading, error, refetch } = useSessionsQuery(api)
+    return { sessions: data, isLoading, error, refetch }
 }
