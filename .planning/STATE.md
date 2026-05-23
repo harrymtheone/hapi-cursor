@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 9 context gathered
-last_updated: "2026-05-22T19:09:57.739Z"
-last_activity: 2026-05-22 -- Phase 09 planning complete
+stopped_at: Phase 9 Plan 1 complete
+last_updated: "2026-05-23T00:15:30Z"
+last_activity: 2026-05-23 -- Phase 09 Plan 1 completed (util dedup + createApiQuery + ToolCard integration test + web madge guard)
 progress:
   total_phases: 12
   completed_phases: 8
   total_plans: 46
-  completed_plans: 42
-  percent: 67
+  completed_plans: 43
+  percent: 70
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 9 — web internal decoupling
+**Current focus:** Phase 09 — web-internal-decoupling
 
 ## Current Position
 
-Phase: 9
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-22 -- Phase 09 planning complete
+Phase: 09 (web-internal-decoupling) — EXECUTING
+Plan: 2 of 4
+Status: Executing Phase 09
+Last activity: 2026-05-23 -- Phase 09 Plan 1 completed (util dedup + createApiQuery + ToolCard integration test + web madge guard)
 
 Progress: [██████████] 100%
 
@@ -94,6 +94,7 @@ Progress: [██████████] 100%
 | Phase 08 P08-02 | 50m | 3 tasks | 21 files |
 | Phase 08 P03 | 30min | 3 tasks | 17 files |
 | Phase 08 P08-04 | 10m | 2 tasks | 2 files |
+| Phase 09 P09-01 | 4min | 5 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -147,6 +148,10 @@ Recent decisions affecting current work:
 - [Phase ?]: Session sub-facade split further into syncEngineSessionResume.ts to satisfy SC#1 <400 line budget
 - [Phase ?]: createShutdownHandler factory exported; main() gated on import.meta.main; shutdown awaits syncEngine.shutdown() raced with 5s timeout
 - [Phase ?]: Phase 8 guard scripts installed: standalone scripts/check-no-circular-hub.sh + Phase-8 D-143 zero-tolerance block in scripts/check-no-cut-agents.sh tail-invoking the madge guard for a single phase-gate command
+- [Phase 09]: Plan 1 dedups estimateBase64Bytes to shared/src/uploads.ts (cli + hub callsites swapped) and dedups levenshteinDistance to web/src/lib/fuzzyMatch.ts (web-only per D-155 shared-boundary rule).
+- [Phase 09]: Plan 1 abstracts createApiQuery factory in web/src/hooks/queries/_factory.ts now that 3 shape-A consumers exist (useSessions/useSession/useMachines); shape-A' and shape-B hooks remain unmigrated per Slice-1 scope.
+- [Phase 09]: Plan 1 introduces table-driven ToolCard.integration.test.tsx asserting every Object.keys(knownTools) entry renders without hitting the unknown-fallback testid + negative-control sentinel; anchor lives on knownTools.tsx WrenchIcon path wrapped in a span (icons.tsx only forwards className).
+- [Phase 09]: Plan 1 adds scripts/check-no-circular-web.sh mirroring the Phase-8 hub guard; madge reports 0 cycles inside web/src/.
 
 ### Pending Todos
 
@@ -166,6 +171,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T16:53:54.187Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-web-internal-decoupling/09-CONTEXT.md
+Last session: 2026-05-23T00:15:30Z
+Stopped at: Phase 9 Plan 1 complete
+Resume file: .planning/phases/09-web-internal-decoupling/09-02-PLAN.md

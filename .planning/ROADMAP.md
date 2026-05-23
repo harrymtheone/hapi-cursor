@@ -175,7 +175,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Levenshtein distance, base64 size estimation, Cursor permission-mode mapping, and the `createApiQuery` hook factory live in `shared/`; ripgrep finds zero duplicate implementations in `cli/` or `web/`
   4. `madge` reports zero cycles inside `web/src/`; `bun typecheck` and `bun run test` both pass
 **Plans**: 4 plans
-- [ ] 09-01-PLAN.md — Slice 1: util dedup (estimateBase64Bytes → shared, levenshteinDistance → web/lib, createApiQuery factory) + check-no-circular-web.sh + ToolCard.integration.test.tsx + knownTools.tsx fallback testid
+- [x] 09-01-PLAN.md — Slice 1: util dedup (estimateBase64Bytes → shared, levenshteinDistance → web/lib, createApiQuery factory) + check-no-circular-web.sh + ToolCard.integration.test.tsx + knownTools.tsx fallback testid
 - [ ] 09-02-PLAN.md — Slice 2: message-window-store → facade + 5 sub-modules; SessionList.tsx → orchestrator + 4 hooks + 4 sub-components
 - [ ] 09-03-PLAN.md — Slice 3: settings/index.tsx → orchestrator + _sections; HappyComposer.tsx → orchestrator + 2 hooks + overlays; _results.tsx → dispatcher + results/{Bash,LineList,Read}Result.tsx + _resultHelpers.ts
 - [ ] 09-04-PLAN.md — Slice 4: append Phase 9 D-158 sweep block to check-no-cut-agents.sh; tail-invoke check-no-circular-web.sh; full phase gate green
