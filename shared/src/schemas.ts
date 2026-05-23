@@ -277,6 +277,68 @@ export const MessageContentSchema = z.union([UserMessageSchema, AgentMessageSche
 
 export type MessageContent = z.infer<typeof MessageContentSchema>
 
+export const CursorModelSummarySchema = z.object({
+    id: z.string().min(1),
+    label: z.string().min(1).optional(),
+    isDefault: z.boolean().optional(),
+    isCurrent: z.boolean().optional()
+}).strict()
+
+export type CursorModelSummary = z.infer<typeof CursorModelSummarySchema>
+
+const CursorRuntimeConfigFailureReasonSchema = z.enum([
+    'cursor-cli-unavailable',
+    'not-authenticated',
+    'timed-out',
+    'empty-model-list',
+    'unknown'
+])
+
+export const CursorModelDiscoveryResultSchema = z.discriminatedUnion('status', [
+    z.object({
+        status: z.literal('ok'),
+        models: z.array(CursorModelSummarySchema),
+        discoveredAt: z.number()
+    }).strict(),
+    z.object({
+        status: z.literal('error'),
+        reason: CursorRuntimeConfigFailureReasonSchema,
+        discoveredAt: z.number()
+    }).strict()
+])
+
+export type CursorModelDiscoveryResult = z.infer<typeof CursorModelDiscoveryResultSchema>
+
+const CursorRuntimeConfigStateSchema = {
+    model: z.string().nullable(),
+    modelReasoningEffort: z.string().nullable(),
+    effort: z.string().nullable()
+}
+
+export const CursorRuntimeConfigApplyResultSchema = z.discriminatedUnion('status', [
+    z.object({
+        status: z.literal('applied'),
+        ...CursorRuntimeConfigStateSchema
+    }).strict(),
+    z.object({
+        status: z.literal('pending'),
+        ...CursorRuntimeConfigStateSchema,
+        reason: CursorRuntimeConfigFailureReasonSchema.optional()
+    }).strict(),
+    z.object({
+        status: z.literal('failed'),
+        ...CursorRuntimeConfigStateSchema,
+        reason: CursorRuntimeConfigFailureReasonSchema.optional()
+    }).strict(),
+    z.object({
+        status: z.literal('applies-next-run'),
+        ...CursorRuntimeConfigStateSchema,
+        reason: CursorRuntimeConfigFailureReasonSchema.optional()
+    }).strict()
+])
+
+export type CursorRuntimeConfigApplyResult = z.infer<typeof CursorRuntimeConfigApplyResultSchema>
+
 export const SessionSchema = z.object({
     id: z.string(),
     seq: z.number(),
