@@ -41,6 +41,21 @@ function sortSessionSummaries(left: SessionSummary, right: SessionSummary): numb
     return right.updatedAt - left.updatedAt
 }
 
+function getPatchedStatusKind(
+    current: SessionSummary,
+    next: Pick<SessionSummary, 'active' | 'thinking' | 'backgroundTaskCount' | 'pendingRequestsCount'>,
+    patch: SessionPatch
+): SessionSummary['statusKind'] {
+    if (Object.prototype.hasOwnProperty.call(patch, 'statusKind') && patch.statusKind) {
+        return patch.statusKind
+    }
+    if (next.thinking) return 'thinking'
+    if (next.pendingRequestsCount > 0) return 'waiting'
+    if (next.active || next.backgroundTaskCount > 0) return 'running'
+    if (current.statusKind === 'completed' || current.statusKind === 'error') return current.statusKind
+    return 'idle'
+}
+
 function getVisibilityState(): VisibilityState {
     if (typeof document === 'undefined') {
         return 'hidden'
@@ -222,15 +237,32 @@ export function useSSE(options: {
                     return previous
                 }
 
+                const nextActive = patch.active ?? current.active
+                const nextThinking = patch.thinking ?? current.thinking
+                const nextBackgroundTaskCount = patch.backgroundTaskCount ?? current.backgroundTaskCount
+                const nextUpdatedAt = patch.updatedAt ?? current.updatedAt
+                const nextStatusKind = getPatchedStatusKind(current, {
+                    active: nextActive,
+                    thinking: nextThinking,
+                    backgroundTaskCount: nextBackgroundTaskCount,
+                    pendingRequestsCount: current.pendingRequestsCount
+                }, patch)
                 const nextSummary: SessionSummary = {
                     ...current,
-                    active: patch.active ?? current.active,
-                    thinking: patch.thinking ?? current.thinking,
+                    active: nextActive,
+                    thinking: nextThinking,
                     activeAt: patch.activeAt ?? current.activeAt,
-                    updatedAt: patch.updatedAt ?? current.updatedAt,
-                    backgroundTaskCount: patch.backgroundTaskCount ?? current.backgroundTaskCount,
+                    updatedAt: nextUpdatedAt,
+                    backgroundTaskCount: nextBackgroundTaskCount,
                     model: Object.prototype.hasOwnProperty.call(patch, 'model') ? patch.model ?? null : current.model,
-                    effort: Object.prototype.hasOwnProperty.call(patch, 'effort') ? patch.effort ?? null : current.effort
+                    effort: Object.prototype.hasOwnProperty.call(patch, 'effort') ? patch.effort ?? null : current.effort,
+                    statusKind: nextStatusKind,
+                    completionMarker: Object.prototype.hasOwnProperty.call(patch, 'completionMarker')
+                        ? patch.completionMarker ?? null
+                        : current.completionMarker,
+                    errorMarker: Object.prototype.hasOwnProperty.call(patch, 'errorMarker')
+                        ? patch.errorMarker ?? null
+                        : current.errorMarker
                 }
 
                 patched = true
