@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isPermissionModeAllowedForFlavor } from '@hapi/protocol'
+import type { CursorRuntimeConfigApplyResult } from '@hapi/protocol/types'
 import type { ApiClient } from '@/api/client'
 import type { PermissionMode } from '@/types/api'
 import { queryKeys } from '@/lib/query-keys'
@@ -15,7 +16,7 @@ export function useSessionActions(
     archiveSession: () => Promise<void>
     switchSession: () => Promise<void>
     setPermissionMode: (mode: PermissionMode) => Promise<void>
-    setModel: (model: string | null) => Promise<void>
+    setModel: (model: string | null) => Promise<CursorRuntimeConfigApplyResult>
     setEffort: (effort: string | null) => Promise<void>
     renameSession: (name: string) => Promise<void>
     deleteSession: () => Promise<void>
@@ -77,7 +78,7 @@ export function useSessionActions(
             if (!api || !sessionId) {
                 throw new Error('Session unavailable')
             }
-            await api.setModel(sessionId, model)
+            return await api.setModel(sessionId, model)
         },
         onSuccess: () => void invalidateSession(),
     })

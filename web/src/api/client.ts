@@ -23,7 +23,7 @@ import type {
     SessionResponse,
     SessionsResponse
 } from '@/types/api'
-import type { CursorPermissionMode } from '@hapi/protocol'
+import type { CursorPermissionMode, CursorRuntimeConfigApplyResult } from '@hapi/protocol'
 import type { CancelMessageResponse } from '@hapi/protocol/schemas'
 
 type ApiClientOptions = {
@@ -348,8 +348,8 @@ export class ApiClient {
         })
     }
 
-    async setModel(sessionId: string, model: string | null): Promise<void> {
-        await this.request(`/api/sessions/${encodeURIComponent(sessionId)}/model`, {
+    async setModel(sessionId: string, model: string | null): Promise<CursorRuntimeConfigApplyResult> {
+        return await this.request<CursorRuntimeConfigApplyResult>(`/api/sessions/${encodeURIComponent(sessionId)}/model`, {
             method: 'POST',
             body: JSON.stringify({ model })
         })
