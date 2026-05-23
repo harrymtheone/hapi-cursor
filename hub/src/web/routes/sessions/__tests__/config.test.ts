@@ -2,22 +2,116 @@ import { describe, expect, it } from 'bun:test'
 import { createApp, createSession } from './_fixtures'
 
 describe('sessions config routes', () => {
-    it('rejects model changes for Cursor sessions', async () => {
+    it('returns active applied model change results', async () => {
         const session = createSession({
             metadata: { path: '/tmp/project', host: 'localhost' }
         })
-        const { app, applySessionConfigCalls } = createApp(session)
+        const result = {
+            status: 'applied' as const,
+            model: 'cursor-runtime-model-next',
+            modelReasoningEffort: null,
+            effort: null
+        }
+        const { app, applySessionConfigCalls } = createApp(session, {}, result)
 
         const response = await app.request('/api/sessions/session-1/model', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ model: 'sonnet' })
+            body: JSON.stringify({ model: 'cursor-runtime-model-next' })
         })
 
-        expect(response.status).toBe(400)
-        expect(applySessionConfigCalls).toEqual([])
-        const body = await response.json() as { error: { code: string } }
-        expect(body.error.code).toBe('model-change-unsupported')
+        expect(response.status).toBe(200)
+        expect(await response.json()).toEqual(result)
+        expect(applySessionConfigCalls).toEqual([
+            ['session-1', { model: 'cursor-runtime-model-next' }]
+        ])
+    })
+
+    it('returns active applies-next-run model change results', async () => {
+        const session = createSession()
+        const result = {
+            status: 'applies-next-run' as const,
+            model: 'cursor-runtime-model-next',
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'unknown' as const
+        }
+        const { app } = createApp(session, {}, result)
+
+        const response = await app.request('/api/sessions/session-1/model', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ model: 'cursor-runtime-model-next' })
+        })
+
+        expect(response.status).toBe(200)
+        expect(await response.json()).toEqual(result)
+    })
+
+    it('returns failed model change results without route-side persistence', async () => {
+        const session = createSession()
+        const result = {
+            status: 'failed' as const,
+            model: 'cursor-runtime-model-next',
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'unknown' as const
+        }
+        const { app, applySessionConfigCalls } = createApp(session, {}, result)
+
+        const response = await app.request('/api/sessions/session-1/model', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ model: 'cursor-runtime-model-next' })
+        })
+
+        expect(response.status).toBe(200)
+        expect(await response.json()).toEqual(result)
+        expect(session.model).toBe('ollama/exaone:4.5-33b-q8')
+        expect(applySessionConfigCalls).toEqual([
+            ['session-1', { model: 'cursor-runtime-model-next' }]
+        ])
+    })
+
+    it('allows inactive model changes as applies-next-run metadata', async () => {
+        const session = createSession({ active: false })
+        const result = {
+            status: 'applies-next-run' as const,
+            model: 'cursor-runtime-model-next',
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'unknown' as const
+        }
+        const { app } = createApp(session, {}, result)
+
+        const response = await app.request('/api/sessions/session-1/model', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ model: 'cursor-runtime-model-next' })
+        })
+
+        expect(response.status).toBe(200)
+        expect(await response.json()).toEqual(result)
+    })
+
+    it('returns apply-config-failed when model apply is rejected by the engine', async () => {
+        const session = createSession()
+        const { app } = createApp(session, {
+            applySessionConfig: async () => {
+                throw new Error('selected runtime config was rejected')
+            }
+        })
+
+        const response = await app.request('/api/sessions/session-1/model', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ model: 'cursor-runtime-model-next' })
+        })
+
+        expect(response.status).toBe(409)
+        const body = await response.json() as { error: { code: string; message: string } }
+        expect(body.error.code).toBe('apply-config-failed')
+        expect(body.error.message).toBe('selected runtime config was rejected')
     })
 
     it('applies permission mode changes for inactive sessions', async () => {

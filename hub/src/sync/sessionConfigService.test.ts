@@ -33,10 +33,10 @@ describe('SessionConfigService', () => {
         const session = repo.getOrCreateSession('config-1', sessionMetadata, null)
 
         events.length = 0
-        config.applySessionConfig(session.id, { model: 'gpt-5.5' })
+        config.applySessionConfig(session.id, { model: 'cursor-runtime-model-stored' })
 
-        expect(repo.getSession(session.id)?.model).toBe('gpt-5.5')
-        expect(store.sessions.getSession(session.id)?.model).toBe('gpt-5.5')
+        expect(repo.getSession(session.id)?.model).toBe('cursor-runtime-model-stored')
+        expect(store.sessions.getSession(session.id)?.model).toBe('cursor-runtime-model-stored')
         const update = events.find((e) => e.type === 'session-updated')
         expect(update).toBeDefined()
         if (update && update.type === 'session-updated' && 'metadata' in update.data) {
@@ -44,10 +44,41 @@ describe('SessionConfigService', () => {
         }
     })
 
+    it('applySessionConfig persists model effort fields when provided', () => {
+        const events: SyncEvent[] = []
+        const { store, repo, config } = createServices(events)
+        const session = repo.getOrCreateSession('config-effort', sessionMetadata, null)
+
+        config.applySessionConfig(session.id, {
+            model: 'cursor-runtime-model-next',
+            modelReasoningEffort: 'medium',
+            effort: 'background'
+        })
+
+        expect(repo.getSession(session.id)?.model).toBe('cursor-runtime-model-next')
+        expect(repo.getSession(session.id)?.modelReasoningEffort).toBe('medium')
+        expect(repo.getSession(session.id)?.effort).toBe('background')
+        expect(store.sessions.getSession(session.id)?.model).toBe('cursor-runtime-model-next')
+        expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBe('medium')
+        expect(store.sessions.getSession(session.id)?.effort).toBe('background')
+        expect(events.some((e) => e.type === 'session-updated')).toBe(true)
+    })
+
+    it('applySessionConfig does not emit when no config fields are provided', () => {
+        const events: SyncEvent[] = []
+        const { repo, config } = createServices(events)
+        const session = repo.getOrCreateSession('config-empty', sessionMetadata, null)
+
+        events.length = 0
+        config.applySessionConfig(session.id, {})
+
+        expect(events).toEqual([])
+    })
+
     it('applySessionConfig accepts model=null to clear', () => {
         const events: SyncEvent[] = []
         const { store, repo, config } = createServices(events)
-        const session = repo.getOrCreateSession('config-clear', sessionMetadata, null, { model: 'gpt-5.4' })
+        const session = repo.getOrCreateSession('config-clear', sessionMetadata, null, { model: 'cursor-runtime-model-stored' })
 
         config.applySessionConfig(session.id, { model: null })
 

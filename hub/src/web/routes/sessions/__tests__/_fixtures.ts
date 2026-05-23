@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import type { CursorRuntimeConfigApplyResult } from '@hapi/protocol/types'
 import type { Session, SyncEngine } from '../../../../sync/syncEngine'
 import { registerApiErrorHandler } from '../../../middleware/apiRouteError'
 import type { WebAppEnv } from '../../../middleware/auth'
@@ -53,7 +54,17 @@ export type EngineOverrides = Partial<SyncEngine> & {
     resolveSessionAccess?: SyncEngine['resolveSessionAccess']
 }
 
-export function createApp(session: Session | null, engineOverrides: EngineOverrides = {}) {
+export function createApp(
+    session: Session | null,
+    engineOverrides: EngineOverrides = {},
+    applySessionConfigResult: CursorRuntimeConfigApplyResult = {
+        status: 'applies-next-run',
+        model: session?.model ?? null,
+        modelReasoningEffort: session?.modelReasoningEffort ?? null,
+        effort: session?.effort ?? null,
+        reason: 'unknown'
+    }
+) {
     const applySessionConfigCalls: Array<[string, Record<string, unknown>]> = []
     const baseEngine: Partial<SyncEngine> = {
         resolveSessionAccess: ((sessionId: string) => {
@@ -64,6 +75,7 @@ export function createApp(session: Session | null, engineOverrides: EngineOverri
         }) as SyncEngine['resolveSessionAccess'],
         applySessionConfig: (async (sessionId: string, config: Record<string, unknown>) => {
             applySessionConfigCalls.push([sessionId, config])
+            return applySessionConfigResult
         }) as unknown as SyncEngine['applySessionConfig'],
         resumeSession: (async (sessionId: string) => ({ type: 'success', sessionId })) as unknown as SyncEngine['resumeSession'],
         abortSession: (async () => { }) as unknown as SyncEngine['abortSession'],
