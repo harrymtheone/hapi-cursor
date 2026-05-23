@@ -41,6 +41,9 @@ coverage/
 localdocs/
 execplan/
 
+# Cursor local settings
+.cursor/
+
 # Generated npm bundle output (local)
 cli/npm/main/
 .ace-tool/

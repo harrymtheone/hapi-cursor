@@ -547,17 +547,17 @@ If any of A1–A3 is contested by the planner, the alternative path is documente
 
 ## Open Questions
 
-1. **Should `madge` be added as a project devDependency or kept as `npx --no-install`?**
+1. **Should `madge` be added as a project devDependency or kept as `npx --no-install`?** (RESOLVED — Plan 06-04 Task 3 adds `madge` to root `devDependencies` so the guard script invokes it via `npx --no-install madge` deterministically.)
    - What we know: madge is widely-used, stable; `npx` already works ad-hoc.
    - What's unclear: whether the planner wants the guard to be CI-deterministic (project dep) vs ephemeral (`npx`).
    - Recommendation: Add `madge` to root `devDependencies` so `bun install` warms the cache and the guard script can rely on `./node_modules/.bin/madge`. Cost: one entry in root `package.json`.
 
-2. **Should the guard script (`scripts/check-no-cut-agents.sh`) extend with Phase 6 keywords or should a new dedicated script be created?**
+2. **Should the guard script (`scripts/check-no-cut-agents.sh`) extend with Phase 6 keywords or should a new dedicated script be created?** (RESOLVED — Plan 06-04 Task 3 extends `scripts/check-no-cut-agents.sh` with a Phase-6 block enforcing the four D-108 keywords + madge exit-code + JSDoc anchor count, consistent with the Phase-3/4/5 inline pattern.)
    - What we know: D-108 says "added to existing test:guard script style". Phase 4-5 inlined into the same script.
    - What's unclear: maintainability vs single-file growth.
    - Recommendation: extend the existing script with a `PHASE6_*` block (consistent with PHASE3/4/5 pattern). One file, contiguous history. Add `madge` invocation as a parallel exit-code check at the end.
 
-3. **Should `applyDisplayMode` parameter type narrow from `string | undefined` to `PermissionMode | undefined`?**
+3. **Should `applyDisplayMode` parameter type narrow from `string | undefined` to `PermissionMode | undefined`?** (RESOLVED — Plan 06-03 narrows `applyDisplayMode` to `PermissionMode | undefined` as part of the launcher cast removal.)
    - What we know: it currently accepts `string | undefined` because of the `as string` cast upstream.
    - Recommendation: narrow to `PermissionMode | undefined` — consistent with D-100 narrowing. Trivial change, no runtime effect.
 
