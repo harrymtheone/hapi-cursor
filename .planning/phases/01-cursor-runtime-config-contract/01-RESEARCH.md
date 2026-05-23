@@ -368,22 +368,19 @@ export const SessionPatchSchema = z.object({
 |---|-------|---------|---------------|
 | A1 | CLI discovery failures may include raw stderr with noisy local details. | Common Pitfalls | If wrong, safe error mapping is still harmless; if right and ignored, UI may leak sensitive or confusing output. |
 
-## Open Questions
+## Open Questions — RESOLVED
 
-1. **Should model discovery be machine-scoped or session-scoped?**
+1. **RESOLVED: Should model discovery be machine-scoped or session-scoped?**
    - What we know: New-session discovery runs before a session exists and requires a selected machine/runner. [VERIFIED: phase context] [VERIFIED: codebase]
-   - What's unclear: Whether future local terminal sessions without runner should expose discovery separately. [ASSUMED]
-   - Recommendation: For Phase 01, implement machine-scoped discovery through the runner/CLI machine RPC and keep session-scoped discovery out of scope. [VERIFIED: codebase]
+   - Resolution: For Phase 01, implement machine-scoped discovery through the runner/CLI machine RPC and keep session-scoped discovery out of scope. Future local terminal discovery is not required by this phase because discovery is triggered from the new-session panel before a session exists. [VERIFIED: phase context] [VERIFIED: codebase]
 
-2. **Can HAPI safely inject `/model <id>` into local interactive Cursor?**
+2. **RESOLVED: Can HAPI safely inject `/model <id>` into local interactive Cursor?**
    - What we know: Cursor documents `/model`; HAPI local launcher currently spawns `agent` under terminal guard and does not retain a child stdin writer for RPC control. [CITED: https://cursor.com/docs/cli/reference/slash-commands] [VERIFIED: codebase]
-   - What's unclear: Whether injecting slash commands into the interactive TTY is reliable across terminal modes. [ASSUMED]
-   - Recommendation: Do not plan true local hot switch unless a spike proves a robust child-stdin/PTY control path. Otherwise present local switch as unavailable/read-only. [VERIFIED: codebase]
+   - Resolution: Phase 01 must not claim true local hot switching. Unless the executor finds and proves an existing robust child-stdin/PTY control path while implementing the plan, the UI presents switching as unavailable/read-only or applies-next-run according to runtime response. [VERIFIED: codebase] [VERIFIED: phase context]
 
-3. **How should separate effort be represented?**
+3. **RESOLVED: How should separate effort be represented?**
    - What we know: Installed CLI exposes many effort-like model ids but no separate `--effort` flag in help. [VERIFIED: local CLI]
-   - What's unclear: Whether Cursor has an undocumented separate effort API. [ASSUMED]
-   - Recommendation: Treat effort as derived/display metadata only when discovery can verify it from model ids or runtime output; do not add a free-standing effort selector in Phase 01. [VERIFIED: phase context]
+   - Resolution: Treat separate effort as unsupported unless discovery or verified runtime behavior exposes it as a real capability. Phase 01 must not add a free-standing effort selector or hardcoded effort options; display effort only when it exists in session metadata or verified runtime output. [VERIFIED: local CLI] [VERIFIED: phase context]
 
 ## Environment Availability
 
