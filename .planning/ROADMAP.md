@@ -205,7 +205,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. A new SSE reconnect / patch-loss invariant test simulates dropped events plus reconnection; the front-end query cache converges to the authoritative server state within a bounded retry budget
   3. Auth route negative-case tests cover bad token, expired JWT, replayed JWT, and empty body — every case returns the expected 4xx status without leaking secrets in the response body or logs
   4. `bun run test` is green; coverage for `cli/src/cursor/`, `hub/src/web/routes/auth.ts`, `hub/src/sse/`, and `web/src/hooks/useSSE.ts` does not regress versus Phase 10
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 11-01-PLAN.md — Phase 10 coverage baseline capture from `main` for the five Phase 11 SUT scopes (orchestrator override 2026-05-23)
+- [ ] 11-02-PLAN.md — REFT-01: `cli/src/agent/permissionMatrix.test.ts` (type-exhaustive + runtime key cross-check + per-row deep-equal; D-176/D-177/D-178)
+- [ ] 11-03-PLAN.md — REFT-03: `assertNoSecretLeak` helper + `hub/src/web/routes/auth.test.ts` + `hub/src/web/middleware/auth.test.ts` (two-layer split, no replay-detection per D-184; orchestrator override drops `uid != ownerId` case)
+- [ ] 11-04-PLAN.md — REFT-02: minimal `export` of useSSE backoff constants (D-190 carve-out) + reconnect convergence describe block (bounded-window + cache-converges; no MAX_RETRIES per RESEARCH § M2)
+- [ ] 11-05-PLAN.md — Phase 11 guard block append (D-179) + Phase 11 coverage capture + non-regression diff vs Phase 10 baseline + full phase gate (D-188/D-189)
 
 ### Phase 12: Docs cleanup & milestone verification
 **Goal**: Documentation reflects the Cursor-only post-cut codebase, and all Milestone 1 acceptance checks pass end-to-end.
