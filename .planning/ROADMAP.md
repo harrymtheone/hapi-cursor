@@ -193,8 +193,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 - [ ] 10-01-PLAN.md — Slice 1: residue + Wave-0 test scaffolds + Phase-10 guard block stub (delete `hapi server` alias + RETIRED_COMMANDS resolver guard, fix WEBAPP_* env-rename bug in `cli/src/commands/hub.ts`, seed configuration.test.ts skeletons + Store schema-mismatch tests, add Phase-10 guard block with alias + migration-v* checks active)
 - [ ] 10-02-PLAN.md — Slice 2: Hub `loadConfig()` + DI cutover (single coordinated wave per HIGH-risk note: rewrite `hub/src/configuration.ts` as frozen factory, add `rejectOldEnvVars`, cut over all 7 Hub consumers — jwtSecret/ownerId/web-server/socket-server/cli+auth routes — preserve `constantTimeEquals` at 3 sites)
-- [ ] 10-03-PLAN.md — Slice 3: CLI `loadConfig()` + bootstrap-then-freeze + DI cutover (rewrite `cli/src/configuration.ts`, delete `apiUrlInit.ts`, refactor `tokenInit.ts` → `bootstrapToken`, parameterize `persistence.ts`, cut over ~30 CLI consumers + `cli/src/lib.ts` public API, convert 4 singleton-mocking tests to `makeConfig` factory, integration regression for `hapi hub --host/--port`)
-- [ ] 10-04-PLAN.md — Slice 4: SQLite final cleanup + finalize Phase-10 guard (SCHEMA_VERSION bump audit per D-174, D-173 message wording, flip all 5 guard sub-checks to active, close phase gate)
+- [ ] 10-03-PLAN.md — Slice 3: CLI `loadConfig()` + bootstrap-then-freeze + DI cutover (rewrite `cli/src/configuration.ts`, delete `apiUrlInit.ts`, refactor `tokenInit.ts` → `bootstrapToken`, parameterize `persistence.ts`, cut over ~30 CLI consumers, convert 4 singleton-mocking tests to `makeConfig` factory, integration regression for `hapi hub --host/--port`)
+- [ ] 10-04-PLAN.md — Slice 4: `cli/src/lib.ts` public-library export swap + SQLite final cleanup + finalize Phase-10 guard (D-166 lib.ts breaking change, D-173 Store error wording + test assertion, D-174 SCHEMA_VERSION decision recorded, flip all 5 guard sub-checks to active, close phase gate)
 
 ### Phase 11: Test gap fill
 **Goal**: Cursor permission contract, SSE reconnect invariants, and auth route negative cases are covered by automated tests.
