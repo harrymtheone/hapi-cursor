@@ -50,6 +50,7 @@ describe('Store schema mismatch', () => {
         expect(caught!.message).toContain(dbPath)
         expect(caught!.message).toContain(String(expectedVersion))
         expect(caught!.message).toContain(String(foundVersion))
+        expect(caught!.message).toMatch(/offline migration|rebuild/i)
     })
 })
 
