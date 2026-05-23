@@ -20,6 +20,9 @@ function makeSession(overrides: Partial<SessionSummary> & { id: string }): Sessi
         backgroundTaskCount: 0,
         model: null,
         effort: null,
+        statusKind: 'idle',
+        completionMarker: null,
+        errorMarker: null,
         ...overrides
     }
 }
@@ -93,5 +96,40 @@ describe('SessionList directory action', () => {
         )
 
         expect(screen.queryByRole('button', { name: 'New session in this directory' })).toBeNull()
+    })
+
+    it('marks a completed session marker viewed after selecting it', () => {
+        const onSelect = vi.fn()
+        const session = makeSession({
+            id: 'completed-session',
+            updatedAt: Date.now(),
+            statusKind: 'completed',
+            completionMarker: 9_000,
+            metadata: {
+                path: '/home/ubuntu',
+                machineId: 'machine-1',
+                name: 'Completed result',
+            }
+        })
+
+        renderWithProviders(
+            <SessionList
+                sessions={[session]}
+                selectedSessionId={null}
+                onSelect={onSelect}
+                onNewSession={vi.fn()}
+                onRefresh={vi.fn()}
+                isLoading={false}
+                renderHeader={false}
+                api={null}
+                machineLabelsById={{ 'machine-1': 'Mint' }}
+            />
+        )
+
+        expect(screen.getByLabelText('Unread result')).toBeInTheDocument()
+        fireEvent.click(screen.getByText('Completed result'))
+
+        expect(onSelect).toHaveBeenCalledWith('completed-session')
+        expect(screen.getByLabelText('Viewed')).toBeInTheDocument()
     })
 })

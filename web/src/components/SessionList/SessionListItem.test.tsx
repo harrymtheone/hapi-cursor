@@ -30,6 +30,9 @@ function makeSession(overrides: Partial<SessionSummary> & { id: string }): Sessi
         backgroundTaskCount: 0,
         model: null,
         effort: null,
+        statusKind: 'idle',
+        completionMarker: null,
+        errorMarker: null,
         ...overrides,
     }
 }
@@ -88,5 +91,105 @@ describe('SessionListItem component', () => {
         )
         const button = screen.getByRole('button', { current: 'page' })
         expect(button).toBeInTheDocument()
+    })
+
+    it('renders a spinner-style indicator for running and thinking states', () => {
+        const { rerender } = renderWithProviders(
+            <SessionListItem
+                session={makeSession({ id: 'sess-running', statusKind: 'running' })}
+                onSelect={vi.fn()}
+                api={null}
+            />
+        )
+
+        expect(screen.getByLabelText('Running')).toBeInTheDocument()
+        expect(screen.getByLabelText('Running').querySelector('svg')).toHaveClass('animate-spin-slow')
+
+        rerender(
+            <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
+                <I18nProvider>
+                    <SessionListItem
+                        session={makeSession({ id: 'sess-thinking', statusKind: 'thinking' })}
+                        onSelect={vi.fn()}
+                        api={null}
+                    />
+                </I18nProvider>
+            </QueryClientProvider>
+        )
+
+        expect(screen.getByLabelText('Thinking')).toBeInTheDocument()
+        expect(screen.getByLabelText('Thinking').querySelector('svg')).toHaveClass('animate-spin-slow')
+    })
+
+    it('renders one compact yellow waiting dot for pending requests', () => {
+        renderWithProviders(
+            <SessionListItem
+                session={makeSession({ id: 'sess-waiting', statusKind: 'waiting', pendingRequestsCount: 2 })}
+                onSelect={vi.fn()}
+                api={null}
+            />
+        )
+
+        const indicator = screen.getByLabelText('Waiting')
+        expect(indicator).toHaveClass('h-2', 'w-2', 'bg-[#FF9500]')
+        expect(screen.queryByText(/pending/i)).not.toBeInTheDocument()
+    })
+
+    it('renders red, green, and gray compact dots for error and completion states', () => {
+        const { rerender } = renderWithProviders(
+            <SessionListItem
+                session={makeSession({ id: 'sess-error', statusKind: 'error', errorMarker: 1 })}
+                onSelect={vi.fn()}
+                api={null}
+            />
+        )
+
+        expect(screen.getByLabelText('Error')).toHaveClass('h-2', 'w-2', 'bg-[var(--app-badge-error-text)]')
+
+        rerender(
+            <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
+                <I18nProvider>
+                    <SessionListItem
+                        session={makeSession({ id: 'sess-complete', statusKind: 'completed', completionMarker: 2 })}
+                        onSelect={vi.fn()}
+                        api={null}
+                    />
+                </I18nProvider>
+            </QueryClientProvider>
+        )
+        expect(screen.getByLabelText('Unread result')).toHaveClass('h-2', 'w-2', 'bg-[var(--app-badge-success-text)]')
+
+        rerender(
+            <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
+                <I18nProvider>
+                    <SessionListItem
+                        session={makeSession({ id: 'sess-viewed', statusKind: 'completed', completionMarker: 2 })}
+                        onSelect={vi.fn()}
+                        api={null}
+                        completionViewed
+                    />
+                </I18nProvider>
+            </QueryClientProvider>
+        )
+        expect(screen.getByLabelText('Viewed')).toHaveClass('h-2', 'w-2', 'bg-[var(--app-hint)]')
+    })
+
+    it('does not render model or effort text in the row', () => {
+        renderWithProviders(
+            <SessionListItem
+                session={makeSession({
+                    id: 'sess-runtime-text',
+                    metadata: { name: 'Runtime Text', path: '' },
+                    model: 'cursor-model-visible-only-in-composer',
+                    effort: 'high'
+                })}
+                onSelect={vi.fn()}
+                api={null}
+            />
+        )
+
+        expect(screen.getByText('Runtime Text')).toBeInTheDocument()
+        expect(screen.queryByText('cursor-model-visible-only-in-composer')).not.toBeInTheDocument()
+        expect(screen.queryByText('high')).not.toBeInTheDocument()
     })
 })
