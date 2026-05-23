@@ -1,0 +1,3 @@
+Timestamp: 2026-05-23Txx:xx:xx+08:00
+Mechanism: Ctrl-C / SIGINT in the hapi hub terminal
+Observed: hub process stopped; phone client disconnected or stopped receiving updates as expected.

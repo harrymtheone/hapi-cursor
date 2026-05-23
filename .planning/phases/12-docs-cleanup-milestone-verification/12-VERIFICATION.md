@@ -148,7 +148,29 @@ Coverage summary: no regressions on the two scopes with real measurable baseline
 
 ## Manual Tailscale scenario
 
-_pending Task 3 (human-required — D-05 9-step checklist on Tailnet phone)_
+### Manual Tailscale + Cursor + Phone scenario
+
+Executed by: Harry
+Date / time: 2026-05-23T16:24:00+08:00
+Dev machine: harry-5090 / Linux 6.8.0-117-generic
+Phone: phone on same Tailnet (device details not recorded)
+
+| # | Step | Result | Timestamp | Notes / Screenshot |
+| --- | --- | --- | --- | --- |
+| 1 | hapi runner up | ✅ | 16:24 +08:00 | `manual-tailscale/step-01-runner-up.png` |
+| 2 | hapi hub up (reachable on Tailnet) | ✅ | 16:09 +08:00 | `manual-tailscale/step-02-hub-up.png`; hub bound to `0.0.0.0:3006` with `HAPI_PUBLIC_URL=http://10.126.126.1:3006` |
+| 3 | Phone opens PWA at Tailscale URL | ✅ | 16:09 +08:00 | `manual-tailscale/step-03-pwa-loaded.png`; phone could load `http://10.126.126.1:3006/` |
+| 4 | New Cursor session created | ✅ | 16:24 +08:00 | `manual-tailscale/step-04-session-created.png` |
+| 5 | First round of interaction | ✅ | 16:24 +08:00 | `manual-tailscale/step-05-first-round.png` |
+| 6 | hub killed (mechanism: Ctrl-C / SIGINT) | ✅ | 16:24 +08:00 | `manual-tailscale/step-06-hub-killed.txt` |
+| 7 | hub restarted | ✅ | 16:24 +08:00 | `manual-tailscale/step-07-hub-restarted.png` |
+| 8 | Session state recovered | ✅ | 16:24 +08:00 | `manual-tailscale/step-08-state-recovered.png`; message history and machine list recovered after hub restart |
+| 9 | Second round of interaction | ✅ | 16:24 +08:00 | `manual-tailscale/step-09-second-round.png` |
+
+Operational note: the first runner attempt used `bun run dev runner`, which only printed the runner help text and did not register a machine. This was corrected by starting the runner with `runner start-sync`; after that, the phone PWA showed the machine and the end-to-end scenario completed successfully. The manual run also used an isolated `HAPI_HOME=/tmp/hapi-phase12-uat.4AOz0A` to avoid mutating the existing `~/.hapi/hapi.db` with schema version 9.
+
+Overall: PASS
+Rationale: Phone PWA was reachable over Tailscale, machine registration worked after launching the runner correctly, a Cursor session completed interaction before and after hub restart, and session state recovered successfully.
 
 ## ROADMAP reconciliation
 
