@@ -46,14 +46,21 @@ function getPatchedStatusKind(
     next: Pick<SessionSummary, 'active' | 'thinking' | 'backgroundTaskCount' | 'pendingRequestsCount'>,
     patch: SessionPatch
 ): SessionSummary['statusKind'] {
-    if (Object.prototype.hasOwnProperty.call(patch, 'statusKind') && patch.statusKind) {
+    if (Object.prototype.hasOwnProperty.call(patch, 'statusKind')) {
         return patch.statusKind
     }
     if (next.thinking) return 'thinking'
     if (next.pendingRequestsCount > 0) return 'waiting'
-    if (next.active || next.backgroundTaskCount > 0) return 'running'
+    if (next.backgroundTaskCount > 0) return 'running'
     if (current.statusKind === 'completed' || current.statusKind === 'error') return current.statusKind
     return 'idle'
+}
+
+function shouldClearStatusMarkers(statusKind: SessionSummary['statusKind'], patch: SessionPatch): boolean {
+    if (Object.prototype.hasOwnProperty.call(patch, 'statusKind')) {
+        return true
+    }
+    return statusKind === 'thinking' || statusKind === 'waiting' || statusKind === 'running'
 }
 
 function getVisibilityState(): VisibilityState {
@@ -247,6 +254,7 @@ export function useSSE(options: {
                     backgroundTaskCount: nextBackgroundTaskCount,
                     pendingRequestsCount: current.pendingRequestsCount
                 }, patch)
+                const clearStatusMarkers = shouldClearStatusMarkers(nextStatusKind, patch)
                 const nextSummary: SessionSummary = {
                     ...current,
                     active: nextActive,
@@ -259,10 +267,14 @@ export function useSSE(options: {
                     statusKind: nextStatusKind,
                     completionMarker: Object.prototype.hasOwnProperty.call(patch, 'completionMarker')
                         ? patch.completionMarker ?? null
-                        : current.completionMarker,
+                        : clearStatusMarkers
+                            ? null
+                            : current.completionMarker,
                     errorMarker: Object.prototype.hasOwnProperty.call(patch, 'errorMarker')
                         ? patch.errorMarker ?? null
-                        : current.errorMarker
+                        : clearStatusMarkers
+                            ? null
+                            : current.errorMarker
                 }
 
                 patched = true

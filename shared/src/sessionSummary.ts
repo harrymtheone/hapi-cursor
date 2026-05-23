@@ -31,7 +31,7 @@ export type SessionSummary = {
 function getSessionStatusKind(session: Session, pendingRequestsCount: number): SessionSummaryStatusKind {
     if (session.thinking) return 'thinking'
     if (pendingRequestsCount > 0) return 'waiting'
-    if (session.active || (session.backgroundTaskCount ?? 0) > 0) return 'running'
+    if ((session.backgroundTaskCount ?? 0) > 0) return 'running'
     if (session.endReason === 'error') return 'error'
     if (session.endReason === 'completed') return 'completed'
     return 'idle'
