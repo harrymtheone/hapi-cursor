@@ -246,6 +246,9 @@ describe('useSSE handleSyncEvent', () => {
             ['thinking', { type: 'session-updated', sessionId: 'session-1', data: { thinking: true } }, (queryClient) => {
                 expect(queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)?.sessions[0]?.thinking).toBe(true)
             }],
+            ['statusKind', { type: 'session-updated', sessionId: 'session-1', data: { statusKind: 'thinking' } }, (queryClient) => {
+                expect(queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)?.sessions[0]?.statusKind).toBe('thinking')
+            }],
             ['updatedAt', { type: 'session-updated', sessionId: 'session-1', data: { updatedAt: 4_000 } }, (queryClient) => {
                 expect(queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)?.sessions[0]?.updatedAt).toBe(4_000)
             }],
@@ -260,6 +263,16 @@ describe('useSSE handleSyncEvent', () => {
             }],
             ['effort', { type: 'session-updated', sessionId: 'session-1', data: { effort: 'medium' } }, (queryClient) => {
                 expect(queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)?.sessions[0]?.effort).toBe('medium')
+            }],
+            ['completionMarker', { type: 'session-updated', sessionId: 'session-1', data: { statusKind: 'completed', completionMarker: 5_000 } }, (queryClient) => {
+                const summary = queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)?.sessions[0]
+                expect(summary?.statusKind).toBe('completed')
+                expect(summary?.completionMarker).toBe(5_000)
+            }],
+            ['errorMarker', { type: 'session-updated', sessionId: 'session-1', data: { statusKind: 'error', errorMarker: 6_000 } }, (queryClient) => {
+                const summary = queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)?.sessions[0]
+                expect(summary?.statusKind).toBe('error')
+                expect(summary?.errorMarker).toBe(6_000)
             }],
         ]
 
