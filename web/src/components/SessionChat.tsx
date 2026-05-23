@@ -18,6 +18,7 @@ import { buildConversationOutline } from '@/chat/outline'
 import { buildVisibleChatBlocks, isToolGroupBlock, type ToolGroupBlock } from '@/chat/toolGroups'
 import { isQueuedForInvocation, mergeMessages } from '@/lib/messages'
 import { HappyComposer } from '@/components/AssistantChat/HappyComposer'
+import type { ModelSwitchState } from '@/components/AssistantChat/StatusBar'
 import type { PendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
 import { resolvePendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
 import { HappyThread } from '@/components/AssistantChat/HappyThread'
@@ -108,6 +109,7 @@ export function SessionChat(props: {
     const visibleGroupsRef = useRef<ToolGroupBlock[]>([])
     const [forceScrollToken, setForceScrollToken] = useState(0)
     const [outlineOpen, setOutlineOpen] = useState(false)
+    const [modelSwitchState, setModelSwitchState] = useState<ModelSwitchState>({ status: 'idle' })
     const agentFlavor = 'cursor'
     const controlledByUser = props.session.agentState?.controlledByUser === true
     const {
@@ -237,11 +239,18 @@ export function SessionChat(props: {
 
     // Model mode change handler
     const handleModelChange = useCallback(async (model: string | null) => {
+        setModelSwitchState({ status: 'applying' })
         try {
-            await setModel(model)
-            haptic.notification('success')
+            const result = await setModel(model)
+            const reason = 'reason' in result ? result.reason : undefined
+            const nextState: ModelSwitchState = reason
+                ? { status: result.status, reason }
+                : { status: result.status }
+            setModelSwitchState(nextState)
+            haptic.notification(result.status === 'failed' ? 'error' : 'success')
             props.onRefresh()
         } catch (e) {
+            setModelSwitchState({ status: 'failed' })
             haptic.notification('error')
             console.error('Failed to set model:', e)
         }
@@ -416,6 +425,7 @@ export function SessionChat(props: {
                         model={props.session.model}
                         effort={props.session.effort}
                         agentFlavor={agentFlavor}
+                        modelSwitchState={modelSwitchState}
                         active={props.session.active}
                         allowSendWhenInactive
                         thinking={props.session.thinking}

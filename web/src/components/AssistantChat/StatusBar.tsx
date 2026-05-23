@@ -9,6 +9,11 @@ import type { AgentState, PermissionMode } from '@/types/api'
 import { getContextBudgetTokens } from '@/chat/modelConfig'
 import { useTranslation } from '@/lib/use-translation'
 
+export type ModelSwitchState = {
+    status: 'idle' | 'applying' | 'applied' | 'pending' | 'failed' | 'applies-next-run'
+    reason?: string
+}
+
 // Vibing messages for thinking state
 const VIBING_MESSAGES = [
     "Accomplishing", "Actioning", "Actualizing", "Baking", "Booping", "Brewing",
@@ -109,6 +114,40 @@ function formatTokenCount(value: number): string {
     return String(value)
 }
 
+function formatSwitchReason(reason: string | undefined, t: (key: string) => string): string | null {
+    if (!reason) return null
+    const reasonKey = {
+        'cursor-cli-unavailable': 'newSession.model.discovery.reason.cursorCliUnavailable',
+        'not-authenticated': 'newSession.model.discovery.reason.notAuthenticated',
+        'timed-out': 'newSession.model.discovery.reason.timedOut',
+        'empty-model-list': 'newSession.model.discovery.reason.emptyModelList',
+        unknown: 'newSession.model.discovery.reason.unknown'
+    }[reason]
+    return reasonKey ? t(reasonKey) : null
+}
+
+function getModelSwitchLabel(
+    state: ModelSwitchState | undefined,
+    t: (key: string) => string
+): { text: string; className: string } | null {
+    if (!state || state.status === 'idle') return null
+    if (state.status === 'applying' || state.status === 'pending') {
+        return { text: t('composer.model.applying'), className: 'text-[var(--app-hint)]' }
+    }
+    if (state.status === 'applied') {
+        return { text: t('composer.model.applied'), className: 'text-[var(--app-hint)]' }
+    }
+    if (state.status === 'applies-next-run') {
+        return { text: t('composer.model.appliesNextRun'), className: 'text-amber-500' }
+    }
+
+    const reason = formatSwitchReason(state.reason, t)
+    return {
+        text: reason ? `${t('composer.model.switchFailed')} · ${reason}` : t('composer.model.switchFailed'),
+        className: 'text-[var(--app-badge-error-text)]'
+    }
+}
+
 export function StatusBar(props: {
     active: boolean
     thinking: boolean
@@ -120,6 +159,7 @@ export function StatusBar(props: {
     model?: string | null
     permissionMode?: PermissionMode
     agentFlavor?: string | null
+    modelSwitchState?: ModelSwitchState
 }) {
     const { t } = useTranslation()
     const connectionStatus = useMemo(
@@ -165,6 +205,7 @@ export function StatusBar(props: {
     const permissionModeLabel = displayPermissionMode ? getPermissionModeLabel(displayPermissionMode) : null
     const permissionModeTone = displayPermissionMode ? getPermissionModeTone(displayPermissionMode) : null
     const permissionModeColor = permissionModeTone ? PERMISSION_TONE_CLASSES[permissionModeTone] : 'text-[var(--app-hint)]'
+    const modelSwitchLabel = getModelSwitchLabel(props.modelSwitchState, t)
 
     return (
         <div className="flex min-w-0 items-center justify-between gap-2 px-2 pb-1">
@@ -195,6 +236,11 @@ export function StatusBar(props: {
             </div>
 
             <div className="flex min-w-0 shrink-0 items-center gap-2">
+                {modelSwitchLabel ? (
+                    <span className={`whitespace-nowrap text-xs ${modelSwitchLabel.className}`}>
+                        {modelSwitchLabel.text}
+                    </span>
+                ) : null}
                 {displayPermissionMode ? (
                     <span className={`whitespace-nowrap text-xs ${permissionModeColor}`}>
                         {permissionModeLabel}

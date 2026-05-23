@@ -2,6 +2,7 @@ import { ComposerPrimitive } from '@assistant-ui/react'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { StatusBar } from '@/components/AssistantChat/StatusBar'
+import type { ModelSwitchState } from '@/components/AssistantChat/StatusBar'
 import { ComposerButtons } from '@/components/AssistantChat/ComposerButtons'
 import type { PendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
 import { AttachmentItem } from '@/components/AssistantChat/AttachmentItem'
@@ -29,6 +30,7 @@ export interface HappyComposerProps {
     contextWindow?: number | null
     controlledByUser?: boolean
     agentFlavor?: string | null
+    modelSwitchState?: ModelSwitchState
     availableModelOptions?: Array<{ value: string | null; label: string }>
     onPermissionModeChange?: (mode: PermissionMode) => void
     onModelChange?: (model: string | null) => void
@@ -121,6 +123,7 @@ export function HappyComposer(props: HappyComposerProps) {
                         model={model}
                         permissionMode={permissionMode}
                         agentFlavor={props.agentFlavor}
+                        modelSwitchState={props.modelSwitchState}
                     />
 
                     <div className="overflow-hidden rounded-[20px] bg-[var(--app-secondary-bg)]">

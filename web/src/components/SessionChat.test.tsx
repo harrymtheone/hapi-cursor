@@ -155,15 +155,24 @@ describe('SessionChat model switch state', () => {
             modelReasoningEffort: null,
             effort: null
         }
-        const { onRefresh } = renderSessionChat(applyResult)
+        let resolveApply!: (result: CursorRuntimeConfigApplyResult) => void
+        const pendingApply = new Promise<CursorRuntimeConfigApplyResult>((resolve) => {
+            resolveApply = resolve
+        })
+        const { onRefresh } = renderSessionChat(pendingApply)
 
         expect(composerProps?.modelSwitchState).toEqual({ status: 'idle' })
 
-        await act(async () => {
+        act(() => {
             fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
+        })
+        await waitFor(() => {
             expect(composerProps?.modelSwitchState).toEqual({ status: 'applying' })
         })
 
+        await act(async () => {
+            resolveApply(applyResult)
+        })
         await waitFor(() => {
             expect(composerProps?.modelSwitchState).toEqual({ status: 'applied' })
         })
