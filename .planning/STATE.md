@@ -4,14 +4,14 @@ milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
 stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-05-23T15:33:49.898Z"
+last_updated: "2026-05-23T15:42:19.674Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 7
+  percent: 0
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 1 of 5 (Cursor Runtime Config Contract)
-Plan: 6 of 8 in current phase
+Plan: 7 of 8 in current phase
 Status: Ready to execute
 Last activity: 2026-05-23
 
-Progress: [████████░░] 75%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [████████░░] 75%
 | Phase 01 P03 | 6min | 2 tasks | 10 files |
 | Phase 01 P04 | 6min | 2 tasks | 8 files |
 | Phase 01 P06 | 10min | 2 tasks | 9 files |
+| Phase 01 P07 | 6min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Preserve Hub truth for Web model switching by returning CursorRuntimeConfigApplyResult through ApiClient.setModel and useSessionActions.setModel.
 - [Phase 01]: Keep model switch feedback in SessionChat composer/status state rather than chat timeline messages.
 - [Phase 01]: Map runtime failure reasons through localized safe copy before rendering switch status.
+- [Phase 01]: Use runtimeModelSwitchSupported as the authoritative hot-switch capability gate for composer model selector access.
+- [Phase 01]: Keep the composer model box read-only by default and open selector only when runtime support, approved options, and idle state are all true.
+- [Phase 01]: Preserve failed model switch retry targets in composer switch state instead of adding timeline events.
 
 ### Pending Todos
 
@@ -111,7 +115,7 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:33:44.808Z
+Last session: 2026-05-23T15:41:32.925Z
 Stopped at: Completed 01-06-PLAN.md
 Resume file: None
 
