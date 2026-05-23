@@ -494,3 +494,60 @@ echo "✅ Phase 9 D-158 #6: createApiQuery defined once + ≥ 3 users."
 bash "$(dirname "$0")/check-no-circular-web.sh"
 
 echo "✅ Phase 9 guard PASS (D-158 #1–#6 + madge zero cycles)."
+
+# -----------------------------------------------------------------------------
+# Phase-10 config-cleanup guard (Plan 01 — active checks only)
+#
+# Active sub-checks land in this slice:
+#   (#3) `name: 'server'` alias removed from cli/src/commands/registry.ts
+#   (#4) zero runtime `migration-v*.ts` files under hub/src
+#
+# Staged sub-checks (Plan 04 will flip these on after the CLI/Hub DI cutover
+# in Plan 02 + Plan 03 lands; until then they would false-positive on the
+# in-flight singleton/legacy-field code paths):
+#   (#1) legacy field reads (`\bserverUrl\b|\bwebapp(Host|Port|Url|Origin)\b`)
+#   (#2) mutable setters (`_setApiUrl|_setCliApiToken|_setExtraHeaders`)
+#   (#5) singleton imports (`getConfiguration\(\)` / `import { configuration }`)
+# -----------------------------------------------------------------------------
+
+# (#1) Plan 04: enable after Plan 02 + Plan 03 land DI cutover
+# PHASE10_LEGACY_FIELDS=$("$RG_BIN" -n '\bserverUrl\b|\bwebapp(Host|Port|Url|Origin)\b' \
+#   cli/src hub/src --glob '!*.test.*' 2>/dev/null | wc -l)
+# if [ "$PHASE10_LEGACY_FIELDS" -ne 0 ]; then
+#   echo "❌ Phase 10 #1: legacy serverUrl / webapp* field reads must be zero."
+#   exit 1
+# fi
+
+# (#2) Plan 04: enable after Plan 02 + Plan 03 land DI cutover
+# PHASE10_MUTABLE_SETTERS=$("$RG_BIN" -n '_setApiUrl|_setCliApiToken|_setExtraHeaders' \
+#   cli/src hub/src --glob '!*.test.*' 2>/dev/null | wc -l)
+# if [ "$PHASE10_MUTABLE_SETTERS" -ne 0 ]; then
+#   echo "❌ Phase 10 #2: mutable singleton setters must be removed."
+#   exit 1
+# fi
+
+# (#3) D-160 — `hapi server` alias must be gone from the command registry.
+PHASE10_SERVER_ALIAS=$("$RG_BIN" -c "name:\s*['\"]server['\"]" cli/src/commands/registry.ts 2>/dev/null || echo 0)
+if [ "$PHASE10_SERVER_ALIAS" -ne 0 ]; then
+  echo "❌ Phase 10 #3: \`name: 'server'\` alias must be removed from cli/src/commands/registry.ts (D-160)."
+  exit 1
+fi
+echo "✅ Phase 10 #3: hapi server alias removed."
+
+# (#4) D-175 — no runtime compatibility migration files under hub/src.
+PHASE10_MIGRATION_FILES=$(find hub/src -name 'migration-v*.ts' 2>/dev/null | wc -l)
+if [ "$PHASE10_MIGRATION_FILES" -ne 0 ]; then
+  echo "❌ Phase 10 #4: runtime migration-v*.ts files must not exist under hub/src (D-175)."
+  exit 1
+fi
+echo "✅ Phase 10 #4: no runtime migration-v*.ts files."
+
+# (#5) Plan 04: enable after Plan 02 + Plan 03 land DI cutover
+# PHASE10_SINGLETON_IMPORTS=$("$RG_BIN" -n 'getConfiguration\(\)|^\s*import\s+\{\s*configuration\s*\}' \
+#   cli/src hub/src --glob '!*.test.*' --glob '!configuration.ts' 2>/dev/null | wc -l)
+# if [ "$PHASE10_SINGLETON_IMPORTS" -ne 0 ]; then
+#   echo "❌ Phase 10 #5: configuration singleton imports must be replaced by DI."
+#   exit 1
+# fi
+
+echo "✅ Phase 10 guard PASS."
