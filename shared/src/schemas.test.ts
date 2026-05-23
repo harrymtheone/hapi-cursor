@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
+    CursorModelDiscoveryResultSchema,
+    CursorRuntimeConfigApplyResultSchema,
     MachinePatchSchema,
     MachineSchema,
     MessageContentSchema,
@@ -8,6 +10,68 @@ import {
     SessionSchema,
     SyncEventSchema
 } from './schemas'
+
+describe('CursorModelDiscoveryResultSchema', () => {
+    it('accepts discovery success with raw model ids', () => {
+        const result = CursorModelDiscoveryResultSchema.safeParse({
+            status: 'ok',
+            models: [
+                {
+                    id: 'cursor-runtime-model-raw-id',
+                    label: 'Cursor Runtime Model',
+                    isDefault: true,
+                    isCurrent: false
+                }
+            ],
+            discoveredAt: 123
+        })
+
+        expect(result.success).toBe(true)
+    })
+
+    it('accepts discovery error with safe reasons only', () => {
+        for (const reason of ['cursor-cli-unavailable', 'not-authenticated', 'timed-out', 'empty-model-list', 'unknown']) {
+            expect(CursorModelDiscoveryResultSchema.safeParse({
+                status: 'error',
+                reason,
+                discoveredAt: 123
+            }).success).toBe(true)
+        }
+    })
+
+    it('rejects raw stderr-like discovery reasons', () => {
+        expect(CursorModelDiscoveryResultSchema.safeParse({
+            status: 'error',
+            reason: 'Error: token leaked in /home/user/.config/cursor',
+            discoveredAt: 123
+        }).success).toBe(false)
+    })
+})
+
+describe('CursorRuntimeConfigApplyResultSchema', () => {
+    it('accepts all runtime config apply statuses', () => {
+        const cases = [
+            { status: 'applied', model: 'cursor-runtime-model-raw-id', modelReasoningEffort: null, effort: null },
+            { status: 'pending', model: null, modelReasoningEffort: null, effort: null, reason: 'unknown' },
+            { status: 'failed', model: null, modelReasoningEffort: null, effort: null, reason: 'timed-out' },
+            { status: 'applies-next-run', model: 'cursor-runtime-model-raw-id', modelReasoningEffort: null, effort: null, reason: 'unknown' }
+        ]
+
+        for (const value of cases) {
+            expect(CursorRuntimeConfigApplyResultSchema.safeParse(value).success).toBe(true)
+        }
+    })
+
+    it('rejects raw stderr-like apply reasons', () => {
+        expect(CursorRuntimeConfigApplyResultSchema.safeParse({
+            status: 'failed',
+            model: null,
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'spawn agent ENOENT with stderr: secret details'
+        }).success).toBe(false)
+    })
+})
 
 const minimalSession = {
     id: 'session-1',
