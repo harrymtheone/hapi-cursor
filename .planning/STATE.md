@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 10 context gathered
-last_updated: "2026-05-23T02:15:01.729Z"
-last_activity: 2026-05-23 -- Phase 10 planning complete
+last_updated: "2026-05-23T02:38:11.000Z"
+last_activity: 2026-05-23
 progress:
   total_phases: 12
   completed_phases: 9
   total_plans: 50
-  completed_plans: 46
+  completed_plans: 47
   percent: 75
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-20)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 10 — config cleanup
+**Current focus:** Phase 10 — config-cleanup
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
+Phase: 10 (config-cleanup) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-05-23 -- Phase 10 planning complete
+Last activity: 2026-05-23
 
-Progress: [██████████] 100%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -99,6 +99,7 @@ Progress: [██████████] 100%
 | Phase 09 P02 | 18 | 4 tasks | 25 files |
 | Phase 09 P03 | 12min | 3 tasks | 22 files |
 | Phase 9 P4 | 10 | 3 tasks | 6 files |
+| Phase 10-config-cleanup P01 | 10min | 4 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -159,6 +160,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 09 Plan 2: message-window-store split into 5 sub-modules + 28-line facade; SessionList split into 4 hooks + 4 sub-components + icons support; public surfaces preserved verbatim, pre-existing tests pass unmodified.
 - [Phase 09]: Plan 3 collapses settings/index.tsx (758 → 47), HappyComposer.tsx (669 → 178), and ToolCard/views/_results.tsx (687 → 175 dispatcher) to thin orchestrators. Public surfaces preserved (settings default export, HappyComposer named export, _results.tsx re-exports of extractTextFromResult + getMutationResultRenderMode). REFW-02 closed; bun typecheck + bun run test all green; pre-existing 09-02 typecheck slip in SessionListItem.test.tsx fixed inline (Rule 3).
 - [Phase ?]: Phase 9 closed: single-command gate green; 7 D-158 sub-checks active; pre-existing messageWindow* madge cycles fixed via trim-helper extraction + persistence registrar inversion.
+- [Phase ?]: Plan 10-01: retired CLI commands fail hard via RETIRED_COMMANDS with repair message (D-160)
+- [Phase ?]: Plan 10-01: CLI hub launcher writes HAPI_LISTEN_HOST/PORT (env names the hub actually reads)
+- [Phase ?]: Plan 10-01: Phase-10 guard block — alias+migration-v* active; legacy-field/setter/singleton staged for Plan 04
 
 ### Pending Todos
 
@@ -178,6 +182,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T01:21:37.517Z
+Last session: 2026-05-23T02:38:05.376Z
 Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-config-cleanup/10-CONTEXT.md
+Resume file: None
