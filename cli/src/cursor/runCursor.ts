@@ -12,9 +12,11 @@ import { registerLocalHandoffHandler } from '@/agent/localHandoff';
 import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
 import { isPermissionModeAllowedForFlavor } from '@hapi/protocol';
 import { UnknownPermissionModeError } from '@hapi/protocol/modes';
-import { PermissionModeSchema } from '@hapi/protocol/schemas';
+import { CursorRuntimeConfigApplyResultSchema, PermissionModeSchema } from '@hapi/protocol/schemas';
+import type { CursorRuntimeConfigApplyResult } from '@hapi/protocol/types';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
 import { getInvokedCwd } from '@/utils/invokedCwd';
+import { z } from 'zod';
 
 export const resolvePermissionMode = (value: unknown): PermissionMode => {
     const parsed = PermissionModeSchema.safeParse(value);
@@ -23,6 +25,64 @@ export const resolvePermissionMode = (value: unknown): PermissionMode => {
     }
     return parsed.data as PermissionMode;
 };
+
+const nullableRuntimeConfigValue = z.string().trim().min(1).nullable();
+
+const CursorSessionConfigPayloadSchema = z.object({
+    permissionMode: z.unknown().optional(),
+    model: nullableRuntimeConfigValue.optional(),
+    modelReasoningEffort: nullableRuntimeConfigValue.optional(),
+    effort: nullableRuntimeConfigValue.optional()
+}).strict();
+
+type CursorSessionConfigApplyResponse =
+    | CursorRuntimeConfigApplyResult
+    | { applied: { permissionMode: PermissionMode } };
+
+export function applyCursorSessionConfig(
+    payload: unknown,
+    state: {
+        currentPermissionMode: PermissionMode;
+        currentModel: string | null | undefined;
+        currentModelReasoningEffort: string | null | undefined;
+        currentEffort: string | null | undefined;
+        syncPermissionMode: (mode: PermissionMode) => void;
+    }
+): CursorSessionConfigApplyResponse {
+    const parsed = CursorSessionConfigPayloadSchema.safeParse(payload);
+    if (!parsed.success) {
+        throw new Error('Invalid session config payload');
+    }
+
+    const config = parsed.data;
+    let nextPermissionMode = state.currentPermissionMode;
+    if (config.permissionMode !== undefined) {
+        nextPermissionMode = resolvePermissionMode(config.permissionMode);
+        state.syncPermissionMode(nextPermissionMode);
+    }
+
+    const hasRuntimeConfigRequest = Object.prototype.hasOwnProperty.call(config, 'model')
+        || Object.prototype.hasOwnProperty.call(config, 'modelReasoningEffort')
+        || Object.prototype.hasOwnProperty.call(config, 'effort');
+
+    if (!hasRuntimeConfigRequest) {
+        return { applied: { permissionMode: nextPermissionMode } };
+    }
+
+    return CursorRuntimeConfigApplyResultSchema.parse({
+        status: 'applies-next-run',
+        model: Object.prototype.hasOwnProperty.call(config, 'model')
+            ? config.model
+            : state.currentModel ?? null,
+        modelReasoningEffort: Object.prototype.hasOwnProperty.call(config, 'modelReasoningEffort')
+            ? config.modelReasoningEffort
+            : state.currentModelReasoningEffort ?? null,
+        effort: Object.prototype.hasOwnProperty.call(config, 'effort')
+            ? config.effort
+            : state.currentEffort ?? null,
+        reason: 'unknown'
+    });
+}
 
 const formatFailureReason = (message: string): string => {
     const maxLength = 200;
@@ -117,17 +177,16 @@ export async function runCursor(
     });
 
     session.rpcHandlerManager.registerHandler('set-session-config', async (payload: unknown) => {
-        if (!payload || typeof payload !== 'object') {
-            throw new Error('Invalid session config payload');
-        }
-        const config = payload as { permissionMode?: unknown };
-
-        if (config.permissionMode !== undefined) {
-            currentPermissionMode = resolvePermissionMode(config.permissionMode);
-        }
-
-        syncSessionMode();
-        return { applied: { permissionMode: currentPermissionMode } };
+        return applyCursorSessionConfig(payload, {
+            currentPermissionMode,
+            currentModel: currentModel ?? null,
+            currentModelReasoningEffort: null,
+            currentEffort: null,
+            syncPermissionMode: (mode) => {
+                currentPermissionMode = mode;
+                syncSessionMode();
+            }
+        });
     });
 
     let crashed = false;
