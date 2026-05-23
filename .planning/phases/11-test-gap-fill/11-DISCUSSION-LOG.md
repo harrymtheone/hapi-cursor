@@ -127,3 +127,50 @@ Notes:
 - hub coverage uses `bun:test`'s built-in coverage (TESTING.md § Coverage notes hub has no preconfigured provider) — numbers are the `% Lines` / `% Funcs` columns from its text report. Per D-188, no CI gate is added; numbers are advisory only.
 - cli + web both declare `provider: 'v8'` in their `vitest.config.ts` but do NOT include `@vitest/coverage-v8` as a dependency on `main` @ 9c58af9. Installing the missing package was out of scope (would mutate `main` install state and was not the planned action). Per RESEARCH § Open Question #3 fallback: "If any scope's number cannot be obtained, write `unavailable — <reason>`. Plan 11-05 will then declare Phase 11 numbers the new baseline."
 - Plan 11-05 (SC#4 non-regression check) MUST treat the three `unavailable` scopes as "Phase 11 numbers become the new baseline" rather than asserting non-regression against a missing baseline. The two captured hub scopes (`auth.ts` 18.18%, `sseManager.ts` 79.82%) DO have a real baseline and must not regress.
+
+---
+
+## Phase 11 Coverage After (captured 2026-05-23)
+
+Captured from: Phase 11 branch HEAD `d3e5279` (post Task 1 of plan 11-05; per-task commit b7-style cadence — coverage values are read after Phase 11 test additions but before this DISCUSSION-LOG append).
+
+Active checkout (`main`) is dirty with the same pre-existing planning-tree drift documented in plan 11-01 (config.json, prior-phase planning files, etc.); no install state was mutated for this capture so cli + web `@vitest/coverage-v8` is still missing — the three `unavailable` scopes from baseline carry forward. Per RESEARCH § Open Question #3 fallback + plan 11-01 SUMMARY: "Plan 11-05 must treat the three `unavailable` scopes as 'Phase 11 numbers become the new baseline'."
+
+| Scope | Phase 11 Line Coverage | Phase 10 Baseline | Delta | Non-Regression |
+|-------|------------------------|-------------------|-------|----------------|
+| cli/src/cursor/ | unavailable — `@vitest/coverage-v8` not installed in `cli/package.json` (same as baseline) | unavailable | n/a | n/a (baseline + current both unavailable; new baseline declared per Open Question #3) |
+| cli/src/agent/ | unavailable — `@vitest/coverage-v8` not installed in `cli/package.json` (same as baseline) | unavailable | n/a | n/a (baseline + current both unavailable; new baseline declared per Open Question #3) |
+| hub/src/web/routes/auth.ts | **100.00% lines (100.00% funcs)** — fully covered by REFT-03 (plan 11-03 added 6 route + 10 middleware tests) | 18.18% lines (0.00% funcs) | **+81.82 pp lines / +100.00 pp funcs** | ✅ |
+| hub/src/sse/ | 79.82% lines (57.14% funcs) — only file `sseManager.ts`; uncovered lines 63–67, 108, 114–118, 127–131, 136–141 (unchanged from baseline; Phase 11 did not target sseManager.ts) | 79.82% lines (57.14% funcs) | 0.00 pp | ✅ |
+| web/src/hooks/useSSE.ts | unavailable — `@vitest/coverage-v8` not installed in `web/package.json` (same as baseline) | unavailable | n/a | n/a (baseline + current both unavailable; new baseline declared per Open Question #3) |
+
+Source commands (run from each package root inside the active checkout — no worktree this time; capture is read-only on the dirty active tree because `bun:test --coverage` and `vitest run --coverage` only read `src/`, never the planning subtree):
+
+- `cd cli && bun run tools:unpack && bun run vitest run --coverage --coverage.reporter=text --coverage.include='src/cursor/**' --coverage.include='src/agent/**'` — `MISSING DEPENDENCY @vitest/coverage-v8` (same as baseline)
+- `cd hub && bun test --coverage 2>&1 | grep -E '(auth\.ts|sse/)'` — three lines extracted: `src/sse/sseManager.ts | 57.14 | 79.82 | 63-67,...`, `src/web/middleware/auth.ts | 100.00 | 100.00 |`, `src/web/routes/auth.ts | 100.00 | 100.00 |` (bun's columns are `% Funcs | % Lines | Uncovered`)
+- `cd web && bun run vitest run --coverage --coverage.reporter=text --coverage.include='src/hooks/useSSE.ts'` — `MISSING DEPENDENCY @vitest/coverage-v8` (same as baseline)
+
+**Non-regression verdict:** **GREEN with declared-baseline rider.**
+
+- The two scopes with a real Phase 10 baseline (`hub/src/web/routes/auth.ts`, `hub/src/sse/sseManager.ts`) both pass non-regression: `auth.ts` jumped from 18.18% → 100.00% lines (REFT-03 effect), `sseManager.ts` held at 79.82% lines (Phase 11 did not target it).
+- The three scopes whose Phase 10 baseline was `unavailable` remain `unavailable` in Phase 11 capture (same `MISSING DEPENDENCY @vitest/coverage-v8` reason; installing the package is still out of scope per plan 11-01 rationale). Per RESEARCH Open Question #3 fallback + plan 11-01 SUMMARY § "Could-not-fix issues" #3, these three scopes are declared the new Phase 11 baseline as `unavailable` — Phase 12 verification can decide whether to install the dev-dep and capture real numbers, or carry the `unavailable` baseline forward.
+
+Per D-188: no CI gate added. Non-regression is a manual assertion at phase close.
+Per orchestrator override 2026-05-23: assertion is recorded in this section.
+
+Bonus: `hub/src/web/middleware/auth.ts` (out of original baseline scope — REFT-03 added 10 new tests for it) is now at 100.00% lines / 100.00% funcs, captured incidentally by the same `bun test --coverage` run. Recorded for Phase 12 reference; not part of the SC#4 five-scope contract.
+
+---
+
+## Phase 11 Gate Results (2026-05-23)
+
+Closing slice (D-189) — every component independently green on Phase 11 branch HEAD `d3e5279`:
+
+- ✅ `cd cli && bun typecheck` → exit 0 (`tsc --noEmit`)
+- ✅ `cd hub && bun typecheck` → exit 0 (`tsc --noEmit`)
+- ✅ `cd web && bun typecheck` → exit 0 (`tsc --noEmit`)
+- n/a `cd shared && bun typecheck` → no `typecheck` script in `shared/package.json` (plan permits skipping when script absent)
+- ✅ `bun run test` (repo root) → exit 0 — runs `test:cli && test:hub && test:web && test:guard` sequentially per `package.json#scripts.test`; CLI Vitest, Hub bun:test, Web Vitest, and full guard script all green
+- ✅ `bash scripts/check-no-cut-agents.sh` → exit 0 — Phase 1–11 PASS lines all printed; Phase 11 guard sub-checks #1 + #2 active
+
+Phase 11 ready for verify-phase. No ❌; phase close not blocked.
