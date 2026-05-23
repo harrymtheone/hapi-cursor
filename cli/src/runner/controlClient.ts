@@ -11,8 +11,13 @@ import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { isBunCompiled, projectPath } from '@/projectPath';
 import { isProcessAlive, killProcess } from '@/utils/process';
-import { configuration } from '@/configuration';
+import type { Config } from '@/configuration';
 import { hashRunnerCliApiToken, isRunnerStateCompatibleWithIdentity } from './runnerIdentity';
+
+type ControlClientConfig = Pick<
+    Config,
+    'apiUrl' | 'cliApiToken' | 'settingsFile' | 'runnerStateFile' | 'runnerLockFile'
+>;
 
 export function getInstalledCliMtimeMs(): number | undefined {
   if (isBunCompiled()) {
@@ -35,8 +40,8 @@ export function getInstalledCliMtimeMs(): number | undefined {
   }
 }
 
-async function runnerPost(path: string, body?: any): Promise<{ error?: string } | any> {
-  const state = await readRunnerState();
+async function runnerPost(runnerStateFile: string, path: string, body?: any): Promise<{ error?: string } | any> {
+  const state = await readRunnerState(runnerStateFile);
   if (!state?.httpPort) {
     const errorMessage = 'No runner running, no state file found';
     logger.debug(`[CONTROL CLIENT] ${errorMessage}`);
@@ -82,32 +87,33 @@ async function runnerPost(path: string, body?: any): Promise<{ error?: string } 
 }
 
 export async function notifyRunnerSessionStarted(
+  runnerStateFile: string,
   sessionId: string,
   metadata: Metadata
 ): Promise<{ error?: string } | any> {
-  return await runnerPost('/session-started', {
+  return await runnerPost(runnerStateFile, '/session-started', {
     sessionId,
     metadata
   });
 }
 
-export async function listRunnerSessions(): Promise<any[]> {
-  const result = await runnerPost('/list');
+export async function listRunnerSessions(runnerStateFile: string): Promise<any[]> {
+  const result = await runnerPost(runnerStateFile, '/list');
   return result.children || [];
 }
 
-export async function stopRunnerSession(sessionId: string): Promise<boolean> {
-  const result = await runnerPost('/stop-session', { sessionId });
+export async function stopRunnerSession(runnerStateFile: string, sessionId: string): Promise<boolean> {
+  const result = await runnerPost(runnerStateFile, '/stop-session', { sessionId });
   return result.success || false;
 }
 
-export async function spawnRunnerSession(directory: string, sessionId?: string): Promise<any> {
-  const result = await runnerPost('/spawn-session', { directory, sessionId });
+export async function spawnRunnerSession(runnerStateFile: string, directory: string, sessionId?: string): Promise<any> {
+  const result = await runnerPost(runnerStateFile, '/spawn-session', { directory, sessionId });
   return result;
 }
 
-export async function stopRunnerHttp(): Promise<void> {
-  await runnerPost('/stop');
+export async function stopRunnerHttp(runnerStateFile: string): Promise<void> {
+  await runnerPost(runnerStateFile, '/stop');
 }
 
 /**
@@ -137,8 +143,10 @@ export async function stopRunnerHttp(): Promise<void> {
  * We can destructure the response on the caller for richer output.
  * For instance when running `hapi runner status` we can show more information.
  */
-export async function checkIfRunnerRunningAndCleanupStaleState(): Promise<boolean> {
-  const state = await readRunnerState();
+export async function checkIfRunnerRunningAndCleanupStaleState(
+  config: Pick<Config, 'runnerStateFile' | 'runnerLockFile'>
+): Promise<boolean> {
+  const state = await readRunnerState(config.runnerStateFile);
   if (!state) {
     return false;
   }
@@ -149,7 +157,7 @@ export async function checkIfRunnerRunningAndCleanupStaleState(): Promise<boolea
   }
 
   logger.debug('[RUNNER RUN] Runner PID not running, cleaning up state');
-  await cleanupRunnerState();
+  await cleanupRunnerState(config);
   return false;
 }
 
@@ -160,28 +168,29 @@ export async function checkIfRunnerRunningAndCleanupStaleState(): Promise<boolea
  * 
  * @returns true if versions match, false if versions differ or no runner running
  */
-export async function isRunnerRunningCurrentlyInstalledHappyVersion(): Promise<boolean> {
+export async function isRunnerRunningCurrentlyInstalledHappyVersion(
+  config: ControlClientConfig
+): Promise<boolean> {
   logger.debug('[RUNNER CONTROL] Checking if runner is running same version');
-  const runningRunner = await checkIfRunnerRunningAndCleanupStaleState();
+  const runningRunner = await checkIfRunnerRunningAndCleanupStaleState(config);
   if (!runningRunner) {
     logger.debug('[RUNNER CONTROL] No runner running, returning false');
     return false;
   }
 
-  const state = await readRunnerState();
+  const state = await readRunnerState(config.runnerStateFile);
   if (!state) {
     logger.debug('[RUNNER CONTROL] No runner state found, returning false');
     return false;
   }
 
-  const settings = await readSettings();
+  const settings = await readSettings(config.settingsFile);
   const currentApiUrl = process.env.HAPI_API_URL
     || settings.apiUrl
-    || settings.serverUrl
-    || configuration.apiUrl;
+    || config.apiUrl;
   const currentCliApiToken = process.env.CLI_API_TOKEN
     || settings.cliApiToken
-    || configuration.cliApiToken;
+    || config.cliApiToken;
   const currentMachineId = settings.machineId;
   
   try {
@@ -234,18 +243,20 @@ export async function isRunnerRunningCurrentlyInstalledHappyVersion(): Promise<b
   }
 }
 
-export async function cleanupRunnerState(): Promise<void> {
+export async function cleanupRunnerState(
+  config: Pick<Config, 'runnerStateFile' | 'runnerLockFile'>
+): Promise<void> {
   try {
-    await clearRunnerState();
+    await clearRunnerState(config.runnerStateFile, config.runnerLockFile);
     logger.debug('[RUNNER RUN] Runner state file removed');
   } catch (error) {
     logger.debug('[RUNNER RUN] Error cleaning up runner metadata', error);
   }
 }
 
-export async function stopRunner() {
+export async function stopRunner(config: Pick<Config, 'runnerStateFile'>) {
   try {
-    const state = await readRunnerState();
+    const state = await readRunnerState(config.runnerStateFile);
     if (!state) {
       logger.debug('No runner state found');
       return;
@@ -255,7 +266,7 @@ export async function stopRunner() {
 
     // Try HTTP graceful stop
     try {
-      await stopRunnerHttp();
+      await stopRunnerHttp(config.runnerStateFile);
 
       // Wait for runner to die
       await waitForProcessDeath(state.pid, 2000);

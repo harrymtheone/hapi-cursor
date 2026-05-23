@@ -2,12 +2,14 @@ import chalk from 'chalk'
 import os from 'node:os'
 import * as readline from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
-import { configuration } from '@/configuration'
+import type { Config } from '@/configuration'
 import { readSettings, clearMachineId, updateSettings } from '@/persistence'
-import { initializeApiUrl } from '@/ui/apiUrlInit'
-import type { CommandDefinition } from './types'
+import type { CommandContext, CommandDefinition } from './types'
 
-export async function handleAuthCommand(args: string[]): Promise<void> {
+export async function handleAuthCommand(
+    config: Pick<Config, 'apiUrl' | 'settingsFile'>,
+    args: string[]
+): Promise<void> {
     const subcommand = args[0]
 
     if (!subcommand || subcommand === 'help' || subcommand === '--help' || subcommand === '-h') {
@@ -16,14 +18,13 @@ export async function handleAuthCommand(args: string[]): Promise<void> {
     }
 
     if (subcommand === 'status') {
-        await initializeApiUrl()
-        const settings = await readSettings()
+        const settings = await readSettings(config.settingsFile)
         const envToken = process.env.CLI_API_TOKEN
         const settingsToken = settings.cliApiToken
         const hasToken = Boolean(envToken || settingsToken)
         const tokenSource = envToken ? 'environment' : (settingsToken ? 'settings file' : 'none')
         console.log(chalk.bold('\nDirect Connect Status\n'))
-        console.log(chalk.gray(`  HAPI_API_URL: ${configuration.apiUrl}`))
+        console.log(chalk.gray(`  HAPI_API_URL: ${config.apiUrl}`))
         console.log(chalk.gray(`  CLI_API_TOKEN: ${hasToken ? 'set' : 'missing'}`))
         console.log(chalk.gray(`  Token Source: ${tokenSource}`))
         console.log(chalk.gray(`  Machine ID: ${settings.machineId ?? 'not set'}`))
@@ -58,12 +59,12 @@ export async function handleAuthCommand(args: string[]): Promise<void> {
                 process.exit(1)
             }
 
-            await updateSettings(current => ({
+            await updateSettings(config.settingsFile, (current) => ({
                 ...current,
                 cliApiToken: token.trim()
             }))
-            configuration._setCliApiToken(token.trim())
-            console.log(chalk.green(`\nToken saved to ${configuration.settingsFile}`))
+            console.log(chalk.green(`\nToken saved to ${config.settingsFile}`))
+            console.log(chalk.gray('Re-run the command to pick up the new token.'))
         } finally {
             rl.close()
         }
@@ -71,11 +72,11 @@ export async function handleAuthCommand(args: string[]): Promise<void> {
     }
 
     if (subcommand === 'logout') {
-        await updateSettings(current => ({
+        await updateSettings(config.settingsFile, (current) => ({
             ...current,
             cliApiToken: undefined
         }))
-        await clearMachineId()
+        await clearMachineId(config.settingsFile)
         console.log(chalk.green('Cleared local credentials (token and machineId).'))
         console.log(chalk.gray('Note: If CLI_API_TOKEN is set via environment variable, it will still be used.'))
         return
@@ -105,9 +106,9 @@ ${chalk.bold('Token priority (highest to lowest):')}
 export const authCommand: CommandDefinition = {
     name: 'auth',
     requiresRuntimeAssets: true,
-    run: async ({ commandArgs }) => {
+    run: async ({ commandArgs, config }: CommandContext) => {
         try {
-            await handleAuthCommand(commandArgs)
+            await handleAuthCommand(config, commandArgs)
         } catch (error) {
             console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error')
             if (process.env.DEBUG) {

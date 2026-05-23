@@ -1,26 +1,26 @@
 /**
  * Minimal persistence functions for HAPI CLI
- * 
- * Handles settings, encryption key, and runner state storage in ~/.hapi/ (or HAPI_HOME override)
+ *
+ * Plan 10-03: parameterized by explicit file paths — no `@/configuration`
+ * singleton imports. Callers pass `config.settingsFile` / `config.runnerStateFile`
+ * / `config.runnerLockFile` / `config.privateKeyFile` derived from `loadConfig()`.
  */
 
 import { FileHandle } from 'node:fs/promises'
 import { readFile, writeFile, mkdir, open, unlink, rename, stat } from 'node:fs/promises'
 import { existsSync, writeFileSync, readFileSync, unlinkSync } from 'node:fs'
-import { configuration } from '@/configuration'
+import { dirname } from 'node:path'
 import { isProcessAlive } from '@/utils/process';
 
-interface Settings {
+export interface Settings {
   // This ID is used as the actual database ID on the server
   // All machine operations use this ID
   machineId?: string
   machineIdConfirmedByServer?: boolean
   runnerAutoStartWhenRunningHappy?: boolean
   cliApiToken?: string
-  // API URL for server connections (priority: env HAPI_API_URL > this > default)
+  // API URL for hub connections (priority: env HAPI_API_URL > this > default)
   apiUrl?: string
-  // Legacy field name (for migration, read-only)
-  serverUrl?: string
 }
 
 const defaultSettings: Settings = {}
@@ -42,33 +42,46 @@ export interface RunnerLocallyPersistedState {
   runnerLogPath?: string;
 }
 
-export async function readSettings(): Promise<Settings> {
-  if (!existsSync(configuration.settingsFile)) {
+export async function readSettings(settingsFile: string): Promise<Settings> {
+  if (!existsSync(settingsFile)) {
     return { ...defaultSettings }
+  }
+
+  let content: string
+  try {
+    content = await readFile(settingsFile, 'utf8')
+  } catch {
+    throw new Error(
+      `Cannot read ${settingsFile}. Please fix or remove the file and restart.`
+    )
   }
 
   try {
-    const content = await readFile(configuration.settingsFile, 'utf8')
     return JSON.parse(content)
   } catch {
-    return { ...defaultSettings }
+    throw new Error(
+      `Cannot parse ${settingsFile}: invalid JSON. Please fix or remove the file and restart.`
+    )
   }
 }
 
-export async function writeSettings(settings: Settings): Promise<void> {
-  if (!existsSync(configuration.happyHomeDir)) {
-    await mkdir(configuration.happyHomeDir, { recursive: true })
+export async function writeSettings(settingsFile: string, settings: Settings): Promise<void> {
+  const dir = dirname(settingsFile)
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true })
   }
 
-  await writeFile(configuration.settingsFile, JSON.stringify(settings, null, 2))
+  await writeFile(settingsFile, JSON.stringify(settings, null, 2))
 }
 
 /**
  * Atomically update settings with multi-process safety via file locking
+ * @param settingsFile The settings file path (from `config.settingsFile`)
  * @param updater Function that takes current settings and returns updated settings
  * @returns The updated settings
  */
 export async function updateSettings(
+  settingsFile: string,
   updater: (current: Settings) => Settings | Promise<Settings>
 ): Promise<Settings> {
   // Timing constants
@@ -76,12 +89,13 @@ export async function updateSettings(
   const MAX_LOCK_ATTEMPTS = 50;        // Maximum number of attempts (5 seconds total)
   const STALE_LOCK_TIMEOUT_MS = 10000; // Consider lock stale after 10 seconds
 
-  if (!existsSync(configuration.happyHomeDir)) {
-    await mkdir(configuration.happyHomeDir, { recursive: true });
+  const dir = dirname(settingsFile)
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true });
   }
 
-  const lockFile = configuration.settingsFile + '.lock';
-  const tmpFile = configuration.settingsFile + '.tmp';
+  const lockFile = settingsFile + '.lock';
+  const tmpFile = settingsFile + '.tmp';
   let fileHandle;
   let attempts = 0;
 
@@ -116,14 +130,14 @@ export async function updateSettings(
 
   try {
     // Read current settings with defaults
-    const current = await readSettings() || { ...defaultSettings };
+    const current = await readSettings(settingsFile) || { ...defaultSettings };
 
     // Apply update
     const updated = await updater(current);
 
     // Write atomically using rename
     await writeFile(tmpFile, JSON.stringify(updated, null, 2));
-    await rename(tmpFile, configuration.settingsFile); // Atomic on POSIX
+    await rename(tmpFile, settingsFile); // Atomic on POSIX
 
     return updated;
   } finally {
@@ -137,24 +151,28 @@ export async function updateSettings(
 // Authentication
 //
 
-export async function writeCredentialsDataKey(credentials: { publicKey: Uint8Array, machineKey: Uint8Array, token: string }): Promise<void> {
-  if (!existsSync(configuration.happyHomeDir)) {
-    await mkdir(configuration.happyHomeDir, { recursive: true })
+export async function writeCredentialsDataKey(
+  privateKeyFile: string,
+  credentials: { publicKey: Uint8Array, machineKey: Uint8Array, token: string }
+): Promise<void> {
+  const dir = dirname(privateKeyFile)
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true })
   }
-  await writeFile(configuration.privateKeyFile, JSON.stringify({
+  await writeFile(privateKeyFile, JSON.stringify({
     encryption: { publicKey: Buffer.from(credentials.publicKey).toString('base64'), machineKey: Buffer.from(credentials.machineKey).toString('base64') },
     token: credentials.token
   }, null, 2));
 }
 
-export async function clearCredentials(): Promise<void> {
-  if (existsSync(configuration.privateKeyFile)) {
-    await unlink(configuration.privateKeyFile);
+export async function clearCredentials(privateKeyFile: string): Promise<void> {
+  if (existsSync(privateKeyFile)) {
+    await unlink(privateKeyFile);
   }
 }
 
-export async function clearMachineId(): Promise<void> {
-  await updateSettings(settings => ({
+export async function clearMachineId(settingsFile: string): Promise<void> {
+  await updateSettings(settingsFile, settings => ({
     ...settings,
     machineId: undefined
   }));
@@ -163,16 +181,16 @@ export async function clearMachineId(): Promise<void> {
 /**
  * Read runner state from local file
  */
-export async function readRunnerState(): Promise<RunnerLocallyPersistedState | null> {
+export async function readRunnerState(runnerStateFile: string): Promise<RunnerLocallyPersistedState | null> {
   try {
-    if (!existsSync(configuration.runnerStateFile)) {
+    if (!existsSync(runnerStateFile)) {
       return null;
     }
-    const content = await readFile(configuration.runnerStateFile, 'utf-8');
+    const content = await readFile(runnerStateFile, 'utf-8');
     return JSON.parse(content) as RunnerLocallyPersistedState;
   } catch (error) {
     // State corrupted somehow :(
-    console.error(`[PERSISTENCE] Runner state file corrupted: ${configuration.runnerStateFile}`, error);
+    console.error(`[PERSISTENCE] Runner state file corrupted: ${runnerStateFile}`, error);
     return null;
   }
 }
@@ -180,21 +198,21 @@ export async function readRunnerState(): Promise<RunnerLocallyPersistedState | n
 /**
  * Write runner state to local file (synchronously for atomic operation)
  */
-export function writeRunnerState(state: RunnerLocallyPersistedState): void {
-  writeFileSync(configuration.runnerStateFile, JSON.stringify(state, null, 2), 'utf-8');
+export function writeRunnerState(runnerStateFile: string, state: RunnerLocallyPersistedState): void {
+  writeFileSync(runnerStateFile, JSON.stringify(state, null, 2), 'utf-8');
 }
 
 /**
  * Clean up runner state file and lock file
  */
-export async function clearRunnerState(): Promise<void> {
-  if (existsSync(configuration.runnerStateFile)) {
-    await unlink(configuration.runnerStateFile);
+export async function clearRunnerState(runnerStateFile: string, runnerLockFile: string): Promise<void> {
+  if (existsSync(runnerStateFile)) {
+    await unlink(runnerStateFile);
   }
   // Also clean up lock file if it exists (for stale cleanup)
-  if (existsSync(configuration.runnerLockFile)) {
+  if (existsSync(runnerLockFile)) {
     try {
-      await unlink(configuration.runnerLockFile);
+      await unlink(runnerLockFile);
     } catch {
       // Lock file might be held by running runner, ignore error
     }
@@ -203,17 +221,16 @@ export async function clearRunnerState(): Promise<void> {
 
 /**
  * Acquire an exclusive lock file for the runner.
- * The lock file proves the runner is running and prevents multiple instances.
- * Returns the file handle to hold for the runner's lifetime, or null if locked.
  */
 export async function acquireRunnerLock(
+  runnerLockFile: string,
   maxAttempts: number = 5,
   delayIncrementMs: number = 200
 ): Promise<FileHandle | null> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       // 'wx' ensures we only create if it doesn't exist (atomic lock acquisition)
-      const fileHandle = await open(configuration.runnerLockFile, 'wx');
+      const fileHandle = await open(runnerLockFile, 'wx');
       // Write PID to lock file for debugging
       await fileHandle.writeFile(String(process.pid));
       return fileHandle;
@@ -221,11 +238,11 @@ export async function acquireRunnerLock(
       if (error.code === 'EEXIST') {
         // Lock file exists, check if process is still running
         try {
-          const lockPid = readFileSync(configuration.runnerLockFile, 'utf-8').trim();
+          const lockPid = readFileSync(runnerLockFile, 'utf-8').trim();
           if (lockPid && !isNaN(Number(lockPid))) {
             if (!isProcessAlive(Number(lockPid))) {
               // Process doesn't exist, remove stale lock
-              unlinkSync(configuration.runnerLockFile);
+              unlinkSync(runnerLockFile);
               continue; // Retry acquisition
             }
           }
@@ -247,14 +264,14 @@ export async function acquireRunnerLock(
 /**
  * Release runner lock by closing handle and deleting lock file
  */
-export async function releaseRunnerLock(lockHandle: FileHandle): Promise<void> {
+export async function releaseRunnerLock(runnerLockFile: string, lockHandle: FileHandle): Promise<void> {
   try {
     await lockHandle.close();
   } catch { }
 
   try {
-    if (existsSync(configuration.runnerLockFile)) {
-      unlinkSync(configuration.runnerLockFile);
+    if (existsSync(runnerLockFile)) {
+      unlinkSync(runnerLockFile);
     }
   } catch { }
 }

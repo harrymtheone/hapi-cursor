@@ -1,6 +1,5 @@
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
-import { configuration } from '@/configuration';
 import packageJson from '../package.json';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -13,12 +12,16 @@ export function projectPath(): string {
     return resolve(__dirname, '..');
 }
 
-export function runtimePath(): string {
+/**
+ * Plan 10-03: `runtimePath` is parameterized by `happyHomeDir` (sourced from
+ * the frozen Config) instead of reading the singleton configuration.
+ */
+export function runtimePath(happyHomeDir: string): string {
     if (!isCompiled) {
         return projectPath();
     }
 
-    return join(configuration.happyHomeDir, 'runtime', packageJson.version);
+    return join(happyHomeDir, 'runtime', packageJson.version);
 }
 
 export function isBunCompiled(): boolean {

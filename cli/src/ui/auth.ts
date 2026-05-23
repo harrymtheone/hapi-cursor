@@ -1,16 +1,18 @@
 import { randomUUID } from 'node:crypto'
-import { configuration } from '@/configuration'
+import type { Config } from '@/configuration'
 import { updateSettings } from '@/persistence'
 
-export async function authAndSetupMachineIfNeeded(): Promise<{
+export async function authAndSetupMachineIfNeeded(
+    config: Pick<Config, 'cliApiToken' | 'settingsFile'>
+): Promise<{
     token: string
     machineId: string
 }> {
-    if (!configuration.cliApiToken) {
+    if (!config.cliApiToken) {
         throw new Error('CLI_API_TOKEN is required')
     }
 
-    const settings = await updateSettings((current) => {
+    const settings = await updateSettings(config.settingsFile, (current) => {
         if (!current.machineId) {
             return {
                 ...current,
@@ -24,6 +26,5 @@ export async function authAndSetupMachineIfNeeded(): Promise<{
         throw new Error('Failed to initialize machineId')
     }
 
-    return { token: configuration.cliApiToken, machineId: settings.machineId }
+    return { token: config.cliApiToken, machineId: settings.machineId }
 }
-

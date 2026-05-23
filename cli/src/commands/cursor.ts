@@ -1,6 +1,5 @@
 import chalk from 'chalk'
 import { authAndSetupMachineIfNeeded } from '@/ui/auth'
-import { initializeToken } from '@/ui/tokenInit'
 import { maybeAutoStartServer } from '@/utils/autoStartServer'
 import type { CommandDefinition } from './types'
 import { CURSOR_PERMISSION_MODES } from '@hapi/protocol/modes'
@@ -9,7 +8,8 @@ import type { CursorPermissionMode } from '@hapi/protocol/types'
 export const cursorCommand: CommandDefinition = {
     name: 'cursor',
     requiresRuntimeAssets: true,
-    run: async ({ commandArgs }) => {
+    requiresAuth: true,
+    run: async ({ commandArgs, config }) => {
         try {
             const { runCursor } = await import('@/cursor/runCursor')
 
@@ -85,10 +85,9 @@ export const cursorCommand: CommandDefinition = {
                 options.cursorArgs = unknownArgs
             }
 
-            await initializeToken()
-            await maybeAutoStartServer()
-            await authAndSetupMachineIfNeeded()
-            await runCursor(options)
+            await maybeAutoStartServer(config)
+            await authAndSetupMachineIfNeeded(config)
+            await runCursor(config, options)
         } catch (error) {
             console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error')
             if (process.env.DEBUG) {

@@ -30,7 +30,7 @@ const RETIRED_COMMANDS: Record<string, string> = {
     server: 'hub'
 }
 
-export function resolveCommand(args: string[]): { command: CommandDefinition; context: CommandContext } {
+export function resolveCommand(args: string[]): { command: CommandDefinition; context: Omit<CommandContext, 'config'> } {
     const subcommand = args[0]
     if (subcommand && subcommand in RETIRED_COMMANDS) {
         throw new Error(`Unknown command "hapi ${subcommand}". Use "hapi ${RETIRED_COMMANDS[subcommand]}" instead.`)

@@ -7,9 +7,14 @@ import type { ApiSessionClient } from '@/api/apiSession'
 import type { AgentState, MachineMetadata, Metadata, Session } from '@/api/types'
 import { notifyRunnerSessionStarted } from '@/runner/controlClient'
 import { readSettings } from '@/persistence'
-import { configuration } from '@/configuration'
+import type { Config } from '@/configuration'
 import { logger } from '@/ui/logger'
 import { runtimePath } from '@/projectPath'
+
+type SessionFactoryConfig = Pick<
+    Config,
+    'apiUrl' | 'cliApiToken' | 'extraHeaders' | 'happyHomeDir' | 'settingsFile' | 'runnerStateFile'
+>
 import { getInvokedCwd } from '@/utils/invokedCwd'
 import { readWorktreeEnv } from '@/utils/worktreeEnv'
 import packageJson from '../../package.json'
@@ -37,26 +42,32 @@ export type SessionBootstrapResult = {
     workingDirectory: string
 }
 
-export function buildMachineMetadata(options?: { workspaceRoots?: string[] }): MachineMetadata {
+export function buildMachineMetadata(
+    config: Pick<Config, 'happyHomeDir'>,
+    options?: { workspaceRoots?: string[] }
+): MachineMetadata {
     return {
         host: process.env.HAPI_HOSTNAME || os.hostname(),
         platform: os.platform(),
         happyCliVersion: packageJson.version,
         homeDir: os.homedir(),
-        happyHomeDir: configuration.happyHomeDir,
-        happyLibDir: runtimePath(),
+        happyHomeDir: config.happyHomeDir,
+        happyLibDir: runtimePath(config.happyHomeDir),
         workspaceRoots: options?.workspaceRoots
     }
 }
 
-export function buildSessionMetadata(options: {
-    startedBy: SessionStartedBy
-    workingDirectory: string
-    machineId: string
-    now?: number
-    metadataOverrides?: Partial<Metadata>
-}): Metadata {
-    const happyLibDir = runtimePath()
+export function buildSessionMetadata(
+    config: Pick<Config, 'happyHomeDir'>,
+    options: {
+        startedBy: SessionStartedBy
+        workingDirectory: string
+        machineId: string
+        now?: number
+        metadataOverrides?: Partial<Metadata>
+    }
+): Metadata {
+    const happyLibDir = runtimePath(config.happyHomeDir)
     const worktreeInfo = readWorktreeEnv()
     const now = options.now ?? Date.now()
 
@@ -67,7 +78,7 @@ export function buildSessionMetadata(options: {
         os: os.platform(),
         machineId: options.machineId,
         homeDir: os.homedir(),
-        happyHomeDir: configuration.happyHomeDir,
+        happyHomeDir: config.happyHomeDir,
         happyLibDir,
         happyToolsDir: resolve(happyLibDir, 'tools', 'unpacked'),
         startedFromRunner: options.startedBy === 'runner',
@@ -98,8 +109,8 @@ function pickExistingSessionMetadata(metadata: Metadata | null | undefined): Par
     return preserved
 }
 
-async function getMachineIdOrExit(): Promise<string> {
-    const settings = await readSettings()
+async function getMachineIdOrExit(settingsFile: string): Promise<string> {
+    const settings = await readSettings(settingsFile)
     const machineId = settings?.machineId
     if (!machineId) {
         console.error(`[START] No machine ID found in settings, which is unexpected since authAndSetupMachineIfNeeded should have created it. Please report this issue on ${packageJson.bugs}`)
@@ -109,10 +120,10 @@ async function getMachineIdOrExit(): Promise<string> {
     return machineId
 }
 
-async function reportSessionStarted(sessionId: string, metadata: Metadata): Promise<void> {
+async function reportSessionStarted(runnerStateFile: string, sessionId: string, metadata: Metadata): Promise<void> {
     try {
         logger.debug(`[START] Reporting session ${sessionId} to runner`)
-        const result = await notifyRunnerSessionStarted(sessionId, metadata)
+        const result = await notifyRunnerSessionStarted(runnerStateFile, sessionId, metadata)
         if (result?.error) {
             logger.debug(`[START] Failed to report to runner (may not be running):`, result.error)
         } else {
@@ -123,21 +134,24 @@ async function reportSessionStarted(sessionId: string, metadata: Metadata): Prom
     }
 }
 
-export async function bootstrapSession(options: SessionBootstrapOptions): Promise<SessionBootstrapResult> {
+export async function bootstrapSession(
+    config: SessionFactoryConfig,
+    options: SessionBootstrapOptions
+): Promise<SessionBootstrapResult> {
     const workingDirectory = options.workingDirectory ?? getInvokedCwd()
     const startedBy = options.startedBy ?? 'terminal'
     const sessionTag = options.tag ?? randomUUID()
     const agentState = options.agentState === undefined ? {} : options.agentState
 
-    const api = await ApiClient.create()
+    const api = await ApiClient.create(config)
 
-    const machineId = await getMachineIdOrExit()
+    const machineId = await getMachineIdOrExit(config.settingsFile)
     await api.getOrCreateMachine({
         machineId,
-        metadata: buildMachineMetadata()
+        metadata: buildMachineMetadata(config)
     })
 
-    const metadata = buildSessionMetadata({
+    const metadata = buildSessionMetadata(config, {
         startedBy,
         workingDirectory,
         machineId,
@@ -155,7 +169,7 @@ export async function bootstrapSession(options: SessionBootstrapOptions): Promis
 
     const session = api.sessionSyncClient(sessionInfo)
 
-    await reportSessionStarted(sessionInfo.id, metadata)
+    await reportSessionStarted(config.runnerStateFile, sessionInfo.id, metadata)
 
     return {
         api,
@@ -168,23 +182,26 @@ export async function bootstrapSession(options: SessionBootstrapOptions): Promis
     }
 }
 
-export async function bootstrapExistingSession(options: {
-    sessionId: string
-    startedBy?: SessionStartedBy
-    workingDirectory: string
-    metadataOverrides?: Partial<Metadata>
-}): Promise<SessionBootstrapResult> {
+export async function bootstrapExistingSession(
+    config: SessionFactoryConfig,
+    options: {
+        sessionId: string
+        startedBy?: SessionStartedBy
+        workingDirectory: string
+        metadataOverrides?: Partial<Metadata>
+    }
+): Promise<SessionBootstrapResult> {
     const startedBy = options.startedBy ?? 'terminal'
-    const api = await ApiClient.create()
-    const machineId = await getMachineIdOrExit()
+    const api = await ApiClient.create(config)
+    const machineId = await getMachineIdOrExit(config.settingsFile)
 
     await api.getOrCreateMachine({
         machineId,
-        metadata: buildMachineMetadata()
+        metadata: buildMachineMetadata(config)
     })
 
     const sessionInfo = await api.getSession(options.sessionId)
-    const baseMetadata = buildSessionMetadata({
+    const baseMetadata = buildSessionMetadata(config, {
         startedBy,
         workingDirectory: options.workingDirectory,
         machineId
@@ -203,7 +220,7 @@ export async function bootstrapExistingSession(options: {
 
     const session = api.sessionSyncClient(sessionInfo)
     session.updateMetadata(buildUpdatedMetadata)
-    await reportSessionStarted(sessionInfo.id, metadata)
+    await reportSessionStarted(config.runnerStateFile, sessionInfo.id, metadata)
 
     return {
         api,

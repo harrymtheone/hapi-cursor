@@ -5,7 +5,7 @@ import type { CommandDefinition } from './types'
 export const doctorCommand: CommandDefinition = {
     name: 'doctor',
     requiresRuntimeAssets: true,
-    run: async ({ commandArgs }) => {
+    run: async ({ commandArgs, config }) => {
         if (commandArgs[0] === 'clean') {
             const result = await killRunawayHappyProcesses()
             console.log(`Cleaned up ${result.killed} runaway processes`)
@@ -14,6 +14,6 @@ export const doctorCommand: CommandDefinition = {
             }
             process.exit(0)
         }
-        await runDoctorCommand()
+        await runDoctorCommand(config)
     }
 }

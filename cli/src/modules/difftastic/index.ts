@@ -4,8 +4,16 @@
 
 import { spawn } from 'child_process';
 import { join, resolve } from 'path';
-import { platform, arch } from 'os';
+import { homedir, platform, arch } from 'os';
 import { runtimePath } from '@/projectPath';
+
+// RPC handlers don't have access to the loaded Config; derive happyHomeDir
+// the same way `loadConfig()` does (HAPI_HOME with `~` expansion → ~/.hapi).
+function happyHomeDirFromEnv(): string {
+    return process.env.HAPI_HOME
+        ? process.env.HAPI_HOME.replace(/^~/, homedir())
+        : join(homedir(), '.hapi');
+}
 
 export interface DifftasticResult {
     exitCode: number
@@ -23,7 +31,7 @@ export interface DifftasticOptions {
 function getBinaryPath(): string {
     const platformName = platform();
     const binaryName = platformName === 'win32' ? 'difft.exe' : 'difft';
-    return resolve(join(runtimePath(), 'tools', 'unpacked', binaryName));
+    return resolve(join(runtimePath(happyHomeDirFromEnv()), 'tools', 'unpacked', binaryName));
 }
 
 /**

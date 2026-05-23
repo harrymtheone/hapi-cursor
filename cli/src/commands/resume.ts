@@ -5,8 +5,8 @@ import { stdin as input, stdout as output } from 'node:process'
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
 import type { CursorPermissionMode } from '@hapi/protocol/types'
 import { ApiClient } from '@/api/api'
+import type { Config } from '@/configuration'
 import { authAndSetupMachineIfNeeded } from '@/ui/auth'
-import { initializeToken } from '@/ui/tokenInit'
 import { maybeAutoStartServer } from '@/utils/autoStartServer'
 import type { CommandDefinition } from './types'
 
@@ -54,7 +54,7 @@ function assertDirectoryExists(target: LocalResumeTarget): void {
     }
 }
 
-async function dispatchLocalResume(target: LocalResumeTarget): Promise<void> {
+async function dispatchLocalResume(config: Config, target: LocalResumeTarget): Promise<void> {
     const base = {
         existingSessionId: target.sessionId,
         workingDirectory: target.directory,
@@ -64,7 +64,7 @@ async function dispatchLocalResume(target: LocalResumeTarget): Promise<void> {
     }
 
     const { runCursor } = await import('@/cursor/runCursor')
-    await runCursor({
+    await runCursor(config, {
         existingSessionId: base.existingSessionId,
         workingDirectory: base.workingDirectory,
         resumeSessionId: base.resumeSessionId,
@@ -98,12 +98,12 @@ async function resolveSessionId(api: ApiClient, machineId: string, args: string[
 export const resumeCommand: CommandDefinition = {
     name: 'resume',
     requiresRuntimeAssets: true,
-    run: async ({ commandArgs }) => {
+    requiresAuth: true,
+    run: async ({ commandArgs, config }) => {
         try {
-            await initializeToken()
-            await maybeAutoStartServer()
-            const { machineId } = await authAndSetupMachineIfNeeded()
-            const api = await ApiClient.create()
+            await maybeAutoStartServer(config)
+            const { machineId } = await authAndSetupMachineIfNeeded(config)
+            const api = await ApiClient.create(config)
             const sessionId = await resolveSessionId(api, machineId, commandArgs)
             const target = await api.getLocalResumeTarget(sessionId)
 
@@ -118,7 +118,7 @@ export const resumeCommand: CommandDefinition = {
                 await api.handoffSessionToLocal(target.sessionId)
             }
 
-            await dispatchLocalResume(target)
+            await dispatchLocalResume(config, target)
         } catch (error) {
             console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error')
             if (process.env.DEBUG) {

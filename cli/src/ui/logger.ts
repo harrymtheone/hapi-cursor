@@ -3,23 +3,29 @@
  * - Logging should be done only through file for debugging, otherwise we might disturb the agent session when in interactive mode
  * - Use info for logs that are useful to the user - this is our UI
  * - File output location: ~/.handy/logs/<date time in local timezone>.log
+ *
+ * Plan 10-03 DI: the singleton `logger` is initialized lazily and replaced
+ * by `initializeLogger(config)` at the CLI entry-point once `loadConfig()`
+ * has produced a frozen Config. `listRunnerLogFiles` and `getLatestRunnerLog`
+ * take explicit paths so no module-level `@/configuration` import survives.
  */
 
 import chalk from 'chalk'
 import { appendFileSync } from 'fs'
-import { configuration } from '@/configuration'
-import { existsSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, statSync, mkdirSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import { join, basename } from 'node:path'
+import type { Config } from '@/configuration'
 import { readRunnerState } from '@/persistence'
 
 /**
  * Consistent date/time formatting functions
  */
 function createTimestampForFilename(date: Date = new Date()): string {
-  return date.toLocaleString('sv-SE', { 
+  return date.toLocaleString('sv-SE', {
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     year: 'numeric',
-    month: '2-digit', 
+    month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
@@ -28,7 +34,7 @@ function createTimestampForFilename(date: Date = new Date()): string {
 }
 
 function createTimestampForLogEntry(date: Date = new Date()): string {
-  return date.toLocaleTimeString('en-US', { 
+  return date.toLocaleTimeString('en-US', {
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     hour12: false,
     hour: '2-digit',
@@ -38,16 +44,27 @@ function createTimestampForLogEntry(date: Date = new Date()): string {
   })
 }
 
-function getSessionLogPath(): string {
+// Pre-config-load defaults so anything that touches the logger before
+// initializeLogger() runs (early errors during bootstrap) still writes
+// somewhere reasonable. Replaced via initializeLogger() after loadConfig().
+function defaultLogsDir(): string {
+  const base = process.env.HAPI_HOME
+    ? process.env.HAPI_HOME.replace(/^~/, homedir())
+    : join(homedir(), '.hapi')
+  return join(base, 'logs')
+}
+
+function computeSessionLogPath(logsDir: string, isRunnerProcess: boolean): string {
   const timestamp = createTimestampForFilename()
-  const filename = configuration.isRunnerProcess ? `${timestamp}-runner.log` : `${timestamp}.log`
-  return join(configuration.logsDir, filename)
+  const filename = isRunnerProcess ? `${timestamp}-runner.log` : `${timestamp}.log`
+  return join(logsDir, filename)
 }
 
 export class Logger {
   constructor(
-    public readonly logFilePath = getSessionLogPath()
-  ) {}
+    public readonly logFilePath: string,
+    public readonly logsDir: string
+  ) { }
 
   // Use local timezone for simplicity of locating the logs,
   // in practice you will not need absolute timestamps
@@ -57,15 +74,6 @@ export class Logger {
 
   debug(message: string, ...args: unknown[]): void {
     this.logToFile(`[${this.localTimezoneTimestamp()}]`, message, ...args)
-
-    // NOTE: @kirill does not think its a good ideas,
-    // as it will break us using the agent in interactive mode.
-    // Instead simply open the debug file in a new editor window.
-    //
-    // Also log to console in development mode
-    // if (process.env.DEBUG) {
-    //   this.logToConsole('debug', '', message, ...args)
-    // }
   }
 
   debugLargeJson(
@@ -79,14 +87,13 @@ export class Logger {
       return
     }
 
-    // Some of our messages are huge, but we still want to show them in the logs
     const truncateStrings = (obj: unknown): unknown => {
       if (typeof obj === 'string') {
-        return obj.length > maxStringLength 
+        return obj.length > maxStringLength
           ? obj.substring(0, maxStringLength) + '... [truncated for logs]'
           : obj
       }
-      
+
       if (Array.isArray(obj)) {
         const truncatedArray = obj.map(item => truncateStrings(item)).slice(0, maxArrayLength)
         if (obj.length > maxArrayLength) {
@@ -94,19 +101,18 @@ export class Logger {
         }
         return truncatedArray
       }
-      
+
       if (obj && typeof obj === 'object') {
         const result: Record<string, unknown> = {}
         for (const [key, value] of Object.entries(obj)) {
           if (key === 'usage') {
-            // Drop usage, not generally useful for debugging
             continue
           }
           result[key] = truncateStrings(value)
         }
         return result
       }
-      
+
       return obj
     }
 
@@ -114,31 +120,28 @@ export class Logger {
     const json = JSON.stringify(truncatedObject, null, 2)
     this.logToFile(`[${this.localTimezoneTimestamp()}]`, message, '\n', json)
   }
-  
+
   info(message: string, ...args: unknown[]): void {
     this.logToConsole('info', '', message, ...args)
     this.debug(message, args)
   }
-  
+
   infoDeveloper(message: string, ...args: unknown[]): void {
-    // Always write to debug
     this.debug(message, ...args)
-    
-    // Write to info if DEBUG mode is on
     if (process.env.DEBUG) {
       this.logToConsole('info', '[DEV]', message, ...args)
     }
   }
-  
+
   warn(message: string, ...args: unknown[]): void {
     this.logToConsole('warn', '', message, ...args)
     this.debug(`[WARN] ${message}`, ...args)
   }
-  
+
   getLogPath(): string {
     return this.logFilePath
   }
-  
+
   private logToConsole(level: 'debug' | 'error' | 'info' | 'warn', prefix: string, message: string, ...args: unknown[]): void {
     switch (level) {
       case 'debug': {
@@ -170,11 +173,10 @@ export class Logger {
   }
 
   private logToFile(prefix: string, message: string, ...args: unknown[]): void {
-    const logLine = `${prefix} ${message} ${args.map(arg => 
+    const logLine = `${prefix} ${message} ${args.map(arg =>
       typeof arg === 'string' ? arg : JSON.stringify(arg)
     ).join(' ')}\n`
 
-    // Handle async file path
     try {
       appendFileSync(this.logFilePath, logLine)
     } catch (appendError) {
@@ -187,8 +189,36 @@ export class Logger {
   }
 }
 
-// Will be initialized immideately on startup
-export let logger = new Logger()
+function makeFallbackLogger(): Logger {
+  // Try the env-derived default first; fall back to tmpdir if it fails.
+  try {
+    const logsDir = defaultLogsDir()
+    if (!existsSync(logsDir)) {
+      mkdirSync(logsDir, { recursive: true })
+    }
+    return new Logger(computeSessionLogPath(logsDir, false), logsDir)
+  } catch {
+    const fallback = join(tmpdir(), 'hapi-logs')
+    try { mkdirSync(fallback, { recursive: true }) } catch { /* ignore */ }
+    return new Logger(computeSessionLogPath(fallback, false), fallback)
+  }
+}
+
+// Mutable singleton: an initial pre-config-load fallback is created so any
+// imports during bootstrap (e.g. error paths inside loadConfig) still write
+// somewhere. `initializeLogger(config)` replaces it after loadConfig.
+export let logger: Logger = makeFallbackLogger()
+
+/**
+ * Replace the singleton logger with one derived from the frozen Config.
+ * Called exactly once from runCli after loadConfig().
+ */
+export function initializeLogger(config: Pick<Config, 'isRunnerProcess' | 'logsDir'>): void {
+  logger = new Logger(
+    computeSessionLogPath(config.logsDir, config.isRunnerProcess),
+    config.logsDir
+  )
+}
 
 /**
  * Information about a log file on disk
@@ -203,9 +233,12 @@ export type LogFileInfo = {
  * List runner log files in descending modification time order.
  * Returns up to `limit` entries; empty array if none.
  */
-export async function listRunnerLogFiles(limit: number = 50): Promise<LogFileInfo[]> {
+export async function listRunnerLogFiles(
+  logsDir: string,
+  runnerStateFile: string,
+  limit: number = 50
+): Promise<LogFileInfo[]> {
   try {
-    const logsDir = configuration.logsDir;
     if (!existsSync(logsDir)) {
       return [];
     }
@@ -221,7 +254,7 @@ export async function listRunnerLogFiles(limit: number = 50): Promise<LogFileInf
 
     // Prefer the path persisted by the runner if present (return 0th element if present)
     try {
-      const state = await readRunnerState();
+      const state = await readRunnerState(runnerStateFile);
 
       if (!state) {
         return logs;
@@ -255,7 +288,10 @@ export async function listRunnerLogFiles(limit: number = 50): Promise<LogFileInf
 /**
  * Get the most recent runner log file, or null if none exist.
  */
-export async function getLatestRunnerLog(): Promise<LogFileInfo | null> {
-  const [latest] = await listRunnerLogFiles(1);
+export async function getLatestRunnerLog(
+  logsDir: string,
+  runnerStateFile: string
+): Promise<LogFileInfo | null> {
+  const [latest] = await listRunnerLogFiles(logsDir, runnerStateFile, 1);
   return latest || null;
 }

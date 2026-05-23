@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { makeConfig } from '@/__fixtures__/config'
 
 const {
     checkRunnerMock,
@@ -72,7 +73,7 @@ describe('doctor remote-log diagnostics', () => {
         let output = ''
 
         try {
-            await runDoctorCommand('all')
+            await runDoctorCommand(makeConfig({ apiUrl: 'https://hapi.example.com' }), 'all')
             output = logSpy.mock.calls
                 .map((call) => stripAnsi(call.map(String).join(' ')))
                 .join('\n')

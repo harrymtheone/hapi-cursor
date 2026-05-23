@@ -1,9 +1,8 @@
-import { configuration } from '@/configuration'
+import type { Config } from '@/configuration'
 
-export function getAuthToken(): string {
-    if (!configuration.cliApiToken) {
+export function getAuthToken(config: Pick<Config, 'cliApiToken'>): string {
+    if (!config.cliApiToken) {
         throw new Error('CLI_API_TOKEN is required')
     }
-    return configuration.cliApiToken
+    return config.cliApiToken
 }
-

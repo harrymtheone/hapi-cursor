@@ -4,9 +4,17 @@
 
 import { spawn } from 'child_process';
 import { join, resolve } from 'path';
-import { platform } from 'os';
+import { homedir, platform } from 'os';
 import { runtimePath } from '@/projectPath';
 import { withBunRuntimeEnv } from '@/utils/bunRuntime';
+
+// RPC handlers don't have access to the loaded Config; derive happyHomeDir
+// the same way `loadConfig()` does (HAPI_HOME with `~` expansion → ~/.hapi).
+function happyHomeDirFromEnv(): string {
+    return process.env.HAPI_HOME
+        ? process.env.HAPI_HOME.replace(/^~/, homedir())
+        : join(homedir(), '.hapi');
+}
 
 export interface RipgrepResult {
     exitCode: number
@@ -21,7 +29,7 @@ export interface RipgrepOptions {
 function getBinaryPath(): string {
     const platformName = platform();
     const binaryName = platformName === 'win32' ? 'rg.exe' : 'rg';
-    return resolve(join(runtimePath(), 'tools', 'unpacked', binaryName));
+    return resolve(join(runtimePath(happyHomeDirFromEnv()), 'tools', 'unpacked', binaryName));
 }
 
 export function run(args: string[], options?: RipgrepOptions): Promise<RipgrepResult> {

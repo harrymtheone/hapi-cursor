@@ -12,7 +12,6 @@ import {
 import { getLatestRunnerLog } from '@/ui/logger'
 import { spawnHappyCLI } from '@/utils/spawnHappyCLI'
 import { runDoctorCommand } from '@/ui/doctor'
-import { initializeToken } from '@/ui/tokenInit'
 import type { CommandDefinition } from './types'
 
 /**
@@ -73,14 +72,15 @@ function extractWorkspaceRootArgs(args: string[]): string[] | undefined {
 export const runnerCommand: CommandDefinition = {
     name: 'runner',
     requiresRuntimeAssets: true,
-    run: async ({ commandArgs }) => {
+    requiresAuth: true,
+    run: async ({ commandArgs, config }) => {
         const mutableArgs = [...commandArgs]
         const workspaceRoots = extractWorkspaceRootArgs(mutableArgs)
         const runnerSubcommand = mutableArgs[0]
 
         if (runnerSubcommand === 'list') {
             try {
-                const sessions = await listRunnerSessions()
+                const sessions = await listRunnerSessions(config.runnerStateFile)
 
                 if (sessions.length === 0) {
                     console.log('No active sessions this runner is aware of (they might have been started by a previous version of the runner)')
@@ -102,7 +102,7 @@ export const runnerCommand: CommandDefinition = {
             }
 
             try {
-                const success = await stopRunnerSession(sessionId)
+                const success = await stopRunnerSession(config.runnerStateFile, sessionId)
                 console.log(success ? 'Session stopped' : 'Failed to stop session')
             } catch {
                 console.log('No runner running')
@@ -126,7 +126,7 @@ export const runnerCommand: CommandDefinition = {
 
             let started = false
             for (let i = 0; i < 50; i++) {
-                if (await checkIfRunnerRunningAndCleanupStaleState()) {
+                if (await checkIfRunnerRunningAndCleanupStaleState(config)) {
                     started = true
                     break
                 }
@@ -143,23 +143,22 @@ export const runnerCommand: CommandDefinition = {
         }
 
         if (runnerSubcommand === 'start-sync') {
-            await initializeToken()
-            await startRunner({ workspaceRoots })
+            await startRunner(config, { workspaceRoots })
             process.exit(0)
         }
 
         if (runnerSubcommand === 'stop') {
-            await stopRunner()
+            await stopRunner(config)
             process.exit(0)
         }
 
         if (runnerSubcommand === 'status') {
-            await runDoctorCommand('runner')
+            await runDoctorCommand(config, 'runner')
             process.exit(0)
         }
 
         if (runnerSubcommand === 'logs') {
-            const latest = await getLatestRunnerLog()
+            const latest = await getLatestRunnerLog(config.logsDir, config.runnerStateFile)
             if (!latest) {
                 console.log('No runner logs found')
             } else {

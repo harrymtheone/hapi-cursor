@@ -7,7 +7,7 @@ import { readdir, realpath, stat } from 'node:fs/promises'
 import { realpathSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, relative, resolve as resolvePath } from 'node:path'
 import { logger } from '@/ui/logger'
-import { configuration } from '@/configuration'
+import type { Config } from '@/configuration'
 import type { Update, UpdateMachineBody } from '@hapi/protocol'
 import type { RunnerState, Machine, MachineMetadata } from './types'
 import { RunnerStateSchema, MachineMetadataSchema } from './types'
@@ -115,6 +115,8 @@ function formatWorkspaceRoots(paths?: string[]): string {
     return paths?.length ? paths.join(', ') : '(none)'
 }
 
+export type ApiMachineClientConfig = Pick<Config, 'apiUrl' | 'extraHeaders'>
+
 export class ApiMachineClient {
     private socket!: Socket<ServerToRunnerEvents, RunnerToServerEvents>
     private keepAliveInterval: NodeJS.Timeout | null = null
@@ -125,6 +127,7 @@ export class ApiMachineClient {
     constructor(
         private readonly token: string,
         private readonly machine: Machine,
+        private readonly config: ApiMachineClientConfig,
         private readonly workspaceRoots?: string[]
     ) {
         // Realpath roots once so all subsequent comparisons are against
@@ -396,7 +399,7 @@ export class ApiMachineClient {
     }
 
     connect(): void {
-        this.socket = io(`${configuration.apiUrl}/cli`, {
+        this.socket = io(`${this.config.apiUrl}/cli`, {
             transports: ['websocket'],
             auth: {
                 token: this.token,
@@ -407,7 +410,7 @@ export class ApiMachineClient {
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionDelayMax: 5000,
-            ...buildSocketIoExtraHeaderOptions()
+            ...buildSocketIoExtraHeaderOptions(this.config.extraHeaders)
         })
 
         this.socket.on('connect', () => {

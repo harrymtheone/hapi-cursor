@@ -6,8 +6,13 @@ import { RunnerState, Metadata } from '@/api/types';
 import { SpawnSessionOptions, SpawnSessionResult } from '@/modules/common/rpcTypes';
 import { logger } from '@/ui/logger';
 import { authAndSetupMachineIfNeeded } from '@/ui/auth';
-import { configuration } from '@/configuration';
+import type { Config } from '@/configuration';
 import packageJson from '../../package.json';
+
+type RunnerConfig = Pick<
+  Config,
+  'apiUrl' | 'cliApiToken' | 'extraHeaders' | 'happyHomeDir' | 'logsDir' | 'settingsFile' | 'runnerStateFile' | 'runnerLockFile'
+>;
 import { getEnvironmentInfo } from '@/ui/doctor';
 import { spawnHappyCLI } from '@/utils/spawnHappyCLI';
 import { writeRunnerState, RunnerLocallyPersistedState, readRunnerState, acquireRunnerLock, releaseRunnerLock } from '@/persistence';
@@ -23,7 +28,7 @@ import { buildMachineMetadata } from '@/agent/sessionFactory';
 import { resolveWorkspaceRoots } from '@/utils/workspaceRoot';
 import { hashRunnerCliApiToken } from './runnerIdentity';
 
-export async function startRunner(options: { workspaceRoots?: string[] } = {}): Promise<void> {
+export async function startRunner(config: RunnerConfig, options: { workspaceRoots?: string[] } = {}): Promise<void> {
   // We don't have cleanup function at the time of server construction
   // Control flow is:
   // 1. Create promise that will resolve when shutdown is requested
@@ -94,14 +99,14 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
   });
 
   logger.debug('[RUNNER RUN] Starting runner process...');
-  logger.debugLargeJson('[RUNNER RUN] Environment', getEnvironmentInfo());
+  logger.debugLargeJson('[RUNNER RUN] Environment', getEnvironmentInfo(config));
 
   // Check if already running
   // Check if running runner version matches current CLI version
-  const runningRunnerVersionMatches = await isRunnerRunningCurrentlyInstalledHappyVersion();
+  const runningRunnerVersionMatches = await isRunnerRunningCurrentlyInstalledHappyVersion(config);
   if (!runningRunnerVersionMatches) {
     logger.debug('[RUNNER RUN] Runner version mismatch detected, restarting runner with current CLI version');
-    await stopRunner();
+    await stopRunner(config);
   } else {
     logger.debug('[RUNNER RUN] Runner version matches, keeping existing runner');
     console.log('Runner already running with matching version');
@@ -109,7 +114,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
   }
 
   // Acquire exclusive lock (proves runner is running)
-  const runnerLockHandle = await acquireRunnerLock(5, 200);
+  const runnerLockHandle = await acquireRunnerLock(config.runnerLockFile, 5, 200);
   if (!runnerLockHandle) {
     logger.debug('[RUNNER RUN] Runner lock file already held, another runner is running');
     process.exit(0);
@@ -121,7 +126,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
 
   try {
     // Ensure auth and machine registration BEFORE anything else
-    const { machineId } = await authAndSetupMachineIfNeeded();
+    const { machineId } = await authAndSetupMachineIfNeeded(config);
     logger.debug('[RUNNER RUN] Auth and machine setup complete');
 
     // Setup state - key by PID
@@ -647,12 +652,12 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
       startTime: new Date().toLocaleString(),
       startedWithCliVersion: packageJson.version,
       startedWithCliMtimeMs,
-      startedWithApiUrl: configuration.apiUrl,
+      startedWithApiUrl: config.apiUrl,
       startedWithMachineId: machineId,
-      startedWithCliApiTokenHash: hashRunnerCliApiToken(configuration.cliApiToken),
+      startedWithCliApiTokenHash: hashRunnerCliApiToken(config.cliApiToken),
       runnerLogPath: logger.logFilePath
     };
-    writeRunnerState(fileState);
+    writeRunnerState(config.runnerStateFile, fileState);
     logger.debug('[RUNNER RUN] Runner state written');
 
     // Prepare initial runner state
@@ -664,7 +669,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
     };
 
     // Create API client
-    const api = await ApiClient.create();
+    const api = await ApiClient.create(config);
 
     const workspaceRoots = resolveWorkspaceRoots(options.workspaceRoots);
     logger.debug(`[RUNNER RUN] Workspace roots: ${workspaceRoots?.join(', ') ?? '(not set)'}`);
@@ -673,7 +678,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
     const machine = await withRetry(
       () => api.getOrCreateMachine({
         machineId,
-        metadata: buildMachineMetadata({ workspaceRoots }),
+        metadata: buildMachineMetadata(config, { workspaceRoots }),
         runnerState: initialRunnerState
       }),
       {
@@ -707,7 +712,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
     console.log('');
     console.log('Hapi runner started.');
     console.log(`  Workspace roots: ${workspaceRoots?.join(', ') ?? '(not set — browse disabled; pass --workspace-root to enable)'}`);
-    console.log(`  Hub URL:        ${configuration.apiUrl}`);
+    console.log(`  Hub URL:        ${config.apiUrl}`);
     console.log(`  Machine ID:     ${machine.id}`);
     console.log(`  Control port:   ${controlPort}`);
     console.log('Waiting for sessions. Press Ctrl+C to stop.');
@@ -809,7 +814,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
 
       // Before wrecklessly overriting the runner state file, we should check if we are the ones who own it
       // Race condition is possible, but thats okay for the time being :D
-      const runnerState = await readRunnerState();
+      const runnerState = await readRunnerState(config.runnerStateFile);
       if (runnerState && runnerState.pid !== process.pid) {
         logger.debug('[RUNNER RUN] Somehow a different runner was started without killing us. We should kill ourselves.')
         requestShutdown('exception', 'A different runner was started without killing us. We should kill ourselves.')
@@ -829,7 +834,7 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
           lastHeartbeat: new Date().toLocaleString(),
           runnerLogPath: fileState.runnerLogPath
         };
-        writeRunnerState(updatedState);
+        writeRunnerState(config.runnerStateFile, updatedState);
         if (process.env.DEBUG) {
           logger.debug(`[RUNNER RUN] Health check completed at ${updatedState.lastHeartbeat}`);
         }
@@ -863,8 +868,8 @@ export async function startRunner(options: { workspaceRoots?: string[] } = {}): 
 
       apiMachine.shutdown();
       await stopControlServer();
-      await cleanupRunnerState();
-      await releaseRunnerLock(runnerLockHandle);
+      await cleanupRunnerState(config);
+      await releaseRunnerLock(config.runnerLockFile, runnerLockHandle);
 
       logger.debug('[RUNNER RUN] Cleanup completed, exiting process');
       process.exit(0);

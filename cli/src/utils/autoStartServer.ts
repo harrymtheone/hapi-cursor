@@ -10,10 +10,12 @@
 
 import chalk from 'chalk'
 import { createConnection } from 'node:net'
-import { configuration } from '@/configuration'
+import type { Config } from '@/configuration'
 import { readSettings } from '@/persistence'
 import { spawnHappyCLI } from '@/utils/spawnHappyCLI'
 import { logger } from '@/ui/logger'
+
+type AutoStartConfig = Pick<Config, 'apiUrl' | 'settingsFile'>
 
 const DEFAULT_SERVER_PORT = 3006
 const SERVER_STARTUP_TIMEOUT_MS = 10000
@@ -89,7 +91,7 @@ async function waitForServerReady(
 /**
  * Determine if hub should be auto-started
  */
-async function shouldAutoStartServer(): Promise<boolean> {
+async function shouldAutoStartServer(config: AutoStartConfig): Promise<boolean> {
     // Condition 1: HAPI_API_URL not set (using default localhost:3006)
     if (process.env.HAPI_API_URL) {
         logger.debug('[AUTO-START] HAPI_API_URL is set, skipping auto-start')
@@ -97,10 +99,10 @@ async function shouldAutoStartServer(): Promise<boolean> {
     }
 
     // Condition 2: Check settings.json
-    const settings = await readSettings()
+    const settings = await readSettings(config.settingsFile)
 
     // 2a: apiUrl is set in settings.json (user configured a specific hub)
-    if (settings.apiUrl || settings.serverUrl) {
+    if (settings.apiUrl) {
         logger.debug('[AUTO-START] apiUrl is set in settings.json, skipping auto-start')
         return false
     }
@@ -142,9 +144,9 @@ function startServerAsChild(): void {
 /**
  * Main entry point: auto-start hub if conditions are met
  */
-export async function maybeAutoStartServer(): Promise<void> {
+export async function maybeAutoStartServer(config: AutoStartConfig): Promise<void> {
     try {
-        const shouldStart = await shouldAutoStartServer()
+        const shouldStart = await shouldAutoStartServer(config)
         if (!shouldStart) {
             return
         }
@@ -154,7 +156,7 @@ export async function maybeAutoStartServer(): Promise<void> {
 
         startServerAsChild()
 
-        const isReady = await waitForServerReady(configuration.apiUrl)
+        const isReady = await waitForServerReady(config.apiUrl)
 
         if (!isReady) {
             console.log(chalk.yellow('Warning: Hub did not start within expected time'))

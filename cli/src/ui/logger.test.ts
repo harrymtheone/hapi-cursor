@@ -49,7 +49,7 @@ describe('Logger local-only logging', () => {
 
   it('writes local log entries without uploading when remote-log env is set', () => {
     const logPath = join(tempDir, 'session.log')
-    const logger = new Logger(logPath)
+    const logger = new Logger(logPath, tempDir)
 
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     try {
@@ -71,7 +71,7 @@ describe('Logger local-only logging', () => {
   it('does not inspect large payloads outside DEBUG mode', () => {
     delete process.env.DEBUG
     const logPath = join(tempDir, 'session.log')
-    const logger = new Logger(logPath)
+    const logger = new Logger(logPath, tempDir)
 
     logger.debugLargeJson('payload', { secret: 'do-not-write' })
 

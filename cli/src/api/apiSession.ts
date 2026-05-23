@@ -8,7 +8,7 @@ import { backoff } from '@/utils/time'
 import { apiValidationError } from '@/utils/errorUtils'
 import { AsyncLock } from '@/utils/lock'
 import type { RawJSONLines } from '@/agent/agentLogSchema'
-import { configuration } from '@/configuration'
+import type { Config } from '@/configuration'
 import { AGENT_MESSAGE_PAYLOAD_TYPE } from "@hapi/protocol"
 import type { SessionEndReason } from '@hapi/protocol'
 import type { ClientToServerEvents, ServerToClientEvents, Update } from '@hapi/protocol'
@@ -128,9 +128,12 @@ export class IncomingMessageFilter {
     }
 }
 
+export type ApiSessionClientConfig = Pick<Config, 'apiUrl' | 'extraHeaders'>
+
 export class ApiSessionClient extends EventEmitter {
     private readonly token: string
     readonly sessionId: string
+    private readonly config: ApiSessionClientConfig
     private metadata: Metadata | null
     private metadataVersion: number
     private agentState: AgentState | null
@@ -148,9 +151,10 @@ export class ApiSessionClient extends EventEmitter {
     private agentStateLock = new AsyncLock()
     private metadataLock = new AsyncLock()
 
-    constructor(token: string, session: Session) {
+    constructor(token: string, session: Session, config: ApiSessionClientConfig) {
         super()
         this.token = token
+        this.config = config
         this.sessionId = session.id
         this.metadata = session.metadata
         this.metadataVersion = session.metadataVersion
@@ -166,7 +170,7 @@ export class ApiSessionClient extends EventEmitter {
             registerCommonHandlers(this.rpcHandlerManager, this.metadata.path)
         }
 
-        this.socket = io(`${configuration.apiUrl}/cli`, {
+        this.socket = io(`${this.config.apiUrl}/cli`, {
             auth: {
                 token: this.token,
                 clientType: 'session-scoped' as const,
@@ -179,7 +183,7 @@ export class ApiSessionClient extends EventEmitter {
             reconnectionDelayMax: 5000,
             transports: ['websocket'],
             autoConnect: false,
-            ...buildSocketIoExtraHeaderOptions()
+            ...buildSocketIoExtraHeaderOptions(this.config.extraHeaders)
         })
 
         this.terminalManager = new TerminalManager({
@@ -375,10 +379,10 @@ export class ApiSessionClient extends EventEmitter {
             let cursor = startSeq
             while (true) {
                 const response = await axios.get(
-                    `${configuration.apiUrl}/cli/sessions/${encodeURIComponent(this.sessionId)}/messages`,
+                    `${this.config.apiUrl}/cli/sessions/${encodeURIComponent(this.sessionId)}/messages`,
                     {
                         params: { afterSeq: cursor, limit },
-                        headers: buildHubRequestHeaders({
+                        headers: buildHubRequestHeaders(this.config.extraHeaders, {
                             Authorization: `Bearer ${this.token}`,
                             'Content-Type': 'application/json'
                         }),

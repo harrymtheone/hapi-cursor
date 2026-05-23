@@ -4,6 +4,7 @@ import { arch, platform } from 'node:os';
 import * as tar from 'tar';
 import packageJson from '../../package.json';
 import type { EmbeddedAsset } from '#embedded-assets';
+import type { Config } from '@/configuration';
 import { isBunCompiled, runtimePath } from '@/projectPath';
 
 const RUNTIME_MARKER = '.runtime-version';
@@ -117,13 +118,13 @@ function runtimeAssetsReady(runtimeRoot: string): boolean {
     return areToolsUnpacked(join(runtimeRoot, 'tools', 'unpacked'));
 }
 
-export async function ensureRuntimeAssets(): Promise<void> {
+export async function ensureRuntimeAssets(config: Pick<Config, 'happyHomeDir'>): Promise<void> {
     if (!isBunCompiled()) {
         return;
     }
 
     const { loadEmbeddedAssets } = await import('#embedded-assets');
-    const runtimeRoot = runtimePath();
+    const runtimeRoot = runtimePath(config.happyHomeDir);
     const markerPath = join(runtimeRoot, RUNTIME_MARKER);
     if (existsSync(markerPath)) {
         const markerVersion = readFileSync(markerPath, 'utf-8').trim();

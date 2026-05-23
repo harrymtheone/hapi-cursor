@@ -7,6 +7,7 @@ import { registerKillSessionHandler } from '@/agent/registerKillSessionHandler';
 import type { AgentState } from '@/api/types';
 import type { CursorSession } from './session';
 import { bootstrapExistingSession, bootstrapSession } from '@/agent/sessionFactory';
+import type { Config } from '@/configuration';
 import { registerLocalHandoffHandler } from '@/agent/localHandoff';
 import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
 import { isPermissionModeAllowedForFlavor } from '@hapi/protocol';
@@ -31,15 +32,18 @@ const formatFailureReason = (message: string): string => {
     return `${message.slice(0, maxLength)}...`;
 };
 
-export async function runCursor(opts: {
-    startedBy?: 'runner' | 'terminal';
-    cursorArgs?: string[];
-    permissionMode?: PermissionMode;
-    resumeSessionId?: string;
-    model?: string;
-    existingSessionId?: string;
-    workingDirectory?: string;
-}): Promise<void> {
+export async function runCursor(
+    config: Pick<Config, 'apiUrl' | 'cliApiToken' | 'extraHeaders' | 'happyHomeDir' | 'settingsFile' | 'runnerStateFile'>,
+    opts: {
+        startedBy?: 'runner' | 'terminal';
+        cursorArgs?: string[];
+        permissionMode?: PermissionMode;
+        resumeSessionId?: string;
+        model?: string;
+        existingSessionId?: string;
+        workingDirectory?: string;
+    }
+): Promise<void> {
     const workingDirectory = opts.workingDirectory ?? getInvokedCwd();
     const startedBy = opts.startedBy ?? 'terminal';
 
@@ -49,12 +53,12 @@ export async function runCursor(opts: {
         controlledByUser: false
     };
     const bootstrap = opts.existingSessionId
-        ? await bootstrapExistingSession({
+        ? await bootstrapExistingSession(config, {
             sessionId: opts.existingSessionId,
             startedBy,
             workingDirectory
         })
-        : await bootstrapSession({
+        : await bootstrapSession(config, {
             startedBy,
             workingDirectory,
             agentState: state,

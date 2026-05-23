@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Session } from '@/api/types'
+import { makeConfig } from '@/__fixtures__/config'
 
 const {
     getSessionMock,
@@ -31,14 +32,6 @@ vi.mock('@/runner/controlClient', () => ({
 
 vi.mock('@/persistence', () => ({
     readSettings: readSettingsMock
-}))
-
-vi.mock('@/configuration', () => ({
-    configuration: {
-        happyHomeDir: '/tmp/.hapi',
-        logsDir: '/tmp/.hapi/logs',
-        isRunnerProcess: false
-    }
 }))
 
 vi.mock('@/ui/logger', () => ({
@@ -95,7 +88,7 @@ describe('bootstrapExistingSession', () => {
         sessionSyncClientMock.mockReturnValue(sessionClient)
         readSettingsMock.mockResolvedValue({ machineId: 'machine-1' })
 
-        const result = await bootstrapExistingSession({
+        const result = await bootstrapExistingSession(makeConfig(), {
             sessionId: 'hapi-session-1',
             workingDirectory: '/tmp/project'
         })
@@ -105,6 +98,7 @@ describe('bootstrapExistingSession', () => {
         expect(sessionSyncClientMock).toHaveBeenCalledWith(session)
         expect(sessionClient.updateMetadata).toHaveBeenCalledOnce()
         expect(notifyRunnerSessionStartedMock).toHaveBeenCalledWith(
+            expect.any(String),
             'hapi-session-1',
             expect.objectContaining({
                 path: '/tmp/project',
@@ -138,7 +132,7 @@ describe('bootstrapExistingSession', () => {
         sessionSyncClientMock.mockReturnValue(sessionClient)
         readSettingsMock.mockResolvedValue({ machineId: 'machine-1' })
 
-        const result = await bootstrapExistingSession({
+        const result = await bootstrapExistingSession(makeConfig(), {
             sessionId: 'hapi-session-1',
             workingDirectory: '/tmp/project'
         })
@@ -158,6 +152,7 @@ describe('bootstrapExistingSession', () => {
             cursorSessionId: 'cursor-thread-1'
         }))
         expect(notifyRunnerSessionStartedMock).toHaveBeenCalledWith(
+            expect.any(String),
             'hapi-session-1',
             expect.objectContaining({
                 cursorSessionId: 'cursor-thread-1'
@@ -166,7 +161,7 @@ describe('bootstrapExistingSession', () => {
     })
 
     it('advertises remote terminal capability in session metadata', () => {
-        const metadata = buildSessionMetadata({
+        const metadata = buildSessionMetadata(makeConfig(), {
             startedBy: 'terminal',
             workingDirectory: '/tmp/project',
             machineId: 'machine-1',

@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { writeFileSync, mkdirSync, unlinkSync, existsSync } from 'node:fs';
-import { configuration } from '@/configuration';
 import { logger } from '@/ui/logger';
 import { getHappyCliCommand } from '@/utils/spawnHappyCLI';
 
@@ -69,11 +68,12 @@ function buildHookSettings(command: string, hooksEnabled?: boolean): HookSetting
 }
 
 export function generateHookSettingsFile(
+    happyHomeDir: string,
     port: number,
     token: string,
     options: HookSettingsOptions
 ): string {
-    const hooksDir = join(configuration.happyHomeDir, 'tmp', 'hooks');
+    const hooksDir = join(happyHomeDir, 'tmp', 'hooks');
     mkdirSync(hooksDir, { recursive: true });
 
     const filename = `${options.filenamePrefix}-${process.pid}.json`;
