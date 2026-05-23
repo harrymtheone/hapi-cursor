@@ -177,7 +177,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 - [x] 09-01-PLAN.md — Slice 1: util dedup (estimateBase64Bytes → shared, levenshteinDistance → web/lib, createApiQuery factory) + check-no-circular-web.sh + ToolCard.integration.test.tsx + knownTools.tsx fallback testid
 - [x] 09-02-PLAN.md — Slice 2: message-window-store → facade + 5 sub-modules; SessionList.tsx → orchestrator + 4 hooks + 4 sub-components
-- [ ] 09-03-PLAN.md — Slice 3: settings/index.tsx → orchestrator + _sections; HappyComposer.tsx → orchestrator + 2 hooks + overlays; _results.tsx → dispatcher + results/{Bash,LineList,Read}Result.tsx + _resultHelpers.ts
+- [x] 09-03-PLAN.md — Slice 3: settings/index.tsx → orchestrator + _sections; HappyComposer.tsx → orchestrator + 2 hooks + overlays; _results.tsx → dispatcher + results/{Bash,LineList,Read}Result.tsx + _resultHelpers.tsx
 - [ ] 09-04-PLAN.md — Slice 4: append Phase 9 D-158 sweep block to check-no-cut-agents.sh; tail-invoke check-no-circular-web.sh; full phase gate green
 **UI hint**: yes
 
@@ -230,7 +230,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Agent runtime shared kit + mode hardening | 4/4 | Complete   | 2026-05-22 |
 | 7. Wire contracts unification & SSE patch contract | 1/4 | In Progress|  |
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
-| 9. Web internal decoupling | 2/4 | In Progress|  |
+| 9. Web internal decoupling | 0/TBD | Not started | - |
 | 10. Config cleanup | 0/TBD | Not started | - |
 | 11. Test gap fill | 0/TBD | Not started | - |
 | 12. Docs cleanup & milestone verification | 0/TBD | Not started | - |
