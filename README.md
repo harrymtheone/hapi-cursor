@@ -1,52 +1,63 @@
-# HAPI
+# HAPI Cursor Edition
 
-Run official Claude Code / Codex / Gemini / OpenCode sessions locally and control them remotely through a Web / PWA / Telegram Mini App.
+Remote-control the Cursor coding agent from your phone or laptop over Tailscale.
 
-> **Why HAPI?** HAPI is a local-first alternative to Happy. See [Why Not Happy?](docs/guide/why-hapi.md) for the key differences.
+## What this is / What this is not
 
-## Features
+**Is:** A single-user, self-hosted bridge between the [Cursor Agent CLI](https://docs.cursor.com/cli/overview) running on your dev machine and a React PWA you open from another device. You launch sessions, watch the timeline, approve tool calls, type messages, and tail terminals — all over your private Tailscale network.
 
-- **Seamless Handoff** - Work locally, switch to remote when needed, switch back anytime. No context loss, no session restart.
-- **Native First** - HAPI wraps your AI agent instead of replacing it. Same terminal, same experience, same muscle memory.
-- **AFK Without Stopping** - Step away from your desk? Approve AI requests from your phone with one tap.
-- **Your AI, Your Choice** - Claude Code, Codex, Cursor Agent, Gemini, OpenCode—different models, one unified workflow.
-- **Terminal Anywhere** - Run commands from your phone or browser, directly connected to the working machine.
-- **Voice Control** - Talk to your AI agent hands-free using the built-in voice assistant.
-- **Workspace Browser** - Opt-in via one or more `hapi runner start --workspace-root <path>` flags: browse scoped file trees from the web and start sessions in allowed subdirectories.
+**Is not:** A multi-agent platform, a hosted SaaS, or a public web app. There is no install base, no backward compatibility layer, and no support for other AI coding agents — Cursor is the only one wired in. Tailscale (or any other private network you control) is the only intended transport for non-localhost access.
 
-## Demo
+## Repo layout
 
-https://github.com/user-attachments/assets/38230353-94c6-4dbe-9c29-b2a2cc457546
+| Workspace  | Role                                                                    |
+| ---------- | ----------------------------------------------------------------------- |
+| `cli/`     | `hapi` CLI — Cursor Agent wrapper, background runner, hub launcher.     |
+| `hub/`     | Local server — HTTP + Socket.IO + SSE on top of SQLite persistence.     |
+| `web/`     | React 19 PWA — phone/desktop client served by the hub.                  |
+| `shared/`  | `@hapi/protocol` — types, Zod schemas, socket event names.              |
 
-## Getting Started
+## Quickstart
 
-```bash
-npx @twsxtd/hapi hub             # start local hub
-npx @twsxtd/hapi                 # run claude code
-```
-
-`hapi server` remains supported as an alias.
-
-The terminal will display the local hub URL. Use Tailscale or another network path you control for phone access.
-
-For Tailscale and self-hosted options, see [Installation](docs/guide/installation.md)
-
-## Docs
-
-- [App](docs/guide/pwa.md)
-- [How it Works](docs/guide/how-it-works.md)
-- [Cursor Agent](docs/guide/cursor.md)
-- [Voice Assistant](docs/guide/voice-assistant.md)
-- [Why HAPI](docs/guide/why-hapi.md)
-- [FAQ](docs/guide/faq.md)
-
-## Build from source
+Prerequisites: [Bun](https://bun.sh) ≥ 1.3, [Cursor Agent CLI](https://docs.cursor.com/cli/overview) (`cursor-agent`) on `PATH`, and [Tailscale](https://tailscale.com/) on both the dev machine and the phone/laptop you want to drive sessions from.
 
 ```bash
 bun install
+```
+
+Run the hub + web dev servers together (hub on `127.0.0.1:3006`, Vite on `127.0.0.1:5173`):
+
+```bash
+bun run dev
+```
+
+Start a Cursor session against the running hub (in a second terminal, from the repo root or anywhere on `PATH` once installed):
+
+```bash
+cd cli && bun run dev cursor       # interactive Cursor session
+cd cli && bun run dev runner       # background runner (multi-session daemon)
+cd cli && bun run dev hub          # standalone hub (alternative to `bun run dev:hub`)
+```
+
+The hub prints its listen URL on startup. On your phone, open `http://<tailscale-machine-name>:3006/` (or whatever `HAPI_LISTEN_HOST` / `HAPI_LISTEN_PORT` resolves to on your tailnet) and pair using the token shown in the hub logs. The web bundle is served straight from the hub in single-exe builds, so the PWA installs from that same URL.
+
+For a packaged single binary (hub + web + CLI in one executable):
+
+```bash
 bun run build:single-exe
 ```
 
-## Credits
+The built binary lands in `cli/dist/`; copy it to any machine on the tailnet and run `hapi hub` to start serving.
 
-HAPI means "哈皮" a Chinese transliteration of [Happy](https://github.com/slopus/happy). Great credit to the original project.
+## Development
+
+```bash
+bun run typecheck      # tsc --noEmit across cli, hub, web
+bun run test           # vitest (cli, web) + bun:test (hub) + repo guard
+```
+
+Per-package quickstarts live in [`cli/README.md`](cli/README.md), [`hub/README.md`](hub/README.md), and [`web/README.md`](web/README.md). AI coding agents working in this repo should read [`AGENTS.md`](AGENTS.md) for navigation cues and [`.cursor/rules/`](.cursor/rules/) for Cursor-IDE-specific guidance.
+
+## License
+
+[AGPL-3.0-only](LICENSE). See [`SECURITY.md`](SECURITY.md) for the disclosure policy.
