@@ -1,7 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { getConfiguration } from '../configuration'
 import { getOrCreateJsonFile } from './generators'
 
 const ownerIdFileSchema = z.object({
@@ -17,14 +16,8 @@ function generateOwnerId(): number {
     return value > 0 ? value : 1
 }
 
-let cachedOwnerId: number | null = null
-
-export async function getOrCreateOwnerId(): Promise<number> {
-    if (cachedOwnerId !== null) {
-        return cachedOwnerId
-    }
-
-    const ownerIdFile = join(getConfiguration().dataDir, 'owner-id.json')
+export async function getOrCreateOwnerId(dataDir: string): Promise<number> {
+    const ownerIdFile = join(dataDir, 'owner-id.json')
 
     const result = await getOrCreateJsonFile({
         filePath: ownerIdFile,
@@ -41,6 +34,5 @@ export async function getOrCreateOwnerId(): Promise<number> {
         dirMode: 0o700
     })
 
-    cachedOwnerId = result.value
     return result.value
 }

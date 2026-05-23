@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { PROTOCOL_VERSION } from '@hapi/protocol'
-import { getConfiguration } from '../../configuration'
 import { constantTimeEquals } from '../../utils/crypto'
 import { parseAccessToken } from '../../utils/accessToken'
 import type { Machine, Session, SyncEngine } from '../../sync/syncEngine'
@@ -58,7 +57,7 @@ function resolveMachine(
     return { ok: false, status: 404, error: 'Machine not found' }
 }
 
-export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<CliEnv> {
+export function createCliRoutes(getSyncEngine: () => SyncEngine | null, cliApiToken: string): Hono<CliEnv> {
     const app = new Hono<CliEnv>()
 
     app.use('*', async (c, next) => {
@@ -75,9 +74,8 @@ export function createCliRoutes(getSyncEngine: () => SyncEngine | null): Hono<Cl
         }
 
         const token = parsed.data.replace(/^Bearer\s+/i, '')
-        const configuration = getConfiguration()
         const parsedToken = parseAccessToken(token)
-        if (!parsedToken || !constantTimeEquals(parsedToken, configuration.cliApiToken)) {
+        if (!parsedToken || !constantTimeEquals(parsedToken, cliApiToken)) {
             return c.json({ error: 'Invalid token' }, 401)
         }
 

@@ -1,9 +1,9 @@
 /**
  * Configuration for hapi-hub (Direct Connect)
  *
- * Configuration is loaded with priority: environment variable > settings.json > default
+ * Configuration is loaded with priority: environment variable > settings.json > default.
  * When values are read from environment variables and not present in settings.json,
- * they are automatically saved for future use
+ * they are automatically saved for future use.
  *
  * Optional environment variables:
  * - CLI_API_TOKEN: Shared secret for hapi CLI authentication (auto-generated if not set)
@@ -14,6 +14,9 @@
  * - VAPID_SUBJECT: Contact email or URL for Web Push (defaults to mailto:admin@hapi.run)
  * - HAPI_HOME: Data directory (default: ~/.hapi)
  * - DB_PATH: SQLite database path (default: {HAPI_HOME}/hapi.db)
+ *
+ * Plan 10-02: replaces the prior `Configuration` singleton with `loadConfig()` —
+ * a deeply frozen `Config` threaded via DI through every Hub consumer.
  */
 
 import { existsSync, mkdirSync } from 'node:fs'
@@ -21,7 +24,7 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { getOrCreateCliApiToken } from './config/cliApiToken'
 import { getSettingsFile } from './config/settings'
-import { loadServerSettings, type ServerSettings, type ServerSettingsResult } from './config/serverSettings'
+import { loadServerSettings, rejectOldEnvVars } from './config/serverSettings'
 
 export type ConfigSource = 'env' | 'file' | 'default'
 
@@ -33,143 +36,67 @@ export interface ConfigSources {
     cliApiToken: 'env' | 'file' | 'generated'
 }
 
-class Configuration {
-    /** CLI auth token (shared secret) */
-    public cliApiToken: string
+export type Config = Readonly<{
+    dataDir: string
+    dbPath: string
+    settingsFile: string
+    listenHost: string
+    listenPort: number
+    publicUrl: string
+    corsOrigins: readonly string[]
+    cliApiToken: string
+    cliApiTokenSource: 'env' | 'file' | 'generated'
+    cliApiTokenIsNew: boolean
+    sources: Readonly<ConfigSources>
+}>
 
-    /** Source of CLI API token */
-    public cliApiTokenSource: 'env' | 'file' | 'generated' | ''
-
-    /** Whether CLI API token was newly generated (for first-run display) */
-    public cliApiTokenIsNew: boolean
-
-    /** Path to settings.json file */
-    public readonly settingsFile: string
-
-    /** Data directory for credentials and state */
-    public readonly dataDir: string
-
-    /** SQLite DB path */
-    public readonly dbPath: string
-
-    /** Port for the HTTP service */
-    public readonly listenPort: number
-
-    /** Host/IP to bind the HTTP service to */
-    public readonly listenHost: string
-
-    /** Public URL for external access to the web PWA */
-    public readonly publicUrl: string
-
-    /** Allowed CORS origins for web + Socket.IO (comma-separated env override) */
-    public readonly corsOrigins: string[]
-
-    /** Sources of each configuration value */
-    public readonly sources: ConfigSources
-
-    /** Private constructor - use createConfiguration() instead */
-    private constructor(
-        dataDir: string,
-        dbPath: string,
-        serverSettings: ServerSettings,
-        sources: ServerSettingsResult['sources']
-    ) {
-        this.dataDir = dataDir
-        this.dbPath = dbPath
-        this.settingsFile = getSettingsFile(dataDir)
-
-        // Apply server settings
-        this.listenHost = serverSettings.listenHost
-        this.listenPort = serverSettings.listenPort
-        this.publicUrl = serverSettings.publicUrl
-        this.corsOrigins = serverSettings.corsOrigins
-
-        // CLI API token - will be set by _setCliApiToken() before create() returns
-        this.cliApiToken = ''
-        this.cliApiTokenSource = ''
-        this.cliApiTokenIsNew = false
-
-        // Store sources for logging (cliApiToken will be set by _setCliApiToken)
-        this.sources = {
-            ...sources,
-        } as ConfigSources
-
-        // Ensure data directory exists
-        if (!existsSync(this.dataDir)) {
-            mkdirSync(this.dataDir, { recursive: true })
+function deepFreeze<T>(value: T): T {
+    if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+        for (const key of Object.keys(value as object)) {
+            deepFreeze((value as Record<string, unknown>)[key])
         }
+        Object.freeze(value)
     }
-
-    /** Create configuration asynchronously */
-    static async create(): Promise<Configuration> {
-        // 1. Determine data directory (env only - not persisted)
-        const dataDir = process.env.HAPI_HOME
-            ? process.env.HAPI_HOME.replace(/^~/, homedir())
-            : join(homedir(), '.hapi')
-
-        // Ensure data directory exists before loading settings
-        if (!existsSync(dataDir)) {
-            mkdirSync(dataDir, { recursive: true })
-        }
-
-        // 2. Determine DB path (env only - not persisted)
-        const dbPath = process.env.DB_PATH
-            ? process.env.DB_PATH.replace(/^~/, homedir())
-            : join(dataDir, 'hapi.db')
-
-        // 3. Load hub settings (with persistence)
-        const settingsResult = await loadServerSettings(dataDir)
-
-        if (settingsResult.savedToFile) {
-            console.log(`[Hub] Configuration saved to ${getSettingsFile(dataDir)}`)
-        }
-
-        // 4. Create configuration instance
-        const config = new Configuration(
-            dataDir,
-            dbPath,
-            settingsResult.settings,
-            settingsResult.sources
-        )
-
-        // 5. Load CLI API token
-        const tokenResult = await getOrCreateCliApiToken(dataDir)
-        config._setCliApiToken(tokenResult.token, tokenResult.source, tokenResult.isNew)
-
-        return config
-    }
-
-    /** Set CLI API token (called during async initialization) */
-    _setCliApiToken(token: string, source: 'env' | 'file' | 'generated', isNew: boolean): void {
-        this.cliApiToken = token
-        this.cliApiTokenSource = source
-        this.cliApiTokenIsNew = isNew
-        ;(this.sources as { cliApiToken: string }).cliApiToken = source
-    }
+    return value
 }
 
-// Singleton instance (set by createConfiguration)
-let _configuration: Configuration | null = null
+export async function loadConfig(): Promise<Config> {
+    rejectOldEnvVars()
 
-/**
- * Create and initialize configuration asynchronously.
- * Must be called once at startup before getConfiguration() can be used.
- */
-export async function createConfiguration(): Promise<Configuration> {
-    if (_configuration) {
-        return _configuration
-    }
-    _configuration = await Configuration.create()
-    return _configuration
-}
+    const dataDir = process.env.HAPI_HOME
+        ? process.env.HAPI_HOME.replace(/^~/, homedir())
+        : join(homedir(), '.hapi')
 
-/**
- * Get the initialized configuration.
- * Throws if createConfiguration() has not been called yet.
- */
-export function getConfiguration(): Configuration {
-    if (!_configuration) {
-        throw new Error('Configuration not initialized. Call createConfiguration() first.')
+    if (!existsSync(dataDir)) {
+        mkdirSync(dataDir, { recursive: true })
     }
-    return _configuration
+
+    const dbPath = process.env.DB_PATH
+        ? process.env.DB_PATH.replace(/^~/, homedir())
+        : join(dataDir, 'hapi.db')
+
+    const settingsResult = await loadServerSettings(dataDir)
+
+    if (settingsResult.savedToFile) {
+        console.log(`[Hub] Configuration saved to ${getSettingsFile(dataDir)}`)
+    }
+
+    const tokenResult = await getOrCreateCliApiToken(dataDir)
+
+    return deepFreeze({
+        dataDir,
+        dbPath,
+        settingsFile: getSettingsFile(dataDir),
+        listenHost: settingsResult.settings.listenHost,
+        listenPort: settingsResult.settings.listenPort,
+        publicUrl: settingsResult.settings.publicUrl,
+        corsOrigins: Object.freeze([...settingsResult.settings.corsOrigins]) as readonly string[],
+        cliApiToken: tokenResult.token,
+        cliApiTokenSource: tokenResult.source,
+        cliApiTokenIsNew: tokenResult.isNew,
+        sources: Object.freeze({
+            ...settingsResult.sources,
+            cliApiToken: tokenResult.source,
+        }),
+    }) as Config
 }

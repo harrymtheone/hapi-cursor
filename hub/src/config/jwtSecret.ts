@@ -1,15 +1,14 @@
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { getConfiguration } from '../configuration'
 import { getOrCreateJsonFile } from './generators'
 
 const jwtSecretFileSchema = z.object({
     secretBase64: z.string()
 })
 
-export async function getOrCreateJwtSecret(): Promise<Uint8Array> {
-    const secretFile = join(getConfiguration().dataDir, 'jwt-secret.json')
+export async function getOrCreateJwtSecret(dataDir: string): Promise<Uint8Array> {
+    const secretFile = join(dataDir, 'jwt-secret.json')
 
     const result = await getOrCreateJsonFile({
         filePath: secretFile,

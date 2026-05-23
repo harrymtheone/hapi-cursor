@@ -3,7 +3,6 @@ import { Server, type DefaultEventsMap } from 'socket.io'
 import { jwtVerify } from 'jose'
 import { z } from 'zod'
 import type { Store } from '../store'
-import { getConfiguration } from '../configuration'
 import { constantTimeEquals } from '../utils/crypto'
 import { parseAccessToken } from '../utils/accessToken'
 import { registerCliHandlers } from './handlers/cli'
@@ -34,7 +33,8 @@ export type SocketServerDeps = {
     store: Store
     jwtSecret: Uint8Array
     scheduler: KeepaliveScheduler
-    corsOrigins?: string[]
+    corsOrigins: readonly string[]
+    cliApiToken: string
     getSession?: (sessionId: string) => { active: boolean } | null
     onWebappEvent?: (event: SyncEvent) => void
     onSessionAlive?: (payload: { sid: string; time: number; thinking?: boolean; mode?: 'local' | 'remote' }) => void
@@ -50,10 +50,9 @@ export function createSocketServer(deps: SocketServerDeps): {
     engine: Engine
     rpcRegistry: RpcRegistry
 } {
-    const configuration = getConfiguration()
-    const corsOrigins = deps.corsOrigins ?? configuration.corsOrigins
+    const corsOrigins = deps.corsOrigins
     const allowAllOrigins = corsOrigins.includes('*')
-    const corsOriginOption = allowAllOrigins ? '*' : corsOrigins
+    const corsOriginOption = allowAllOrigins ? '*' : [...corsOrigins]
     const corsOptions = {
         origin: corsOriginOption,
         methods: ['GET', 'POST'],
@@ -105,7 +104,7 @@ export function createSocketServer(deps: SocketServerDeps): {
         const auth = socket.handshake.auth as Record<string, unknown> | undefined
         const token = typeof auth?.token === 'string' ? auth.token : null
         const parsedToken = token ? parseAccessToken(token) : null
-        if (!parsedToken || !constantTimeEquals(parsedToken, configuration.cliApiToken)) {
+        if (!parsedToken || !constantTimeEquals(parsedToken, deps.cliApiToken)) {
             return next(new Error('Invalid token'))
         }
         next()

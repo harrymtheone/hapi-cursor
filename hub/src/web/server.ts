@@ -4,7 +4,6 @@ import { logger } from 'hono/logger'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { serveStatic } from 'hono/bun'
-import { getConfiguration } from '../configuration'
 import { PROTOCOL_VERSION } from '@hapi/protocol'
 import type { SyncEngine } from '../sync/syncEngine'
 import { createAuthMiddleware, type WebAppEnv } from './middleware/auth'
@@ -60,7 +59,9 @@ function createWebApp(options: {
     jwtSecret: Uint8Array
     store: Store
     vapidPublicKey: string
-    corsOrigins?: string[]
+    corsOrigins: readonly string[]
+    cliApiToken: string
+    ownerId: number
     embeddedAssetMap: Map<string, EmbeddedWebAsset> | null
 }): Hono<WebAppEnv> {
     const app = new Hono<WebAppEnv>()
@@ -72,9 +73,8 @@ function createWebApp(options: {
     // Health check endpoint (no auth required)
     app.get('/health', (c) => c.json({ status: 'ok', protocolVersion: PROTOCOL_VERSION }))
 
-    const configuration = getConfiguration()
-    const corsOrigins = options.corsOrigins ?? configuration.corsOrigins
-    const corsOriginOption = corsOrigins.includes('*') ? '*' : corsOrigins
+    const corsOrigins = options.corsOrigins
+    const corsOriginOption = corsOrigins.includes('*') ? '*' : [...corsOrigins]
     const corsMiddleware = cors({
         origin: corsOriginOption,
         allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -83,9 +83,9 @@ function createWebApp(options: {
     app.use('/api/*', corsMiddleware)
     app.use('/cli/*', corsMiddleware)
 
-    app.route('/cli', createCliRoutes(options.getSyncEngine))
+    app.route('/cli', createCliRoutes(options.getSyncEngine, options.cliApiToken))
 
-    app.route('/api', createAuthRoutes(options.jwtSecret))
+    app.route('/api', createAuthRoutes(options.jwtSecret, options.cliApiToken, options.ownerId))
 
     app.use('/api/*', createAuthMiddleware(options.jwtSecret))
     app.route('/api', createEventsRoutes(options.getSseManager, options.getSyncEngine, options.getVisibilityTracker))
@@ -182,7 +182,12 @@ export async function startWebServer(options: {
     store: Store
     vapidPublicKey: string
     socketEngine: SocketEngine
-    corsOrigins?: string[]
+    corsOrigins: readonly string[]
+    cliApiToken: string
+    ownerId: number
+    listenHost: string
+    listenPort: number
+    publicUrl: string
 }): Promise<BunServer<WebSocketData>> {
     const isCompiled = isBunCompiled()
     const embeddedAssetMap = isCompiled ? await loadEmbeddedAssetMap() : null
@@ -194,15 +199,16 @@ export async function startWebServer(options: {
         store: options.store,
         vapidPublicKey: options.vapidPublicKey,
         corsOrigins: options.corsOrigins,
+        cliApiToken: options.cliApiToken,
+        ownerId: options.ownerId,
         embeddedAssetMap
     })
 
-    const configuration = getConfiguration()
     const socketHandler = options.socketEngine.handler()
 
     const server = Bun.serve({
-        hostname: configuration.listenHost,
-        port: configuration.listenPort,
+        hostname: options.listenHost,
+        port: options.listenPort,
         idleTimeout: Math.max(30, socketHandler.idleTimeout),
         maxRequestBodySize: Math.max(socketHandler.maxRequestBodySize, 68 * 1024 * 1024),
         websocket: socketHandler.websocket,
@@ -215,8 +221,8 @@ export async function startWebServer(options: {
         }
     })
 
-    console.log(`[Web] hub listening on ${configuration.listenHost}:${configuration.listenPort}`)
-    console.log(`[Web] public URL: ${configuration.publicUrl}`)
+    console.log(`[Web] hub listening on ${options.listenHost}:${options.listenPort}`)
+    console.log(`[Web] public URL: ${options.publicUrl}`)
 
     return server
 }

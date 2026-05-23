@@ -20,6 +20,23 @@ const OLD_SETTINGS_FIELDS = [
     'relayEnabled',
 ] as const
 
+const OLD_ENV_VARS = {
+    WEBAPP_HOST: 'HAPI_LISTEN_HOST',
+    WEBAPP_PORT: 'HAPI_LISTEN_PORT',
+    WEBAPP_URL: 'HAPI_PUBLIC_URL',
+    SERVER_URL: 'HAPI_API_URL',
+} as const
+
+export function rejectOldEnvVars(): void {
+    for (const [oldName, newName] of Object.entries(OLD_ENV_VARS)) {
+        if (process.env[oldName] !== undefined) {
+            throw new Error(
+                `Unsupported legacy env var ${oldName}. Rename to ${newName} and restart.`
+            )
+        }
+    }
+}
+
 export interface ServerSettings {
     listenHost: string
     listenPort: number

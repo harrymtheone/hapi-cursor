@@ -7,13 +7,14 @@
  * - SSE updates for the web UI
  */
 
-import { createConfiguration, type ConfigSource } from './configuration'
+import { loadConfig, type ConfigSource } from './configuration'
 import { Store } from './store'
 import { SyncEngine, type SyncEvent } from './sync/syncEngine'
 import { NotificationHub } from './notifications/notificationHub'
 import type { NotificationChannel } from './notifications/notificationTypes'
 import { startWebServer } from './web/server'
 import { getOrCreateJwtSecret } from './config/jwtSecret'
+import { getOrCreateOwnerId } from './config/ownerId'
 import { createSocketServer } from './socket/server'
 import { SSEManager } from './sse/sseManager'
 import { KeepaliveScheduler } from './utils/scheduler'
@@ -50,7 +51,7 @@ function normalizeOrigin(value: string): string {
     }
 }
 
-function normalizeOrigins(origins: string[]): string[] {
+function normalizeOrigins(origins: readonly string[]): string[] {
     const normalized = origins
         .map(normalizeOrigin)
         .filter(Boolean)
@@ -113,7 +114,7 @@ async function main() {
     console.log('HAPI Hub starting...')
 
     // Load configuration (async - loads from env/file with persistence)
-    const config = await createConfiguration()
+    const config = await loadConfig()
     const corsOrigins = normalizeOrigins(config.corsOrigins)
 
     // Display CLI API token information
@@ -139,7 +140,8 @@ async function main() {
     console.log(`[Hub] HAPI_PUBLIC_URL: ${config.publicUrl} (${formatSource(config.sources.publicUrl)})`)
 
     const store = new Store(config.dbPath)
-    const jwtSecret = await getOrCreateJwtSecret()
+    const jwtSecret = await getOrCreateJwtSecret(config.dataDir)
+    const ownerId = await getOrCreateOwnerId(config.dataDir)
     const vapidKeys = await getOrCreateVapidKeys(config.dataDir)
     const vapidSubject = process.env.VAPID_SUBJECT ?? 'mailto:admin@hapi.run'
     const pushService = new PushService(vapidKeys, vapidSubject, store)
@@ -153,6 +155,7 @@ async function main() {
         jwtSecret,
         scheduler,
         corsOrigins,
+        cliApiToken: config.cliApiToken,
         getSession: (sessionId) => {
             if (syncEngine) {
                 return syncEngine.getSession(sessionId) ?? null
@@ -184,7 +187,12 @@ async function main() {
         store,
         vapidPublicKey: vapidKeys.publicKey,
         socketEngine: socketServer.engine,
-        corsOrigins
+        corsOrigins,
+        cliApiToken: config.cliApiToken,
+        ownerId,
+        listenHost: config.listenHost,
+        listenPort: config.listenPort,
+        publicUrl: config.publicUrl
     })
 
     console.log('')

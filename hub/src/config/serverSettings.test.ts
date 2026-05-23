@@ -114,6 +114,26 @@ describe('loadServerSettings', () => {
         )
     })
 
+    const OLD_FIELDS = [
+        'webappHost',
+        'webappPort',
+        'webappUrl',
+        'relayApi',
+        'relayAuth',
+        'relayForceTcp',
+        'relayEnabled',
+    ] as const
+
+    for (const field of OLD_FIELDS) {
+        it(`rejects legacy settings field "${field}"`, async () => {
+            dir = makeTempDir()
+            writeFileSync(join(dir, 'settings.json'), JSON.stringify({ [field]: 'whatever' }))
+
+            await expect(loadServerSettings(dir)).rejects.toThrow('Unsupported old settings field')
+            await expect(loadServerSettings(dir)).rejects.toThrow(field)
+        })
+    }
+
     it('rejects invalid file-sourced corsOrigins values', async () => {
         dir = makeTempDir()
         writeFileSync(join(dir, 'settings.json'), JSON.stringify({
