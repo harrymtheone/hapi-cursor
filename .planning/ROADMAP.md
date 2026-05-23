@@ -20,12 +20,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Cut deployment infrastructure** — Delete tunwg tunnel, TLS gate, `HAPI_RELAY_*` env vars, remote log upload stream (completed 2026-05-21)
 - [x] **Phase 5: Flavor consolidation + capability abstraction** — Collapse `AgentFlavor` to `'cursor'` only; populate capability table; remove all hardcoded `flavor ===` branches (completed 2026-05-22)
 - [x] **Phase 6: Agent runtime shared kit + mode hardening** — Extract `SessionContext / LocalAdapter / RemoteAdapter / ModeConfig / LaunchPolicy`; break `loop ↔ session ↔ launcher` cycle; throw on unknown mode (completed 2026-05-22)
-- [ ] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection
-- [ ] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler
-- [ ] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/`
+- [x] **Phase 7: Wire contracts unification & SSE patch contract** — `shared/` becomes the only source of `Session / Machine / Message / RunnerState`; delete heuristic SSE patch detection (completed 2026-05-22)
+- [x] **Phase 8: Hub internal decoupling** — Split `SessionCache` + `SyncEngine`; route template helpers + `ApiRouteError`; central keepalive scheduler (completed 2026-05-23)
+- [x] **Phase 9: Web internal decoupling** — Break ToolCard 11-file cycle; split oversized files (SessionList, message-window-store, reducerTimeline, settings, HappyComposer); promote util duplicates to `shared/` (completed 2026-05-23)
 - [x] **Phase 10: Config cleanup** — Drop `serverUrl`/`webapp` aliases + `hapi server` command + runtime SQLite migrations; `loadConfig()` returns frozen object; DI replaces `_setApiUrl()` setters (completed 2026-05-23)
-- [ ] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases
-- [ ] **Phase 12: Docs cleanup & milestone verification** — Cursor-only README/AGENTS/docs; delete `website/`; full `bun typecheck` + `bun run test` + `madge` + ripgrep absence + manual Tailscale scenario
+- [x] **Phase 11: Test gap fill** — Cursor permission contract matrix; SSE reconnect / patch-loss invariants; auth route negative cases (completed 2026-05-23)
+- [ ] **Phase 12: Docs cleanup & milestone verification** — Cursor-only README/AGENTS/docs; delete `website/`; full `bun typecheck` + `bun run test` + `madge` + ripgrep absence + manual Tailscale scenario (in progress)
 
 ## Phase Details
 
@@ -145,9 +145,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. `bun typecheck` and `bun run test` both pass; new tests exercise the SSE handler against a strictly typed event stream
 **Plans**: 4 plans
 - [x] 07-01-PLAN.md — Slice 1: shared schema lift (Machine/RunnerState/Message/Patch) + SyncEventSchema tighten + AGENT_MESSAGE_PAYLOAD_TYPE='cursor' + MetadataSchema.flavor delete + schemas.test.ts
-- [ ] 07-02-PLAN.md — Slice 2: hub broadcast conformance + machineCache type collapse + syncEngine flavor-defense delete + sessionCache.test.ts contract test
-- [ ] 07-03-PLAN.md — Slice 3: cli + web type-duplicate cleanup + useSSE rewrite (delete 7 narrows + invalidation queue) + useSSE.test.tsx (backgroundTaskCount regression)
-- [ ] 07-04-PLAN.md — Slice 4: scripts/check-no-cut-agents.sh D-126 additions + D-124 whitelist removal + final ripgrep zero-hit phase gate
+- [x] 07-02-PLAN.md — Slice 2: hub broadcast conformance + machineCache type collapse + syncEngine flavor-defense delete + sessionCache.test.ts contract test (completed 2026-05-22)
+- [x] 07-03-PLAN.md — Slice 3: cli + web type-duplicate cleanup + useSSE rewrite (delete 7 narrows + invalidation queue) + useSSE.test.tsx (backgroundTaskCount regression) (completed 2026-05-22)
+- [x] 07-04-PLAN.md — Slice 4: scripts/check-no-cut-agents.sh D-126 additions + D-124 whitelist removal + final ripgrep zero-hit phase gate (completed 2026-05-22)
 
 ### Phase 8: Hub internal decoupling
 **Goal**: Hub sync layer is decomposed into single-responsibility services; SSE no longer reverse-depends on `SyncEngine`; every recurring timer goes through a shared scheduler that is fully cleared on shutdown.
@@ -161,9 +161,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. `madge` reports zero circular dependencies inside `hub/src/`; `bun typecheck` and `bun run test` both pass
 **Plans**: 4 plans
 - [x] 08-01-PLAN.md — Slice 1 (REFH-01): SessionCache 4-way split into sessionRepository/Liveness/Config/Merge + thin facade; redistribute tests
-- [ ] 08-02-PLAN.md — Slice 2 (REFH-02 + REFH-04): KeepaliveScheduler + 4 timer rewires + SyncEngine 4 sub-facades + SSE SyncEvent swap + SIGINT closure extension
-- [ ] 08-03-PLAN.md — Slice 3 (REFH-03): route-helpers middleware + ApiRouteError + app.onError + sessions.ts → sessions/{lifecycle,config,upload,read,index}.ts
-- [ ] 08-04-PLAN.md — Slice 4: check-no-circular-hub.sh + Phase-8 D-143 block appended to check-no-cut-agents.sh; consolidated phase gate
+- [x] 08-02-PLAN.md — Slice 2 (REFH-02 + REFH-04): KeepaliveScheduler + 4 timer rewires + SyncEngine 4 sub-facades + SSE SyncEvent swap + SIGINT closure extension (completed 2026-05-23)
+- [x] 08-03-PLAN.md — Slice 3 (REFH-03): route-helpers middleware + ApiRouteError + app.onError + sessions.ts → sessions/{lifecycle,config,upload,read,index}.ts (completed 2026-05-23)
+- [x] 08-04-PLAN.md — Slice 4: check-no-circular-hub.sh + Phase-8 D-143 block appended to check-no-cut-agents.sh; consolidated phase gate (completed 2026-05-23)
 
 ### Phase 9: Web internal decoupling
 **Goal**: Web circular dependencies are broken, oversized files are decomposed, and duplicated utilities live in `shared/` instead of being copy-pasted across packages.
@@ -178,7 +178,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 09-01-PLAN.md — Slice 1: util dedup (estimateBase64Bytes → shared, levenshteinDistance → web/lib, createApiQuery factory) + check-no-circular-web.sh + ToolCard.integration.test.tsx + knownTools.tsx fallback testid
 - [x] 09-02-PLAN.md — Slice 2: message-window-store → facade + 5 sub-modules; SessionList.tsx → orchestrator + 4 hooks + 4 sub-components
 - [x] 09-03-PLAN.md — Slice 3: settings/index.tsx → orchestrator + _sections; HappyComposer.tsx → orchestrator + 2 hooks + overlays; _results.tsx → dispatcher + results/{Bash,LineList,Read}Result.tsx + _resultHelpers.tsx
-- [ ] 09-04-PLAN.md — Slice 4: append Phase 9 D-158 sweep block to check-no-cut-agents.sh; tail-invoke check-no-circular-web.sh; full phase gate green
+- [x] 09-04-PLAN.md — Slice 4: append Phase 9 D-158 sweep block to check-no-cut-agents.sh; tail-invoke check-no-circular-web.sh; full phase gate green (completed 2026-05-23)
 **UI hint**: yes
 
 ### Phase 10: Config cleanup
@@ -209,8 +209,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 11-01-PLAN.md — Phase 10 coverage baseline capture from `main` for the five Phase 11 SUT scopes (orchestrator override 2026-05-23)
 - [x] 11-02-PLAN.md — REFT-01: `cli/src/agent/permissionMatrix.test.ts` (type-exhaustive + runtime key cross-check + per-row deep-equal; D-176/D-177/D-178)
 - [x] 11-03-PLAN.md — REFT-03: `assertNoSecretLeak` helper + `hub/src/web/routes/auth.test.ts` + `hub/src/web/middleware/auth.test.ts` (two-layer split, no replay-detection per D-184; orchestrator override drops `uid != ownerId` case)
-- [ ] 11-04-PLAN.md — REFT-02: minimal `export` of useSSE backoff constants (D-190 carve-out) + reconnect convergence describe block (bounded-window + cache-converges; no MAX_RETRIES per RESEARCH § M2)
-- [ ] 11-05-PLAN.md — Phase 11 guard block append (D-179) + Phase 11 coverage capture + non-regression diff vs Phase 10 baseline + full phase gate (D-188/D-189)
+- [x] 11-04-PLAN.md — REFT-02: minimal `export` of useSSE backoff constants (D-190 carve-out) + reconnect convergence describe block (bounded-window + cache-converges; no MAX_RETRIES per RESEARCH § M2) (completed 2026-05-23)
+- [x] 11-05-PLAN.md — Phase 11 guard block append (D-179) + Phase 11 coverage capture + non-regression diff vs Phase 10 baseline + full phase gate (D-188/D-189) (completed 2026-05-23)
 
 ### Phase 12: Docs cleanup & milestone verification
 **Goal**: Documentation reflects the Cursor-only post-cut codebase, and all Milestone 1 acceptance checks pass end-to-end.
@@ -237,11 +237,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Cut deployment infrastructure | 4/4 | Complete   | 2026-05-21 |
 | 5. Flavor consolidation + capability abstraction | 8/8 | Complete   | 2026-05-22 |
 | 6. Agent runtime shared kit + mode hardening | 4/4 | Complete   | 2026-05-22 |
-| 7. Wire contracts unification & SSE patch contract | 1/4 | In Progress|  |
-| 8. Hub internal decoupling | 0/TBD | Not started | - |
-| 9. Web internal decoupling | 0/TBD | Not started | - |
+| 7. Wire contracts unification & SSE patch contract | 4/4 | Complete   | 2026-05-22 |
+| 8. Hub internal decoupling | 4/4 | Complete   | 2026-05-23 |
+| 9. Web internal decoupling | 4/4 | Complete   | 2026-05-23 |
 | 10. Config cleanup | 4/4 | Complete    | 2026-05-23 |
-| 11. Test gap fill | 3/5 | In Progress|  |
+| 11. Test gap fill | 5/5 | Complete   | 2026-05-23 |
 | 12. Docs cleanup & milestone verification | 3/4 | In Progress | - |
 
 ---

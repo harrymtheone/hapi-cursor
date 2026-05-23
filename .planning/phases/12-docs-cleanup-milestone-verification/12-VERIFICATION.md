@@ -152,7 +152,36 @@ _pending Task 3 (human-required — D-05 9-step checklist on Tailnet phone)_
 
 ## ROADMAP reconciliation
 
-_pending Task 4_
+ROADMAP plan checkboxes drifted relative to commit history (D-12). STATE.md and per-plan SUMMARY artifacts are authoritative; ROADMAP got patched. Source-of-truth grep:
+
+```
+git log --all --format='%h %ad' --date=short -1 --grep="docs(<plan>): complete"
+```
+
+| Plan | Before | After | Closing commit | Date | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| 07-02 | `[ ]` | `[x] (completed 2026-05-22)` | `28746e5` | 2026-05-22 | `docs(07-02): complete hub broadcast contract plan` |
+| 07-03 | `[ ]` | `[x] (completed 2026-05-22)` | `24bb9f9` | 2026-05-22 | `docs(07-03): complete wire contracts SSE plan` |
+| 07-04 | `[ ]` | `[x] (completed 2026-05-22)` | `9e1a7eb` | 2026-05-22 | `docs(07-04): complete wire contract guard closure plan` |
+| 08-02 | `[ ]` | `[x] (completed 2026-05-23)` | `1aab321` | 2026-05-23 | `docs(08-02): complete scheduler + SyncEngine split plan` |
+| 08-03 | `[ ]` | `[x] (completed 2026-05-23)` | `4cdf6fc` | 2026-05-23 | `docs(08-03): complete sessions route decomposition + unified error handling plan` |
+| 08-04 | `[ ]` | `[x] (completed 2026-05-23)` | `c843d79` | 2026-05-23 | `docs(08-04): complete guard-scripts plan; lock REFH-01..REFH-04 with CI guards` |
+| 09-04 | `[ ]` | `[x] (completed 2026-05-23)` | `f2bbed2` | 2026-05-23 | `docs(09-04): complete Phase 9 — append sweep block + cycle fix, gate green` |
+| 11-04 | `[ ]` | `[x] (completed 2026-05-23)` | `e97a369` | 2026-05-23 | `docs(11-04): complete REFT-02 SSE reconnect/patch-loss coverage plan` |
+| 11-05 | `[ ]` | `[x] (completed 2026-05-23)` | `dd384ed` | 2026-05-23 | `docs(11-05): complete Phase 11 guard + coverage close-out plan` |
+
+Progress table corrections (top-level row):
+
+| Phase | Before (column = Plans Complete / Status / Completed) | After |
+| --- | --- | --- |
+| 7  | `1/4` / `In Progress` / blank   | `4/4` / `Complete` / `2026-05-22` |
+| 8  | `0/TBD` / `Not started` / `-`   | `4/4` / `Complete` / `2026-05-23` |
+| 9  | `0/TBD` / `Not started` / `-`   | `4/4` / `Complete` / `2026-05-23` |
+| 11 | `3/5` / `In Progress` / blank   | `5/5` / `Complete` / `2026-05-23` |
+
+Phase-level header bullets at the top of ROADMAP also flipped from `[ ]` to `[x]` (with completion dates) for Phases 7, 8, 9, 11.
+
+SC gap findings during reconciliation: **none.** Every confirmed-complete plan had a matching `docs(NN-NN): complete` commit and an existing per-plan SUMMARY artifact. STATE.md `completed_plans: 59` aligns with summed `[x]` plans across the ROADMAP after this reconcile (Phase 1–11 = 5+6+7+4+8+4+4+4+4+4+5 = 55; Phase 12 currently 3 complete + 12-04 in progress = 58 + 1 in-progress slot; STATE's `59` counts 12-04 as in-progress + the 55 + Phase 12's prior 3 — see Task 6 STATE reconcile for the post-sign-off value of 60).
 
 ## Outstanding (Milestone 2 backlog)
 
