@@ -24,7 +24,7 @@ function makeSession(overrides: Partial<SessionSummary> & { id: string }): Sessi
         thinking: false,
         activeAt: 0,
         updatedAt: Date.now(),
-        metadata: { name: 'My Session' },
+        metadata: { name: 'My Session', path: '' },
         todoProgress: null,
         pendingRequestsCount: 0,
         backgroundTaskCount: 0,
@@ -47,7 +47,7 @@ function renderWithProviders(children: ReactNode) {
 
 describe('SessionListItem helpers', () => {
     it('getSessionTitle prefers metadata.name when present', () => {
-        const session = makeSession({ id: 's-1', metadata: { name: 'My App' } })
+        const session = makeSession({ id: 's-1', metadata: { name: 'My App', path: '' } })
         expect(getSessionTitle(session)).toBe('My App')
     })
 
@@ -65,7 +65,7 @@ describe('SessionListItem helpers', () => {
 describe('SessionListItem component', () => {
     it('renders the session title and forwards onSelect on click', () => {
         const onSelect = vi.fn()
-        const session = makeSession({ id: 'sess-click', metadata: { name: 'Clickable' } })
+        const session = makeSession({ id: 'sess-click', metadata: { name: 'Clickable', path: '' } })
         renderWithProviders(
             <SessionListItem session={session} onSelect={onSelect} api={null} />
         )
@@ -80,7 +80,7 @@ describe('SessionListItem component', () => {
     it('marks the button with aria-current when selected', () => {
         renderWithProviders(
             <SessionListItem
-                session={makeSession({ id: 'sess-selected', metadata: { name: 'Selected' } })}
+                session={makeSession({ id: 'sess-selected', metadata: { name: 'Selected', path: '' } })}
                 onSelect={vi.fn()}
                 api={null}
                 selected
