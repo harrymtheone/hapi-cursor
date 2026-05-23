@@ -31,6 +31,7 @@ export interface HappyComposerProps {
     controlledByUser?: boolean
     agentFlavor?: string | null
     modelSwitchState?: ModelSwitchState
+    runtimeModelSwitchSupported?: boolean
     availableModelOptions?: Array<{ value: string | null; label: string }>
     onPermissionModeChange?: (mode: PermissionMode) => void
     onModelChange?: (model: string | null) => void
@@ -53,7 +54,6 @@ export function HappyComposer(props: HappyComposerProps) {
         onModelChange: props.onModelChange,
         onSwitchToRemote: props.onSwitchToRemote,
         agentFlavor: props.agentFlavor,
-        availableModelOptions: props.availableModelOptions,
     })
 
     const {

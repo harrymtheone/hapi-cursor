@@ -7,7 +7,6 @@ import {
     useCallback,
     useEffect,
 } from 'react'
-import { supportsModelChange } from '@hapi/protocol'
 import type { PermissionMode } from '@/types/api'
 import { applySuggestion } from '@/utils/applySuggestion'
 import { markSkillUsed } from '@/lib/recent-skills'
@@ -19,7 +18,6 @@ export interface UseHappyComposerHandlersProps {
     onModelChange?: (model: string | null) => void
     onSwitchToRemote?: () => void
     agentFlavor?: string | null
-    availableModelOptions?: Array<{ value: string | null; label: string }>
 }
 
 export function useHappyComposerHandlers(state: HappyComposerState, props: UseHappyComposerHandlersProps) {
@@ -50,13 +48,14 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
         abortDisabled,
         switchDisabled,
         model,
+        modelOptions,
+        canOpenModelSelector,
     } = state
     const {
         onPermissionModeChange,
         onModelChange,
         onSwitchToRemote,
         agentFlavor,
-        availableModelOptions,
     } = props
 
     const handleSuggestionSelect = useCallback((index: number) => {
@@ -180,16 +179,16 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
 
     useEffect(() => {
         const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
-            if (e.key === 'm' && (e.metaKey || e.ctrlKey) && onModelChange && supportsModelChange(agentFlavor)) {
+            if (e.key === 'm' && (e.metaKey || e.ctrlKey) && onModelChange && canOpenModelSelector) {
                 e.preventDefault()
-                onModelChange(getNextModelForFlavor(agentFlavor, model, availableModelOptions))
+                onModelChange(getNextModelForFlavor(agentFlavor, model, modelOptions))
                 haptic('light')
             }
         }
 
         window.addEventListener('keydown', handleGlobalKeyDown)
         return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-    }, [model, onModelChange, haptic, agentFlavor, availableModelOptions])
+    }, [model, onModelChange, haptic, agentFlavor, modelOptions, canOpenModelSelector])
 
     const handleChange = useCallback((e: ReactChangeEvent<HTMLTextAreaElement>) => {
         const selection = {
@@ -250,11 +249,11 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
     }, [onPermissionModeChange, controlsDisabled, haptic, setShowSettings])
 
     const handleModelChange = useCallback((nextModel: string | null) => {
-        if (!onModelChange || controlsDisabled) return
+        if (!onModelChange || !canOpenModelSelector) return
         onModelChange(nextModel)
         setShowSettings(false)
         haptic('light')
-    }, [onModelChange, controlsDisabled, haptic, setShowSettings])
+    }, [onModelChange, canOpenModelSelector, haptic, setShowSettings])
 
     const handleSend = useCallback(() => {
         api.composer().send()

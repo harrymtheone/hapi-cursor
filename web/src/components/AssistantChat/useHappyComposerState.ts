@@ -36,6 +36,7 @@ export interface UseHappyComposerStateProps {
     contextWindow?: number | null
     controlledByUser?: boolean
     agentFlavor?: string | null
+    runtimeModelSwitchSupported?: boolean
     availableModelOptions?: Array<{ value: string | null; label: string }>
     onPermissionModeChange?: (mode: PermissionMode) => void
     onModelChange?: (model: string | null) => void
@@ -62,6 +63,7 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         allowSendWhenInactive = false,
         controlledByUser = false,
         agentFlavor,
+        runtimeModelSwitchSupported = false,
         availableModelOptions,
         onPermissionModeChange,
         onModelChange,
@@ -188,9 +190,22 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
     const showTerminalButton = Boolean(onTerminal || terminalUnsupported)
     const terminalDisabled = controlsDisabled || terminalUnsupported
     const terminalLabel = terminalUnsupported ? t('terminal.unsupportedWindows') : t('composer.terminal')
+    const pendingRequestCount = props.agentState?.requests
+        ? Object.keys(props.agentState.requests).length
+        : 0
+    const isModelSwitchIdle = !props.thinking && (props.backgroundTaskCount ?? 0) === 0 && pendingRequestCount === 0
+    const hasRuntimeModelOptions = (availableModelOptions?.length ?? 0) > 0
 
     const showPermissionSettings = Boolean(onPermissionModeChange && permissionModeOptions.length > 0)
-    const showModelSettings = Boolean(onModelChange && supportsModelChange(agentFlavor) && modelOptions.length > 0)
+    const canOpenModelSelector = Boolean(
+        onModelChange
+        && supportsModelChange(agentFlavor)
+        && runtimeModelSwitchSupported
+        && hasRuntimeModelOptions
+        && isModelSwitchIdle
+        && !controlsDisabled
+    )
+    const showModelSettings = canOpenModelSelector
     const showSettingsButton = Boolean(showPermissionSettings || showModelSettings)
     const showAbortButton = true
 
@@ -235,6 +250,7 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         permissionModeOptions,
         modelOptions,
         permissionModes,
+        canOpenModelSelector,
         abortDisabled,
         switchDisabled,
         showSwitchButton,
