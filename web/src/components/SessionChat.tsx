@@ -19,6 +19,7 @@ import { buildVisibleChatBlocks, isToolGroupBlock, type ToolGroupBlock } from '@
 import { isQueuedForInvocation, mergeMessages } from '@/lib/messages'
 import { HappyComposer } from '@/components/AssistantChat/HappyComposer'
 import type { ModelSwitchState } from '@/components/AssistantChat/StatusBar'
+import type { ModelOption } from '@/components/AssistantChat/modelOptions'
 import type { PendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
 import { resolvePendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
 import { HappyThread } from '@/components/AssistantChat/HappyThread'
@@ -98,6 +99,8 @@ export function SessionChat(props: {
     onRetryMessage?: (localId: string) => void
     autocompleteSuggestions?: (query: string) => Promise<Suggestion[]>
     availableSlashCommands?: readonly SlashCommand[]
+    runtimeModelSwitchSupported?: boolean
+    availableModelOptions?: ModelOption[]
 }) {
     const { haptic } = usePlatform()
     useTranslation()
@@ -427,6 +430,8 @@ export function SessionChat(props: {
                         effort={props.session.effort}
                         agentFlavor={agentFlavor}
                         modelSwitchState={modelSwitchState}
+                        runtimeModelSwitchSupported={props.runtimeModelSwitchSupported}
+                        availableModelOptions={props.availableModelOptions}
                         active={props.session.active}
                         allowSendWhenInactive
                         thinking={props.session.thinking}

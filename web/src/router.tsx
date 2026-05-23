@@ -27,6 +27,7 @@ import { useSession } from '@/hooks/queries/useSession'
 import { useSessions } from '@/hooks/queries/useSessions'
 import { useSlashCommands } from '@/hooks/queries/useSlashCommands'
 import { useSkills } from '@/hooks/queries/useSkills'
+import { useCursorModels } from '@/hooks/useCursorModels'
 import { useSendMessage } from '@/hooks/mutations/useSendMessage'
 import { queryKeys } from '@/lib/query-keys'
 import { useToast } from '@/lib/toast-context'
@@ -34,6 +35,7 @@ import { useTranslation } from '@/lib/use-translation'
 import { fetchLatestMessages, seedMessageWindowFromSession } from '@/lib/message-window-store'
 import { clearDraftsAfterSend } from '@/lib/clearDraftsAfterSend'
 import type { Machine } from '@/types/api'
+import type { CursorModelSummary } from '@hapi/protocol/types'
 import FilesPage from '@/routes/sessions/files'
 import FilePage from '@/routes/sessions/file'
 import TerminalPage from '@/routes/sessions/terminal'
@@ -121,6 +123,15 @@ function getMachineTitle(machine: Machine): string {
     if (machine.metadata?.displayName) return machine.metadata.displayName
     if (machine.metadata?.host) return machine.metadata.host
     return machine.id.slice(0, 8)
+}
+
+function formatRuntimeModelOption(model: CursorModelSummary): { value: string; label: string } {
+    return {
+        value: model.id,
+        label: model.label && model.label !== model.id
+            ? `${model.id} - ${model.label}`
+            : model.id,
+    }
 }
 
 function SessionsPage() {
@@ -256,6 +267,8 @@ function SessionPage() {
         session,
         refetch: refetchSession,
     } = useSession(api, sessionId)
+    const sessionMachineId = session?.metadata?.machineId ?? null
+    const cursorModels = useCursorModels(api, sessionMachineId, Boolean(sessionMachineId))
     const {
         messages,
         pendingMessages,
@@ -353,6 +366,17 @@ function SessionPage() {
         return await getSlashSuggestions(query)
     }, [getSkillSuggestions, getSlashSuggestions])
 
+    const runtimeModelOptions = useMemo(() => {
+        if (cursorModels.result?.status !== 'ok' || cursorModels.result.models.length === 0) {
+            return []
+        }
+        return [
+            { value: null, label: t('newSession.model.autoUnspecified') },
+            ...cursorModels.result.models.map(formatRuntimeModelOption),
+        ]
+    }, [cursorModels.result, t])
+    const runtimeModelSwitchSupported = cursorModels.result?.status === 'ok' && cursorModels.result.models.length > 0
+
     const refreshSelectedSession = useCallback(() => {
         void refetchSession()
         void refetchMessages()
@@ -388,6 +412,8 @@ function SessionPage() {
             onRetryMessage={retryMessage}
             autocompleteSuggestions={getAutocompleteSuggestions}
             availableSlashCommands={slashCommands}
+            runtimeModelSwitchSupported={runtimeModelSwitchSupported}
+            availableModelOptions={runtimeModelOptions}
         />
     )
 }
