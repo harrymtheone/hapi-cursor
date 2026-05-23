@@ -127,7 +127,24 @@ Verdict: ✅ PASS — all 9 keywords zero-hit under the documented whitelist.
 
 ## Coverage snapshot
 
-_pending Task 2_
+Per D-09: coverage is **captured, not gated**, this phase. Numbers are compared against the Phase 11 declared baseline (Phase 11 11-DISCUSSION-LOG.md §"Phase 11 Coverage After"). Regressions (if any) flow to Outstanding as Milestone 2 priority, but do not block Milestone 1 sign-off.
+
+Capture commands (run from each package root inside the active checkout):
+
+- `cd cli && bun run vitest run --coverage` → `MISSING DEPENDENCY @vitest/coverage-v8` (same as Phase 11 baseline; `@vitest/coverage-v8` is declared as the v8 provider in `cli/vitest.config.ts` but not installed in `cli/package.json`). Installing the dev-dep was deferred at Phase 11 plan 11-01 SUMMARY § "Could-not-fix issues #3" and remains deferred — see Outstanding.
+- `cd web && bun run vitest run --coverage` → `MISSING DEPENDENCY @vitest/coverage-v8` (same reason as cli scope).
+- `cd hub && bun test --coverage` → emits `% Funcs | % Lines | Uncovered` columns; values for the SC#4 hub scopes extracted below.
+
+| Scope | Metric | Phase 11 baseline | Phase 12 after | Delta | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| `cli/src/cursor/`         | lines | unavailable — missing `@vitest/coverage-v8` | unavailable — missing `@vitest/coverage-v8` (no install state changes between Phase 11 and Phase 12) | n/a | N/A — baseline declared, install dev-dep deferred to M2 |
+| `cli/src/agent/`          | lines | unavailable — missing `@vitest/coverage-v8` | unavailable — same reason | n/a | N/A |
+| `hub/src/web/routes/auth.ts` | lines / funcs | 18.18% lines / 0.00% funcs (Phase 10 baseline; Phase 11 jumped to 100.00 / 100.00) | **100.00% lines / 100.00% funcs** | 0 pp vs Phase 11 after; +81.82 pp lines / +100.00 pp funcs vs Phase 10 baseline | ✅ GREEN |
+| `hub/src/sse/sseManager.ts` | lines / funcs | 79.82% lines / 57.14% funcs | **79.82% lines / 57.14% funcs** (uncovered: 63-67, 108, 114-118, 127-131, 136-141 — unchanged) | 0 pp | ✅ GREEN (held — Phase 12 did not target sseManager.ts) |
+| `web/src/hooks/useSSE.ts` | lines | unavailable — missing `@vitest/coverage-v8` | unavailable — same reason | n/a | N/A |
+| `hub/src/web/middleware/auth.ts` (bonus, not in original SC#4 5-scope) | lines / funcs | 100.00% / 100.00% (incidentally captured Phase 11 after) | 100.00% / 100.00% | 0 pp | ✅ GREEN (informational) |
+
+Coverage summary: no regressions on the two scopes with real measurable baselines. Three scopes carry forward as `unavailable` — same dev-dep gap as Phase 11. **No coverage regression** → Milestone 1 sign-off not blocked. The `@vitest/coverage-v8` install is recorded in Outstanding as a Milestone 2 candidate.
 
 ## Manual Tailscale scenario
 
