@@ -5,6 +5,7 @@ import { rmSync } from 'node:fs'
 import type { RpcHandlerManager } from '@/api/rpc/RpcHandlerManager'
 import { getErrorMessage, rpcError } from '../rpcResponses'
 import { getHapiBlobsDir } from '@/constants/uploadPaths'
+import { estimateBase64Bytes, MAX_UPLOAD_BYTES } from '@hapi/protocol'
 
 interface UploadFileRequest {
     sessionId?: string
@@ -33,7 +34,6 @@ const uploadDirs = new Map<string, string>()
 const uploadDirPromises = new Map<string, Promise<string>>()
 const uploadDirCleanupRequested = new Set<string>()
 let cleanupRegistered = false
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 function sanitizeFilename(filename: string): string {
     // Remove path separators and limit length
@@ -50,13 +50,6 @@ function sanitizeFilename(filename: string): string {
 function getSessionKey(sessionId?: string): string {
     const trimmed = sessionId?.trim()
     return trimmed ? trimmed : 'unknown'
-}
-
-function estimateBase64Bytes(base64: string): number {
-    const len = base64.length
-    if (len === 0) return 0
-    const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0
-    return Math.floor((len * 3) / 4) - padding
 }
 
 async function getOrCreateUploadDir(sessionId?: string): Promise<string> {

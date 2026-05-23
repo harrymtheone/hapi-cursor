@@ -4,6 +4,7 @@ import type { SyncEngine } from '../../../sync/syncEngine'
 import { ApiRouteError } from '../../middleware/apiRouteError'
 import type { WebAppEnv } from '../../middleware/auth'
 import { parseJsonBody, withActiveSession, withEngine } from '../../middleware/route-helpers'
+import { estimateBase64Bytes, MAX_UPLOAD_BYTES } from '@hapi/protocol'
 
 const uploadSchema = z.object({
     filename: z.string().min(1).max(255),
@@ -14,15 +15,6 @@ const uploadSchema = z.object({
 const uploadDeleteSchema = z.object({
     path: z.string().min(1)
 })
-
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
-
-function estimateBase64Bytes(base64: string): number {
-    const len = base64.length
-    if (len === 0) return 0
-    const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0
-    return Math.floor((len * 3) / 4) - padding
-}
 
 export function createUploadRoutes(
     getSyncEngine: () => SyncEngine | null
