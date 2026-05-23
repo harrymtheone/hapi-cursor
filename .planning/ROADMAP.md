@@ -206,7 +206,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Auth route negative-case tests cover bad token, expired JWT, replayed JWT, and empty body — every case returns the expected 4xx status without leaking secrets in the response body or logs
   4. `bun run test` is green; coverage for `cli/src/cursor/`, `hub/src/web/routes/auth.ts`, `hub/src/sse/`, and `web/src/hooks/useSSE.ts` does not regress versus Phase 10
 **Plans**: 5 plans
-- [ ] 11-01-PLAN.md — Phase 10 coverage baseline capture from `main` for the five Phase 11 SUT scopes (orchestrator override 2026-05-23)
+- [x] 11-01-PLAN.md — Phase 10 coverage baseline capture from `main` for the five Phase 11 SUT scopes (orchestrator override 2026-05-23)
 - [ ] 11-02-PLAN.md — REFT-01: `cli/src/agent/permissionMatrix.test.ts` (type-exhaustive + runtime key cross-check + per-row deep-equal; D-176/D-177/D-178)
 - [ ] 11-03-PLAN.md — REFT-03: `assertNoSecretLeak` helper + `hub/src/web/routes/auth.test.ts` + `hub/src/web/middleware/auth.test.ts` (two-layer split, no replay-detection per D-184; orchestrator override drops `uid != ownerId` case)
 - [ ] 11-04-PLAN.md — REFT-02: minimal `export` of useSSE backoff constants (D-190 carve-out) + reconnect convergence describe block (bounded-window + cache-converges; no MAX_RETRIES per RESEARCH § M2)
@@ -241,7 +241,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Hub internal decoupling | 0/TBD | Not started | - |
 | 9. Web internal decoupling | 0/TBD | Not started | - |
 | 10. Config cleanup | 4/4 | Complete    | 2026-05-23 |
-| 11. Test gap fill | 0/TBD | Not started | - |
+| 11. Test gap fill | 1/5 | In Progress|  |
 | 12. Docs cleanup & milestone verification | 0/TBD | Not started | - |
 
 ---
