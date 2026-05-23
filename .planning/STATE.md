@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: planning
-last_updated: "2026-05-23T09:14:41.765Z"
+status: ready_to_plan
+last_updated: "2026-05-23T09:24:00.000Z"
 last_activity: 2026-05-23
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,39 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** v1.1 Cursor mobile features — defining requirements for mobile model switching, skills, MCP controls, session metadata, and browser MCP screenshots
+**Current focus:** Phase 1: Cursor Runtime Config Contract
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-05-23 — Milestone v1.1 started
+Phase: 1 of 5 (Cursor Runtime Config Contract)
+Plan: TBD in current phase
+Status: Ready to plan
+Last activity: 2026-05-23 — v1.1 roadmap created with 19/19 requirements mapped
+
+Progress: [░░░░░░░░░░] 0%
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 0
+- Average duration: n/a
+- Total execution time: 0.0 hours
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 1. Cursor Runtime Config Contract | TBD | - | - |
+| 2. Skills Visibility and Session Policy | TBD | - | - |
+| 3. MCP Inventory and Session Policy | TBD | - | - |
+| 4. Mobile Screenshot Display | TBD | - | - |
+| 5. Integration Guards and Mobile E2E | TBD | - | - |
+
+**Recent Trend:**
+- Last 5 plans: none
+- Trend: n/a
+
+*Updated after each plan completion*
 
 ## Accumulated Context
 
@@ -35,20 +60,20 @@ Last activity: 2026-05-23 — Milestone v1.1 started
 
 Full decision log archived in `PROJECT.md` Key Decisions table and per-phase `DISCUSSION-LOG.md` files under `.planning/milestones/v1.0-phases/`.
 
-Carry-forward to v1.1:
+Recent decisions affecting current work:
 
-- `reducerTimeline.ts` (925 LOC) decomposition deferred — non-blocking, on M2 backlog
-- Cursor permission-mode helper promotion to `shared/` deferred — non-blocking
-- Lint not enforced in CI (`bun run lint` exists but not wired into `verify.yml`) — non-blocking
-- M2-BL-01..10 backlog items (see `.planning/milestones/v1.0-phases/12-docs-cleanup-milestone-verification/12-04-SUMMARY.md`)
+- v1.1 reset numbering starts at Phase 1 for this milestone.
+- Runtime config comes first so model/effort/session metadata is real before policy and UI surfaces depend on it.
+- Skills and MCP are separate phases because their discovery, enforcement, and safety risks differ.
+- Integration/quality requirements close the milestone in Phase 5 after feature slices exist.
 
 ### Pending Todos
 
-None — milestone closed.
+None yet.
 
 ### Blockers / Concerns
 
-None open. v1.0 verification PASS on commit `e492044` (manual Tailscale + phone E2E).
+No blockers. Research flags remain for phase planning: Cursor model list output, per-session skill enforcement, per-session MCP enforcement, and screenshot result shape.
 
 ## Deferred Items
 
@@ -56,14 +81,17 @@ Items acknowledged and carried forward from previous milestone close:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none — first milestone, no pre-existing deferred items)* | | | |
+| Code quality | `reducerTimeline.ts` decomposition | Non-blocking carry-forward | v1.0 close |
+| Shared contract | Cursor permission-mode helper promotion to `shared/` | Non-blocking carry-forward | v1.0 close |
+| Quality gate | Lint not enforced in CI | Covered by v1.1 QUAL-01 | v1.0 close |
+| Backlog | M2-BL-01..10 | Review during phase planning as needed | v1.0 close |
 
 ## Session Continuity
 
-Last session: 2026-05-23T08:55:00.000Z
-Stopped at: v1.0 milestone complete-milestone workflow finished
-Resume file: `.planning/MILESTONES.md` (v1.0 archive entry); next action `/gsd-new-milestone`
+Last session: 2026-05-23T09:24:00.000Z
+Stopped at: v1.1 roadmap created; next action `/gsd-plan-phase 1`
+Resume file: None
 
 ---
 
-*Note: Performance metrics and per-phase D-NNN decision log entries from v1.0 have been pruned at milestone close. Phase-local detail lives in `.planning/milestones/v1.0-phases/{phase}/{plan}-SUMMARY.md` and `{phase}-DISCUSSION-LOG.md`.*
+*Note: v1.0 detail lives in `.planning/milestones/v1.0-phases/` and milestone archives. v1.1 execution should use `.planning/ROADMAP.md` as the active phase source.*

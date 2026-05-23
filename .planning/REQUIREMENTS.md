@@ -90,31 +90,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CURS-01 | TBD | Pending |
-| CURS-02 | TBD | Pending |
-| CURS-03 | TBD | Pending |
-| CURS-04 | TBD | Pending |
-| SKIL-01 | TBD | Pending |
-| SKIL-02 | TBD | Pending |
-| SKIL-03 | TBD | Pending |
-| MCP-01 | TBD | Pending |
-| MCP-02 | TBD | Pending |
-| MCP-03 | TBD | Pending |
-| MCP-04 | TBD | Pending |
-| SHOT-01 | TBD | Pending |
-| SHOT-02 | TBD | Pending |
-| INTG-01 | TBD | Pending |
-| INTG-02 | TBD | Pending |
-| QUAL-01 | TBD | Pending |
-| QUAL-02 | TBD | Pending |
-| QUAL-03 | TBD | Pending |
-| QUAL-04 | TBD | Pending |
+| CURS-01 | Phase 1 | Pending |
+| CURS-02 | Phase 1 | Pending |
+| CURS-03 | Phase 1 | Pending |
+| CURS-04 | Phase 1 | Pending |
+| SKIL-01 | Phase 2 | Pending |
+| SKIL-02 | Phase 2 | Pending |
+| SKIL-03 | Phase 2 | Pending |
+| MCP-01 | Phase 3 | Pending |
+| MCP-02 | Phase 3 | Pending |
+| MCP-03 | Phase 3 | Pending |
+| MCP-04 | Phase 3 | Pending |
+| SHOT-01 | Phase 4 | Pending |
+| SHOT-02 | Phase 4 | Pending |
+| INTG-01 | Phase 5 | Pending |
+| INTG-02 | Phase 5 | Pending |
+| QUAL-01 | Phase 5 | Pending |
+| QUAL-02 | Phase 5 | Pending |
+| QUAL-03 | Phase 5 | Pending |
+| QUAL-04 | Phase 5 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19
+- Mapped to phases: 19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-23*
-*Last updated: 2026-05-23 after v1.1 requirements approval*
+*Last updated: 2026-05-23 after v1.1 roadmap creation*
