@@ -18,6 +18,8 @@ import { registerCommonHandlers } from '../modules/common/registerCommonHandlers
 import type { SpawnSessionOptions, SpawnSessionResult } from '../modules/common/rpcTypes'
 import { applyVersionedAck } from './versionedUpdate'
 import { buildSocketIoExtraHeaderOptions } from './hubExtraHeaders'
+import { discoverCursorModels } from '../cursor/modelDiscovery'
+import { CursorModelDiscoveryResultSchema } from '@hapi/protocol/schemas'
 
 interface ServerToRunnerEvents {
     update: (data: Update) => void
@@ -273,6 +275,10 @@ export class ApiMachineClient {
     }
 
     setRPCHandlers({ spawnSession, stopSession, requestShutdown }: MachineRpcHandlers): void {
+        this.rpcHandlerManager.registerHandler('discover-cursor-models', async () => {
+            return CursorModelDiscoveryResultSchema.parse(await discoverCursorModels())
+        })
+
         this.rpcHandlerManager.registerHandler('spawn-happy-session', async (params: any) => {
             const { directory, sessionId, resumeSessionId, machineId, approvedNewDirectoryCreation, agent, model, effort, modelReasoningEffort, yolo, permissionMode, token, sessionType, worktreeName } = params || {}
 
@@ -308,7 +314,11 @@ export class ApiMachineClient {
                 case 'requestToApproveDirectoryCreation':
                     return { type: 'requestToApproveDirectoryCreation', directory: result.directory }
                 case 'error':
-                    return { type: 'error', errorMessage: result.errorMessage }
+                    return {
+                        type: 'error',
+                        errorMessage: result.errorMessage,
+                        ...(result.code ? { code: result.code } : {})
+                    }
             }
         })
 

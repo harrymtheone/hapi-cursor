@@ -1,5 +1,4 @@
 import { spawn } from 'node:child_process';
-import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { CursorModelDiscoveryResultSchema } from '@hapi/protocol/schemas';
 import type { CursorModelDiscoveryResult, CursorModelSummary } from '@hapi/protocol/types';
 import { logger } from '@/ui/logger';
@@ -8,20 +7,19 @@ const DEFAULT_TIMEOUT_MS = 5000;
 const AUTH_FAILURE_PATTERN = /\b(auth|authenticate|authenticated|authentication|login|log in|logged in|sign in|signin|unauthorized|401|403)\b/i;
 
 export function parseCursorModelList(stdout: string): CursorModelSummary[] {
-    return stdout
-        .split(/\r?\n/)
-        .map((line) => {
-            const match = line.match(/^\s*(\S+)\s+-\s+(.+?)\s*$/);
-            if (!match) {
-                return null;
-            }
+    const models: CursorModelSummary[] = [];
+    for (const line of stdout.split(/\r?\n/)) {
+        const match = line.match(/^\s*(\S+)\s+-\s+(.+?)\s*$/);
+        if (!match) {
+            continue;
+        }
 
-            return {
-                id: match[1],
-                label: match[2]
-            };
-        })
-        .filter((model): model is CursorModelSummary => model !== null);
+        models.push({
+            id: match[1],
+            label: match[2]
+        });
+    }
+    return models;
 }
 
 export async function discoverCursorModels(options: {
@@ -40,7 +38,7 @@ export async function discoverCursorModels(options: {
         let stdout = '';
         let stderr = '';
         let settled = false;
-        let child: ChildProcessWithoutNullStreams | null = null;
+        let child: ReturnType<typeof spawn> | null = null;
 
         const settle = (result: CursorModelDiscoveryResult) => {
             if (settled) {
@@ -76,11 +74,11 @@ export async function discoverCursorModels(options: {
             return;
         }
 
-        child.stdout.on('data', (chunk) => {
+        child.stdout?.on('data', (chunk) => {
             stdout += chunk.toString();
         });
 
-        child.stderr.on('data', (chunk) => {
+        child.stderr?.on('data', (chunk) => {
             const text = chunk.toString();
             stderr += text;
             if (text.trim()) {

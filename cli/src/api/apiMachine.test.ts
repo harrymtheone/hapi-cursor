@@ -22,7 +22,8 @@ function createMachine(): Machine {
             happyCliVersion: '0.0.0',
             homeDir: '/home/user',
             happyHomeDir: '/home/user/.hapi',
-            happyLibDir: '/home/user/.hapi/lib'
+            happyLibDir: '/home/user/.hapi/lib',
+            workspaceRoots: undefined
         },
         metadataVersion: 1,
         runnerState: null,
@@ -44,7 +45,7 @@ describe('ApiMachineClient runtime discovery RPC', () => {
         const client = new ApiMachineClient(
             'token',
             createMachine(),
-            { apiUrl: 'http://127.0.0.1:3006' },
+            { apiUrl: 'http://127.0.0.1:3006', extraHeaders: {} },
             ['/tmp']
         );
 

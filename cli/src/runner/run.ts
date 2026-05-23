@@ -28,6 +28,27 @@ import { buildMachineMetadata } from '@/agent/sessionFactory';
 import { resolveWorkspaceRoots } from '@/utils/workspaceRoot';
 import { hashRunnerCliApiToken } from './runnerIdentity';
 
+const SELECTED_RUNTIME_CONFIG_REJECTED = 'selected-runtime-config-rejected' as const;
+const SELECTED_RUNTIME_CONFIG_REJECTED_MESSAGE = 'Cursor rejected the selected runtime config';
+
+export function toSafeSpawnFailure(
+  options: SpawnSessionOptions,
+  errorMessage: string
+): Extract<SpawnSessionResult, { type: 'error' }> {
+  if (options.model || options.effort || options.modelReasoningEffort) {
+    return {
+      type: 'error',
+      code: SELECTED_RUNTIME_CONFIG_REJECTED,
+      errorMessage: SELECTED_RUNTIME_CONFIG_REJECTED_MESSAGE
+    };
+  }
+
+  return {
+    type: 'error',
+    errorMessage
+  };
+}
+
 export async function startRunner(config: RunnerConfig, options: { workspaceRoots?: string[] } = {}): Promise<void> {
   // We don't have cleanup function at the time of server construction
   // Control flow is:
@@ -558,11 +579,15 @@ export async function startRunner(config: RunnerConfig, options: { workspaceRoot
             });
           });
         });
-        if (spawnResult.type === 'error') {
+        const safeSpawnResult = spawnResult.type === 'error'
+          ? toSafeSpawnFailure(options, spawnResult.errorMessage)
+          : spawnResult;
+
+        if (safeSpawnResult.type === 'error') {
           reportSpawnOutcomeToHub?.({
             type: 'error',
             details: {
-              message: spawnResult.errorMessage,
+              message: safeSpawnResult.errorMessage,
               pid,
               exitCode: observedExitCode,
               signal: observedExitSignal
@@ -572,7 +597,7 @@ export async function startRunner(config: RunnerConfig, options: { workspaceRoot
         } else {
           reportSpawnOutcomeToHub?.({ type: 'success' });
         }
-        return spawnResult;
+        return safeSpawnResult;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         logger.debug('[RUNNER RUN] Failed to spawn session:', error);

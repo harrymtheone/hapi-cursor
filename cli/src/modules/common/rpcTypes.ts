@@ -18,4 +18,4 @@ export interface SpawnSessionOptions {
 export type SpawnSessionResult =
     | { type: 'success'; sessionId: string }
     | { type: 'requestToApproveDirectoryCreation'; directory: string }
-    | { type: 'error'; errorMessage: string }
+    | { type: 'error'; errorMessage: string; code?: 'selected-runtime-config-rejected' }
