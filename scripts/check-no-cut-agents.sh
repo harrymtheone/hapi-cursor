@@ -496,40 +496,61 @@ bash "$(dirname "$0")/check-no-circular-web.sh"
 echo "✅ Phase 9 guard PASS (D-158 #1–#6 + madge zero cycles)."
 
 # -----------------------------------------------------------------------------
-# Phase-10 config-cleanup guard (Plan 01 — active checks only)
+# Phase-10 config-cleanup guard — all five sub-checks active.
 #
-# Active sub-checks land in this slice:
-#   (#3) `name: 'server'` alias removed from cli/src/commands/registry.ts
-#   (#4) zero runtime `migration-v*.ts` files under hub/src
-#
-# Staged sub-checks (Plan 04 will flip these on after the CLI/Hub DI cutover
-# in Plan 02 + Plan 03 lands; until then they would false-positive on the
-# in-flight singleton/legacy-field code paths):
-#   (#1) legacy field reads (`\bserverUrl\b|\bwebapp(Host|Port|Url|Origin)\b`)
-#   (#2) mutable setters (`_setApiUrl|_setCliApiToken|_setExtraHeaders`)
-#   (#5) singleton imports (`getConfiguration\(\)` / `import { configuration }`)
+#   (#1) D-160 — legacy field reads `serverUrl` / `webapp(Host|Port|Url|Origin)`
+#                must be zero in cli/src + hub/src production source.
+#                `hub/src/config/serverSettings.ts::OLD_SETTINGS_FIELDS` lists
+#                the legacy names intentionally to reject them at load time.
+#   (#2) D-164 / D-168 — mutable singleton setters
+#                `_setApiUrl` / `_setCliApiToken` / `_setExtraHeaders` must be
+#                deleted (Config is now deep-frozen and DI'd from the entry).
+#   (#3) D-160 — `name: 'server'` alias removed from the command registry.
+#   (#4) D-175 — zero runtime `migration-v*.ts` files under hub/src.
+#                Surviving offline tool: `hub/scripts/migrate-namespace-isolation.ts`.
+#   (#5) D-166 / D-171 — the deleted `configuration` singleton symbol and the
+#                old `getConfiguration()` getter must be zero in production
+#                source. NOTE: this check matches the deleted symbol (e.g.
+#                `import { configuration }` / `getConfiguration()`), not the
+#                module path — DI consumers legitimately import the *type*
+#                (`import type { Config } from '@/configuration'`) and the
+#                *factory* (`import { loadConfig } from '@/configuration'`).
+#                Whitelisted legitimate sites (carry the deleted symbol's name
+#                only in JSDoc or rejection-error strings):
+#                  - cli/src/configuration.ts and hub/src/configuration.ts
+#                    (where `loadConfig` itself lives)
+#                  - cli/src/lib.ts (JSDoc breaking-change note references the
+#                    deleted singleton by name)
 # -----------------------------------------------------------------------------
 
-# (#1) Plan 04: enable after Plan 02 + Plan 03 land DI cutover
-# PHASE10_LEGACY_FIELDS=$("$RG_BIN" -n '\bserverUrl\b|\bwebapp(Host|Port|Url|Origin)\b' \
-#   cli/src hub/src --glob '!*.test.*' 2>/dev/null | wc -l)
-# if [ "$PHASE10_LEGACY_FIELDS" -ne 0 ]; then
-#   echo "❌ Phase 10 #1: legacy serverUrl / webapp* field reads must be zero."
-#   exit 1
-# fi
+# (#1) D-160 — legacy field reads must be zero. Whitelisted legitimate sites:
+# `hub/src/config/serverSettings.ts` and `cli/src/configuration.ts` intentionally
+# list the legacy names in their rejection arrays (`OLD_*_FIELDS`).
+PHASE10_LEGACY_FIELDS=$("$RG_BIN" -n --glob '!**/*.test.ts' \
+  --glob '!**/serverSettings.ts' \
+  --glob '!cli/src/configuration.ts' \
+  '\bserverUrl\b|\bwebapp(Host|Port|Url|Origin)\b' cli/src hub/src 2>/dev/null || true)
+if [ -n "$PHASE10_LEGACY_FIELDS" ]; then
+  echo "$PHASE10_LEGACY_FIELDS"
+  echo "❌ Phase 10 D-160 #1: legacy config field read (serverUrl / webapp*) in production source."
+  exit 1
+fi
+echo "✅ Phase 10 #1: no legacy serverUrl / webapp* field reads."
 
-# (#2) Plan 04: enable after Plan 02 + Plan 03 land DI cutover
-# PHASE10_MUTABLE_SETTERS=$("$RG_BIN" -n '_setApiUrl|_setCliApiToken|_setExtraHeaders' \
-#   cli/src hub/src --glob '!*.test.*' 2>/dev/null | wc -l)
-# if [ "$PHASE10_MUTABLE_SETTERS" -ne 0 ]; then
-#   echo "❌ Phase 10 #2: mutable singleton setters must be removed."
-#   exit 1
-# fi
+# (#2) D-164 / D-168 — mutable singleton setters must be removed.
+PHASE10_MUTABLE_SETTERS=$("$RG_BIN" -n --glob '!**/*.test.ts' \
+  '_setApiUrl|_setCliApiToken|_setExtraHeaders' cli/src hub/src 2>/dev/null || true)
+if [ -n "$PHASE10_MUTABLE_SETTERS" ]; then
+  echo "$PHASE10_MUTABLE_SETTERS"
+  echo "❌ Phase 10 D-164/D-168 #2: mutable config setter found in production source."
+  exit 1
+fi
+echo "✅ Phase 10 #2: no mutable singleton setters."
 
 # (#3) D-160 — `hapi server` alias must be gone from the command registry.
 PHASE10_SERVER_ALIAS=$("$RG_BIN" -c "name:\s*['\"]server['\"]" cli/src/commands/registry.ts 2>/dev/null || echo 0)
 if [ "$PHASE10_SERVER_ALIAS" -ne 0 ]; then
-  echo "❌ Phase 10 #3: \`name: 'server'\` alias must be removed from cli/src/commands/registry.ts (D-160)."
+  echo "❌ Phase 10 D-160 #3: \`name: 'server'\` alias must be removed from cli/src/commands/registry.ts."
   exit 1
 fi
 echo "✅ Phase 10 #3: hapi server alias removed."
@@ -537,17 +558,25 @@ echo "✅ Phase 10 #3: hapi server alias removed."
 # (#4) D-175 — no runtime compatibility migration files under hub/src.
 PHASE10_MIGRATION_FILES=$(find hub/src -name 'migration-v*.ts' 2>/dev/null | wc -l)
 if [ "$PHASE10_MIGRATION_FILES" -ne 0 ]; then
-  echo "❌ Phase 10 #4: runtime migration-v*.ts files must not exist under hub/src (D-175)."
+  echo "❌ Phase 10 D-175 #4: runtime migration-v*.ts files must not exist under hub/src."
   exit 1
 fi
 echo "✅ Phase 10 #4: no runtime migration-v*.ts files."
 
-# (#5) Plan 04: enable after Plan 02 + Plan 03 land DI cutover
-# PHASE10_SINGLETON_IMPORTS=$("$RG_BIN" -n 'getConfiguration\(\)|^\s*import\s+\{\s*configuration\s*\}' \
-#   cli/src hub/src --glob '!*.test.*' --glob '!configuration.ts' 2>/dev/null | wc -l)
-# if [ "$PHASE10_SINGLETON_IMPORTS" -ne 0 ]; then
-#   echo "❌ Phase 10 #5: configuration singleton imports must be replaced by DI."
-#   exit 1
-# fi
+# (#5) D-166 / D-171 — singleton symbol uses must be zero (whitelisted sites
+# listed in the header comment above). Pattern matches the deleted singleton
+# name (`configuration` as an imported value, or `getConfiguration()` calls).
+PHASE10_SINGLETON=$("$RG_BIN" -n "getConfiguration\\(\\)|import\\s*\\{[^}]*\\bconfiguration\\b[^}]*\\}\\s*from\\s*['\"](@|\\.{1,2})/[^'\"]*configuration['\"]" \
+  cli/src hub/src \
+  --glob '!**/*.test.ts' \
+  --glob '!cli/src/configuration.ts' \
+  --glob '!hub/src/configuration.ts' \
+  --glob '!cli/src/lib.ts' 2>/dev/null || true)
+if [ -n "$PHASE10_SINGLETON" ]; then
+  echo "$PHASE10_SINGLETON"
+  echo "❌ Phase 10 D-166/D-171 #5: production code still imports the config singleton."
+  exit 1
+fi
+echo "✅ Phase 10 #5: no configuration singleton imports outside whitelist."
 
 echo "✅ Phase 10 guard PASS."
