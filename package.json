@@ -21,6 +21,7 @@
         "test:hub": "cd hub && bun run test",
         "test:web": "cd web && bun run test",
         "test:guard": "bash scripts/check-no-cut-agents.sh",
+        "madge:check": "madge --circular --extensions ts,tsx --exclude '(^\\.\\./|web/dist)' cli/src hub/src web/src",
         "clean-session": "bun run hub/scripts/cleanup-sessions.ts",
         "release-all": "cd cli && bun run release-all"
     },
