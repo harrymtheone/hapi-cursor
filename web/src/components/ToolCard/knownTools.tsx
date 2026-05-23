@@ -415,7 +415,7 @@ export function getToolPresentation(
     }
 
     return {
-        icon: <WrenchIcon className={DEFAULT_ICON_CLASS} />,
+        icon: <WrenchIcon className={DEFAULT_ICON_CLASS} data-testid="tool-card-unknown-fallback" />,
         title,
         subtitle: subtitle && subtitle !== title ? truncate(subtitle, 80) : null,
         minimal: true
