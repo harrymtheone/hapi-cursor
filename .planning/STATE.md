@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-05-23T15:04:17.077Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-05-23T15:12:37.767Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 8
-  completed_plans: 3
-  percent: 38
+  completed_plans: 4
+  percent: 50
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 4 of 8 in current phase
 Status: Ready to execute
 Last activity: 2026-05-23
 
-Progress: [████░░░░░░] 38%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [████░░░░░░] 38%
 *Updated after each plan completion*
 
 | Phase 01 P05 | 5min | 2 tasks | 9 files |
+| Phase 01 P03 | 6min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Report active model and effort changes as applies-next-run until HAPI has a proven hot-switch control path. — Preserves runtime truthfulness until a verified control path exists.
 - [Phase 01]: Preserve permission-mode config on the existing applied response path while model and effort use the shared status contract. — Avoids widening the shared schema after a CRITICAL file-level impact check.
 - [Phase 01]: Inactive model route requests persist metadata as applies-next-run state through the engine path. — Inactive sessions cannot acknowledge active runtime changes, but metadata can be queued for the next run.
+- [Phase 01]: Keep machine-scoped Cursor model discovery behind the authenticated Hub machine route and delegate through SyncEngine/RpcGateway. — Preserves architecture and avoids direct Hub shell execution.
+- [Phase 01]: Cache Cursor model discovery results for 30000ms per machine id and sanitize rejected request errors. — Prevents repeated runtime discovery and keeps raw transport details out of UI state.
 
 ### Pending Todos
 
@@ -101,8 +104,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:04:17.074Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-05-23T15:12:28.664Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
 
 ---
