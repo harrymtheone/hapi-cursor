@@ -239,18 +239,18 @@ export function SessionChat(props: {
 
     // Model mode change handler
     const handleModelChange = useCallback(async (model: string | null) => {
-        setModelSwitchState({ status: 'applying' })
+        setModelSwitchState({ status: 'applying', targetModel: model })
         try {
             const result = await setModel(model)
             const reason = 'reason' in result ? result.reason : undefined
             const nextState: ModelSwitchState = reason
-                ? { status: result.status, reason }
-                : { status: result.status }
+                ? { status: result.status, reason, targetModel: model }
+                : { status: result.status, targetModel: model }
             setModelSwitchState(nextState)
             haptic.notification(result.status === 'failed' ? 'error' : 'success')
             props.onRefresh()
         } catch (e) {
-            setModelSwitchState({ status: 'failed' })
+            setModelSwitchState({ status: 'failed', targetModel: model })
             haptic.notification('error')
             console.error('Failed to set model:', e)
         }
@@ -423,6 +423,7 @@ export function SessionChat(props: {
                         permissionMode={props.session.permissionMode}
                         threadGoal={reduced.latestGoal}
                         model={props.session.model}
+                        modelReasoningEffort={props.session.modelReasoningEffort}
                         effort={props.session.effort}
                         agentFlavor={agentFlavor}
                         modelSwitchState={modelSwitchState}

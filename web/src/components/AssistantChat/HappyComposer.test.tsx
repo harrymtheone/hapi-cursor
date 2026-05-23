@@ -55,6 +55,15 @@ vi.mock('@assistant-ui/react', async () => {
     }
 })
 
+vi.mock('@hapi/protocol', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('@hapi/protocol')>()
+    return {
+        ...actual,
+        getPermissionModeOptionsForFlavor: () => [],
+        supportsModelChange: () => true,
+    }
+})
+
 vi.mock('@/hooks/useComposerEnterBehavior', () => ({
     useComposerEnterBehavior: () => ({ composerEnterBehavior: 'send', setComposerEnterBehavior: vi.fn() }),
     getComposerEnterBehaviorOptions: () => [],

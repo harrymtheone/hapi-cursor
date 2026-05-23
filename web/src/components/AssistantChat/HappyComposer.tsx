@@ -85,6 +85,7 @@ export function HappyComposer(props: HappyComposerProps) {
         showTerminalButton,
         terminalDisabled,
         terminalLabel,
+        canOpenModelSelector,
         abortDisabled,
         switchDisabled,
         isAborting,
@@ -121,9 +122,14 @@ export function HappyComposer(props: HappyComposerProps) {
                         contextCacheRead={props.contextCacheRead}
                         contextWindow={props.contextWindow}
                         model={model}
+                        modelReasoningEffort={props.modelReasoningEffort}
+                        effort={props.effort}
                         permissionMode={permissionMode}
                         agentFlavor={props.agentFlavor}
                         modelSwitchState={props.modelSwitchState}
+                        canOpenModelSelector={canOpenModelSelector}
+                        onModelInfoClick={handlers.handleSettingsToggle}
+                        onModelRetry={handlers.handleModelChange}
                     />
 
                     <div className="overflow-hidden rounded-[20px] bg-[var(--app-secondary-bg)]">

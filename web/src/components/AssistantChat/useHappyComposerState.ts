@@ -1,6 +1,6 @@
 import { useAssistantApi, useAssistantState } from '@assistant-ui/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { getPermissionModeOptionsForFlavor, supportsModelChange } from '@hapi/protocol'
+import { getPermissionModeOptionsForFlavor } from '@hapi/protocol'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { useActiveWord } from '@/hooks/useActiveWord'
@@ -199,7 +199,6 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
     const showPermissionSettings = Boolean(onPermissionModeChange && permissionModeOptions.length > 0)
     const canOpenModelSelector = Boolean(
         onModelChange
-        && supportsModelChange(agentFlavor)
         && runtimeModelSwitchSupported
         && hasRuntimeModelOptions
         && isModelSwitchIdle

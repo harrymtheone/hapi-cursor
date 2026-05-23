@@ -12,6 +12,7 @@ import { useTranslation } from '@/lib/use-translation'
 export type ModelSwitchState = {
     status: 'idle' | 'applying' | 'applied' | 'pending' | 'failed' | 'applies-next-run'
     reason?: string
+    targetModel?: string | null
 }
 
 // Vibing messages for thinking state
@@ -157,9 +158,14 @@ export function StatusBar(props: {
     contextCacheRead?: number
     contextWindow?: number | null
     model?: string | null
+    modelReasoningEffort?: string | null
+    effort?: string | null
     permissionMode?: PermissionMode
     agentFlavor?: string | null
     modelSwitchState?: ModelSwitchState
+    canOpenModelSelector?: boolean
+    onModelInfoClick?: () => void
+    onModelRetry?: (model: string | null) => void
 }) {
     const { t } = useTranslation()
     const connectionStatus = useMemo(
@@ -206,6 +212,11 @@ export function StatusBar(props: {
     const permissionModeTone = displayPermissionMode ? getPermissionModeTone(displayPermissionMode) : null
     const permissionModeColor = permissionModeTone ? PERMISSION_TONE_CLASSES[permissionModeTone] : 'text-[var(--app-hint)]'
     const modelSwitchLabel = getModelSwitchLabel(props.modelSwitchState, t)
+    const modelLabel = props.model?.trim() ? props.model : t('newSession.model.autoUnspecified')
+    const effortLabel = props.modelReasoningEffort ?? props.effort ?? null
+    const canOpenModelSelector = props.canOpenModelSelector === true
+    const showReadOnlyHint = !canOpenModelSelector && !modelSwitchLabel
+    const retryModel = props.modelSwitchState?.targetModel ?? props.model ?? null
 
     return (
         <div className="flex min-w-0 items-center justify-between gap-2 px-2 pb-1">
@@ -236,11 +247,66 @@ export function StatusBar(props: {
             </div>
 
             <div className="flex min-w-0 shrink-0 items-center gap-2">
-                {modelSwitchLabel ? (
-                    <span className={`whitespace-nowrap text-xs ${modelSwitchLabel.className}`}>
-                        {modelSwitchLabel.text}
+                <div
+                    role="button"
+                    tabIndex={canOpenModelSelector ? 0 : -1}
+                    aria-label={`${t('misc.model')} ${modelLabel}`}
+                    aria-disabled={!canOpenModelSelector}
+                    onClick={() => {
+                        if (!canOpenModelSelector) return
+                        props.onModelInfoClick?.()
+                    }}
+                    onKeyDown={(event) => {
+                        if (!canOpenModelSelector) return
+                        if (event.key !== 'Enter' && event.key !== ' ') return
+                        event.preventDefault()
+                        props.onModelInfoClick?.()
+                    }}
+                    className={`flex min-w-0 flex-col items-end rounded-lg border border-[var(--app-divider)] px-2 py-1 text-right transition-colors ${
+                        canOpenModelSelector
+                            ? 'cursor-pointer hover:bg-[var(--app-secondary-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--app-link)]'
+                            : 'cursor-default'
+                    }`}
+                >
+                    <span className="max-w-[12rem] truncate text-xs font-semibold text-[var(--app-fg)]">
+                        {modelLabel}
                     </span>
-                ) : null}
+                    {effortLabel ? (
+                        <span className="max-w-[12rem] truncate text-xs text-[var(--app-hint)]">
+                            {effortLabel}
+                        </span>
+                    ) : null}
+                    {modelSwitchLabel ? (
+                        props.modelSwitchState?.status === 'failed' && props.onModelRetry ? (
+                            <button
+                                type="button"
+                                aria-label={t('composer.model.switchFailed')}
+                                className={`whitespace-nowrap text-xs ${modelSwitchLabel.className}`}
+                                onClick={(event) => {
+                                    event.stopPropagation()
+                                    props.onModelRetry?.(retryModel)
+                                }}
+                                onKeyDown={(event) => {
+                                    if (event.key !== 'Enter' && event.key !== ' ') return
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                    props.onModelRetry?.(retryModel)
+                                }}
+                            >
+                                {modelSwitchLabel.text}
+                            </button>
+                        ) : (
+                            <span className={`whitespace-nowrap text-xs ${modelSwitchLabel.className}`}>
+                                {modelSwitchLabel.text}
+                            </span>
+                        )
+                    ) : null}
+                    {showReadOnlyHint ? (
+                        <span className="whitespace-nowrap text-xs text-[var(--app-hint)]">
+                            {t('composer.model.switchingUnavailable')}
+                        </span>
+                    ) : null}
+                </div>
                 {displayPermissionMode ? (
                     <span className={`whitespace-nowrap text-xs ${permissionModeColor}`}>
                         {permissionModeLabel}
