@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-05-23T14:56:49.523Z"
-last_activity: 2026-05-23 -- Completed 01-02-PLAN.md
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-05-23T15:04:17.077Z"
+last_activity: 2026-05-23
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 8
-  completed_plans: 2
-  percent: 25
+  completed_plans: 3
+  percent: 38
 ---
 
 # Project State
@@ -26,25 +26,25 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 1 of 5 (Cursor Runtime Config Contract)
-Plan: 3 of 8 in current phase
+Plan: 4 of 8 in current phase
 Status: Ready to execute
-Last activity: 2026-05-23 -- Completed 01-02-PLAN.md
+Last activity: 2026-05-23
 
-Progress: [███░░░░░░░] 25%
+Progress: [████░░░░░░] 38%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 2
-- Average duration: 3min
-- Total execution time: 0.10 hours
+- Total plans completed: 3
+- Average duration: 4min
+- Total execution time: 0.18 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Cursor Runtime Config Contract | 2/8 | 6min | 3min |
+| 1. Cursor Runtime Config Contract | 3/8 | 11min | 4min |
 | 2. Skills Visibility and Session Policy | TBD | - | - |
 | 3. MCP Inventory and Session Policy | TBD | - | - |
 | 4. Mobile Screenshot Display | TBD | - | - |
@@ -52,10 +52,12 @@ Progress: [███░░░░░░░] 25%
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (2min), 01-02 (4min)
+- Last 5 plans: 01-01 (2min), 01-02 (4min), 01-05 (5min)
 - Trend: baseline
 
 *Updated after each plan completion*
+
+| Phase 01 P05 | 5min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -74,6 +76,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Run Cursor model discovery only through local agent models and return safe categorized failures. — Preserves runtime truth and avoids static model catalogs.
 - [Phase 01]: Expose model discovery as a machine-scoped RPC because discovery happens before session launch. — A session-scoped handler cannot serve the new-session panel before launch.
 - [Phase 01]: Preserve auto launch failures while labeling explicit selected runtime rejection with selected-runtime-config-rejected. — Selected config rejection must be clear without silently falling back to auto.
+- [Phase 01]: Report active model and effort changes as applies-next-run until HAPI has a proven hot-switch control path. — Preserves runtime truthfulness until a verified control path exists.
+- [Phase 01]: Preserve permission-mode config on the existing applied response path while model and effort use the shared status contract. — Avoids widening the shared schema after a CRITICAL file-level impact check.
+- [Phase 01]: Inactive model route requests persist metadata as applies-next-run state through the engine path. — Inactive sessions cannot acknowledge active runtime changes, but metadata can be queued for the next run.
 
 ### Pending Todos
 
@@ -96,8 +101,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T14:56:49.520Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-05-23T15:04:17.074Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
 
 ---
