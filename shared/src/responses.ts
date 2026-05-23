@@ -19,4 +19,4 @@ export type MachinesResponse = { machines: Machine[] }
 
 export type SpawnResponse =
     | { type: 'success'; sessionId: string }
-    | { type: 'error'; message: string }
+    | { type: 'error'; message: string; code?: 'selected-runtime-config-rejected' }

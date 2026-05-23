@@ -6,7 +6,7 @@
  * narrow callback for that so this sub-facade doesn't need a back-reference to
  * the session sub-facade.
  */
-import type { PermissionMode } from '@hapi/protocol/types'
+import type { CursorModelDiscoveryResult, PermissionMode } from '@hapi/protocol/types'
 import type {
     RpcCommandResponse,
     RpcDeleteUploadResponse,
@@ -14,6 +14,7 @@ import type {
     RpcGeneratedImageResponse,
     RpcListDirectoryResponse,
     RpcReadFileResponse,
+    SpawnErrorCode,
     RpcUploadFileResponse
 } from './rpcGateway'
 
@@ -69,7 +70,7 @@ export class SyncEngineRpc {
         resumeSessionId?: string,
         effort?: string,
         permissionMode?: PermissionMode
-    ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string }> {
+    ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string; code?: SpawnErrorCode }> {
         return await this.rpcGateway.spawnSession(
             machineId,
             directory,
@@ -83,6 +84,10 @@ export class SyncEngineRpc {
             effort,
             permissionMode
         )
+    }
+
+    async discoverCursorModels(machineId: string): Promise<CursorModelDiscoveryResult> {
+        return await this.rpcGateway.discoverCursorModels(machineId)
     }
 
     async checkPathsExist(machineId: string, paths: string[]): Promise<Record<string, boolean>> {

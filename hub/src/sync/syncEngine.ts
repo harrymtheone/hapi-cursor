@@ -11,7 +11,7 @@
  */
 
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
-import type { CursorRuntimeConfigApplyResult, DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
+import type { CursorModelDiscoveryResult, CursorRuntimeConfigApplyResult, DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
 import type { Store, CancelQueuedMessageResult } from '../store'
 import type { RpcRegistry } from '../socket/rpcRegistry'
@@ -28,6 +28,7 @@ import {
     type RpcListDirectoryResponse,
     type RpcPathExistsResponse,
     type RpcReadFileResponse,
+    type SpawnErrorCode,
     type RpcUploadFileResponse
 } from './rpcGateway'
 import { SessionCache } from './sessionCache'
@@ -47,6 +48,7 @@ export type {
     RpcListDirectoryResponse,
     RpcPathExistsResponse,
     RpcReadFileResponse,
+    SpawnErrorCode,
     RpcUploadFileResponse
 } from './rpcGateway'
 
@@ -281,7 +283,7 @@ export class SyncEngine {
         resumeSessionId?: string,
         effort?: string,
         permissionMode?: PermissionMode
-    ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string }> {
+    ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string; code?: SpawnErrorCode }> {
         return await this.rpc.spawnSession(
             machineId,
             directory,
@@ -295,6 +297,10 @@ export class SyncEngine {
             effort,
             permissionMode
         )
+    }
+
+    async discoverCursorModels(machineId: string): Promise<CursorModelDiscoveryResult> {
+        return await this.rpc.discoverCursorModels(machineId)
     }
 
     resolveLocalResumeTarget(sessionId: string, scope: string): LocalResumeTargetResult

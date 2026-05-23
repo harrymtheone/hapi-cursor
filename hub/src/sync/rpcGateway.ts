@@ -1,8 +1,12 @@
-import type { PermissionMode } from '@hapi/protocol/types'
+import { CursorModelDiscoveryResultSchema } from '@hapi/protocol/schemas'
+import type { CursorModelDiscoveryResult, PermissionMode } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
 import type { RpcRegistry } from '../socket/rpcRegistry'
 
 const DEFAULT_RPC_TIMEOUT_MS = 30_000
+const SELECTED_RUNTIME_CONFIG_REJECTED = 'selected-runtime-config-rejected' as const
+
+export type SpawnErrorCode = typeof SELECTED_RUNTIME_CONFIG_REJECTED
 
 export type RpcCommandResponse = {
     success: boolean
@@ -131,7 +135,7 @@ export class RpcGateway {
         resumeSessionId?: string,
         effort?: string,
         permissionMode?: PermissionMode
-    ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string }> {
+    ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string; code?: SpawnErrorCode }> {
         try {
             const result = await this.machineRpc(
                 machineId,
@@ -144,7 +148,11 @@ export class RpcGateway {
                     return { type: 'success', sessionId: obj.sessionId }
                 }
                 if (obj.type === 'error' && typeof obj.errorMessage === 'string') {
-                    return { type: 'error', message: obj.errorMessage }
+                    return {
+                        type: 'error',
+                        message: obj.errorMessage,
+                        ...(obj.code === SELECTED_RUNTIME_CONFIG_REJECTED ? { code: obj.code } : {})
+                    }
                 }
                 if (obj.type === 'requestToApproveDirectoryCreation' && typeof obj.directory === 'string') {
                     return { type: 'error', message: `Directory creation requires approval: ${obj.directory}` }
@@ -169,6 +177,15 @@ export class RpcGateway {
         } catch (error) {
             return { type: 'error', message: error instanceof Error ? error.message : String(error) }
         }
+    }
+
+    async discoverCursorModels(machineId: string): Promise<CursorModelDiscoveryResult> {
+        const result = await this.machineRpc(machineId, 'discover-cursor-models', {})
+        const parsed = CursorModelDiscoveryResultSchema.safeParse(result)
+        if (!parsed.success) {
+            throw new Error('Invalid cursor model discovery result')
+        }
+        return parsed.data
     }
 
     async listMachineDirectory(machineId: string, path: string): Promise<RpcListDirectoryResponse> {

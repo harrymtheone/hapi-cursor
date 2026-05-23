@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { SyncEngine } from '../../sync/syncEngine'
+import { ApiRouteError } from '../middleware/apiRouteError'
 import type { WebAppEnv } from '../middleware/auth'
 import { requireMachine } from './guards'
 
@@ -63,6 +64,30 @@ export function createMachinesRoutes(getSyncEngine: () => SyncEngine | null): Ho
             parsed.data.effort
         )
         return c.json(result)
+    })
+
+    app.get('/machines/:id/cursor/models', async (c) => {
+        const engine = getSyncEngine()
+        if (!engine) {
+            return c.json({ error: 'Not connected' }, 503)
+        }
+
+        const machineId = c.req.param('id')
+        const machine = requireMachine(c, engine, machineId)
+        if (machine instanceof Response) {
+            return machine
+        }
+        if (!machine.active) {
+            return c.json({ error: 'Machine is offline' }, 409)
+        }
+
+        try {
+            const result = await engine.discoverCursorModels(machineId)
+            return c.json(result)
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to discover Cursor models'
+            throw new ApiRouteError(502, 'model-discovery-failed', undefined, message)
+        }
     })
 
     app.post('/machines/:id/list-directory', async (c) => {
