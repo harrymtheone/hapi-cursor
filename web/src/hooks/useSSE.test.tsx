@@ -310,6 +310,62 @@ describe('useSSE handleSyncEvent', () => {
         })
     })
 
+    it('active keepalive without turn work converges summary status to idle', async () => {
+        const { queryClient, wrapper } = createHarness()
+        queryClient.setQueryData(queryKeys.sessions, {
+            sessions: [createSummary({
+                active: true,
+                thinking: false,
+                backgroundTaskCount: 0,
+                pendingRequestsCount: 0,
+                statusKind: 'running',
+            })],
+        })
+        mountUseSSE(wrapper)
+
+        act(() => {
+            activeSource().dispatch({
+                type: 'session-updated',
+                sessionId: 'session-1',
+                data: { active: true, thinking: false, updatedAt: 3_000 },
+            } satisfies SyncEvent)
+        })
+
+        await waitFor(() => {
+            const summary = queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)?.sessions[0]
+            expect(summary?.statusKind).toBe('idle')
+            expect(summary?.completionMarker).toBeNull()
+            expect(summary?.errorMarker).toBeNull()
+        })
+    })
+
+    it('active keepalive preserves completed marker until new work arrives', async () => {
+        const { queryClient, wrapper } = createHarness()
+        queryClient.setQueryData(queryKeys.sessions, {
+            sessions: [createSummary({
+                active: true,
+                thinking: false,
+                statusKind: 'completed',
+                completionMarker: 5_000,
+            })],
+        })
+        mountUseSSE(wrapper)
+
+        act(() => {
+            activeSource().dispatch({
+                type: 'session-updated',
+                sessionId: 'session-1',
+                data: { active: true, thinking: false, updatedAt: 6_000 },
+            } satisfies SyncEvent)
+        })
+
+        await waitFor(() => {
+            const summary = queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)?.sessions[0]
+            expect(summary?.statusKind).toBe('completed')
+            expect(summary?.completionMarker).toBe(5_000)
+        })
+    })
+
     it('full machine-updated upserts machine cache', async () => {
         const { queryClient, wrapper } = createHarness()
         queryClient.setQueryData(queryKeys.machines, { machines: [] })

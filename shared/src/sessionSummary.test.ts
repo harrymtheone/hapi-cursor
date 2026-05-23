@@ -29,6 +29,19 @@ function makeSession(overrides: Partial<Session> = {}): Session {
 }
 
 describe('toSessionSummary status fields', () => {
+    it('derives idle status for a blank active Cursor session', () => {
+        const summary = toSessionSummary(makeSession({
+            active: true,
+            thinking: false,
+            backgroundTaskCount: 0,
+            agentState: null
+        }))
+
+        expect(summary.statusKind).toBe('idle')
+        expect(summary.completionMarker).toBeNull()
+        expect(summary.errorMarker).toBeNull()
+    })
+
     it('derives thinking status from active thinking sessions', () => {
         const summary = toSessionSummary(makeSession({ active: true, thinking: true }))
 
@@ -52,6 +65,15 @@ describe('toSessionSummary status fields', () => {
         }))
 
         expect(summary.statusKind).toBe('waiting')
+    })
+
+    it('derives running status from background work instead of active liveness alone', () => {
+        const summary = toSessionSummary(makeSession({
+            active: true,
+            backgroundTaskCount: 1
+        }))
+
+        expect(summary.statusKind).toBe('running')
     })
 
     it('derives completed status and marker from completed end reason', () => {
