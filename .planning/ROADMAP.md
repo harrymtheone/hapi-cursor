@@ -242,7 +242,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 9. Web internal decoupling | 0/TBD | Not started | - |
 | 10. Config cleanup | 4/4 | Complete    | 2026-05-23 |
 | 11. Test gap fill | 3/5 | In Progress|  |
-| 12. Docs cleanup & milestone verification | 2/4 | In Progress | - |
+| 12. Docs cleanup & milestone verification | 3/4 | In Progress | - |
 
 ---
 *Roadmap created: 2026-05-20 (Milestone 1 — Refactor & Slim-Down)*
