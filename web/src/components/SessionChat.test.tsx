@@ -167,14 +167,14 @@ describe('SessionChat model switch state', () => {
             fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
         })
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'applying' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'applying', targetModel: 'cursor-next' })
         })
 
         await act(async () => {
             resolveApply(applyResult)
         })
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'applied' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'applied', targetModel: 'cursor-next' })
         })
         expect(hapticNotification).toHaveBeenCalledWith('success')
         expect(onRefresh).toHaveBeenCalledTimes(1)
@@ -203,7 +203,7 @@ describe('SessionChat model switch state', () => {
             fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
         })
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'applies-next-run', reason: 'unknown' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'applies-next-run', reason: 'unknown', targetModel: 'cursor-next' })
         })
         expect(hapticNotification).toHaveBeenLastCalledWith('success')
 
@@ -213,7 +213,7 @@ describe('SessionChat model switch state', () => {
             fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
         })
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'failed', reason: 'not-authenticated' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'failed', reason: 'not-authenticated', targetModel: 'cursor-next' })
         })
         expect(hapticNotification).toHaveBeenLastCalledWith('error')
     })
@@ -226,7 +226,7 @@ describe('SessionChat model switch state', () => {
         })
 
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'failed' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'failed', targetModel: 'cursor-next' })
         })
         expect(hapticNotification).toHaveBeenCalledWith('error')
         expect(threadProps?.rawMessagesCount).toBe(0)
