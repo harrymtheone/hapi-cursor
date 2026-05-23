@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { configuration } from '@/configuration'
+import { makeConfig } from '@/__fixtures__/config'
 
 const axiosPostMock = vi.hoisted(() => vi.fn())
 const ioMock = vi.hoisted(() => vi.fn())
@@ -8,10 +8,6 @@ vi.mock('axios', () => ({
     default: {
         post: axiosPostMock
     }
-}))
-
-vi.mock('@/api/auth', () => ({
-    getAuthToken: () => 'cli-token'
 }))
 
 vi.mock('socket.io-client', () => ({
@@ -46,15 +42,15 @@ describe('API extra headers integration', () => {
     const now = 1_710_000_000_000
 
     beforeEach(() => {
-        configuration._setApiUrl('https://hapi.example.com')
-        configuration._setExtraHeaders({})
         axiosPostMock.mockReset()
         ioMock.mockReset()
     })
 
     it('adds extra headers to REST requests', async () => {
-        configuration._setExtraHeaders({
-            Cookie: 'CF_Authorization=token'
+        const config = makeConfig({
+            apiUrl: 'https://hapi.example.com',
+            cliApiToken: 'cli-token',
+            extraHeaders: { Cookie: 'CF_Authorization=token' }
         })
 
         axiosPostMock.mockResolvedValue({
@@ -84,7 +80,7 @@ describe('API extra headers integration', () => {
             }
         })
 
-        const client = await ApiClient.create()
+        const client = await ApiClient.create(config)
         await client.getOrCreateSession({
             tag: 'test',
             metadata: {
@@ -105,8 +101,9 @@ describe('API extra headers integration', () => {
     })
 
     it('adds extra headers to socket transport options', () => {
-        configuration._setExtraHeaders({
-            Cookie: 'CF_Authorization=token'
+        const config = makeConfig({
+            apiUrl: 'https://hapi.example.com',
+            extraHeaders: { Cookie: 'CF_Authorization=token' }
         })
 
         const fakeSocket = {
@@ -135,7 +132,7 @@ describe('API extra headers integration', () => {
             modelReasoningEffort: null,
             effort: null,
             permissionMode: undefined
-        })
+        }, config)
 
         expect(ioMock).toHaveBeenCalledOnce()
         expect(ioMock.mock.calls[0]?.[1]).toMatchObject({

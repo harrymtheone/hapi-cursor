@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { configuration, parseExtraHeaders } from '@/configuration'
+import { describe, expect, it, vi } from 'vitest'
+import { parseExtraHeaders } from '@/configuration'
 import { buildHubRequestHeaders, buildSocketIoExtraHeaderOptions } from './hubExtraHeaders'
 
 describe('parseExtraHeaders', () => {
@@ -32,17 +32,13 @@ describe('parseExtraHeaders', () => {
 })
 
 describe('hub extra headers helpers', () => {
-    beforeEach(() => {
-        configuration._setExtraHeaders({})
-    })
-
     it('merges custom headers into REST requests without overriding built-in auth headers', () => {
-        configuration._setExtraHeaders({
+        const extraHeaders = {
             Cookie: 'CF_Authorization=token',
             Authorization: 'should-not-win'
-        })
+        }
 
-        expect(buildHubRequestHeaders({
+        expect(buildHubRequestHeaders(extraHeaders, {
             Authorization: 'Bearer cli-token',
             'Content-Type': 'application/json'
         })).toEqual({
@@ -53,12 +49,12 @@ describe('hub extra headers helpers', () => {
     })
 
     it('builds socket transport options when extra headers are configured', () => {
-        configuration._setExtraHeaders({
+        const extraHeaders = {
             Cookie: 'CF_Authorization=token',
             'X-Test': '1'
-        })
+        }
 
-        expect(buildSocketIoExtraHeaderOptions()).toEqual({
+        expect(buildSocketIoExtraHeaderOptions(extraHeaders)).toEqual({
             extraHeaders: {
                 Cookie: 'CF_Authorization=token',
                 'X-Test': '1'
@@ -67,6 +63,6 @@ describe('hub extra headers helpers', () => {
     })
 
     it('returns empty socket options when no extra headers are configured', () => {
-        expect(buildSocketIoExtraHeaderOptions()).toEqual({})
+        expect(buildSocketIoExtraHeaderOptions({})).toEqual({})
     })
 })

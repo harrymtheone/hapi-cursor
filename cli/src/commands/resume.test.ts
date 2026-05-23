@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { makeConfig } from '@/__fixtures__/config'
 
 const {
-    initializeTokenMock,
     maybeAutoStartServerMock,
     authAndSetupMachineIfNeededMock,
     listResumableSessionsMock,
@@ -10,17 +10,15 @@ const {
     runCursorMock,
     existsSyncMock
 } = vi.hoisted(() => ({
-    initializeTokenMock: vi.fn(async () => {}),
-    maybeAutoStartServerMock: vi.fn(async () => {}),
+    maybeAutoStartServerMock: vi.fn(async () => { }),
     authAndSetupMachineIfNeededMock: vi.fn(async () => ({ machineId: 'machine-1' })),
     listResumableSessionsMock: vi.fn(),
     getLocalResumeTargetMock: vi.fn(),
-    handoffSessionToLocalMock: vi.fn(async () => {}),
-    runCursorMock: vi.fn(async () => {}),
+    handoffSessionToLocalMock: vi.fn(async () => { }),
+    runCursorMock: vi.fn(async () => { }),
     existsSyncMock: vi.fn(() => true)
 }))
 
-vi.mock('@/ui/tokenInit', () => ({ initializeToken: initializeTokenMock }))
 vi.mock('@/utils/autoStartServer', () => ({ maybeAutoStartServer: maybeAutoStartServerMock }))
 vi.mock('@/ui/auth', () => ({ authAndSetupMachineIfNeeded: authAndSetupMachineIfNeededMock }))
 vi.mock('@/api/api', () => ({
@@ -41,13 +39,13 @@ function createContext(commandArgs: string[]) {
     return {
         args: ['resume'].concat(commandArgs),
         subcommand: 'resume',
-        commandArgs
+        commandArgs,
+        config: makeConfig()
     }
 }
 
 describe('resumeCommand', () => {
     beforeEach(() => {
-        initializeTokenMock.mockClear()
         maybeAutoStartServerMock.mockClear()
         authAndSetupMachineIfNeededMock.mockClear()
         listResumableSessionsMock.mockReset()
@@ -74,7 +72,9 @@ describe('resumeCommand', () => {
         await resumeCommand.run(createContext(['hapi-session-2']))
 
         expect(handoffSessionToLocalMock).not.toHaveBeenCalled()
-        expect(runCursorMock).toHaveBeenCalledWith({
+        // runCursor is now called with (config, opts) — the second argument
+        // carries the shape we previously asserted against.
+        expect(runCursorMock).toHaveBeenCalledWith(expect.anything(), {
             existingSessionId: 'hapi-session-2',
             workingDirectory: '/tmp/project',
             resumeSessionId: '11111111-1111-4111-8111-111111111111',
@@ -85,7 +85,7 @@ describe('resumeCommand', () => {
     })
 
     it('fails before launching when the target belongs to another machine', async () => {
-        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
         const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
             throw new Error(`process.exit:${code ?? 'undefined'}`)
         }) as never)
@@ -112,7 +112,7 @@ describe('resumeCommand', () => {
     })
 
     it('resumes an inactive local target even when controlledByUser is sticky', async () => {
-        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
         const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
             throw new Error(`process.exit:${code ?? 'undefined'}`)
         }) as never)
@@ -135,10 +135,13 @@ describe('resumeCommand', () => {
             expect(exitSpy).not.toHaveBeenCalled()
             expect(consoleErrorSpy).not.toHaveBeenCalled()
             expect(handoffSessionToLocalMock).not.toHaveBeenCalled()
-            expect(runCursorMock).toHaveBeenCalledWith(expect.objectContaining({
-                existingSessionId: 'hapi-session-4',
-                resumeSessionId: '11111111-1111-4111-8111-111111111111'
-            }))
+            expect(runCursorMock).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    existingSessionId: 'hapi-session-4',
+                    resumeSessionId: '11111111-1111-4111-8111-111111111111'
+                })
+            )
         } finally {
             consoleErrorSpy.mockRestore()
             exitSpy.mockRestore()

@@ -1,28 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { configuration } from '@/configuration'
+import { makeConfig } from '@/__fixtures__/config'
 
 const {
     readSettingsMock,
     clearMachineIdMock,
-    updateSettingsMock,
-    initializeApiUrlMock
+    updateSettingsMock
 } = vi.hoisted(() => ({
     readSettingsMock: vi.fn(),
     clearMachineIdMock: vi.fn(),
-    updateSettingsMock: vi.fn(),
-    initializeApiUrlMock: vi.fn(async () => {
-        configuration._setApiUrl('https://hapi.example.com')
-    })
+    updateSettingsMock: vi.fn()
 }))
 
 vi.mock('@/persistence', () => ({
     readSettings: readSettingsMock,
     clearMachineId: clearMachineIdMock,
     updateSettings: updateSettingsMock
-}))
-
-vi.mock('@/ui/apiUrlInit', () => ({
-    initializeApiUrl: initializeApiUrlMock
 }))
 
 import { handleAuthCommand } from './auth'
@@ -33,25 +25,24 @@ function stripAnsi(value: string): string {
 
 describe('handleAuthCommand', () => {
     beforeEach(() => {
-        configuration._setApiUrl('http://localhost:3006')
         readSettingsMock.mockReset()
         clearMachineIdMock.mockReset()
         updateSettingsMock.mockReset()
-        initializeApiUrlMock.mockClear()
     })
 
-    it('loads the configured api url before printing status', async () => {
+    it('prints the configured api url from the frozen Config', async () => {
         readSettingsMock.mockResolvedValue({
             apiUrl: 'https://hapi.example.com',
             cliApiToken: 'token-from-settings',
             machineId: 'machine-123'
         })
 
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+        const config = makeConfig({ apiUrl: 'https://hapi.example.com' })
+
+        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => { })
 
         try {
-            await handleAuthCommand(['status'])
-            expect(initializeApiUrlMock).toHaveBeenCalledOnce()
+            await handleAuthCommand(config, ['status'])
 
             const output = logSpy.mock.calls
                 .map((call) => stripAnsi(String(call[0])))
