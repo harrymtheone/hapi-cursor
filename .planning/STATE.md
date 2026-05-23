@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-05-23T15:12:37.767Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-05-23T15:21:04.905Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 8
-  completed_plans: 4
-  percent: 50
+  completed_plans: 5
+  percent: 0
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 1 of 5 (Cursor Runtime Config Contract)
-Plan: 4 of 8 in current phase
+Plan: 5 of 8 in current phase
 Status: Ready to execute
 Last activity: 2026-05-23
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 63%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [█████░░░░░] 50%
 
 | Phase 01 P05 | 5min | 2 tasks | 9 files |
 | Phase 01 P03 | 6min | 2 tasks | 10 files |
+| Phase 01 P04 | 6min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Inactive model route requests persist metadata as applies-next-run state through the engine path. — Inactive sessions cannot acknowledge active runtime changes, but metadata can be queued for the next run.
 - [Phase 01]: Keep machine-scoped Cursor model discovery behind the authenticated Hub machine route and delegate through SyncEngine/RpcGateway. — Preserves architecture and avoids direct Hub shell execution.
 - [Phase 01]: Cache Cursor model discovery results for 30000ms per machine id and sanitize rejected request errors. — Prevents repeated runtime discovery and keeps raw transport details out of UI state.
+- [Phase 01]: Keep auto as a selector-only sentinel and pass undefined unless the user selects a discovered raw Cursor model id. — Preserves unspecified launches and prevents sending auto as a model id.
+- [Phase 01]: Map only selected-runtime-config-rejected to launch rejection copy. — Web does not parse stderr or generic process output to infer runtime rejection.
 
 ### Pending Todos
 
@@ -104,8 +107,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:12:28.664Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-05-23T15:21:04.902Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
 
 ---
