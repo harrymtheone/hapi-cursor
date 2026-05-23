@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01-09-PLAN.md
-last_updated: "2026-05-23T16:51:35.112Z"
+stopped_at: Completed 01-10-PLAN.md
+last_updated: "2026-05-23T17:02:10.879Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 10
-  completed_plans: 9
-  percent: 0
+  completed_plans: 10
+  percent: 20
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 ## Current Position
 
-Phase: 01 (cursor-runtime-config-contract) — EXECUTING
-Plan: 2 of 10
-Status: Ready to execute
+Phase: 01 (cursor-runtime-config-contract) — COMPLETE
+Plan: 10 of 10
+Status: Phase complete
 Last activity: 2026-05-23
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 90%
 | Phase 01 P07 | 6min | 2 tasks | 8 files |
 | Phase 01 P08 | 8min | 2 tasks | 13 files |
 | Phase 01 P09 | 4min | 2 tasks | 5 files |
+| Phase 01 P10 | 8min | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Use session machine id as the live-session Cursor model discovery key. — Keeps composer runtime options tied to the authenticated machine-scoped discovery path.
 - [Phase 01]: Expose live composer model switching only for ok, non-empty Cursor discovery results. — Loading, error, missing machine id, and empty discovery states remain truthfully unavailable.
 - [Phase 01]: Preserve Auto as a null selector sentinel while passing raw Cursor model ids through the live composer selector. — Prevents synthesizing static catalog values or sending the literal "auto".
+- [Phase 01]: Treat active runner liveness as connection state only; real turn work is thinking, waiting, or background-task activity. — Prevents idle connected Cursor sessions from rendering as busy spinners.
+- [Phase 01]: Classify existing role-wrapped agent ready events as turn-completed activity instead of adding a new CLI event type. — Uses the existing trusted ready-event path and avoids widening the wire protocol.
+- [Phase 01]: Keep completed-marker read state local to Web; Hub only emits completionMarker values for runtime truth. — Read/viewed state is local UI state while completion markers are runtime status truth.
 
 ### Pending Todos
 
@@ -123,8 +127,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T16:51:35.109Z
-Stopped at: Completed 01-09-PLAN.md
+Last session: 2026-05-23T17:01:49.093Z
+Stopped at: Completed 01-10-PLAN.md
 Resume file: None
 
 ---

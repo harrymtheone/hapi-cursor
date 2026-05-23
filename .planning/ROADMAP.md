@@ -44,7 +44,7 @@ Plans:
 - [x] 01-07-PLAN.md — Composer runtime model status UI
 - [x] 01-08-PLAN.md — Compact session-list status indicators
 - [x] 01-09-PLAN.md — Gap closure: live composer runtime switch options
-- [ ] 01-10-PLAN.md — Gap closure: idle and completion status markers
+- [x] 01-10-PLAN.md — Gap closure: idle and completion status markers
 **UI hint**: yes
 
 ### Phase 2: Skills Visibility and Session Policy
@@ -127,7 +127,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 9/10 | In Progress|  |
+| 1. Cursor Runtime Config Contract | 10/10 | Complete   | 2026-05-23 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
