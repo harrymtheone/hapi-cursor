@@ -13,7 +13,6 @@ const COMMANDS: CommandDefinition[] = [
     connectCommand,
     cursorCommand,
     hubCommand,
-    { ...hubCommand, name: 'server' },
     doctorCommand,
     resumeCommand,
     runnerCommand,
@@ -25,8 +24,17 @@ for (const command of COMMANDS) {
     commandMap.set(command.name, command)
 }
 
+// Per D-160: retired command aliases must fail hard with a repair message
+// naming the canonical replacement, not silently fall through to cursorCommand.
+const RETIRED_COMMANDS: Record<string, string> = {
+    server: 'hub'
+}
+
 export function resolveCommand(args: string[]): { command: CommandDefinition; context: CommandContext } {
     const subcommand = args[0]
+    if (subcommand && subcommand in RETIRED_COMMANDS) {
+        throw new Error(`Unknown command "hapi ${subcommand}". Use "hapi ${RETIRED_COMMANDS[subcommand]}" instead.`)
+    }
     const command = subcommand ? commandMap.get(subcommand) : undefined
     const resolvedCommand = command ?? cursorCommand
     const commandArgs = command ? args.slice(1) : args
