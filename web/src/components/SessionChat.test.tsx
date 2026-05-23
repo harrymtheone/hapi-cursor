@@ -10,6 +10,11 @@ let composerProps: ComponentProps<typeof import('@/components/AssistantChat/Happ
 let threadProps: Record<string, unknown> | null = null
 let setModelMock: ReturnType<typeof vi.fn>
 const hapticNotification = vi.fn()
+const discoveredModelOptions = [
+    { value: null, label: 'Auto (unspecified)' },
+    { value: 'cursor-fast', label: 'cursor-fast' },
+    { value: 'cursor-opus', label: 'cursor-opus - Opus' },
+]
 
 vi.mock('@tanstack/react-router', () => ({
     useNavigate: () => vi.fn()
@@ -100,7 +105,13 @@ function createSession(overrides: Partial<Session> = {}): Session {
     }
 }
 
-function renderSessionChat(setModelResult: CursorRuntimeConfigApplyResult | Promise<CursorRuntimeConfigApplyResult>) {
+function renderSessionChat(
+    setModelResult: CursorRuntimeConfigApplyResult | Promise<CursorRuntimeConfigApplyResult>,
+    overrides: {
+        session?: Partial<Session>
+        chatProps?: Partial<ComponentProps<typeof SessionChat>>
+    } = {}
+) {
     const queryClient = new QueryClient({
         defaultOptions: {
             mutations: { retry: false },
@@ -115,7 +126,7 @@ function renderSessionChat(setModelResult: CursorRuntimeConfigApplyResult | Prom
             <I18nProvider>
                 <SessionChat
                     api={{} as never}
-                    session={createSession()}
+                    session={createSession(overrides.session)}
                     messages={[]}
                     messagesWarning={null}
                     hasMoreMessages={false}
@@ -130,6 +141,7 @@ function renderSessionChat(setModelResult: CursorRuntimeConfigApplyResult | Prom
                     onSend={vi.fn(async () => true)}
                     onFlushPending={vi.fn()}
                     onAtBottomChange={vi.fn()}
+                    {...overrides.chatProps}
                 />
             </I18nProvider>
         </QueryClientProvider>
@@ -230,5 +242,61 @@ describe('SessionChat model switch state', () => {
         })
         expect(hapticNotification).toHaveBeenCalledWith('error')
         expect(threadProps?.rawMessagesCount).toBe(0)
+    })
+
+    it('forwards live runtime switch support and discovered model options to the composer', async () => {
+        const appliesNextRun: CursorRuntimeConfigApplyResult = {
+            status: 'applies-next-run',
+            model: 'cursor-opus',
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'unknown'
+        }
+        renderSessionChat(appliesNextRun, {
+            session: {
+                metadata: {
+                    path: '/repo',
+                    host: 'devbox',
+                    machineId: 'machine-1',
+                },
+            },
+            chatProps: {
+                runtimeModelSwitchSupported: true,
+                availableModelOptions: discoveredModelOptions,
+            },
+        })
+
+        expect(composerProps?.runtimeModelSwitchSupported).toBe(true)
+        expect(composerProps?.availableModelOptions).toEqual(discoveredModelOptions)
+
+        await act(async () => {
+            fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
+        })
+
+        await waitFor(() => {
+            expect(composerProps?.modelSwitchState).toEqual({
+                status: 'applies-next-run',
+                reason: 'unknown',
+                targetModel: 'cursor-next',
+            })
+        })
+        expect(threadProps?.rawMessagesCount).toBe(0)
+    })
+
+    it('forwards a closed runtime switch gate when discovery is unavailable', () => {
+        renderSessionChat({
+            status: 'applied',
+            model: null,
+            modelReasoningEffort: null,
+            effort: null,
+        }, {
+            chatProps: {
+                runtimeModelSwitchSupported: false,
+                availableModelOptions: [],
+            },
+        })
+
+        expect(composerProps?.runtimeModelSwitchSupported).toBe(false)
+        expect(composerProps?.availableModelOptions).toEqual([])
     })
 })

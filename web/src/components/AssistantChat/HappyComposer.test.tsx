@@ -95,8 +95,10 @@ vi.mock('@/hooks/useActiveSuggestions', () => ({
 afterEach(() => cleanup())
 
 const runtimeOptions = [
+    { value: null, label: 'Auto (unspecified)' },
     { value: 'gpt-5', label: 'gpt-5' },
     { value: 'gpt-5-high', label: 'gpt-5-high' },
+    { value: 'cursor-raw-opus', label: 'cursor-raw-opus - Cursor Raw Opus' },
 ]
 
 function renderComposer(props: Partial<Parameters<typeof HappyComposer>[0]> = {}) {
@@ -134,12 +136,18 @@ describe('HappyComposer', () => {
         expect(screen.getByText('Switching unavailable for this runtime')).toBeInTheDocument()
     })
 
-    it('opens the model selector when runtime switching is supported and idle', () => {
-        renderComposer({ runtimeModelSwitchSupported: true })
+    it('opens discovered runtime model options when runtime switching is supported and idle', () => {
+        const onModelChange = vi.fn()
+        renderComposer({ runtimeModelSwitchSupported: true, onModelChange })
 
         fireEvent.click(screen.getByLabelText('Model gpt-5'))
 
-        expect(screen.getByRole('button', { name: 'gpt-5-high' })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'cursor-raw-opus - Cursor Raw Opus' })).toBeInTheDocument()
+        expect(screen.queryByText('Switching unavailable for this runtime')).not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'cursor-raw-opus - Cursor Raw Opus' }))
+
+        expect(onModelChange).toHaveBeenCalledWith('cursor-raw-opus')
     })
 
     it('renders applies-next-run and failed switch feedback next to the composer', () => {
