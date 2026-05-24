@@ -213,9 +213,7 @@ export class SyncEngineSession {
         if (parsed.success) {
             if (parsed.data.status === 'applied' || parsed.data.status === 'applies-next-run') {
                 this.sessionCache.applySessionConfig(sessionId, {
-                    model: parsed.data.model,
-                    modelReasoningEffort: parsed.data.modelReasoningEffort,
-                    effort: parsed.data.effort
+                    model: parsed.data.model
                 })
             }
             return parsed.data

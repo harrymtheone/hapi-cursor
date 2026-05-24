@@ -61,25 +61,17 @@ export function applyCursorSessionConfig(
         state.syncPermissionMode(nextPermissionMode);
     }
 
-    const hasRuntimeConfigRequest = Object.prototype.hasOwnProperty.call(config, 'model')
-        || Object.prototype.hasOwnProperty.call(config, 'modelReasoningEffort')
-        || Object.prototype.hasOwnProperty.call(config, 'effort');
+    const hasModelConfigRequest = Object.prototype.hasOwnProperty.call(config, 'model');
 
-    if (!hasRuntimeConfigRequest) {
+    if (!hasModelConfigRequest) {
         return { applied: { permissionMode: nextPermissionMode } };
     }
 
     return CursorRuntimeConfigApplyResultSchema.parse({
         status: 'applies-next-run',
-        model: Object.prototype.hasOwnProperty.call(config, 'model')
-            ? config.model
-            : state.currentModel ?? null,
-        modelReasoningEffort: Object.prototype.hasOwnProperty.call(config, 'modelReasoningEffort')
-            ? config.modelReasoningEffort
-            : state.currentModelReasoningEffort ?? null,
-        effort: Object.prototype.hasOwnProperty.call(config, 'effort')
-            ? config.effort
-            : state.currentEffort ?? null,
+        model: config.model,
+        modelReasoningEffort: null,
+        effort: null,
         reason: 'unknown'
     });
 }
