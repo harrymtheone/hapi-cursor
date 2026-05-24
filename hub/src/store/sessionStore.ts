@@ -2,6 +2,7 @@ import type { Database } from 'bun:sqlite'
 
 import type { StoredSession, VersionedUpdateResult } from './types'
 import {
+    clearSessionTurnCompletionMarker,
     deleteSession,
     getOrCreateSession,
     getSession,
@@ -10,6 +11,7 @@ import {
     setSessionModel,
     setSessionModelReasoningEffort,
     setSessionTeamState,
+    setSessionTurnCompletionMarker,
     setSessionTodos,
     touchSessionUpdatedAt,
     updateSessionAgentState,
@@ -72,6 +74,14 @@ export class SessionStore {
 
     setSessionTeamState(id: string, teamState: unknown, updatedAt: number): boolean {
         return setSessionTeamState(this.db, id, teamState, updatedAt)
+    }
+
+    setSessionTurnCompletionMarker(id: string, marker: number, updatedAt: number): boolean {
+        return setSessionTurnCompletionMarker(this.db, id, marker, updatedAt)
+    }
+
+    clearSessionTurnCompletionMarker(id: string, updatedAt: number): boolean {
+        return clearSessionTurnCompletionMarker(this.db, id, updatedAt)
     }
 
     setSessionModel(id: string, model: string | null, options?: { touchUpdatedAt?: boolean }): boolean {

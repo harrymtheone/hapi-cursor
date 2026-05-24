@@ -33,14 +33,14 @@ function getSessionStatusKind(session: Session, pendingRequestsCount: number): S
     if (pendingRequestsCount > 0) return 'waiting'
     if ((session.backgroundTaskCount ?? 0) > 0) return 'running'
     if (session.endReason === 'error') return 'error'
-    if (session.endReason === 'completed') return 'completed'
+    if (session.turnCompletionMarker !== null || session.endReason === 'completed') return 'completed'
     return 'idle'
 }
 
 export function toSessionSummary(session: Session): SessionSummary {
     const pendingRequestsCount = session.agentState?.requests ? Object.keys(session.agentState.requests).length : 0
     const statusKind = getSessionStatusKind(session, pendingRequestsCount)
-    const completionMarker = statusKind === 'completed' ? session.updatedAt : null
+    const completionMarker = statusKind === 'completed' ? session.turnCompletionMarker ?? session.updatedAt : null
     const errorMarker = statusKind === 'error' ? session.updatedAt : null
 
     const metadata: SessionSummaryMetadata | null = session.metadata ? {

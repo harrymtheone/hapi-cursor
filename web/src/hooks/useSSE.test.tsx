@@ -85,6 +85,7 @@ function createSession(overrides: Partial<Session> = {}): Session {
         model: 'cursor-model',
         modelReasoningEffort: null,
         effort: null,
+        turnCompletionMarker: null,
         permissionMode: 'default',
         ...overrides,
     }

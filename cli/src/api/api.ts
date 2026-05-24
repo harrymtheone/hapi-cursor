@@ -102,6 +102,7 @@ export class ApiClient {
             model: raw.model,
             modelReasoningEffort: raw.modelReasoningEffort,
             effort: raw.effort,
+            turnCompletionMarker: raw.turnCompletionMarker,
             permissionMode: raw.permissionMode
         }
     }
@@ -149,6 +150,7 @@ export class ApiClient {
             model: raw.model,
             modelReasoningEffort: raw.modelReasoningEffort,
             effort: raw.effort,
+            turnCompletionMarker: raw.turnCompletionMarker,
             permissionMode: raw.permissionMode
         }
     }

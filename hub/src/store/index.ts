@@ -20,7 +20,7 @@ export { MessageStore } from './messageStore'
 export { PushStore } from './pushStore'
 export { SessionStore } from './sessionStore'
 
-const SCHEMA_VERSION: number = 10
+const SCHEMA_VERSION: number = 11
 const REQUIRED_TABLES = [
     'sessions',
     'machines',
@@ -128,6 +128,7 @@ export class Store {
                 todos_updated_at INTEGER,
                 team_state TEXT,
                 team_state_updated_at INTEGER,
+                turn_completion_marker INTEGER,
                 active INTEGER DEFAULT 0,
                 active_at INTEGER,
                 seq INTEGER DEFAULT 0

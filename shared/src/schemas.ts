@@ -360,6 +360,7 @@ export const SessionSchema = z.object({
     model: z.string().nullable().optional().default(null),
     modelReasoningEffort: z.string().nullable().optional().default(null),
     effort: z.string().nullable().optional().default(null),
+    turnCompletionMarker: z.number().nullable().optional().default(null),
     permissionMode: PermissionModeSchema.optional(),
     endReason: SessionEndReasonSchema.optional()
 })

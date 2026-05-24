@@ -131,6 +131,7 @@ describe('API extra headers integration', () => {
             model: null,
             modelReasoningEffort: null,
             effort: null,
+            turnCompletionMarker: null,
             permissionMode: undefined
         }, config)
 

@@ -28,6 +28,7 @@ type DbSessionRow = {
     todos_updated_at: number | null
     team_state: string | null
     team_state_updated_at: number | null
+    turn_completion_marker: number | null
     active: number
     active_at: number | null
     seq: number
@@ -51,6 +52,7 @@ function toStoredSession(row: DbSessionRow): StoredSession {
         todosUpdatedAt: row.todos_updated_at,
         teamState: safeJsonParse(row.team_state),
         teamStateUpdatedAt: row.team_state_updated_at,
+        turnCompletionMarker: row.turn_completion_marker,
         active: row.active === 1,
         activeAt: row.active_at,
         seq: row.seq
@@ -98,6 +100,7 @@ export function getOrCreateSession(
             model_reasoning_effort,
             effort,
             todos, todos_updated_at,
+            turn_completion_marker,
             active, active_at, seq
         ) VALUES (
             @id, @tag, NULL, @created_at, @updated_at,
@@ -107,6 +110,7 @@ export function getOrCreateSession(
             @model_reasoning_effort,
             @effort,
             NULL, NULL,
+            NULL,
             0, NULL, 0
         )
     `).run({
@@ -248,6 +252,56 @@ export function setSessionTeamState(
             id,
             team_state: json,
             team_state_updated_at: updatedAt,
+            updated_at: updatedAt
+        })
+
+        return result.changes === 1
+    } catch {
+        return false
+    }
+}
+
+export function setSessionTurnCompletionMarker(
+    db: Database,
+    id: string,
+    marker: number,
+    updatedAt: number
+): boolean {
+    try {
+        const result = db.prepare(`
+            UPDATE sessions
+            SET turn_completion_marker = @marker,
+                updated_at = CASE WHEN updated_at > @updated_at THEN updated_at ELSE @updated_at END,
+                seq = seq + 1
+            WHERE id = @id
+              AND turn_completion_marker IS NOT @marker
+        `).run({
+            id,
+            marker,
+            updated_at: updatedAt
+        })
+
+        return result.changes === 1
+    } catch {
+        return false
+    }
+}
+
+export function clearSessionTurnCompletionMarker(
+    db: Database,
+    id: string,
+    updatedAt: number
+): boolean {
+    try {
+        const result = db.prepare(`
+            UPDATE sessions
+            SET turn_completion_marker = NULL,
+                updated_at = CASE WHEN updated_at > @updated_at THEN updated_at ELSE @updated_at END,
+                seq = seq + 1
+            WHERE id = @id
+              AND turn_completion_marker IS NOT NULL
+        `).run({
+            id,
             updated_at: updatedAt
         })
 

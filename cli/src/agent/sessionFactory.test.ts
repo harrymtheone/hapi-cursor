@@ -65,6 +65,7 @@ function createSession(): Session {
         model: null,
         modelReasoningEffort: null,
         effort: null,
+        turnCompletionMarker: null,
         permissionMode: undefined
     }
 }

@@ -132,6 +132,7 @@ export class SessionRepository {
             model: stored.model,
             modelReasoningEffort: stored.modelReasoningEffort,
             effort: stored.effort,
+            turnCompletionMarker: stored.turnCompletionMarker,
             permissionMode: existing?.permissionMode
         }
 
