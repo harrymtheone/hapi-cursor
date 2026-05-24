@@ -2,7 +2,6 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, ty
 import type { ApiClient } from '@/api/client'
 import type { Machine } from '@/types/api'
 import { usePlatform } from '@/hooks/usePlatform'
-import { useCursorModels } from '@/hooks/useCursorModels'
 import { useMachinePathsExists } from '@/hooks/useMachinePathsExists'
 import { useSpawnSession } from '@/hooks/mutations/useSpawnSession'
 import { useSessions } from '@/hooks/queries/useSessions'
@@ -14,7 +13,6 @@ import type { SessionType } from './types'
 import { ActionButtons } from './ActionButtons'
 import { DirectorySection } from './DirectorySection'
 import { MachineSelector } from './MachineSelector'
-import { ModelSelector } from './ModelSelector'
 import { SessionTypeSelector } from './SessionTypeSelector'
 import { YoloToggle } from './YoloToggle'
 import { formatRunnerSpawnError } from '../../utils/formatRunnerSpawnError'
@@ -40,20 +38,12 @@ export function NewSession(props: {
     const [directory, setDirectory] = useState(props.initialDirectory ?? '')
     const [suppressSuggestions, setSuppressSuggestions] = useState(false)
     const [isDirectoryFocused, setIsDirectoryFocused] = useState(false)
-    const [model, setModel] = useState('auto')
     const [yoloMode, setYoloMode] = useState(false)
     const [sessionType, setSessionType] = useState<SessionType>('simple')
     const [worktreeName, setWorktreeName] = useState('')
     const [directoryCreationConfirmed, setDirectoryCreationConfirmed] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const worktreeInputRef = useRef<HTMLInputElement>(null)
-    const {
-        result: cursorModelsResult,
-        isLoading: isCursorModelsLoading,
-        error: cursorModelsError,
-        retry: retryCursorModels
-    } = useCursorModels(props.api, machineId, Boolean(machineId))
-
     useEffect(() => {
         if (sessionType === 'worktree') {
             worktreeInputRef.current?.focus()
@@ -240,12 +230,10 @@ export function NewSession(props: {
                 return
             }
 
-            const resolvedModel = model !== 'auto' ? model : undefined
             const result = await spawnSession({
                 machineId,
                 directory: trimmedDirectory,
                 agent: 'cursor',
-                model: resolvedModel,
                 yolo: yoloMode,
                 sessionType,
                 worktreeName: sessionType === 'worktree' ? (worktreeName.trim() || undefined) : undefined
@@ -306,18 +294,6 @@ export function NewSession(props: {
                 isDisabled={isFormDisabled}
                 onSessionTypeChange={setSessionType}
                 onWorktreeNameChange={setWorktreeName}
-            />
-            <ModelSelector
-                agent="cursor"
-                model={model}
-                isDisabled={isFormDisabled}
-                isLoading={isCursorModelsLoading}
-                discoveryResult={cursorModelsResult}
-                discoveryError={cursorModelsError}
-                onRetryDiscovery={() => {
-                    void retryCursorModels()
-                }}
-                onModelChange={setModel}
             />
             <YoloToggle
                 yoloMode={yoloMode}

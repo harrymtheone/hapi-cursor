@@ -1,4 +1,4 @@
-import type { CursorModelDiscoveryResult, Machine, SpawnResponse } from '@hapi/protocol/types'
+import type { Machine, SpawnResponse } from '@hapi/protocol/types'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -25,37 +25,31 @@ function createMachine(id: string): Machine {
             homeDir: '/home/harry',
             happyHomeDir: '/home/harry/.hapi',
             happyLibDir: '/home/harry/.hapi/lib',
-            workspaceRoots: undefined
-        }
+            workspaceRoots: undefined,
+        },
     }
 }
 
-function createApi(args: {
-    discoveryResult?: CursorModelDiscoveryResult
-    spawnResult?: SpawnResponse
-}) {
-    const discoveryResult = args.discoveryResult ?? {
-        status: 'ok' as const,
-        models: [{ id: 'cursor-fast', label: 'Fast lane' }],
-        discoveredAt: 1_000
-    }
-    const spawnResult = args.spawnResult ?? { type: 'success' as const, sessionId: 'session-1' }
+function createApi(spawnResult?: SpawnResponse) {
+    const result = spawnResult ?? { type: 'success' as const, sessionId: 'session-1' }
     const api = {
         getSessions: vi.fn(async () => ({ sessions: [] })),
         checkMachinePathsExists: vi.fn(async () => ({ exists: { '/repo': true } })),
-        getCursorModels: vi.fn(async () => discoveryResult),
-        spawnSession: vi.fn(async () => spawnResult)
+        getCursorModels: vi.fn(async () => {
+            throw new Error('NewSession must not call getCursorModels')
+        }),
+        spawnSession: vi.fn(async () => result),
     } as unknown as ApiClient
     return {
         api,
         getCursorModels: api.getCursorModels as unknown as ReturnType<typeof vi.fn>,
-        spawnSession: api.spawnSession as unknown as ReturnType<typeof vi.fn>
+        spawnSession: api.spawnSession as unknown as ReturnType<typeof vi.fn>,
     }
 }
 
 function renderNewSession(api: ApiClient, machineId: string) {
     const queryClient = new QueryClient({
-        defaultOptions: { queries: { retry: false }, mutations: { retry: false } }
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     })
 
     return render(
@@ -74,17 +68,22 @@ function renderNewSession(api: ApiClient, machineId: string) {
     )
 }
 
-describe('NewSession runtime model discovery', () => {
+describe('NewSession Auto-only launch', () => {
     afterEach(() => cleanup())
 
-    it('discovers models for the selected machine and sends undefined for auto launch', async () => {
-        const { api, getCursorModels, spawnSession } = createApi({})
-        renderNewSession(api, 'machine-auto')
+    it('does not render a model selector or discover models on mount', async () => {
+        const { getCursorModels } = createApi()
+        renderNewSession(createApi().api, 'machine-auto')
 
+        expect(screen.queryByLabelText(/Model/)).not.toBeInTheDocument()
         await waitFor(() => {
-            expect(getCursorModels).toHaveBeenCalledWith('machine-auto')
+            expect(getCursorModels).not.toHaveBeenCalled()
         })
-        expect(screen.getByRole('option', { name: 'cursor-fast - Fast lane' })).toHaveValue('cursor-fast')
+    })
+
+    it('spawns without a model field (Auto)', async () => {
+        const { api, spawnSession } = createApi()
+        renderNewSession(api, 'machine-auto')
 
         fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
@@ -96,31 +95,6 @@ describe('NewSession runtime model discovery', () => {
             '/repo',
             'cursor',
             undefined,
-            false,
-            'simple',
-            undefined
-        )
-    })
-
-    it('sends the selected raw Cursor model id on explicit launch', async () => {
-        const { api, spawnSession } = createApi({})
-        renderNewSession(api, 'machine-explicit')
-
-        const modelSelect = await screen.findByLabelText(/Model/)
-        await waitFor(() => {
-            expect(screen.getByRole('option', { name: 'cursor-fast - Fast lane' })).toBeInTheDocument()
-        })
-        fireEvent.change(modelSelect, { target: { value: 'cursor-fast' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Create' }))
-
-        await waitFor(() => {
-            expect(spawnSession).toHaveBeenCalled()
-        })
-        expect(spawnSession).toHaveBeenCalledWith(
-            'machine-explicit',
-            '/repo',
-            'cursor',
-            'cursor-fast',
             false,
             'simple',
             undefined
