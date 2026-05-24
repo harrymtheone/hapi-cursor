@@ -1,103 +1,100 @@
 ---
 phase: 01-cursor-runtime-config-contract
-reviewed: 2026-05-24T02:21:08Z
+reviewed: 2026-05-24T02:54:38Z
 depth: standard
-files_reviewed: 39
+files_reviewed: 14
 files_reviewed_list:
-  - cli/src/api/api.ts
-  - cli/src/api/apiMachine.ts
-  - cli/src/api/types.ts
   - cli/src/cursor/runCursor.ts
-  - cli/src/modules/common/rpcTypes.ts
-  - cli/src/runner/run.ts
-  - hub/src/socket/handlers/cli/index.ts
-  - hub/src/socket/handlers/cli/sessionHandlers.ts
-  - hub/src/store/index.ts
-  - hub/src/store/sessionStore.ts
-  - hub/src/store/sessions.ts
-  - hub/src/store/types.ts
-  - hub/src/sync/messageService.ts
-  - hub/src/sync/rpcGateway.ts
-  - hub/src/sync/sessionActivity.ts
-  - hub/src/sync/sessionCache.ts
-  - hub/src/sync/sessionConfigService.ts
+  - cli/src/cursor/runCursor.test.ts
+  - hub/src/sync/syncEngineSession.ts
+  - hub/src/sync/syncEngineSession.test.ts
   - hub/src/sync/sessionLivenessService.ts
   - hub/src/sync/sessionLivenessService.test.ts
-  - hub/src/sync/sessionModel.test.ts
-  - hub/src/sync/sessionRepository.ts
-  - hub/src/sync/syncEngine.ts
-  - hub/src/sync/syncEngineRpc.ts
-  - hub/src/sync/syncEngineSession.ts
-  - hub/src/sync/syncEngineSessionResume.ts
-  - hub/src/web/middleware/route-helpers.ts
-  - hub/src/web/routes/machines.ts
+  - hub/src/sync/sessionConfigService.ts
+  - hub/src/sync/sessionConfigService.test.ts
+  - hub/src/sync/sessionActivity.ts
+  - hub/src/sync/syncEngineMessage.ts
+  - hub/src/sync/rpcGateway.ts
   - hub/src/web/routes/sessions/config.ts
-  - shared/src/schemas.ts
+  - hub/src/web/routes/machines.ts
   - shared/src/sessionSummary.ts
-  - web/src/api/client.ts
-  - web/src/components/AssistantChat/HappyComposer.tsx
-  - web/src/components/AssistantChat/StatusBar.tsx
-  - web/src/components/AssistantChat/useHappyComposerHandlers.ts
-  - web/src/components/AssistantChat/useHappyComposerState.ts
-  - web/src/components/SessionChat.tsx
-  - web/src/hooks/mutations/useSessionActions.ts
-  - web/src/hooks/mutations/useSpawnSession.ts
-  - web/src/hooks/useSSE.ts
-  - web/src/router.tsx
 findings:
-  critical: 1
-  warning: 1
-  info: 0
-  total: 2
+  critical: 0
+  warning: 2
+  info: 1
+  total: 3
 status: issues_found
 ---
 
 # Phase 01: Code Review Report
 
-**Reviewed:** 2026-05-24T02:21:08Z
+**Reviewed:** 2026-05-24T02:54:38Z
 **Depth:** standard
-**Files Reviewed:** 39
+**Files Reviewed:** 14
 **Status:** issues_found
 
 ## Summary
 
-Reviewed Phase 01 gap-closure changes from plans 01-11 through 01-15, with collaborator checks around session-config routes, SSE convergence, ready-event classification, and session-cache behavior. The unsupported spawn effort surface is mostly removed, and durable completion markers are plumbed through store/schema/summary, but one race can still make new work look completed and persist that stale marker.
+Re-reviewed Phase 01 gap-closure work from plans **01-16** (effort-only runtime config returns `failed`) and **01-17** (`isStaleCompletion` guard for late `turn-completed` after `markMessageQueued`). The prior review’s **CR-01** (late ready re-persisting completion) and **WR-01** (effort-only success-like acknowledgements) are addressed in code and covered by new regression tests. No new blockers were found in those changes.
+
+Two residual robustness gaps remain: a time-bounded grace window still allows stale completion after 15s, and combined effort+permissionMode payloads can still return success-like `applied` while silently ignoring unsupported effort fields.
 
 ## Narrative Findings (AI reviewer)
 
-## Critical Issues
+### Prior review disposition (plans 01-16 / 01-17)
 
-### CR-01: Late ready events can re-persist completion after new work starts
-
-**File:** `hub/src/sync/sessionLivenessService.ts:119-149`, `hub/src/sync/sessionLivenessService.ts:178-201`
-
-**Issue:** `markMessageQueued()` correctly clears `turnCompletionMarker`, marks the active session as thinking, and sets a pending-thinking grace window when new user work starts. But `recordSessionActivity(..., { kind: 'turn-completed' })` unconditionally writes a new durable completion marker, flips `thinking` to false, and deletes the pending-thinking guard. If a ready event from the prior turn arrives after the user has queued the next turn, the stale ready event wins: the row becomes completed/unread again and the cleared marker is re-persisted. That violates the gap-closure invariant that new work clears the durable completion marker and returns the row to thinking/running.
-
-**Fix:**
-```typescript
-if (activity.kind === 'turn-completed') {
-    const pendingUntil = this.repository.pendingThinkingUntilBySessionId.get(sessionId) ?? 0
-    if (session?.thinking && pendingUntil > Date.now()) {
-        this.repository.store.sessions.touchSessionUpdatedAt(sessionId, nextUpdatedAt)
-        session.updatedAt = Math.max(session.updatedAt, nextUpdatedAt)
-        return
-    }
-}
-```
-Add a regression test: complete a turn, call `markMessageQueued()`, then deliver a ready/turn-completed activity and assert `thinking` remains true and both in-memory/store `turnCompletionMarker` stay null. A stronger long-term fix is to correlate ready markers to a turn/message sequence instead of relying only on timestamps.
+| Prior ID | Topic | Status |
+|---|---|---|
+| CR-01 | Late `turn-completed` after new work | **Fixed** — `isStaleCompletion` in `sessionLivenessService.ts:179-181`; regression at `sessionLivenessService.test.ts:219-264` |
+| WR-01 | Effort-only success-like apply | **Fixed** — `failed` branches in `runCursor.ts:66-78` and `syncEngineSession.ts:197-205`; tests in `runCursor.test.ts:83-130`, `syncEngineSession.test.ts:102-152` |
 
 ## Warnings
 
-### WR-01: Unsupported effort-only config requests are acknowledged as successful
+### WR-01: Stale turn-completed can still win after the 15s grace window
 
-**File:** `cli/src/cursor/runCursor.ts:64-76`, `hub/src/sync/syncEngineSession.ts:188-209`
+**File:** `hub/src/sync/sessionLivenessService.ts:7`, `hub/src/sync/sessionLivenessService.ts:179-204`
 
-**Issue:** Active runner config handling decides whether to return a runtime apply result only from `model`; an effort-only or modelReasoningEffort-only payload falls through to `{ applied: { permissionMode } }`. The inactive Hub path similarly sets `hasRuntimeConfigRequest` for unsupported effort fields and returns `status: 'applies-next-run'` even though it intentionally strips those fields from persistence. That prevents storage divergence, but it still tells callers the unsupported request succeeded or will apply next run. If any internal caller or future route reaches this public `applySessionConfig` contract with effort-only input, UI state can treat unsupported effort as accepted.
+**Issue:** Plan 01-17 correctly demotes delayed `turn-completed` while `thinking === true` and `pendingThinkingUntilBySessionId > Date.now()`. After `QUEUED_MESSAGE_THINKING_GRACE_MS` (15_000 ms) elapses, the guard no longer applies. A very late ready event from the previous turn can still call `setSessionTurnCompletionMarker`, set `thinking = false`, and emit `statusKind: 'completed'`, recreating the race that CR-01 fixed only inside the grace window. Plan 01-17 explicitly deferred turn/message sequence correlation.
 
-**Fix:** Detect unsupported effort fields explicitly and return a safe no-op/rejection instead of `applied` or `applies-next-run`. For example, active runner handling can return a parsed `failed` result with the current model/effort values, and the inactive Hub branch can throw or return `failed` when `model` and `permissionMode` are absent but effort fields are present. Add active and inactive tests that assert the response status is not success-like for unsupported effort-only payloads.
+**Fix:** Extend hardening with a monotonic turn or message sequence on `markMessageQueued` and reject `turn-completed` activities whose sequence is older than the latest queued work. Short-term mitigation: lengthen grace only if product accepts the tradeoff; prefer sequence correlation.
+
+### WR-02: Effort fields bundled with permissionMode still return success-like `applied`
+
+**File:** `cli/src/cursor/runCursor.ts:66-79`, `hub/src/sync/syncEngineSession.ts:189-218`
+
+**Issue:** Effort-only payloads correctly return `status: 'failed'` when no `permissionMode` is present (01-16). If a caller sends `{ effort: 'high', permissionMode: 'plan' }` (or inactive Hub equivalent with supported `permissionMode`), the unsupported-effort branch is skipped because `permissionMode !== undefined`, and the handler returns `{ applied: { permissionMode } }` / inactive `status: 'applied'`. Effort is not applied and not reported as failed. Public HTTP routes only expose separate permission and model endpoints today, but the shared `set-session-config` / `applySessionConfig` contract can still mislead internal or future callers.
+
+**Fix:** When unsupported effort keys are present, return `failed` (or a structured partial result) unless `model` is also being applied. Example for CLI:
+
+```typescript
+const hasUnsupportedEffortRequest =
+    Object.prototype.hasOwnProperty.call(config, 'effort')
+    || Object.prototype.hasOwnProperty.call(config, 'modelReasoningEffort');
+if (hasUnsupportedEffortRequest && !hasModelConfigRequest) {
+    return CursorRuntimeConfigApplyResultSchema.parse({
+        status: 'failed',
+        model: state.currentModel ?? null,
+        modelReasoningEffort: null,
+        effort: null,
+        reason: 'unknown'
+    });
+}
+```
+
+Apply permission mode only when effort keys are absent, or document and test explicit partial-apply semantics.
+
+## Info
+
+### IN-01: Runner alive payloads can still persist effort metadata
+
+**File:** `hub/src/sync/sessionLivenessService.ts:69-88`, `hub/src/socket/handlers/cli/sessionHandlers.ts:16-25`
+
+**Issue:** Spawn and Web paths block unsupported effort, but `handleSessionAlive` still writes `modelReasoningEffort` and `effort` when the runner includes them. This is likely intentional display metadata, not a config-apply acknowledgement bug. Worth confirming it cannot contradict the “effort unsupported for runtime config” product story on the session list.
+
+**Fix:** No change required if metadata is read-only display; otherwise gate effort persistence the same way as spawn/config apply.
 
 ---
 
-_Reviewed: 2026-05-24T02:21:08Z_
+_Reviewed: 2026-05-24T02:54:38Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
