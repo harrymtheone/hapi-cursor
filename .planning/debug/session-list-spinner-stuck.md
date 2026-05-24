@@ -1,70 +1,96 @@
 ---
+session: session-list-spinner-stuck
+phase: 01-cursor-runtime-config-contract
+test: 5
 status: diagnosed
-trigger: "Phase 01-cursor-runtime-config-contract UAT Test 4: mobile session list status indicators. Expected: running, thinking, waiting, error, completed unread, and viewed-completed rows each show one compact accessible status indicator with correct color/spinner behavior; model/effort text absent inline; viewed completed becomes gray. Actual: creating a blank session immediately shows busy spinner; after agent output completes, the status indicator remains busy spinner and does not switch to green."
-created: 2026-05-24T00:27:00+08:00
-updated: 2026-05-24T00:49:00+08:00
+updated: 2026-05-24T03:35:00Z
 ---
 
-## Current Focus
-<!-- OVERWRITE on each update - reflects NOW -->
-
-hypothesis: Session-list "running" is incorrectly derived from runner liveness (`active`) instead of agent turn activity/completion, so an idle connected Cursor session stays a spinner and turn completion never becomes an unread completed marker.
-test: Compare keepalive/thinking semantics, summary status precedence, hub completion propagation, and Web SSE cache updates.
-expecting: If true, a newly connected blank session has active=true/thinking=false and maps to running, while an agent turn completion only sets thinking=false and has no completion marker path unless the whole runner exits.
-next_action: Record root cause and return diagnose-only result.
+# Debug: Test 5 – Session list status stuck and viewed markers reset on refresh
 
 ## Symptoms
-<!-- Written during gathering, then IMMUTABLE -->
 
-expected: Mobile session list rows for running, thinking, waiting, error, completed unread, and viewed-completed states should each show exactly one compact accessible status indicator with correct color or spinner behavior. Model/effort text should not appear inline. Viewed completed rows should become gray.
-actual: Creating a blank session immediately shows the busy spinning indicator. After agent output completes, the row still shows the busy spinning indicator instead of switching to the green completed/unread indicator.
-errors: None reported beyond visible UI state.
-reproduction: Test 4 in .planning/phases/01-cursor-runtime-config-contract/01-UAT.md during live mobile/web verification.
-started: Discovered during UAT for phase 01-cursor-runtime-config-contract.
+User UAT report:
+1. While viewing a single chat session, its spinner correctly switches to a gray idle dot when the agent finishes.
+2. When the user **switches to a different chat session**, the previously-running session's spinner is **stuck**; it does not auto-update to gray/green even after that agent's turn completes.
+3. With multiple completed sessions showing green unread dots, opening one turns it gray (viewed). After **page refresh**, every gray dot reverts to green **except the currently-selected session**.
 
-## Eliminated
-<!-- APPEND only - prevents re-investigating -->
+## Root cause #1 — SSE subscription narrows to a single session on session pages
 
-## Evidence
-<!-- APPEND only - facts discovered -->
+`web/src/App.tsx:274-279` builds the SSE subscription scope based on the currently selected session:
 
-- timestamp: 2026-05-24T00:27:00+08:00
-  checked: Common bug patterns
-  found: Symptom maps to "Wrong data displayed" and likely State Management or Data Shape/API Contract categories.
-  implication: First hypotheses should test stale UI/cache state and mismatched summary status fields.
-- timestamp: 2026-05-24T00:31:00+08:00
-  checked: shared/src/sessionSummary.ts and shared/src/sessionSummary.test.ts
-  found: Completed and error status are derived only from Session.endReason, with completionMarker/errorMarker set from updatedAt only when statusKind is completed/error. Tests cover synthetic Session objects with endReason set.
-  implication: Real runtime completion requires the hub to populate Session.endReason or send explicit statusKind/completionMarker patches.
-- timestamp: 2026-05-24T00:33:00+08:00
-  checked: web/src/components/SessionList/SessionListItem.tsx and web/src/hooks/useSSE.ts
-  found: The row spinner renders only for statusKind running/thinking. useSSE can converge to completed only when a session-updated patch contains statusKind:"completed" plus completionMarker, or when a full Session payload yields toSessionSummary with endReason:"completed".
-  implication: The Web layer is capable of rendering green completed dots, but only if the completion status reaches the cache through the expected contract.
-- timestamp: 2026-05-24T00:36:00+08:00
-  checked: CLI runner lifecycle and apiSession session-end emission
-  found: Cursor runner sets sessionEndReason to "completed" on normal loop exit and sends socket event session-end with { sid, time, reason }.
-  implication: The CLI supplies the completion truth; the loss occurs after the CLI emits it.
-- timestamp: 2026-05-24T00:39:00+08:00
-  checked: hub/src/sync/sessionLivenessService.ts, hub/src/sync/sessionCache.ts, hub/src/sync/syncEngineSession.ts
-  found: SyncEngineSession accepts a reason-bearing payload, but SessionCache narrows handleSessionEnd to { sid, time }, and SessionLivenessService.handleSessionEnd ignores reason and emits only { active:false, thinking:false, backgroundTaskCount:0 }. SyncEngineSession separately emits session-ended with reason.
-  implication: The live session-updated event never contains statusKind/completionMarker/errorMarker or a full Session with endReason, so the summary cache cannot become completed/unread.
-- timestamp: 2026-05-24T00:41:00+08:00
-  checked: hub store/session repository and Web SSE session-ended handling
-  found: Hub session storage/schema/repository have no endReason field, and Web useSSE has no session-ended handling branch. Repository-created Session objects therefore cannot carry endReason into toSessionSummary, and the separate session-ended event is ignored by the session-list cache.
-  implication: Completed/error summary states are unreachable in real hub/Web flow despite being represented in shared types and component tests.
-- timestamp: 2026-05-24T00:43:00+08:00
-  checked: Focused tests
-  found: bun test hub/src/sync/sessionLivenessService.test.ts shared/src/sessionSummary.test.ts passed. The liveness test explicitly expects only active/thinking false on session end, while the summary test only covers synthetic endReason.
-  implication: Existing tests confirm the split contract and miss the end-to-end handoff from real session-end reason to completion marker.
-- timestamp: 2026-05-24T00:48:00+08:00
-  checked: cli/src/agent/sessionBase.ts and cli/src/cursor/cursorRemoteLauncher.ts
-  found: AgentSessionBase sends keepAlive immediately and every 2 seconds with the current thinking flag. CursorRemoteLauncher sets thinking true while a queued agent process runs, then sets thinking false and emits ready after the turn completes; the session object remains alive/active while waiting for more messages.
-  implication: A blank connected session and a completed-but-still-open session are both active=true/thinking=false. The current status derivation treats both as running.
+```274:279:web/src/App.tsx
+    const eventSubscription = useMemo(() => {
+        if (selectedSessionId) {
+            return { sessionId: selectedSessionId }
+        }
+        return { all: true }
+    }, [selectedSessionId])
+```
 
-## Resolution
-<!-- OVERWRITE as understanding evolves -->
+When the user navigates into a session, the client closes the `all: true` stream and opens a `sessionId: <id>` scoped stream. The Hub filters `session-updated` events to that one session id, so the rest of the session list **stops receiving status/completion patches**. The other sessions therefore freeze at whichever `statusKind` was last cached (e.g. `running`/`thinking`), and `useSSE.patchSessionSummary` never gets a chance to converge them to `idle`/`completed`.
 
-root_cause: SessionSummary.statusKind conflates runner liveness with work activity. getSessionStatusKind maps any active session to "running" after only thinking and waiting checks, but Cursor sessions send keepAlive immediately and remain active while idle between prompts. Turn completion only flips thinking back to false and emits ready; it does not end the session. Separately, the completed marker implementation is tied to Session.endReason/session termination, but the hub does not persist endReason and Web ignores the separate session-ended event. Therefore a blank connected session and a just-finished turn both remain active=true/thinking=false and render the busy spinner, while the green unread completion marker is unreachable for normal live turn completion.
-fix:
-verification: Diagnosed only. Focused existing tests pass but demonstrate missing coverage for real session-end reason -> completion marker convergence.
-files_changed: []
+This matches the user-reported behavior exactly: the spinner you see for "other sessions" while inside one is whatever Hub last broadcast over the previous `all: true` window; once subscribed to a single session, no new patches arrive for the others.
+
+`SessionList`'s display is fed from `queryClient`'s `queryKeys.sessions` cache; it does **not** poll or re-fetch on a timer, so the stale status sticks until the user navigates back to a list-only route (re-enabling `all: true`).
+
+## Root cause #2 — Viewed completion markers are React-only state with no persistence
+
+`web/src/components/SessionList.tsx:85` declares the viewed-completed state as plain `useState` and never persists it:
+
+```85:101:web/src/components/SessionList.tsx
+    const [viewedCompletionMarkers, setViewedCompletionMarkers] = useState<Record<string, number>>({})
+
+    const markCompletionViewed = useCallback((session: SessionSummary) => {
+        const marker = session.completionMarker
+        if (session.statusKind !== 'completed' || marker === null) {
+            return
+        }
+        setViewedCompletionMarkers((previous) => {
+            if (previous[session.id] === marker) {
+                return previous
+            }
+            return {
+                ...previous,
+                [session.id]: marker
+            }
+        })
+    }, [])
+```
+
+On every page mount/refresh this map starts empty. The only auto-re-mark is for the currently selected session, in the effect at lines 103-111:
+
+```103:111:web/src/components/SessionList.tsx
+    useEffect(() => {
+        if (!selectedSessionId) {
+            return
+        }
+        const selectedSession = props.sessions.find((session) => session.id === selectedSessionId)
+        if (selectedSession) {
+            markCompletionViewed(selectedSession)
+        }
+    }, [markCompletionViewed, props.sessions, selectedSessionId])
+```
+
+Therefore after refresh, every completed session whose `completionMarker` is not in `viewedCompletionMarkers` is treated as **unread** again — so it shows green. Only the active session is re-marked because of the effect above.
+
+This is consistent with the Plan 01-08 decision in `01-08-SUMMARY.md`:
+> "Viewed completion state remains in Web state instead of shared protocol state. It represents local user read state, not runtime session truth."
+
+The team intentionally chose to keep read state local, but did not add browser-side persistence, so refresh wipes it.
+
+## Files involved
+
+- `web/src/App.tsx` – Narrows SSE subscription to a single session when a chat session is open.
+- `web/src/hooks/useSSE.ts` – Only converges patches for sessions present in the current subscription window.
+- `web/src/components/SessionList.tsx` – `viewedCompletionMarkers` is React-only state, no persistence; only the currently selected session is re-marked on mount.
+
+## Suggested fix direction (for plan-phase --gaps)
+
+For symptom 1/2 (stuck spinner on other sessions while inside one):
+- Always subscribe to `all: true` so the global session list keeps converging. Pair it with a session-id filter on the client if the goal of the narrow subscription was bandwidth — but the list status must be globally accurate.
+- Alternatively, layer two subscriptions: a persistent `all: true` for the list, plus a `sessionId` stream for the open session. The hook currently supports only one EventSource at a time, so this would require a second `useSSE` invocation or a Hub-side broadcast strategy that includes list-level status patches even on session-scoped streams.
+
+For symptom 3 (viewed markers reset after refresh):
+- Persist `viewedCompletionMarkers` to `localStorage` (or IndexedDB), keyed by user/session, and restore on mount before computing list rows. Cap the store and prune deleted sessions.
+- Add a regression test: mount `SessionList` with seeded `localStorage`, expect the seeded sessions to render as viewed (gray) without requiring re-click.

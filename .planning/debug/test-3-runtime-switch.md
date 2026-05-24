@@ -1,61 +1,127 @@
 ---
+session: test-3-runtime-switch
+phase: 01-cursor-runtime-config-contract
+test: 3
 status: diagnosed
-trigger: "UAT Test 3 gap: composer in-session model switching expected truthful applied/pending/failed/applies-next-run state with no new chat timeline messages; actual visible UI/status message is 'Switching unavailable for this runtime'. Goal: find_root_cause_only."
-created: 2026-05-24T00:26:00+08:00
-updated: 2026-05-24T00:45:00+08:00
+updated: 2026-05-24T03:35:00Z
 ---
 
-## Current Focus
+# Debug: Test 3 – Runtime model switch is not actually applied
 
-hypothesis: "SessionChat never supplies runtimeModelSwitchSupported or availableModelOptions to HappyComposer, so useHappyComposerState defaults runtime support to false and StatusBar renders the read-only unavailable hint before any model switch request can reach the API."
-test: "Trace all references to runtimeModelSwitchSupported, availableModelOptions, and switchingUnavailable across Web, then compare with backend applySessionConfig behavior."
-expecting: "If confirmed, only tests/harnesses pass these props; production SessionChat and router do not, while backend/CLI would return applies-next-run if a model request were sent."
-next_action: "Return root-cause-only diagnosis to orchestrator; do not apply fixes."
+## Symptom
 
-## Symptoms
+User UAT report:
+- Selecting a new model on an existing session shows `Applies next run`.
+- Two visible behaviors of the "current model" label in the composer:
+  1. Label switches to the new model name.
+  2. Label flickers to the new model and reverts to the original.
+- In both cases, asking the LLM ("what model are you?") confirms the **actual model in use is still the original model**.
 
-expected: "In idle and busy sessions, requesting model changes from the composer should truthfully show applied, pending, failed, or applies-next-run in the composer model box, and should not create new chat timeline messages."
-actual: "Visible UI/status message: Switching unavailable for this runtime"
-errors: "None reported beyond the visible UI/status message."
-reproduction: "Test 3 in .planning/phases/01-cursor-runtime-config-contract/01-UAT.md during live mobile/web verification."
-started: "Discovered during UAT for phase 01-cursor-runtime-config-contract."
+Three-way consistency at session creation is fine (selected model = displayed model = actual LLM). The bug is **only on in-session switching**.
 
-## Eliminated
+## Hypothesis (proven below)
 
-- hypothesis: "The visible message is a backend or CLI runtime failure response from the model switch API."
-  evidence: "StatusBar renders the exact localized string when canOpenModelSelector is false and no modelSwitchState exists. SessionChat handleModelChange would set modelSwitchState to applying before calling ApiClient.setModel, which would suppress the read-only hint."
-  timestamp: 2026-05-24T00:45:00+08:00
+The UI is allowed to surface a model-switch result (`applies-next-run`), and Hub persists the new model name into session metadata so it can render in the composer label, **but the CLI never updates the `--model` argument it actually passes to `agent` on the next message**. Therefore the next `agent` invocation continues to use the original model.
 
-## Evidence
+## Evidence from prior spike (agent-transcripts/f150696b)
 
-- timestamp: 2026-05-24T00:34:00+08:00
-  checked: ".planning/phases/01-cursor-runtime-config-contract/01-UAT.md and .planning/STATE.md"
-  found: "UAT Test 3 expected composer-local applied/pending/failed/applies-next-run status and observed 'Switching unavailable for this runtime'. STATE records runtimeModelSwitchSupported as the authoritative composer selector gate and says active model/effort changes should report applies-next-run until a proven hot-switch path exists."
-  implication: "The UI should allow a truthful switch request path when runtime support is known; 'unavailable' is only correct when the authoritative gate is false or absent."
-- timestamp: 2026-05-24T00:36:00+08:00
-  checked: "web/src/components/AssistantChat/useHappyComposerState.ts"
-  found: "runtimeModelSwitchSupported defaults to false, hasRuntimeModelOptions requires availableModelOptions.length > 0, and canOpenModelSelector requires onModelChange && runtimeModelSwitchSupported && hasRuntimeModelOptions && idle && !controlsDisabled."
-  implication: "If SessionChat omits either runtimeModelSwitchSupported or availableModelOptions, the composer model selector is always closed even when the session is idle."
-- timestamp: 2026-05-24T00:38:00+08:00
-  checked: "web/src/components/SessionChat.tsx and web/src/router.tsx"
-  found: "SessionChat passes model, modelReasoningEffort, effort, modelSwitchState, and onModelChange to HappyComposer, but does not pass runtimeModelSwitchSupported or availableModelOptions. The router also passes no discovery/capability props into SessionChat."
-  implication: "Production session chat cannot satisfy the authoritative runtime switch gate; the gate remains closed by default."
-- timestamp: 2026-05-24T00:39:00+08:00
-  checked: "workspace references for runtimeModelSwitchSupported and availableModelOptions"
-  found: "Only HappyComposer/useHappyComposerState props and tests reference runtimeModelSwitchSupported. useCursorModels is used by NewSession, but not by SessionChat or router."
-  implication: "The discovered model list and runtime support signal are not wired into the live session composer."
-- timestamp: 2026-05-24T00:41:00+08:00
-  checked: "web/src/components/AssistantChat/StatusBar.tsx and locale strings"
-  found: "StatusBar sets showReadOnlyHint = !canOpenModelSelector && !modelSwitchLabel and renders t('composer.model.switchingUnavailable'), whose English text is exactly 'Switching unavailable for this runtime'."
-  implication: "The reported UI text is generated locally from the closed selector gate, not from a switch mutation result."
-- timestamp: 2026-05-24T00:43:00+08:00
-  checked: "hub/src/web/routes/sessions/config.ts, hub/src/sync/syncEngineSession.ts, cli/src/cursor/runCursor.ts"
-  found: "If a model request is sent, Hub calls applySessionConfig. Active sessions route through RPC to CLI applyCursorSessionConfig, which returns CursorRuntimeConfigApplyResult status 'applies-next-run' for model/modelReasoningEffort/effort requests. Inactive sessions also return 'applies-next-run'."
-  implication: "The backend/CLI contract can produce the UAT-allowed applies-next-run state; the UI gate prevents users from reaching it."
+User and prior agent verified empirically that Cursor CLI does support next-turn model switching in the same chat:
 
-## Resolution
+- Initial run: `agent -p "..." --model composer-2.5-fast …`
+  - `system.init.model = "Composer 2.5 Fast"`, `session_id = bdfd9c25-…`
+- Second run, same session: `agent -p "..." --resume bdfd9c25-… --model gpt-5.5-medium …`
+  - `system.init.model = "GPT-5.5 272K Medium"`, `session_id = bdfd9c25-…`
 
-root_cause: "The live composer switch UI is permanently gated off because SessionChat does not provide the authoritative runtimeModelSwitchSupported capability or any discovered availableModelOptions to HappyComposer. useHappyComposerState therefore falls back to runtimeModelSwitchSupported=false and hasRuntimeModelOptions=false, making canOpenModelSelector false. StatusBar then renders the read-only fallback 'Switching unavailable for this runtime' before any model switch request can call ApiClient.setModel, so the backend's truthful applies-next-run response is never surfaced."
-fix: "Not applied; goal is find_root_cause_only."
-verification: "Static trace confirmed the reported text is rendered by StatusBar's read-only gate, production SessionChat/router omit both required gate inputs, and backend/CLI would return applies-next-run if the request path were invoked."
-files_changed: []
+So switching is technically possible by re-spawning `agent` with `--resume <same_id>` + new `--model`. **The hot-switch path is real; HAPI just isn't using it.**
+
+## Root cause walk-through
+
+1. `cli/src/cursor/runCursor.ts:147` — `currentModel` is captured once at startup as `const`:
+
+```147:147:cli/src/cursor/runCursor.ts
+    const currentModel = opts.model;
+```
+
+2. `cli/src/cursor/runCursor.ts:82-88` — `applyCursorSessionConfig()` returns `applies-next-run` for model changes but does **not** mutate `currentModel`, and there is no `syncModel` analog to the existing `syncPermissionMode`:
+
+```82:89:cli/src/cursor/runCursor.ts
+    return CursorRuntimeConfigApplyResultSchema.parse({
+        status: 'applies-next-run',
+        model: config.model,
+        modelReasoningEffort: null,
+        effort: null,
+        reason: 'unknown'
+    });
+```
+
+```183:194:cli/src/cursor/runCursor.ts
+    session.rpcHandlerManager.registerHandler('set-session-config', async (payload: unknown) => {
+        return applyCursorSessionConfig(payload, {
+            currentPermissionMode,
+            currentModel: currentModel ?? null,
+            currentModelReasoningEffort: null,
+            currentEffort: null,
+            syncPermissionMode: (mode) => {
+                currentPermissionMode = mode;
+                syncSessionMode();
+            }
+        });
+    });
+```
+
+3. `cli/src/cursor/session.ts:14,53` — `CursorSession.model` is `readonly`, set at construction:
+
+```12:57:cli/src/cursor/session.ts
+export class CursorSession extends AgentSessionBase<EnhancedMode> {
+    readonly cursorArgs?: string[];
+    readonly model?: string;
+    …
+    this.model = opts.model;
+```
+
+4. `cli/src/cursor/cursorRemoteLauncher.ts:96-103` — every next message rebuilds args from **`session.model`** (the readonly), not from `batch.mode.model` carried by the queue:
+
+```96:103:cli/src/cursor/cursorRemoteLauncher.ts
+            const args = buildAgentArgs({
+                message,
+                cwd: session.path,
+                sessionId: cursorSessionId,
+                mode: agentMode,
+                model: session.model,
+                yolo
+            });
+```
+
+5. The queue does carry `mode.model`, but it’s populated from the same stale `currentModel`:
+
+```168:175:cli/src/cursor/runCursor.ts
+    session.onUserMessage((message, localId) => {
+        const enhancedMode: EnhancedMode = {
+            permissionMode: currentPermissionMode ?? 'default',
+            model: currentModel
+        };
+```
+
+### Why the UI label still changes
+
+Hub's `SyncEngineSession.applySessionConfig` writes the new `model` into the session cache when the status is `applied` or `applies-next-run` (see Plan 01-05 summary), so SessionList/composer get a `session-updated` patch with the new model name. That patch flows into `StatusBar`'s big label. But because the CLI side never re-spawns `agent` with the new `--model`, the LLM continues to answer as the original model. The "flicker" variant happens when the optimistic local state collides with a subsequent `session-updated` patch.
+
+## Root cause summary
+
+The Phase 1 spike (transcript `f150696b`) proved Cursor CLI supports "same-session next-message model switch" via `--resume <id> --model <new>`. Plan 01-09 implemented the **UI gate and call site only**: discovery wiring, selector unlock, `setModel` mutation. It did **not** implement the **CLI mutation path** that the spike validated. The shipped semantic is dishonest: UI says the model has changed (or will change), Hub persists the new model name, but the next `agent` spawn keeps the old `--model`.
+
+## Files involved
+
+- `cli/src/cursor/runCursor.ts` – `currentModel` constant; `applyCursorSessionConfig` returns `applies-next-run` but never mutates `currentModel`; no `syncModel` analog to `syncPermissionMode`.
+- `cli/src/cursor/session.ts` – `model` is `readonly`; no setter.
+- `cli/src/cursor/cursorRemoteLauncher.ts` – `buildAgentArgs(..., model: session.model, ...)` uses the readonly snapshot instead of the latest `mode.model` from the message queue.
+- `hub/src/sync/syncEngineSession.ts` – persists new model into metadata on `applies-next-run`, which is what makes the UI label change without the runtime actually switching.
+
+## Suggested fix direction (for plan-phase --gaps)
+
+1. Make `currentModel` mutable in `runCursor.ts`; add a `syncModel(model: string | null)` analog to `syncPermissionMode`; update it inside `applyCursorSessionConfig` on `applies-next-run`/`applied` paths.
+2. Expose `CursorSession.setModel(model: string | null)` (drop `readonly`) and wire it from `syncModel` so the launcher source-of-truth changes for the next message.
+3. In `cursorRemoteLauncher.runMainLoop`, use `batch.mode.model` (already on the queue) as the authoritative per-turn model, with `session.model` as fallback only.
+4. Change the Hub/CLI apply-result for the model branch from `applies-next-run` to a more honest "applies on next message" semantic, since remote mode re-spawns `agent` per message. UI copy should say something like "Applies next message" instead of `Applies next run`.
+5. Keep the composer label honest: until a `session-updated` patch confirms the new model has taken effect (or until the next message has been sent), show the **currently-effective** model prominently and the **pending target** as a secondary label. Avoid the flicker by not optimistically swapping the big label.
+6. Add a regression test that posts `set-session-config { model: 'X' }` to a remote-mode session and asserts that the **next** `buildAgentArgs` call includes `--model X` while keeping `--resume <same_id>`.
