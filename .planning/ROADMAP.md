@@ -45,8 +45,8 @@ Plans:
 - [x] 01-09-PLAN.md — Gap closure: live composer runtime switch options
 - [x] 01-10-PLAN.md — Gap closure: idle and completion status markers
 - [x] 01-11-PLAN.md — Gap closure: reject unsupported effort at Hub spawn boundary
-- [ ] 01-16-PLAN.md — Gap closure: flip effort-only set-session-config to failed (CURS-02 / WR-01)
-- [ ] 01-17-PLAN.md — Gap closure: guard late turn-completed after markMessageQueued (CURS-04 / CR-01)
+- [x] 01-16-PLAN.md — Gap closure: flip effort-only set-session-config to failed (CURS-02 / WR-01)
+- [x] 01-17-PLAN.md — Gap closure: guard late turn-completed after markMessageQueued (CURS-04 / CR-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -168,7 +168,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 15/15 | Complete   | 2026-05-24 |
+| 1. Cursor Runtime Config Contract | 17/17 | Complete   | 2026-05-24 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
