@@ -49,13 +49,39 @@ describe('buildCliArgs', () => {
         expect(args).not.toContain('--permission-mode')
     })
 
-    it('passes --model through for cursor', () => {
+    it('passes selected model through for cursor launch', () => {
         const args = buildCliArgs('cursor', {
             directory: '/tmp',
             model: 'sonnet',
         })
         expect(args).toContain('--model')
         expect(args).toContain('sonnet')
+    })
+
+    it('passes resume and selected model through for cursor resume launch', () => {
+        const args = buildCliArgs('cursor', {
+            directory: '/tmp',
+            resumeSessionId: 'resume-session-1',
+            model: 'sonnet',
+        })
+        expect(args).toContain('--resume')
+        expect(args).toContain('resume-session-1')
+        expect(args).toContain('--model')
+        expect(args).toContain('sonnet')
+    })
+
+    it('does not emit unsupported effort flags even if effort-shaped input reaches the builder', () => {
+        const args = buildCliArgs('cursor', {
+            directory: '/tmp',
+            model: 'sonnet',
+            ...({
+                effort: 'high',
+                modelReasoningEffort: 'high',
+            } as Record<string, unknown>),
+        })
+        expect(args).not.toContain('--effort')
+        expect(args).not.toContain('--model-reasoning-effort')
+        expect(args).not.toContain('high')
     })
 
     it('emits every valid cursor permission mode', () => {
