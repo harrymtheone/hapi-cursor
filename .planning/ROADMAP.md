@@ -50,7 +50,7 @@ Plans:
 
 - [x] 01-02-PLAN.md — CLI launch model and effort wiring
 - [x] 01-05-PLAN.md — Selected runtime config launch rejection handling
-- [ ] 01-14-PLAN.md — Gap closure: block unsupported effort in session-config persistence
+- [x] 01-14-PLAN.md — Gap closure: block unsupported effort in session-config persistence
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -166,7 +166,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 11/15 | In Progress|  |
+| 1. Cursor Runtime Config Contract | 12/15 | In Progress|  |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
