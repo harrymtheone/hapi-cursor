@@ -100,20 +100,54 @@ describe('SyncEngineSession.applySessionConfig', () => {
     })
 
     it('strips unsupported effort fields before inactive session-cache persistence', async () => {
-        const result: CursorRuntimeConfigApplyResult = {
-            status: 'applies-next-run',
+        const { facade, applySessionConfig } = createFacade(createSession({
+            active: false,
+            modelReasoningEffort: 'medium',
+            effort: 'background'
+        }), {
+            status: 'failed',
             model: 'cursor-runtime-model-current',
-            modelReasoningEffort: null,
-            effort: null,
+            modelReasoningEffort: 'medium',
+            effort: 'background',
             reason: 'unknown'
-        }
-        const { facade, applySessionConfig } = createFacade(createSession({ active: false }), result)
+        })
 
         await expect(facade.applySessionConfig('session-1', {
             modelReasoningEffort: 'medium',
             effort: 'background'
-        })).resolves.toEqual(result)
+        })).resolves.toEqual({
+            status: 'failed',
+            model: 'cursor-runtime-model-current',
+            modelReasoningEffort: 'medium',
+            effort: 'background',
+            reason: 'unknown'
+        })
 
+        expect(applySessionConfig).not.toHaveBeenCalled()
+    })
+
+    it('does not persist effort-only inactive payloads as session-cache writes', async () => {
+        const { facade, applySessionConfig } = createFacade(createSession({
+            active: false,
+            effort: 'high'
+        }), {
+            status: 'failed',
+            model: 'cursor-runtime-model-current',
+            modelReasoningEffort: null,
+            effort: 'high',
+            reason: 'unknown'
+        })
+
+        const result = await facade.applySessionConfig('session-1', { effort: 'high' })
+
+        expect(result).toEqual({
+            status: 'failed',
+            model: 'cursor-runtime-model-current',
+            modelReasoningEffort: null,
+            effort: 'high',
+            reason: 'unknown'
+        })
+        expect(result.status).not.toBe('applies-next-run')
         expect(applySessionConfig).not.toHaveBeenCalled()
     })
 
