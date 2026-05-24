@@ -44,10 +44,14 @@ describe('SessionConfigService', () => {
         }
     })
 
-    it('applySessionConfig persists model effort fields when provided', () => {
+    it('applySessionConfig ignores unsupported effort fields when provided', () => {
         const events: SyncEvent[] = []
         const { store, repo, config } = createServices(events)
-        const session = repo.getOrCreateSession('config-effort', sessionMetadata, null)
+        const session = repo.getOrCreateSession('config-effort', sessionMetadata, null, {
+            model: 'cursor-runtime-model-current',
+            modelReasoningEffort: 'existing-reasoning',
+            effort: 'existing-effort'
+        })
 
         config.applySessionConfig(session.id, {
             model: 'cursor-runtime-model-next',
@@ -56,12 +60,33 @@ describe('SessionConfigService', () => {
         })
 
         expect(repo.getSession(session.id)?.model).toBe('cursor-runtime-model-next')
-        expect(repo.getSession(session.id)?.modelReasoningEffort).toBe('medium')
-        expect(repo.getSession(session.id)?.effort).toBe('background')
+        expect(repo.getSession(session.id)?.modelReasoningEffort).toBe('existing-reasoning')
+        expect(repo.getSession(session.id)?.effort).toBe('existing-effort')
         expect(store.sessions.getSession(session.id)?.model).toBe('cursor-runtime-model-next')
-        expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBe('medium')
-        expect(store.sessions.getSession(session.id)?.effort).toBe('background')
+        expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBe('existing-reasoning')
+        expect(store.sessions.getSession(session.id)?.effort).toBe('existing-effort')
         expect(events.some((e) => e.type === 'session-updated')).toBe(true)
+    })
+
+    it('applySessionConfig does not emit for unsupported effort-only requests', () => {
+        const events: SyncEvent[] = []
+        const { store, repo, config } = createServices(events)
+        const session = repo.getOrCreateSession('config-effort-only', sessionMetadata, null, {
+            modelReasoningEffort: 'existing-reasoning',
+            effort: 'existing-effort'
+        })
+
+        events.length = 0
+        config.applySessionConfig(session.id, {
+            modelReasoningEffort: 'medium',
+            effort: 'background'
+        })
+
+        expect(repo.getSession(session.id)?.modelReasoningEffort).toBe('existing-reasoning')
+        expect(repo.getSession(session.id)?.effort).toBe('existing-effort')
+        expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBe('existing-reasoning')
+        expect(store.sessions.getSession(session.id)?.effort).toBe('existing-effort')
+        expect(events).toEqual([])
     })
 
     it('applySessionConfig does not emit when no config fields are provided', () => {

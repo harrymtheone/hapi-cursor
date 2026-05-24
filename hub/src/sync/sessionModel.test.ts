@@ -134,7 +134,7 @@ describe('session model', () => {
         expect(store.sessions.getSession(session.id)?.model).toBeNull()
     })
 
-    it('persists applied session effort updates, including clear-to-auto', () => {
+    it('ignores unsupported applied session effort updates', () => {
         const store = new Store(':memory:')
         const events: SyncEvent[] = []
         const cache = new SessionCache(store, createPublisher(events))
@@ -147,15 +147,15 @@ describe('session model', () => {
         )
 
         cache.applySessionConfig(session.id, { effort: 'max' })
-        expect(cache.getSession(session.id)?.effort).toBe('max')
-        expect(store.sessions.getSession(session.id)?.effort).toBe('max')
+        expect(cache.getSession(session.id)?.effort).toBe('medium')
+        expect(store.sessions.getSession(session.id)?.effort).toBe('medium')
 
         cache.applySessionConfig(session.id, { effort: null })
-        expect(cache.getSession(session.id)?.effort).toBeNull()
-        expect(store.sessions.getSession(session.id)?.effort).toBeNull()
+        expect(cache.getSession(session.id)?.effort).toBe('medium')
+        expect(store.sessions.getSession(session.id)?.effort).toBe('medium')
     })
 
-    it('persists applied session model reasoning effort updates, including clear-to-default', () => {
+    it('ignores unsupported applied session model reasoning effort updates', () => {
         const store = new Store(':memory:')
         const events: SyncEvent[] = []
         const cache = new SessionCache(store, createPublisher(events))
@@ -168,12 +168,12 @@ describe('session model', () => {
         )
 
         cache.applySessionConfig(session.id, { modelReasoningEffort: 'xhigh' })
-        expect(cache.getSession(session.id)?.modelReasoningEffort).toBe('xhigh')
-        expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBe('xhigh')
+        expect(cache.getSession(session.id)?.modelReasoningEffort).toBe('high')
+        expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBe('high')
 
         cache.applySessionConfig(session.id, { modelReasoningEffort: null })
-        expect(cache.getSession(session.id)?.modelReasoningEffort).toBeNull()
-        expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBeNull()
+        expect(cache.getSession(session.id)?.modelReasoningEffort).toBe('high')
+        expect(store.sessions.getSession(session.id)?.modelReasoningEffort).toBe('high')
     })
 
     it('persists keepalive effort changes, including clearing the effort', () => {
