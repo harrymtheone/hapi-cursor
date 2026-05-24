@@ -47,6 +47,7 @@ export function applyCursorSessionConfig(
         currentModelReasoningEffort: string | null | undefined;
         currentEffort: string | null | undefined;
         syncPermissionMode: (mode: PermissionMode) => void;
+        syncModel?: (model: string | null) => void;
     }
 ): CursorSessionConfigApplyResponse {
     const parsed = CursorSessionConfigPayloadSchema.safeParse(payload);
@@ -79,6 +80,7 @@ export function applyCursorSessionConfig(
         return { applied: { permissionMode: nextPermissionMode } };
     }
 
+    state.syncModel?.(config.model ?? null);
     return CursorRuntimeConfigApplyResultSchema.parse({
         status: 'applies-next-run',
         model: config.model,
@@ -144,7 +146,7 @@ export async function runCursor(
     const sessionWrapperRef: { current: CursorSession | null } = { current: null };
 
     let currentPermissionMode: PermissionMode = opts.permissionMode ?? 'default';
-    const currentModel = opts.model;
+    let currentModel: string | undefined = opts.model;
 
     const lifecycle = createRunnerLifecycle({
         session,
@@ -189,6 +191,11 @@ export async function runCursor(
             syncPermissionMode: (mode) => {
                 currentPermissionMode = mode;
                 syncSessionMode();
+            },
+            syncModel: (model) => {
+                currentModel = model ?? undefined;
+                sessionWrapperRef.current?.setModel(model);
+                logger.debug(`[cursor] Synced session model: ${currentModel ?? 'auto'}`);
             }
         });
     });
