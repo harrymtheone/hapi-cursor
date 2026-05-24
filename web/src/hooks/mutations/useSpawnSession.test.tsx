@@ -21,6 +21,32 @@ function createWrapper() {
 }
 
 describe('useSpawnSession', () => {
+    it('forwards selected model without unsupported effort payload', async () => {
+        const spawnSession = vi.fn(async () => ({
+            type: 'success' as const,
+            sessionId: 'session-1'
+        }))
+        const api = { spawnSession } as unknown as ApiClient
+        const { result } = renderHook(() => useSpawnSession(api), { wrapper: createWrapper() })
+
+        await result.current.spawnSession({
+            machineId: 'machine-1',
+            directory: '/repo',
+            agent: 'cursor',
+            model: 'cursor-fast'
+        })
+
+        expect(spawnSession).toHaveBeenCalledWith(
+            'machine-1',
+            '/repo',
+            'cursor',
+            'cursor-fast',
+            undefined,
+            undefined,
+            undefined
+        )
+    })
+
     it('maps selected runtime config rejection to localized launch copy', async () => {
         const spawnSession = vi.fn(async () => ({
             type: 'error' as const,

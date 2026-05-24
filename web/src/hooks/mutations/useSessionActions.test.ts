@@ -30,6 +30,22 @@ function createApi(result: CursorRuntimeConfigApplyResult): ApiClient {
 }
 
 describe('useSessionActions model mutation', () => {
+    it('does not expose an unsupported effort mutation action', () => {
+        const api = createApi({
+            status: 'applied',
+            model: 'cursor-fast',
+            modelReasoningEffort: null,
+            effort: null
+        })
+        const { Wrapper } = createWrapper()
+        const { result } = renderHook(
+            () => useSessionActions(api, 'session-1', 'cursor'),
+            { wrapper: Wrapper }
+        )
+
+        expect(result.current).not.toHaveProperty('setEffort')
+    })
+
     it.each([
         {
             status: 'applied',

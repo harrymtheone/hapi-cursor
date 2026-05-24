@@ -98,7 +98,6 @@ describe('NewSession runtime model discovery', () => {
             undefined,
             false,
             'simple',
-            undefined,
             undefined
         )
     })
@@ -124,7 +123,6 @@ describe('NewSession runtime model discovery', () => {
             'cursor-fast',
             false,
             'simple',
-            undefined,
             undefined
         )
     })
