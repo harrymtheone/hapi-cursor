@@ -33,8 +33,7 @@ vi.mock('@/hooks/mutations/useSessionActions', () => ({
         abortSession: vi.fn(),
         switchSession: vi.fn(),
         setPermissionMode: vi.fn(),
-        setModel: setModelMock,
-        setEffort: vi.fn()
+        setModel: setModelMock
     })
 }))
 
@@ -298,5 +297,25 @@ describe('SessionChat model switch state', () => {
 
         expect(composerProps?.runtimeModelSwitchSupported).toBe(false)
         expect(composerProps?.availableModelOptions).toEqual([])
+    })
+
+    it('forwards effort metadata as display-only composer props', () => {
+        renderSessionChat({
+            status: 'applied',
+            model: 'cursor-fast',
+            modelReasoningEffort: null,
+            effort: null,
+        }, {
+            session: {
+                model: 'cursor-fast',
+                modelReasoningEffort: 'high',
+                effort: 'medium',
+            },
+        })
+
+        expect(composerProps?.modelReasoningEffort).toBe('high')
+        expect(composerProps?.effort).toBe('medium')
+        expect(composerProps).not.toHaveProperty('onEffortChange')
+        expect(composerProps).not.toHaveProperty('onModelReasoningEffortChange')
     })
 })

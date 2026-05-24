@@ -127,6 +127,16 @@ describe('HappyComposer', () => {
         expect(screen.getByText('high')).toBeInTheDocument()
     })
 
+    it('renders stored effort metadata without effort controls', () => {
+        renderComposer({
+            modelReasoningEffort: null,
+            effort: 'medium',
+        })
+
+        expect(screen.getByText('medium')).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /effort/i })).not.toBeInTheDocument()
+    })
+
     it('does not open the model selector when runtime switching is unsupported', () => {
         renderComposer({ runtimeModelSwitchSupported: false })
 
