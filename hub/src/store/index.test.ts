@@ -73,3 +73,29 @@ describe('Store missing required tables', () => {
         expect(caught!.message.toLowerCase()).toContain('sessions')
     })
 })
+
+describe('Store session completion marker', () => {
+    it('creates sessions with a nullable durable turn completion marker by default', () => {
+        const store = new Store(':memory:')
+        const session = store.sessions.getOrCreateSession('marker-default', { path: '/tmp/project' }, null)
+
+        expect(session.turnCompletionMarker).toBeNull()
+        expect(store.sessions.getSession(session.id)?.turnCompletionMarker).toBeNull()
+    })
+
+    it('sets and clears the durable turn completion marker without losing updatedAt ordering', () => {
+        const store = new Store(':memory:')
+        const session = store.sessions.getOrCreateSession('marker-set-clear', { path: '/tmp/project' }, null)
+        const completionAt = session.updatedAt + 5_000
+
+        expect(store.sessions.setSessionTurnCompletionMarker(session.id, completionAt, completionAt)).toBe(true)
+        expect(store.sessions.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
+        expect(store.sessions.getSession(session.id)?.updatedAt).toBe(completionAt)
+
+        const clearAt = completionAt + 1_000
+        expect(store.sessions.clearSessionTurnCompletionMarker(session.id, clearAt)).toBe(true)
+        const stored = store.sessions.getSession(session.id)
+        expect(stored?.turnCompletionMarker).toBeNull()
+        expect(stored?.updatedAt).toBe(clearAt)
+    })
+})

@@ -316,4 +316,21 @@ describe('SessionSchema', () => {
             expect('flavor' in result.data.metadata).toBe(false)
         }
     })
+
+    it('defaults absent durable turn completion marker to null', () => {
+        const result = SessionSchema.parse(minimalSession)
+
+        expect(result.turnCompletionMarker).toBeNull()
+    })
+
+    it('accepts a nullable durable turn completion marker', () => {
+        expect(SessionSchema.parse({
+            ...minimalSession,
+            turnCompletionMarker: 7_000
+        }).turnCompletionMarker).toBe(7_000)
+        expect(SessionSchema.parse({
+            ...minimalSession,
+            turnCompletionMarker: null
+        }).turnCompletionMarker).toBeNull()
+    })
 })
