@@ -1,0 +1,112 @@
+import { describe, expect, it } from 'vitest'
+import type { CursorModelSummary } from '@hapi/protocol/types'
+import {
+    composeVariantId,
+    decomposeModelId,
+    formatFamilySummary,
+    groupModelsIntoFamilies,
+} from './cursorModelFamilies'
+
+/** Fixture ids from live `agent models` samples (RESEARCH). */
+export const RESEARCH_MODEL_FIXTURES: CursorModelSummary[] = [
+    { id: 'auto', label: 'Auto' },
+    { id: 'composer-2', label: 'Composer 2' },
+    { id: 'composer-2-fast', label: 'Composer 2 Fast' },
+    { id: 'gpt-5.3-codex-high-fast', label: 'Codex 5.3 High Fast' },
+    {
+        id: 'claude-opus-4-7-thinking-medium-fast',
+        label: 'Opus 4.7 1M Medium Thinking Fast',
+    },
+    { id: 'claude-4.6-opus-high-thinking', label: 'Opus 4.6 1M Thinking' },
+    { id: 'claude-4.6-sonnet-medium', label: 'Sonnet 4.6 1M' },
+]
+
+describe('groupModelsIntoFamilies', () => {
+    it('excludes auto from families', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        expect(families.map((f) => f.key)).not.toContain('auto')
+        expect(families.some((f) => f.variants.some((v) => v.id === 'auto'))).toBe(false)
+    })
+
+    it('groups RESEARCH fixture ids into expected families', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        const keys = families.map((f) => f.key).sort()
+        expect(keys).toEqual([
+            'claude-4.6-opus',
+            'claude-4.6-sonnet',
+            'claude-opus-4-7',
+            'composer-2',
+            'gpt-5.3-codex',
+        ])
+    })
+
+    it('assigns human-readable display names from labels', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        const byKey = Object.fromEntries(families.map((f) => [f.key, f.displayName]))
+        expect(byKey['composer-2']).toBe('Composer 2')
+        expect(byKey['gpt-5.3-codex']).toBe('Codex 5.3')
+        expect(byKey['claude-opus-4-7']).toBe('Opus 4.7')
+        expect(byKey['claude-4.6-opus']).toBe('Opus 4.6')
+        expect(byKey['claude-4.6-sonnet']).toBe('Sonnet 4.6')
+    })
+})
+
+describe('composeVariantId', () => {
+    it('returns only ids that exist on family.variants', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        for (const family of families) {
+            const composed = composeVariantId(family, {})
+            if (composed !== null) {
+                expect(family.variants.some((v) => v.id === composed)).toBe(true)
+            }
+        }
+    })
+
+    it('prefers base variant without thinking or fast when selection is empty', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        const composer = families.find((f) => f.key === 'composer-2')
+        expect(composer).toBeDefined()
+        expect(composeVariantId(composer!, {})).toBe('composer-2')
+    })
+
+    it('composes explicit option combinations when a variant exists', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        const codex = families.find((f) => f.key === 'gpt-5.3-codex')
+        expect(composeVariantId(codex!, { effort: 'high', fast: true })).toBe(
+            'gpt-5.3-codex-high-fast'
+        )
+    })
+
+    it('returns null for impossible option combinations', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        const composer = families.find((f) => f.key === 'composer-2')
+        expect(
+            composeVariantId(composer!, { thinking: true, effort: 'max', fast: true })
+        ).toBeNull()
+    })
+})
+
+describe('decomposeModelId', () => {
+    it('round-trips composed ids for fixture families', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        for (const family of families) {
+            for (const variant of family.variants) {
+                const decomposed = decomposeModelId(variant.id, families)
+                expect(decomposed).not.toBeNull()
+                expect(decomposed!.familyKey).toBe(family.key)
+                expect(composeVariantId(family, decomposed!.selection)).toBe(variant.id)
+            }
+        }
+    })
+})
+
+describe('formatFamilySummary', () => {
+    it('formats family and option parts for status display', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        const decomposed = decomposeModelId('claude-opus-4-7-thinking-medium-fast', families)
+        expect(decomposed).not.toBeNull()
+        const summary = formatFamilySummary(decomposed!)
+        expect(summary).toContain('Opus 4.7')
+        expect(summary).toMatch(/Medium|Thinking|Fast/)
+    })
+})
