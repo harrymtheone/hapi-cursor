@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: ready_to_plan
-stopped_at: Phase 01 complete (17/17) — ready to discuss Phase 2
-last_updated: 2026-05-24T02:54:52.120Z
-last_activity: 2026-05-24 -- Phase 01 execution started
+status: executing
+stopped_at: Completed 01-13-PLAN.md
+last_updated: "2026-05-24T04:57:51.053Z"
+last_activity: 2026-05-24
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 20
+  completed_plans: 18
   percent: 0
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 2 — skills visibility and session policy
+**Current focus:** Phase 01 — cursor-runtime-config-contract
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Ready to plan
+Phase: 01 (cursor-runtime-config-contract) — EXECUTING
+Plan: 2 of 20
+Status: Ready to execute
 Last activity: 2026-05-24
 
-Progress: [██████████] 100%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [██████████] 100%
 | Phase 01 P15 | 3min | 2 tasks | 6 files |
 | Phase 01 P12 | 3min | 2 tasks | 10 files |
 | Phase 01 P13 | 5min | 2 tasks | 18 files |
+| Phase 01 P01-18 | 12min | - tasks | - files |
 
 ## Accumulated Context
 
@@ -123,6 +124,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Persist only the runtime completion marker in Hub; keep viewed/read completion state local to Web. — Durable runtime truth survives refetch without moving read state out of Web.
 - [Phase 01]: Use schema version 11 and the existing fail-fast mismatch policy instead of adding runtime migrations. — Matches the repo no-backward-compatibility SQLite policy.
 - [Phase 01]: Clear durable completion markers only when new queued work starts, not on idle keepalives. — Preserves completed/unread status across reload and reconnect while avoiding stale green on new work.
+- [Phase ?]: Web-side previousModel gate (not Hub-schema) closes UAT Test 3 flicker; BIG label gated until session-updated patch confirms
+- [Phase ?]: Shared CursorRuntimeConfigApplyResult enum unchanged; rename is locale-only (composer.model.appliesNextMessage)
 
 ### Pending Todos
 
@@ -145,7 +148,7 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-24T02:17:27.483Z
+Last session: 2026-05-24T04:57:43.111Z
 Stopped at: Completed 01-13-PLAN.md
 Resume file: None
 
