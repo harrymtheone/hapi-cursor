@@ -60,7 +60,7 @@ Plans:
 **Wave 4** *(blocked on Wave 3 completion)*
 
 - [x] 01-04-PLAN.md — Hub model discovery route and RPC wiring
-- [ ] 01-12-PLAN.md — Gap closure: remove unsupported Web effort mutation
+- [x] 01-12-PLAN.md — Gap closure: remove unsupported Web effort mutation
 - [ ] 01-13-PLAN.md — Gap closure: persist completion markers across refetch
 
 **Wave 5** *(blocked on Wave 4 completion)*
@@ -166,7 +166,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 13/15 | In Progress|  |
+| 1. Cursor Runtime Config Contract | 14/15 | In Progress|  |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |

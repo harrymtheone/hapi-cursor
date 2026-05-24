@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01-15-PLAN.md
-last_updated: "2026-05-24T02:01:34.721Z"
+stopped_at: Completed 01-12-PLAN.md
+last_updated: "2026-05-24T02:09:24.397Z"
 last_activity: 2026-05-24
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 13
-  percent: 87
+  completed_plans: 14
+  percent: 93
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 01 (cursor-runtime-config-contract) — EXECUTING
-Plan: 4 of 15
+Plan: 5 of 15
 Status: Ready to execute
 Last activity: 2026-05-24
 
-Progress: [█████████░] 87%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 87%
 | Phase 01 P11 | 3min | 1 tasks | 7 files |
 | Phase 01 P14 | 2min | 2 tasks | 7 files |
 | Phase 01 P15 | 3min | 2 tasks | 6 files |
+| Phase 01 P12 | 3min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Preserve model and permissionMode behavior while filtering unsupported effort fields. — Keeps supported runtime config status truthful while closing the D-06 gap.
 - [Phase 01]: Keep CLI runner spawn options model-only for selected runtime launch until Cursor exposes verified effort support. — Prevents unsupported effort fields from reaching Cursor launch or being represented as applied runtime state.
 - [Phase 01]: Classify selected-runtime-config-rejected only when an explicit selected model was present. — Unsupported effort-shaped input should not broaden selected runtime rejection now that Hub and session-config paths block it.
+- [Phase 01]: Keep Web effort support display-only until Cursor exposes verified separate effort mutation support. — Closes the unsupported Web mutation gap without implying runtime support.
+- [Phase 01]: Preserve raw selected model forwarding while removing unsupported effort payload slots from Web spawn calls. — Auto launches remain unspecified and explicit launches send only the selected model id.
 
 ### Pending Todos
 
@@ -137,8 +140,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-24T02:01:34.719Z
-Stopped at: Completed 01-15-PLAN.md
+Last session: 2026-05-24T02:09:24.393Z
+Stopped at: Completed 01-12-PLAN.md
 Resume file: None
 
 ---
