@@ -428,6 +428,51 @@ describe('useSSE handleSyncEvent', () => {
         })
     })
 
+    it("session-updated event for a non-selected session updates that session's SessionList summary cache entry while another session is open (cross-session patch convergence)", async () => {
+        const { queryClient, wrapper } = createHarness()
+        const summaryA = createSummary({ id: 'sessionA' })
+        const summaryB = createSummary({
+            id: 'sessionB',
+            statusKind: 'thinking',
+            thinking: true,
+        })
+        queryClient.setQueryData(queryKeys.sessions, { sessions: [summaryA, summaryB] })
+        const sessionADetail = createSession({ id: 'sessionA' })
+        queryClient.setQueryData(queryKeys.session('sessionA'), { session: sessionADetail })
+
+        mountUseSSE(wrapper)
+
+        act(() => {
+            activeSource().dispatch({
+                type: 'session-updated',
+                sessionId: 'sessionB',
+                data: {
+                    active: true,
+                    thinking: false,
+                    statusKind: 'completed',
+                    completionMarker: 7_000,
+                    errorMarker: null,
+                    updatedAt: 7_000,
+                },
+            } satisfies SyncEvent)
+        })
+
+        await waitFor(() => {
+            const sessions = queryClient
+                .getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)
+                ?.sessions ?? []
+            const b = sessions.find((s) => s.id === 'sessionB')
+            expect(b?.statusKind).toBe('completed')
+            expect(b?.completionMarker).toBe(7_000)
+            expect(b?.thinking).toBe(false)
+        })
+
+        // sessionA detail cache untouched by a sessionB patch.
+        expect(
+            queryClient.getQueryData<{ session: Session }>(queryKeys.session('sessionA'))?.session,
+        ).toEqual(sessionADetail)
+    })
+
     it('full machine-updated upserts machine cache', async () => {
         const { queryClient, wrapper } = createHarness()
         queryClient.setQueryData(queryKeys.machines, { machines: [] })
