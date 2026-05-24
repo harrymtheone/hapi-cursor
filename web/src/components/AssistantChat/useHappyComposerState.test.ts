@@ -178,19 +178,19 @@ describe('useHappyComposerState', () => {
         expect(result.current.showModelSettings).toBe(false)
     })
 
-    it('disables model selector when no runtime-approved options exist', () => {
+    it('allows model selector when supported and idle with empty modelFamilies (Auto-only)', () => {
         const { result } = renderHook(
             () => useHappyComposerState({
                 onModelChange: vi.fn(),
                 agentFlavor: 'cursor',
                 runtimeModelSwitchSupported: true,
-                availableModelOptions: [],
+                modelFamilies: [],
             }),
             { wrapper },
         )
 
-        expect(result.current.canOpenModelSelector).toBe(false)
-        expect(result.current.showModelSettings).toBe(false)
+        expect(result.current.canOpenModelSelector).toBe(true)
+        expect(result.current.showModelSettings).toBe(true)
     })
 
     it('controlsDisabled is true when disabled prop is set', () => {

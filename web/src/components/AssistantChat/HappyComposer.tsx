@@ -6,6 +6,7 @@ import type { ModelSwitchState } from '@/components/AssistantChat/StatusBar'
 import { ComposerButtons } from '@/components/AssistantChat/ComposerButtons'
 import type { PendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
 import { AttachmentItem } from '@/components/AssistantChat/AttachmentItem'
+import type { ModelFamily } from '@/lib/cursorModelFamilies'
 import { useHappyComposerState } from './useHappyComposerState'
 import { useHappyComposerHandlers } from './useHappyComposerHandlers'
 import { HappyComposerOverlays } from './HappyComposerOverlays'
@@ -32,6 +33,7 @@ export interface HappyComposerProps {
     agentFlavor?: string | null
     modelSwitchState?: ModelSwitchState
     runtimeModelSwitchSupported?: boolean
+    modelFamilies?: ModelFamily[]
     availableModelOptions?: Array<{ value: string | null; label: string }>
     onPermissionModeChange?: (mode: PermissionMode) => void
     onModelChange?: (model: string | null) => void
@@ -75,6 +77,7 @@ export function HappyComposer(props: HappyComposerProps) {
         permissionModeOptions,
         model,
         modelOptions,
+        modelFamilies: composerModelFamilies,
         showPermissionSettings,
         showModelSettings,
         showSettingsButton,
@@ -101,7 +104,7 @@ export function HappyComposer(props: HappyComposerProps) {
                         permissionMode={permissionMode}
                         permissionModeOptions={permissionModeOptions}
                         model={model}
-                        modelOptions={modelOptions}
+                        modelFamilies={composerModelFamilies ?? []}
                         suggestions={suggestions}
                         selectedIndex={selectedIndex}
                         controlsDisabled={controlsDisabled}
@@ -120,6 +123,7 @@ export function HappyComposer(props: HappyComposerProps) {
                         contextCacheRead={props.contextCacheRead}
                         contextWindow={props.contextWindow}
                         model={model}
+                        modelFamilies={composerModelFamilies}
                         modelReasoningEffort={props.modelReasoningEffort}
                         effort={props.effort}
                         permissionMode={permissionMode}

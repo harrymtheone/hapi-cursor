@@ -4,17 +4,17 @@ import type { ComponentProps, ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CursorRuntimeConfigApplyResult, Session } from '@hapi/protocol/types'
 import { I18nProvider } from '@/lib/i18n-context'
+import { groupModelsIntoFamilies } from '@/lib/cursorModelFamilies'
 import { SessionChat } from './SessionChat'
 
 let composerProps: ComponentProps<typeof import('@/components/AssistantChat/HappyComposer').HappyComposer> | null = null
 let threadProps: Record<string, unknown> | null = null
 let setModelMock: ReturnType<typeof vi.fn>
 const hapticNotification = vi.fn()
-const discoveredModelOptions = [
-    { value: null, label: 'Auto (unspecified)' },
-    { value: 'cursor-fast', label: 'cursor-fast' },
-    { value: 'cursor-opus', label: 'cursor-opus - Opus' },
-]
+const discoveredModelFamilies = groupModelsIntoFamilies([
+    { id: 'cursor-fast', label: 'Fast lane' },
+    { id: 'cursor-opus', label: 'Opus' },
+])
 
 vi.mock('@tanstack/react-router', () => ({
     useNavigate: () => vi.fn()
@@ -243,7 +243,7 @@ describe('SessionChat model switch state', () => {
         expect(threadProps?.rawMessagesCount).toBe(0)
     })
 
-    it('forwards live runtime switch support and discovered model options to the composer', async () => {
+    it('forwards live runtime switch support and model families to the composer', async () => {
         const appliesNextRun: CursorRuntimeConfigApplyResult = {
             status: 'applies-next-run',
             model: 'cursor-opus',
@@ -261,12 +261,12 @@ describe('SessionChat model switch state', () => {
             },
             chatProps: {
                 runtimeModelSwitchSupported: true,
-                availableModelOptions: discoveredModelOptions,
+                modelFamilies: discoveredModelFamilies,
             },
         })
 
         expect(composerProps?.runtimeModelSwitchSupported).toBe(true)
-        expect(composerProps?.availableModelOptions).toEqual(discoveredModelOptions)
+        expect(composerProps?.modelFamilies).toEqual(discoveredModelFamilies)
 
         await act(async () => {
             fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
@@ -292,12 +292,12 @@ describe('SessionChat model switch state', () => {
         }, {
             chatProps: {
                 runtimeModelSwitchSupported: false,
-                availableModelOptions: [],
+                modelFamilies: [],
             },
         })
 
         expect(composerProps?.runtimeModelSwitchSupported).toBe(false)
-        expect(composerProps?.availableModelOptions).toEqual([])
+        expect(composerProps?.modelFamilies).toEqual([])
     })
 
     it('handleModelChange captures previousModel from session.model and forwards it through modelSwitchState', async () => {

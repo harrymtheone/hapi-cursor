@@ -35,7 +35,8 @@ import { useTranslation } from '@/lib/use-translation'
 import { fetchLatestMessages, seedMessageWindowFromSession } from '@/lib/message-window-store'
 import { clearDraftsAfterSend } from '@/lib/clearDraftsAfterSend'
 import type { Machine } from '@/types/api'
-import type { CursorModelSummary } from '@hapi/protocol/types'
+import { groupModelsIntoFamilies } from '@/lib/cursorModelFamilies'
+import { useVisibleModelFamilies } from '@/hooks/useVisibleModelFamilies'
 import FilesPage from '@/routes/sessions/files'
 import FilePage from '@/routes/sessions/file'
 import TerminalPage from '@/routes/sessions/terminal'
@@ -124,15 +125,6 @@ function getMachineTitle(machine: Machine): string {
     if (machine.metadata?.displayName) return machine.metadata.displayName
     if (machine.metadata?.host) return machine.metadata.host
     return machine.id.slice(0, 8)
-}
-
-function formatRuntimeModelOption(model: CursorModelSummary): { value: string; label: string } {
-    return {
-        value: model.id,
-        label: model.label && model.label !== model.id
-            ? `${model.id} - ${model.label}`
-            : model.id,
-    }
 }
 
 function SessionsPage() {
@@ -367,16 +359,17 @@ function SessionPage() {
         return await getSlashSuggestions(query)
     }, [getSkillSuggestions, getSlashSuggestions])
 
-    const runtimeModelOptions = useMemo(() => {
-        if (cursorModels.result?.status !== 'ok' || cursorModels.result.models.length === 0) {
+    const { isFamilyVisible } = useVisibleModelFamilies()
+    const modelFamilies = useMemo(() => {
+        if (cursorModels.result?.status !== 'ok') {
             return []
         }
-        return [
-            { value: null, label: t('newSession.model.autoUnspecified') },
-            ...cursorModels.result.models.map(formatRuntimeModelOption),
-        ]
-    }, [cursorModels.result, t])
-    const runtimeModelSwitchSupported = cursorModels.result?.status === 'ok' && cursorModels.result.models.length > 0
+        return groupModelsIntoFamilies(cursorModels.result.models).filter((family) =>
+            isFamilyVisible(family.key)
+        )
+    }, [cursorModels.result, isFamilyVisible])
+    const runtimeModelSwitchSupported =
+        cursorModels.result?.status === 'ok' && cursorModels.result.models.length > 0
 
     const refreshSelectedSession = useCallback(() => {
         void refetchSession()
@@ -414,7 +407,7 @@ function SessionPage() {
             autocompleteSuggestions={getAutocompleteSuggestions}
             availableSlashCommands={slashCommands}
             runtimeModelSwitchSupported={runtimeModelSwitchSupported}
-            availableModelOptions={runtimeModelOptions}
+            modelFamilies={modelFamilies}
         />
     )
 }

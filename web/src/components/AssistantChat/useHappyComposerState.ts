@@ -11,6 +11,7 @@ import { useComposerDraft } from '@/hooks/useComposerDraft'
 import { useComposerEnterBehavior } from '@/hooks/useComposerEnterBehavior'
 import { useTranslation } from '@/lib/use-translation'
 import type { PendingSchedule } from '@/components/AssistantChat/ScheduleTimePicker'
+import { composeVariantId, type ModelFamily } from '@/lib/cursorModelFamilies'
 import { getModelOptionsForFlavor } from './modelOptions'
 
 export interface TextInputState {
@@ -37,6 +38,7 @@ export interface UseHappyComposerStateProps {
     controlledByUser?: boolean
     agentFlavor?: string | null
     runtimeModelSwitchSupported?: boolean
+    modelFamilies?: ModelFamily[]
     availableModelOptions?: Array<{ value: string | null; label: string }>
     onPermissionModeChange?: (mode: PermissionMode) => void
     onModelChange?: (model: string | null) => void
@@ -64,6 +66,7 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         controlledByUser = false,
         agentFlavor,
         runtimeModelSwitchSupported = false,
+        modelFamilies,
         availableModelOptions,
         onPermissionModeChange,
         onModelChange,
@@ -175,9 +178,21 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         () => getPermissionModeOptionsForFlavor(agentFlavor),
         [agentFlavor]
     )
+    const runtimeShortcutOptions = useMemo(() => {
+        if (!modelFamilies || modelFamilies.length === 0) {
+            return availableModelOptions
+        }
+        return [
+            { value: null, label: t('newSession.model.autoUnspecified') },
+            ...modelFamilies.map((family) => ({
+                value: composeVariantId(family, {}) ?? family.variants[0]?.id ?? null,
+                label: family.displayName,
+            })),
+        ]
+    }, [availableModelOptions, modelFamilies, t])
     const modelOptions = useMemo(
-        () => getModelOptionsForFlavor(agentFlavor, model, availableModelOptions),
-        [agentFlavor, model, availableModelOptions]
+        () => getModelOptionsForFlavor(agentFlavor, model, runtimeShortcutOptions),
+        [agentFlavor, model, runtimeShortcutOptions]
     )
     const permissionModes = useMemo(
         () => permissionModeOptions.map((option) => option.mode),
@@ -194,13 +209,10 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         ? Object.keys(props.agentState.requests).length
         : 0
     const isModelSwitchIdle = !props.thinking && (props.backgroundTaskCount ?? 0) === 0 && pendingRequestCount === 0
-    const hasRuntimeModelOptions = (availableModelOptions?.length ?? 0) > 0
-
     const showPermissionSettings = Boolean(onPermissionModeChange && permissionModeOptions.length > 0)
     const canOpenModelSelector = Boolean(
         onModelChange
         && runtimeModelSwitchSupported
-        && hasRuntimeModelOptions
         && isModelSwitchIdle
         && !controlsDisabled
     )
@@ -246,6 +258,7 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         haptic,
         permissionMode,
         model,
+        modelFamilies,
         permissionModeOptions,
         modelOptions,
         permissionModes,
