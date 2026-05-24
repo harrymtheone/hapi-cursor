@@ -35,7 +35,7 @@ export function toSafeSpawnFailure(
   options: SpawnSessionOptions,
   errorMessage: string
 ): Extract<SpawnSessionResult, { type: 'error' }> {
-  if (options.model || options.effort || options.modelReasoningEffort) {
+  if (options.model) {
     return {
       type: 'error',
       code: SELECTED_RUNTIME_CONFIG_REJECTED,

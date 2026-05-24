@@ -6,8 +6,6 @@ export interface SpawnSessionOptions {
     approvedNewDirectoryCreation?: boolean
     agent?: 'cursor'
     model?: string
-    effort?: string
-    modelReasoningEffort?: string
     yolo?: boolean
     permissionMode?: string
     token?: string
