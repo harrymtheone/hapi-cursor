@@ -73,3 +73,51 @@ describe('ApiMachineClient runtime discovery RPC', () => {
         expect(discoverCursorModels).toHaveBeenCalledTimes(1);
     });
 });
+
+describe('ApiMachineClient spawn RPC', () => {
+    it('forwards selected model without unsupported effort fields', async () => {
+        const spawnSession = vi.fn().mockResolvedValue({
+            type: 'success',
+            sessionId: 'session-1'
+        });
+        const client = new ApiMachineClient(
+            'token',
+            createMachine(),
+            { apiUrl: 'http://127.0.0.1:3006', extraHeaders: {} },
+            ['/tmp']
+        );
+
+        client.setRPCHandlers({
+            spawnSession,
+            stopSession: vi.fn(),
+            requestShutdown: vi.fn()
+        });
+
+        const response = await (client as unknown as {
+            rpcHandlerManager: {
+                handleRequest: (request: { method: string; params: string }) => Promise<string>;
+            };
+        }).rpcHandlerManager.handleRequest({
+            method: 'machine-1:spawn-happy-session',
+            params: JSON.stringify({
+                directory: '/tmp/project',
+                agent: 'cursor',
+                model: 'runtime-fast',
+                effort: 'high',
+                modelReasoningEffort: 'high'
+            })
+        });
+
+        expect(JSON.parse(response)).toEqual({
+            type: 'success',
+            sessionId: 'session-1'
+        });
+        expect(spawnSession).toHaveBeenCalledWith(expect.objectContaining({
+            directory: '/tmp/project',
+            agent: 'cursor',
+            model: 'runtime-fast'
+        }));
+        expect(spawnSession.mock.calls[0]?.[0]).not.toHaveProperty('effort');
+        expect(spawnSession.mock.calls[0]?.[0]).not.toHaveProperty('modelReasoningEffort');
+    });
+});
