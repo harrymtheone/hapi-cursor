@@ -5,16 +5,29 @@ import { ApiRouteError } from '../middleware/apiRouteError'
 import type { WebAppEnv } from '../middleware/auth'
 import { requireMachine } from './guards'
 
+const unsupportedRuntimeEffortResponse = {
+    error: {
+        code: 'unsupported-runtime-effort',
+        message: 'Unsupported runtime effort config'
+    }
+}
+
 const spawnBodySchema = z.object({
     directory: z.string().min(1),
     agent: z.literal('cursor').optional(),
     model: z.string().optional(),
-    effort: z.string().optional(),
-    modelReasoningEffort: z.string().optional(),
     yolo: z.boolean().optional(),
     sessionType: z.enum(['simple', 'worktree']).optional(),
     worktreeName: z.string().optional()
-})
+}).strict()
+
+function hasUnsupportedRuntimeEffort(body: unknown): boolean {
+    return Boolean(
+        body
+        && typeof body === 'object'
+        && ('effort' in body || 'modelReasoningEffort' in body)
+    )
+}
 
 const pathsExistsSchema = z.object({
     paths: z.array(z.string().min(1)).max(1000)
@@ -46,6 +59,10 @@ export function createMachinesRoutes(getSyncEngine: () => SyncEngine | null): Ho
         }
 
         const body = await c.req.json().catch(() => null)
+        if (hasUnsupportedRuntimeEffort(body)) {
+            return c.json(unsupportedRuntimeEffortResponse, 400)
+        }
+
         const parsed = spawnBodySchema.safeParse(body)
         if (!parsed.success) {
             return c.json({ error: 'Invalid body' }, 400)
@@ -56,12 +73,10 @@ export function createMachinesRoutes(getSyncEngine: () => SyncEngine | null): Ho
             parsed.data.directory,
             parsed.data.agent,
             parsed.data.model,
-            parsed.data.modelReasoningEffort,
             parsed.data.yolo,
             parsed.data.sessionType,
             parsed.data.worktreeName,
-            undefined,
-            parsed.data.effort
+            undefined
         )
         return c.json(result)
     })

@@ -154,12 +154,10 @@ export class SyncEngineSessionResume {
             target.directory,
             target.flavor,
             session.model ?? undefined,
-            session.modelReasoningEffort ?? undefined,
             undefined,
             undefined,
             undefined,
             resumeToken,
-            session.effort ?? undefined,
             effectivePermissionMode
         )
 

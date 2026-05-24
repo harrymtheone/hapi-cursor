@@ -128,19 +128,17 @@ export class RpcGateway {
         directory: string,
         agent: 'cursor' = 'cursor',
         model?: string,
-        modelReasoningEffort?: string,
         yolo?: boolean,
         sessionType?: 'simple' | 'worktree',
         worktreeName?: string,
         resumeSessionId?: string,
-        effort?: string,
         permissionMode?: PermissionMode
     ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string; code?: SpawnErrorCode }> {
         try {
             const result = await this.machineRpc(
                 machineId,
                 'spawn-happy-session',
-                { type: 'spawn-in-directory', directory, agent, model, modelReasoningEffort, yolo, sessionType, worktreeName, resumeSessionId, effort, permissionMode }
+                { type: 'spawn-in-directory', directory, agent, model, yolo, sessionType, worktreeName, resumeSessionId, permissionMode }
             )
             if (result && typeof result === 'object') {
                 const obj = result as Record<string, unknown>

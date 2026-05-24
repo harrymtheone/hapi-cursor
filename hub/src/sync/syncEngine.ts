@@ -265,12 +265,10 @@ export class SyncEngine {
         directory: string,
         agent: 'cursor' = 'cursor',
         model?: string,
-        modelReasoningEffort?: string,
         yolo?: boolean,
         sessionType?: 'simple' | 'worktree',
         worktreeName?: string,
         resumeSessionId?: string,
-        effort?: string,
         permissionMode?: PermissionMode
     ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string; code?: SpawnErrorCode }> {
         return await this.rpc.spawnSession(
@@ -278,12 +276,10 @@ export class SyncEngine {
             directory,
             agent,
             model,
-            modelReasoningEffort,
             yolo,
             sessionType,
             worktreeName,
             resumeSessionId,
-            effort,
             permissionMode
         )
     }

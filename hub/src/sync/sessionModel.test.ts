@@ -419,16 +419,13 @@ describe('session model', () => {
                 _directory: string,
                 _agent: string,
                 model?: string,
-                modelReasoningEffort?: string,
                 _yolo?: boolean,
                 _sessionType?: string,
                 _worktreeName?: string,
                 _resumeSessionId?: string,
-                effort?: string
+                _permissionMode?: string
             ) => {
                 capturedModel = model
-                capturedModelReasoningEffort = modelReasoningEffort
-                capturedEffort = effort
                 return { type: 'success', sessionId: session.id }
             }
             ;(engine as any).session.resume.waitForSessionActive = async () => true
@@ -482,10 +479,8 @@ describe('session model', () => {
                 _yolo?: boolean,
                 _sessionType?: string,
                 _worktreeName?: string,
-                _resumeSessionId?: string,
-                modelReasoningEffort?: string
+                _resumeSessionId?: string
             ) => {
-                capturedModelReasoningEffort = modelReasoningEffort
                 return { type: 'success', sessionId: session.id }
             }
             ;(engine as any).session.resume.waitForSessionActive = async () => true
@@ -534,7 +529,6 @@ describe('session model', () => {
                 _directory: string,
                 _agent: string,
                 _model?: string,
-                _modelReasoningEffort?: string,
                 _yolo?: boolean,
                 _sessionType?: 'simple' | 'worktree',
                 _worktreeName?: string,
@@ -601,12 +595,10 @@ describe('session model', () => {
                 _directory: string,
                 _agent: string,
                 _model?: string,
-                _modelReasoningEffort?: string,
                 _yolo?: boolean,
                 _sessionType?: string,
                 _worktreeName?: string,
                 _resumeSessionId?: string,
-                _effort?: string,
                 permissionMode?: string
             ) => {
                 capturedPermissionMode = permissionMode
