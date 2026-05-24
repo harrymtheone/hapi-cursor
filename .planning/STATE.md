@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: ready_to_plan
-stopped_at: Phase 01 complete (20/20) — ready to discuss Phase 2
-last_updated: 2026-05-24T05:54:55.669Z
+status: executing
+stopped_at: Completed 01-13-PLAN.md
+last_updated: "2026-05-24T06:29:40.993Z"
 last_activity: 2026-05-24
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 21
+  completed_plans: 21
   percent: 20
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 2 — skills visibility and session policy
+**Current focus:** Phase 01 — cursor-runtime-config-contract
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Ready to plan
+Phase: 01 (cursor-runtime-config-contract) — EXECUTING
+Plan: 2 of 21
+Status: Ready to execute
 Last activity: 2026-05-24
 
 Progress: [██████████] 100%
@@ -74,6 +74,7 @@ Progress: [██████████] 100%
 | Phase 01 P01-18 | 12min | - tasks | - files |
 | Phase 01 P01-19 | 7m | 2 tasks | 3 files |
 | Phase 01 P01-20 | 6m | 2 tasks | 2 files |
+| Phase 01 P21 | 4m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,7 @@ Recent decisions affecting current work:
 - [Phase 01]: Clear durable completion markers only when new queued work starts, not on idle keepalives. — Preserves completed/unread status across reload and reconnect while avoiding stale green on new work.
 - [Phase ?]: Web-side previousModel gate (not Hub-schema) closes UAT Test 3 flicker; BIG label gated until session-updated patch confirms
 - [Phase ?]: Shared CursorRuntimeConfigApplyResult enum unchanged; rename is locale-only (composer.model.appliesNextMessage)
+- [Phase ?]: [Phase 01]: SessionList prune effect must distinguish transient empty loading from authoritative empty list to prevent localStorage wipe on refresh.
 
 ### Pending Todos
 
@@ -150,7 +152,7 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-24T05:06:13.791Z
+Last session: 2026-05-24T06:29:22.738Z
 Stopped at: Completed 01-13-PLAN.md
 Resume file: None
 

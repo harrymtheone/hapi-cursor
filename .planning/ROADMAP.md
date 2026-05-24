@@ -17,7 +17,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions, if needed later
 
-- [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (UAT gaps reopened — gap-closure plans 18-20 added 2026-05-24)
+- [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (UAT gaps reopened — gap-closure plans 18-21 added 2026-05-24)
 - [ ] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files.
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
@@ -37,7 +37,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
   3. User can request an in-session model switch and see whether it applied, is pending, failed, or applies on the next run based on real CLI runtime behavior.
   4. User can scan each session's status, model, and effort from the mobile session list as live strict patches arrive.
 
-**Plans**: 20 plans
+**Plans**: 21 plans
 Plans:
 **Wave 1**
 
@@ -50,6 +50,7 @@ Plans:
 - [x] 01-18-PLAN.md — Gap closure: CLI hot model switch + Web copy + status semantics (CURS-03 / UAT Test 3)
 - [x] 01-19-PLAN.md — Gap closure: SessionList global SSE subscription (CURS-04 / UAT Test 5 part 1)
 - [x] 01-20-PLAN.md — Gap closure: viewed completion markers localStorage persistence (CURS-04 / UAT Test 5 part 2)
+- [x] 01-21-PLAN.md — Gap closure: preserve viewed completion markers during refresh loading render (CURS-04 / UAT Test 6)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -171,7 +172,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 20/20 | Complete   | 2026-05-24 |
+| 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-24 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
