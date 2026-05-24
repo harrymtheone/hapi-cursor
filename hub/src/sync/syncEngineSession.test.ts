@@ -47,7 +47,7 @@ function createFacade(
 }
 
 describe('SyncEngineSession.applySessionConfig', () => {
-    it('persists active-session fields returned by applies-next-run acknowledgement', async () => {
+    it('persists active-session supported fields returned by applies-next-run acknowledgement', async () => {
         const result: CursorRuntimeConfigApplyResult = {
             status: 'applies-next-run',
             model: 'cursor-runtime-model-next',
@@ -60,9 +60,27 @@ describe('SyncEngineSession.applySessionConfig', () => {
         await expect(facade.applySessionConfig('session-1', { model: 'cursor-runtime-model-next' })).resolves.toEqual(result)
 
         expect(applySessionConfig).toHaveBeenCalledWith('session-1', {
-            model: 'cursor-runtime-model-next',
+            model: 'cursor-runtime-model-next'
+        })
+    })
+
+    it('does not persist unsupported active-session effort fields returned by acknowledgement', async () => {
+        const result: CursorRuntimeConfigApplyResult = {
+            status: 'applies-next-run',
+            model: 'cursor-runtime-model-current',
             modelReasoningEffort: 'medium',
-            effort: null
+            effort: 'background',
+            reason: 'unknown'
+        }
+        const { facade, applySessionConfig } = createFacade(createSession(), result)
+
+        await expect(facade.applySessionConfig('session-1', {
+            modelReasoningEffort: 'medium',
+            effort: 'background'
+        })).resolves.toEqual(result)
+
+        expect(applySessionConfig).toHaveBeenCalledWith('session-1', {
+            model: 'cursor-runtime-model-current'
         })
     })
 
