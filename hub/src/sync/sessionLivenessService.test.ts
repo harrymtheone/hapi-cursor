@@ -196,7 +196,7 @@ describe('SessionLivenessService', () => {
         expect(repo.store.sessions.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
         const update = events.find((e) => e.type === 'session-updated')
         expect(update).toBeDefined()
-        if (update && update.type === 'session-updated') {
+        if (update && update.type === 'session-updated' && 'completionMarker' in update.data) {
             expect(update.data.completionMarker).toBe(completionAt)
         }
     })

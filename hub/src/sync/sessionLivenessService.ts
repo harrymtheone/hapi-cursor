@@ -123,14 +123,17 @@ export class SessionLivenessService {
 
         const nextTime = clampAliveTime(time) ?? Date.now()
         const wasThinking = session.thinking
+        const hadCompletionMarker = session.turnCompletionMarker !== null
         const previousUpdatedAt = session.updatedAt
 
         session.thinking = true
         session.thinkingAt = nextTime
         session.updatedAt = Math.max(session.updatedAt, nextTime)
+        session.turnCompletionMarker = null
+        this.repository.store.sessions.clearSessionTurnCompletionMarker(session.id, session.updatedAt)
         this.repository.pendingThinkingUntilBySessionId.set(session.id, nextTime + QUEUED_MESSAGE_THINKING_GRACE_MS)
 
-        if (!wasThinking || session.updatedAt !== previousUpdatedAt) {
+        if (!wasThinking || hadCompletionMarker || session.updatedAt !== previousUpdatedAt) {
             this.repository.lastBroadcastAtBySessionId.set(session.id, Date.now())
             this.publisher.emit({
                 type: 'session-updated',
@@ -173,7 +176,9 @@ export class SessionLivenessService {
         }
 
         const nextUpdatedAt = Math.max(stored.updatedAt, updatedAt)
-        const touched = this.repository.store.sessions.touchSessionUpdatedAt(sessionId, nextUpdatedAt)
+        const touched = activity.kind === 'turn-completed'
+            ? this.repository.store.sessions.setSessionTurnCompletionMarker(sessionId, nextUpdatedAt, nextUpdatedAt)
+            : this.repository.store.sessions.touchSessionUpdatedAt(sessionId, nextUpdatedAt)
         const session = this.repository.sessions.get(sessionId)
 
         if (!session) {
@@ -191,6 +196,7 @@ export class SessionLivenessService {
         if (activity.kind === 'turn-completed') {
             session.thinking = false
             session.thinkingAt = nextUpdatedAt
+            session.turnCompletionMarker = nextUpdatedAt
             this.repository.pendingThinkingUntilBySessionId.delete(session.id)
         }
         this.publisher.emit({
