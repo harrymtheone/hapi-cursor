@@ -111,6 +111,111 @@ describe('StatusBar', () => {
         expect(retry).toHaveBeenCalledWith('gpt-5')
     })
 
+    it('big model label stays on previousModel while switch state is applying or applies-next-run (gated until session-updated patch arrives)', () => {
+        // Simulates Hub's optimistic write: props.model has already flipped to the
+        // target model while modelSwitchState is still pending. The gate must keep
+        // the BIG label on previousModel to avoid the mid-flight flicker.
+        const switchPending = {
+            status: 'applies-next-run' as const,
+            targetModel: 'cursor-runtime-model-next',
+            previousModel: 'cursor-runtime-model-current'
+        }
+        const { rerender } = renderStatusBar({
+            model: 'cursor-runtime-model-next',
+            modelSwitchState: switchPending
+        })
+
+        expect(screen.getByLabelText('Model cursor-runtime-model-current')).toBeInTheDocument()
+        expect(screen.getByText('cursor-runtime-model-current')).toBeInTheDocument()
+
+        const applyingState = {
+            status: 'applying' as const,
+            targetModel: 'cursor-runtime-model-next',
+            previousModel: 'cursor-runtime-model-current'
+        }
+        rerender(
+            <I18nProvider>
+                <StatusBar
+                    active
+                    thinking={false}
+                    agentState={null}
+                    model="cursor-runtime-model-next"
+                    modelSwitchState={applyingState}
+                />
+            </I18nProvider>
+        )
+        expect(screen.getByLabelText('Model cursor-runtime-model-current')).toBeInTheDocument()
+
+        rerender(
+            <I18nProvider>
+                <StatusBar
+                    active
+                    thinking={false}
+                    agentState={null}
+                    model="cursor-runtime-model-next"
+                    modelSwitchState={{ status: 'idle' }}
+                />
+            </I18nProvider>
+        )
+        expect(screen.getByLabelText('Model cursor-runtime-model-next')).toBeInTheDocument()
+        expect(screen.queryByText('Applies next message')).not.toBeInTheDocument()
+        expect(screen.queryByText('Applies next run')).not.toBeInTheDocument()
+
+        rerender(
+            <I18nProvider>
+                <StatusBar
+                    active
+                    thinking={false}
+                    agentState={null}
+                    model="cursor-runtime-model-current"
+                    modelSwitchState={{ status: 'idle' }}
+                />
+            </I18nProvider>
+        )
+        expect(screen.getByLabelText('Model cursor-runtime-model-current')).toBeInTheDocument()
+    })
+
+    it('applies-next-run renders Applies next message copy in en and 下一条消息生效 in zh-CN (locale rename, status enum unchanged)', () => {
+        const switchState = {
+            status: 'applies-next-run' as const,
+            targetModel: 'X',
+            previousModel: 'Y'
+        }
+        render(
+            <I18nProvider>
+                <StatusBar
+                    active
+                    thinking={false}
+                    agentState={null}
+                    model="Y"
+                    modelSwitchState={switchState}
+                />
+            </I18nProvider>
+        )
+        expect(screen.getByText('Applies next message')).toBeInTheDocument()
+        expect(screen.queryByText('Applies next run')).not.toBeInTheDocument()
+
+        cleanup()
+        localStorage.setItem('hapi-lang', 'zh-CN')
+        try {
+            render(
+                <I18nProvider>
+                    <StatusBar
+                        active
+                        thinking={false}
+                        agentState={null}
+                        model="Y"
+                        modelSwitchState={switchState}
+                    />
+                </I18nProvider>
+            )
+            expect(screen.getByText('下一条消息生效')).toBeInTheDocument()
+            expect(screen.queryByText('下次运行生效')).not.toBeInTheDocument()
+        } finally {
+            localStorage.removeItem('hapi-lang')
+        }
+    })
+
     it('opens model settings only when selector access is enabled', () => {
         const open = vi.fn()
         const { rerender } = renderStatusBar({

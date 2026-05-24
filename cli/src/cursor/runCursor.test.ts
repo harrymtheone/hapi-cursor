@@ -166,6 +166,57 @@ describe('applyCursorSessionConfig', () => {
         )).toThrow('Invalid session config payload');
     });
 
+    it('mutates current model via syncModel callback on applies-next-run model branch', () => {
+        const syncPermissionMode = vi.fn();
+        const syncModel = vi.fn();
+        const state = {
+            currentPermissionMode: 'default' as const,
+            currentModel: 'cursor-runtime-model-current',
+            currentModelReasoningEffort: null,
+            currentEffort: null,
+            syncPermissionMode,
+            syncModel
+        };
+
+        const result = applyCursorSessionConfig({ model: 'cursor-runtime-model-next' }, state);
+
+        expect(result).toEqual({
+            status: 'applies-next-run',
+            model: 'cursor-runtime-model-next',
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'unknown'
+        });
+        expect(syncModel).toHaveBeenCalledTimes(1);
+        expect(syncModel).toHaveBeenCalledWith('cursor-runtime-model-next');
+        expect(syncPermissionMode).not.toHaveBeenCalled();
+
+        syncModel.mockClear();
+        const clearResult = applyCursorSessionConfig({ model: null }, state);
+        expect(clearResult).toMatchObject({ status: 'applies-next-run', model: null });
+        expect(syncModel).toHaveBeenCalledTimes(1);
+        expect(syncModel).toHaveBeenCalledWith(null);
+    });
+
+    it('syncModel is independent of syncPermissionMode (permission-only payload does not call syncModel)', () => {
+        const syncPermissionMode = vi.fn();
+        const syncModel = vi.fn();
+        const state = {
+            currentPermissionMode: 'default' as const,
+            currentModel: 'cursor-runtime-model-current',
+            currentModelReasoningEffort: null,
+            currentEffort: null,
+            syncPermissionMode,
+            syncModel
+        };
+
+        const result = applyCursorSessionConfig({ permissionMode: 'plan' }, state);
+
+        expect(result).toEqual({ applied: { permissionMode: 'plan' } });
+        expect(syncPermissionMode).toHaveBeenCalledWith('plan');
+        expect(syncModel).not.toHaveBeenCalled();
+    });
+
     it('does not emit timeline events for model status results', () => {
         const syncPermissionMode = vi.fn();
         const sendSessionEvent = vi.fn();

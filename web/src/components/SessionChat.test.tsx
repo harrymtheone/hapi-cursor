@@ -299,6 +299,30 @@ describe('SessionChat model switch state', () => {
         expect(composerProps?.availableModelOptions).toEqual([])
     })
 
+    it('handleModelChange captures previousModel from session.model and forwards it through modelSwitchState', async () => {
+        const appliesNextRun: CursorRuntimeConfigApplyResult = {
+            status: 'applies-next-run',
+            model: 'cursor-next',
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'unknown'
+        }
+        renderSessionChat(appliesNextRun)
+
+        await act(async () => {
+            fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
+        })
+
+        await waitFor(() => {
+            expect(composerProps?.modelSwitchState).toEqual({
+                status: 'applies-next-run',
+                reason: 'unknown',
+                targetModel: 'cursor-next',
+                previousModel: 'cursor-old'
+            })
+        })
+    })
+
     it('forwards effort metadata as display-only composer props', () => {
         renderSessionChat({
             status: 'applied',
