@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Variant A — Drill-down settings + composer picker</title>
+  <style>
+    :root {
+      --app-bg: #0f1115;
+      --app-fg: #e8eaed;
+      --app-hint: #9aa0a6;
+      --app-link: #8ab4f8;
+      --app-secondary-bg: #1a1d23;
+      --app-border: #2d323c;
+      --app-divider: #252930;
+      --green: #34c759;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #08090c;
+      color: var(--app-fg);
+      padding: 16px;
+    }
+    h1 { font-size: 14px; color: var(--app-hint); font-weight: 500; margin: 0 0 12px; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+    .phone {
+      width: 320px;
+      background: var(--app-bg);
+      border: 1px solid var(--app-border);
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 520px;
+    }
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--app-border);
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .back { color: var(--app-hint); font-size: 18px; }
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--app-hint);
+      padding: 16px 12px 6px;
+    }
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid var(--app-divider);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .cell:hover { background: var(--app-secondary-bg); }
+    .chev { color: var(--app-hint); }
+    .muted { color: var(--app-hint); font-size: 13px; }
+    .search {
+      margin: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--app-border);
+      background: var(--app-secondary-bg);
+      color: var(--app-fg);
+      width: calc(100% - 24px);
+      font-size: 14px;
+    }
+    .family {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--app-divider);
+      font-size: 14px;
+    }
+    .family input { accent-color: var(--green); width: 18px; height: 18px; }
+    .family .sub { font-size: 11px; color: var(--app-hint); }
+    .composer {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .input-mock {
+      min-height: 72px;
+      border: 1px solid var(--app-border);
+      border-radius: 12px;
+      background: var(--app-secondary-bg);
+      padding: 10px;
+      font-size: 14px;
+      color: var(--app-hint);
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .model-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--app-border);
+      background: var(--app-secondary-bg);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .menus {
+      position: relative;
+      height: 200px;
+    }
+    .menu-primary {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 200px;
+      background: #16191f;
+      border: 1px solid var(--app-border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      overflow: hidden;
+      font-size: 13px;
+    }
+    .menu-primary .hdr {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--app-divider);
+    }
+    .menu-primary .hdr input {
+      width: 100%;
+      background: var(--app-bg);
+      border: 1px solid var(--app-border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      color: var(--app-fg);
+      font-size: 12px;
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .item.sel { background: var(--app-secondary-bg); }
+    .item:hover { background: #22262e; }
+    .edit { color: var(--app-link); font-size: 12px; margin-left: 8px; }
+    .check { color: var(--app-link); }
+    .menu-options {
+      position: absolute;
+      left: 208px;
+      bottom: 0;
+      width: 160px;
+      background: #16191f;
+      border: 1px solid var(--app-border);
+      border-radius: 12px;
+      padding: 8px 0;
+      font-size: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .opt-hdr { padding: 4px 10px; color: var(--app-hint); font-size: 10px; text-transform: uppercase; }
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+    }
+    .toggle {
+      width: 36px; height: 20px; border-radius: 10px;
+      background: var(--green); position: relative;
+    }
+    .toggle.off { background: #444; }
+    .toggle::after {
+      content: '';
+      position: absolute; top: 2px; right: 2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff;
+    }
+    .toggle.off::after { right: auto; left: 2px; }
+    .radio-row { padding: 6px 10px; display: flex; justify-content: space-between; }
+    .radio-row.sel { color: var(--app-link); }
+    .footer-link {
+      padding: 8px 10px;
+      border-top: 1px solid var(--app-divider);
+      color: var(--app-link);
+      font-size: 12px;
+    }
+    .help {
+      padding: 12px;
+      font-size: 11px;
+      color: var(--app-hint);
+      line-height: 1.4;
+    }
+    .tag { font-size: 10px; background: #252a35; padding: 2px 6px; border-radius: 4px; color: var(--app-hint); margin-left: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Variant A (recommended) — Settings drill-down + composer two-panel</h1>
+  <div class="row">
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="back">←</span> Settings</div>
+        <div class="section-title">Chat</div>
+        <div class="cell"><span>Enter key behavior</span><span class="muted">Send <span class="chev">›</span></span></div>
+        <div class="section-title">Models</div>
+        <div class="cell"><span>Visible models</span><span class="muted">6 selected <span class="chev">›</span></span></div>
+        <div class="section-title">About</div>
+        <div class="cell"><span>App version</span><span class="muted">0.1.0</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar"><span class="back">←</span> Visible models</div>
+        <input class="search" placeholder="Search models" />
+        <div class="family"><input type="checkbox" checked /><div><div>Opus 4.7</div><div class="sub">1M · 14 variants</div></div></div>
+        <div class="family"><input type="checkbox" checked /><div><div>Composer 2.5</div><div class="sub">4 variants</div></div></div>
+        <div class="family"><input type="checkbox" /><div><div>Codex 5.3</div><div class="sub">10 variants</div></div></div>
+        <div class="family"><input type="checkbox" checked /><div><div>Sonnet 4.6</div><div class="sub">1M · 6 variants</div></div></div>
+        <div class="help">Only checked families appear in chat. Unchecked all = use “all visible” until you save a filter. Auto is always available in chat.</div>
+      </div>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="bar" style="border:none">Chat session</div>
+        <div class="composer" style="margin-top: auto; padding-top: 280px;">
+          <div class="menus">
+            <div class="menu-primary">
+              <div class="hdr"><input placeholder="Search models" /></div>
+              <div class="item"><span>Auto</span></div>
+              <div class="item sel"><span>Opus 4.7 Medium</span><span><span class="edit">Edit</span> <span class="check">✓</span></span></div>
+              <div class="item"><span>Composer 2.5</span><span class="edit">Edit</span></div>
+              <div class="item"><span>Sonnet 4.6</span><span class="edit">Edit</span></div>
+              <div class="footer-link">Manage visible models…</div>
+            </div>
+            <div class="menu-options">
+              <div class="opt-hdr">Options</div>
+              <div class="toggle-row"><span>Thinking</span><div class="toggle"></div></div>
+              <div class="toggle-row"><span>Fast</span><div class="toggle off"></div></div>
+              <div class="opt-hdr">Context</div>
+              <div class="radio-row"><span>300K</span></div>
+              <div class="radio-row sel"><span>1M</span><span>✓</span></div>
+              <div class="opt-hdr">Effort</div>
+              <div class="radio-row"><span>Low</span></div>
+              <div class="radio-row sel"><span>Medium</span><span>✓</span></div>
+              <div class="radio-row"><span>High</span></div>
+            </div>
+          </div>
+          <div class="input-mock">Message…</div>
+          <div class="toolbar">
+            <button type="button" class="model-btn">Opus 4.7 Medium ▾</button>
+            <span class="muted">Send</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

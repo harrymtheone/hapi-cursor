@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Variant C — Inline expandable section</title>
+  <style>
+    :root {
+      --app-bg: #0f1115;
+      --app-fg: #e8eaed;
+      --app-hint: #9aa0a6;
+      --app-border: #2d323c;
+      --app-secondary-bg: #1a1d23;
+      --green: #34c759;
+    }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #08090c; color: var(--app-fg); padding: 16px; }
+    h1 { font-size: 14px; color: var(--app-hint); }
+    .phone { width: 320px; background: var(--app-bg); border: 1px solid var(--app-border); border-radius: 16px; }
+    .bar { padding: 12px; font-weight: 600; border-bottom: 1px solid var(--app-border); }
+    .expand { padding: 12px; border-bottom: 1px solid #252930; }
+    .expand summary { cursor: pointer; font-weight: 500; list-style: none; display: flex; justify-content: space-between; }
+    .expand summary::after { content: '▼'; font-size: 10px; color: var(--app-hint); }
+    .inner { margin-top: 12px; max-height: 200px; overflow-y: auto; }
+    .f { display: flex; gap: 8px; padding: 6px 0; font-size: 13px; align-items: center; }
+    .warn { padding: 12px; font-size: 11px; color: #f5a623; background: #2a2210; margin: 12px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Variant C — Expandable “Models” block on Settings index (rejected: bloats scroll)</h1>
+  <div class="phone">
+    <div class="bar">← Settings</div>
+    <div class="expand">
+      <details open>
+        <summary>Visible models <span style="color:var(--app-hint);font-weight:400">6 selected</span></summary>
+        <div class="inner">
+          <input placeholder="Search…" style="width:100%;margin-bottom:8px;padding:8px;border-radius:8px;border:1px solid var(--app-border);background:var(--app-secondary-bg);color:var(--app-fg)" />
+          <div class="f"><input type="checkbox" checked /> Opus 4.7</div>
+          <div class="f"><input type="checkbox" checked /> Composer 2.5</div>
+          <div class="f"><input type="checkbox" /> Codex 5.3</div>
+          <div class="f"><input type="checkbox" checked /> Sonnet 4.6</div>
+          <div class="f"><input type="checkbox" /> GPT-5.2</div>
+          <div class="f"><input type="checkbox" /> …</div>
+        </div>
+      </details>
+    </div>
+    <div class="warn">⚠ Settings page becomes very long on first visit before user narrows list. Prefer Variant A drill-down.</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Variant B — Bottom sheets</title>
+  <style>
+    :root {
+      --app-bg: #0f1115;
+      --app-fg: #e8eaed;
+      --app-hint: #9aa0a6;
+      --app-link: #8ab4f8;
+      --app-secondary-bg: #1a1d23;
+      --app-border: #2d323c;
+      --green: #34c759;
+    }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #08090c; color: var(--app-fg); padding: 16px; }
+    h1 { font-size: 14px; color: var(--app-hint); font-weight: 500; }
+    .phone {
+      width: 320px; height: 560px; background: var(--app-bg);
+      border: 1px solid var(--app-border); border-radius: 16px;
+      position: relative; overflow: hidden; margin-top: 12px;
+    }
+    .dim { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+    .sheet {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      max-height: 75%; background: #16191f;
+      border-radius: 16px 16px 0 0;
+      border-top: 1px solid var(--app-border);
+      padding: 8px 0 24px;
+    }
+    .handle { width: 36px; height: 4px; background: #444; border-radius: 2px; margin: 8px auto 12px; }
+    .title { font-weight: 600; padding: 0 16px 12px; font-size: 15px; }
+    .row { padding: 12px 16px; display: flex; justify-content: space-between; font-size: 14px; border-bottom: 1px solid #252930; }
+    .note { padding: 16px; font-size: 12px; color: var(--app-hint); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>Variant B — Same content as A, but models config opens as bottom sheet (from Settings row or composer link)</h1>
+  <div class="phone">
+    <div style="padding:12px;font-weight:600">Chat</div>
+    <div style="flex:1"></div>
+    <div class="dim"></div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div class="title">Visible models</div>
+      <div class="row"><span>Opus 4.7</span><input type="checkbox" checked /></div>
+      <div class="row"><span>Composer 2.5</span><input type="checkbox" checked /></div>
+      <div class="row"><span>Sonnet 4.6</span><input type="checkbox" checked /></div>
+      <div class="note">Pros: no new route. Cons: long list awkward in sheet; harder deep-link; Settings “page” pattern inconsistent with Language/Display.</div>
+    </div>
+  </div>
+</body>
+</html>

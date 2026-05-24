@@ -14,6 +14,7 @@ Requirements for v1.1. Each maps to exactly one roadmap phase.
 - [x] **CURS-02**: User can start a Cursor session with selected model/effort and see those values persisted in session metadata.
 - [x] **CURS-03**: User can request an in-session model switch and see applied, pending, failed, or applies-next-run state backed by real CLI runtime behavior.
 - [x] **CURS-04**: User can scan session status, model, and effort from the mobile session list, updated live through strict patches.
+- [ ] **CURS-05**: User can configure which Cursor model **families** are visible (global filter), start new chat sessions on **Auto** without a launch-time model control, and switch models in-session with a **Cursor Desktop-style** picker (family list + Edit → Options for Thinking/Fast/Context/Effort) that submits a single raw runtime model id.
 
 ### Skills
 
@@ -94,6 +95,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CURS-02 | Phase 1 | Complete |
 | CURS-03 | Phase 1 | Complete |
 | CURS-04 | Phase 1 | Complete |
+| CURS-05 | Phase 1 polish (pre–Phase 2) | Pending |
 | SKIL-01 | Phase 2 | Pending |
 | SKIL-02 | Phase 2 | Pending |
 | SKIL-03 | Phase 2 | Pending |
@@ -111,10 +113,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QUAL-04 | Phase 5 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 19 total
-- Mapped to phases: 19
+- v1.1 requirements: 20 total
+- Mapped to phases: 20
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-23*
-*Last updated: 2026-05-23 after v1.1 roadmap creation*
+*Last updated: 2026-05-25 — CURS-05 model picker UX (explore)*
