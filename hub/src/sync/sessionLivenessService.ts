@@ -176,7 +176,10 @@ export class SessionLivenessService {
         }
 
         const nextUpdatedAt = Math.max(stored.updatedAt, updatedAt)
-        const touched = activity.kind === 'turn-completed'
+        const isStaleCompletion = activity.kind === 'turn-completed'
+            && this.repository.sessions.get(sessionId)?.thinking === true
+            && (this.repository.pendingThinkingUntilBySessionId.get(sessionId) ?? 0) > Date.now()
+        const touched = activity.kind === 'turn-completed' && !isStaleCompletion
             ? this.repository.store.sessions.setSessionTurnCompletionMarker(sessionId, nextUpdatedAt, nextUpdatedAt)
             : this.repository.store.sessions.touchSessionUpdatedAt(sessionId, nextUpdatedAt)
         const session = this.repository.sessions.get(sessionId)
@@ -193,7 +196,7 @@ export class SessionLivenessService {
         }
 
         session.updatedAt = Math.max(session.updatedAt, nextUpdatedAt)
-        if (activity.kind === 'turn-completed') {
+        if (activity.kind === 'turn-completed' && !isStaleCompletion) {
             session.thinking = false
             session.thinkingAt = nextUpdatedAt
             session.turnCompletionMarker = nextUpdatedAt
@@ -202,7 +205,7 @@ export class SessionLivenessService {
         this.publisher.emit({
             type: 'session-updated',
             sessionId,
-            data: activity.kind === 'turn-completed'
+            data: activity.kind === 'turn-completed' && !isStaleCompletion
                 ? {
                     updatedAt: session.updatedAt,
                     thinking: false,
