@@ -151,4 +151,92 @@ describe('machines routes', () => {
             code: 'selected-runtime-config-rejected'
         })
     })
+
+    it('rejects unsupported effort at the spawn route boundary before engine invocation', async () => {
+        let spawnCalls = 0
+        const app = createApp({
+            getMachine: () => createMachine(),
+            spawnSession: async () => {
+                spawnCalls += 1
+                return { type: 'success', sessionId: 'session-1' }
+            }
+        } as never)
+
+        const response = await app.request('/api/machines/machine-1/spawn', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                directory: '/tmp/project',
+                effort: 'high'
+            })
+        })
+
+        expect(response.status).toBe(400)
+        expect(await response.json()).toEqual({
+            error: {
+                code: 'unsupported-runtime-effort',
+                message: 'Unsupported runtime effort config'
+            }
+        })
+        expect(spawnCalls).toBe(0)
+    })
+
+    it('rejects unsupported modelReasoningEffort at the spawn route boundary before engine invocation', async () => {
+        let spawnCalls = 0
+        const app = createApp({
+            getMachine: () => createMachine(),
+            spawnSession: async () => {
+                spawnCalls += 1
+                return { type: 'success', sessionId: 'session-1' }
+            }
+        } as never)
+
+        const response = await app.request('/api/machines/machine-1/spawn', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                directory: '/tmp/project',
+                modelReasoningEffort: 'xhigh'
+            })
+        })
+
+        expect(response.status).toBe(400)
+        expect(await response.json()).toEqual({
+            error: {
+                code: 'unsupported-runtime-effort',
+                message: 'Unsupported runtime effort config'
+            }
+        })
+        expect(spawnCalls).toBe(0)
+    })
+
+    it('passes model-only spawn requests through with the raw selected model id', async () => {
+        let capturedModel: string | undefined
+        const app = createApp({
+            getMachine: () => createMachine(),
+            spawnSession: async (
+                _machineId: string,
+                _directory: string,
+                _agent?: 'cursor',
+                model?: string
+            ) => {
+                capturedModel = model
+                return { type: 'success', sessionId: 'session-1' }
+            }
+        } as never)
+
+        const response = await app.request('/api/machines/machine-1/spawn', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                directory: '/tmp/project',
+                agent: 'cursor',
+                model: 'cursor-fast'
+            })
+        })
+
+        expect(response.status).toBe(200)
+        expect(await response.json()).toEqual({ type: 'success', sessionId: 'session-1' })
+        expect(capturedModel).toBe('cursor-fast')
+    })
 })

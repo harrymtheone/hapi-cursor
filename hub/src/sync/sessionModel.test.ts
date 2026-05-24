@@ -444,7 +444,7 @@ describe('session model', () => {
         }
     })
 
-    it('passes the stored model reasoning effort when respawning a resumed Cursor session', async () => {
+    it('does not pass unsupported model reasoning effort when respawning a resumed Cursor session', async () => {
         const store = new Store(':memory:')
         const engine = new SyncEngine(
             store,
@@ -479,6 +479,10 @@ describe('session model', () => {
                 _directory: string,
                 _agent: string,
                 _model?: string,
+                _yolo?: boolean,
+                _sessionType?: string,
+                _worktreeName?: string,
+                _resumeSessionId?: string,
                 modelReasoningEffort?: string
             ) => {
                 capturedModelReasoningEffort = modelReasoningEffort
@@ -489,7 +493,7 @@ describe('session model', () => {
             const result = await engine.resumeSession(session.id)
 
             expect(result).toEqual({ type: 'success', sessionId: session.id })
-            expect(capturedModelReasoningEffort).toBe('xhigh')
+            expect(capturedModelReasoningEffort).toBeUndefined()
         } finally {
             engine.shutdown()
         }
