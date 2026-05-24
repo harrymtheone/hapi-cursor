@@ -141,6 +141,13 @@ export function SessionList(props: {
     }, [])
 
     useEffect(() => {
+        // Skip pruning during transient empty loading renders (e.g. page refresh
+        // where TanStack Query data is briefly undefined → mapped to []). Without
+        // this guard, persisted viewed markers would be wiped to {} before the
+        // authoritative session list arrives, regressing UAT Test 6 / CURS-04.
+        if (props.isLoading && props.sessions.length === 0) {
+            return
+        }
         const liveMarkers = new Map<string, number | null>()
         for (const session of props.sessions) {
             liveMarkers.set(session.id, session.completionMarker)
@@ -166,7 +173,7 @@ export function SessionList(props: {
             saveViewedCompletionMarkers(next)
             return next
         })
-    }, [props.sessions])
+    }, [props.sessions, props.isLoading])
 
     useEffect(() => {
         if (!selectedSessionId) {
