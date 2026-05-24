@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: executing
-stopped_at: Completed 01-13-PLAN.md
-last_updated: "2026-05-24T06:29:40.993Z"
+status: ready_to_plan
+stopped_at: Phase 01 complete (21/21) — ready to discuss Phase 2
+last_updated: 2026-05-24T06:33:36.101Z
 last_activity: 2026-05-24
 progress:
   total_phases: 5
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 01 — cursor-runtime-config-contract
+**Current focus:** Phase 2 — skills visibility and session policy
 
 ## Current Position
 
-Phase: 01 (cursor-runtime-config-contract) — EXECUTING
-Plan: 2 of 21
-Status: Ready to execute
+Phase: 2
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-05-24
 
 Progress: [██████████] 100%
@@ -36,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 40
+- Total plans completed: 61
 - Average duration: 4min
 - Total execution time: 0.18 hours
 
@@ -49,7 +49,7 @@ Progress: [██████████] 100%
 | 3. MCP Inventory and Session Policy | TBD | - | - |
 | 4. Mobile Screenshot Display | TBD | - | - |
 | 5. Integration Guards and Mobile E2E | TBD | - | - |
-| 01 | 20 | - | - |
+| 01 | 21 | - | - |
 
 **Recent Trend:**
 
