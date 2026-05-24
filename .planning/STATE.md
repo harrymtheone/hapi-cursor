@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.1
-milestone_name: Cursor mobile features
-status: ready_to_plan
-stopped_at: Phase 01 complete (21/21) — ready to discuss Phase 2
-last_updated: 2026-05-24T06:33:36.101Z
-last_activity: 2026-05-24
+milestone_name: milestone
+status: executing
+stopped_at: Completed 01-13-PLAN.md
+last_updated: "2026-05-24T17:09:10.228Z"
+last_activity: 2026-05-24 -- Phase 01.1 planning complete
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 1
-  total_plans: 21
+  total_plans: 24
   completed_plans: 21
-  percent: 20
+  percent: 17
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 2 — skills visibility and session policy
+**Current focus:** Phase 01.1 — model picker UX (CURS-05)
 
 ## Current Position
 
-Phase: 2
+Phase: 01.1
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-05-24
+Status: Ready to execute
+Last activity: 2026-05-24 -- Phase 01.1 planning complete
 
 Progress: [██████████] 100%
 
@@ -77,6 +77,10 @@ Progress: [██████████] 100%
 | Phase 01 P21 | 4m | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 01.1 inserted after Phase 1: Model picker UX — family visibility filter, Auto-only new sessions, Cursor-style composer picker (CURS-05) (URGENT)
 
 ### Decisions
 
