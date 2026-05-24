@@ -215,4 +215,51 @@ describe('SessionLivenessService', () => {
         expect(repo.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
         expect(repo.store.sessions.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
     })
+
+    // 01-VERIFICATION truth #4 / 01-REVIEW CR-01
+    it('recordSessionActivity ignores late turn-completed after markMessageQueued (CURS-04 / truth #4)', () => {
+        const events: SyncEvent[] = []
+        const { repo, liveness } = createServices(events)
+        const session = repo.getOrCreateSession('late-ready-after-queue', sessionMetadata, null)
+
+        const aliveAt = Date.now()
+        liveness.handleSessionAlive({ sid: session.id, time: aliveAt, thinking: true })
+
+        const firstCompletionAt = aliveAt + 1_000
+        liveness.recordSessionActivity(session.id, firstCompletionAt, { kind: 'turn-completed' })
+        expect(repo.getSession(session.id)?.turnCompletionMarker).toBe(firstCompletionAt)
+
+        events.length = 0
+        const queuedAt = aliveAt + 5_000
+        liveness.markMessageQueued(session.id, queuedAt)
+
+        expect(repo.getSession(session.id)?.thinking).toBe(true)
+        expect(repo.getSession(session.id)?.turnCompletionMarker).toBeNull()
+        expect(repo.store.sessions.getSession(session.id)?.turnCompletionMarker).toBeNull()
+        expect(repo.pendingThinkingUntilBySessionId.get(session.id)).toBeDefined()
+        expect(repo.pendingThinkingUntilBySessionId.get(session.id)!).toBeGreaterThan(Date.now())
+
+        const updatedAtBeforeStale = repo.getSession(session.id)!.updatedAt
+
+        const staleCompletedAt = aliveAt + 500
+        liveness.recordSessionActivity(session.id, staleCompletedAt, { kind: 'turn-completed' })
+
+        expect(repo.getSession(session.id)?.thinking).toBe(true)
+        expect(repo.getSession(session.id)?.turnCompletionMarker).toBeNull()
+        expect(repo.store.sessions.getSession(session.id)?.turnCompletionMarker).toBeNull()
+        const pendingUntil = repo.pendingThinkingUntilBySessionId.get(session.id)
+        expect(pendingUntil).toBeDefined()
+        expect(pendingUntil!).toBeGreaterThan(Date.now())
+
+        const updatedAtAfterStale = repo.getSession(session.id)!.updatedAt
+        expect(updatedAtAfterStale).toBeGreaterThanOrEqual(updatedAtBeforeStale)
+
+        const completedAfterQueue = events.filter(
+            (e): e is Extract<SyncEvent, { type: 'session-updated' }> =>
+                e.type === 'session-updated'
+                && 'statusKind' in e.data
+                && e.data.statusKind === 'completed'
+        )
+        expect(completedAfterQueue).toHaveLength(0)
+    })
 })
