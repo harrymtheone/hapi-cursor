@@ -7,6 +7,7 @@ import type { PermissionModeTone } from '@hapi/protocol'
 import { useMemo } from 'react'
 import type { AgentState, PermissionMode } from '@/types/api'
 import { getContextBudgetTokens } from '@/chat/modelConfig'
+import { decomposeModelId, formatFamilySummary, type ModelFamily } from '@/lib/cursorModelFamilies'
 import { useTranslation } from '@/lib/use-translation'
 
 export type ModelSwitchState = {
@@ -159,6 +160,7 @@ export function StatusBar(props: {
     contextCacheRead?: number
     contextWindow?: number | null
     model?: string | null
+    modelFamilies?: ModelFamily[]
     modelReasoningEffort?: string | null
     effort?: string | null
     permissionMode?: PermissionMode
@@ -220,7 +222,14 @@ export function StatusBar(props: {
     const gatedModel = isSwitchPending && props.modelSwitchState?.previousModel !== undefined
         ? props.modelSwitchState.previousModel
         : props.model
-    const modelLabel = gatedModel?.trim() ? gatedModel : t('newSession.model.autoUnspecified')
+    const decomposedModel = gatedModel && props.modelFamilies?.length
+        ? decomposeModelId(gatedModel, props.modelFamilies)
+        : null
+    const modelLabel = decomposedModel
+        ? formatFamilySummary(decomposedModel, (key, fallback) => t(key) || fallback)
+        : gatedModel?.trim()
+            ? gatedModel
+            : t('newSession.model.autoUnspecified')
     const effortLabel = props.modelReasoningEffort ?? props.effort ?? null
     const canOpenModelSelector = props.canOpenModelSelector === true
     const showReadOnlyHint = !canOpenModelSelector && !modelSwitchLabel

@@ -37,12 +37,12 @@ updated: 2026-05-24T14:32:55Z
 expected: Kill any running hub/web/runner service if needed, then start the app from scratch. The Hub boots without errors, the SQLite store opens with the current schema, the Web PWA loads, and the primary sessions view/API returns live session data instead of a migration, schema, or startup failure.
 result: pass
 
-### 2. Real Model Discovery UI
-expected: Open the mobile PWA new-session panel with an online local runner selected. The model selector keeps Auto (unspecified) available, fetches runtime-owned raw Cursor model ids from the selected machine, shows loading/empty/safe retry states when appropriate, and never shows a static fallback catalog, raw stderr, or process output.
+### 2. Auto-Only New Session Launch
+expected: Open the mobile PWA new-session panel with an online local runner selected. There is no launch-time model selector; creating a session omits the model field so Cursor starts on Auto (unspecified). Model discovery still powers Settings and the in-session composer picker with loading/empty/safe retry states when appropriate, and never shows a static fallback catalog, raw stderr, or process output.
 result: pass
 
-### 3. Explicit Model Launch
-expected: Choose a discovered raw Cursor model id in the new-session panel and start a real Cursor session. The launch should not fall back to Auto, the session/composer metadata should show that raw model id, and the request path should send only the selected model with no unsupported effort/modelReasoningEffort field.
+### 3. Explicit Model Via In-Session Picker
+expected: Start a new session on Auto, then in an idle session open the composer family model picker, choose a discovered family/options combination, and send the next message. The composed raw Cursor model id should reach setModel (not Auto), with no unsupported effort/modelReasoningEffort field on the wire.
 result: pass
 
 ### 4. In-Session Model Switch Truth

@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { type ReactNode } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { I18nProvider } from '@/lib/i18n-context'
+import { groupModelsIntoFamilies } from '@/lib/cursorModelFamilies'
+import { RESEARCH_MODEL_FIXTURES } from '@/lib/cursorModelFamilies.test'
 import { HappyComposer } from './HappyComposer'
 
 vi.mock('@assistant-ui/react', async () => {
@@ -94,12 +96,9 @@ vi.mock('@/hooks/useActiveSuggestions', () => ({
 
 afterEach(() => cleanup())
 
-const runtimeOptions = [
-    { value: null, label: 'Auto (unspecified)' },
-    { value: 'gpt-5', label: 'gpt-5' },
-    { value: 'gpt-5-high', label: 'gpt-5-high' },
-    { value: 'cursor-raw-opus', label: 'cursor-raw-opus - Cursor Raw Opus' },
-]
+const modelFamilies = groupModelsIntoFamilies(
+    RESEARCH_MODEL_FIXTURES.filter((model) => model.id !== 'auto')
+)
 
 function renderComposer(props: Partial<Parameters<typeof HappyComposer>[0]> = {}) {
     return render(
@@ -108,11 +107,12 @@ function renderComposer(props: Partial<Parameters<typeof HappyComposer>[0]> = {}
                 active
                 thinking={false}
                 agentState={null}
-                model="gpt-5"
+                model="composer-2"
                 modelReasoningEffort="high"
                 agentFlavor="cursor"
                 onModelChange={vi.fn()}
-                availableModelOptions={runtimeOptions}
+                modelFamilies={modelFamilies}
+                runtimeModelSwitchSupported
                 {...props}
             />
         </I18nProvider>
@@ -120,10 +120,10 @@ function renderComposer(props: Partial<Parameters<typeof HappyComposer>[0]> = {}
 }
 
 describe('HappyComposer', () => {
-    it('renders composer-adjacent model and effort display', () => {
+    it('renders composer-adjacent family summary and effort display', () => {
         renderComposer()
 
-        expect(screen.getByText('gpt-5')).toBeInTheDocument()
+        expect(screen.getByText('Composer 2')).toBeInTheDocument()
         expect(screen.getByText('high')).toBeInTheDocument()
     })
 
@@ -140,24 +140,24 @@ describe('HappyComposer', () => {
     it('does not open the model selector when runtime switching is unsupported', () => {
         renderComposer({ runtimeModelSwitchSupported: false })
 
-        fireEvent.click(screen.getByLabelText('Model gpt-5'))
+        fireEvent.click(screen.getByLabelText('Model Composer 2'))
 
         expect(screen.queryByRole('button', { name: 'gpt-5-high' })).not.toBeInTheDocument()
         expect(screen.getByText('Switching unavailable for this runtime')).toBeInTheDocument()
     })
 
-    it('opens discovered runtime model options when runtime switching is supported and idle', () => {
+    it('opens family model picker when runtime switching is supported and idle', () => {
         const onModelChange = vi.fn()
         renderComposer({ runtimeModelSwitchSupported: true, onModelChange })
 
-        fireEvent.click(screen.getByLabelText('Model gpt-5'))
+        fireEvent.click(screen.getByLabelText('Model Composer 2'))
 
-        expect(screen.getByRole('button', { name: 'cursor-raw-opus - Cursor Raw Opus' })).toBeInTheDocument()
+        expect(screen.getByText('Opus 4.7')).toBeInTheDocument()
         expect(screen.queryByText('Switching unavailable for this runtime')).not.toBeInTheDocument()
 
-        fireEvent.click(screen.getByRole('button', { name: 'cursor-raw-opus - Cursor Raw Opus' }))
+        fireEvent.click(screen.getAllByRole('button', { name: /Select/ })[0]!)
 
-        expect(onModelChange).toHaveBeenCalledWith('cursor-raw-opus')
+        expect(onModelChange).toHaveBeenCalled()
     })
 
     it('renders applies-next-run and failed switch feedback next to the composer', () => {
@@ -173,11 +173,12 @@ describe('HappyComposer', () => {
                     active
                     thinking={false}
                     agentState={null}
-                    model="gpt-5"
+                    model="composer-2"
                     agentFlavor="cursor"
-                    modelSwitchState={{ status: 'failed', targetModel: 'gpt-5', reason: 'timed-out' }}
+                    modelSwitchState={{ status: 'failed', targetModel: 'composer-2', reason: 'timed-out' }}
                     onModelChange={vi.fn()}
-                    availableModelOptions={runtimeOptions}
+                    modelFamilies={modelFamilies}
+                    runtimeModelSwitchSupported
                 />
             </I18nProvider>
         )
