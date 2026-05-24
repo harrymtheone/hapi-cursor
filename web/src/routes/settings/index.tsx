@@ -6,6 +6,7 @@ import { LanguageSection } from './_sections/LanguageSection'
 import { DisplaySection } from './_sections/DisplaySection'
 import { ChatSection } from './_sections/ChatSection'
 import { AboutSection } from './_sections/AboutSection'
+import { ModelsSection } from './_sections/ModelsSection'
 
 export default function SettingsPage() {
     const { t } = useTranslation()
@@ -39,6 +40,7 @@ export default function SettingsPage() {
                         composerEnterDropdown={state.composerEnter}
                         terminalToolDisplayDropdown={state.terminalToolDisplay}
                     />
+                    <ModelsSection />
                     <AboutSection />
                 </div>
             </div>

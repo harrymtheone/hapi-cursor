@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { I18nContext, I18nProvider } from '@/lib/i18n-context'
 import { en } from '@/lib/locales'
 import { PROTOCOL_VERSION } from '@hapi/protocol'
@@ -9,9 +9,11 @@ vi.mock('@hapi/protocol', () => ({
     PROTOCOL_VERSION: 1,
 }))
 
+const navigateMock = vi.fn()
+
 // Mock the router hooks
 vi.mock('@tanstack/react-router', () => ({
-    useNavigate: () => vi.fn(),
+    useNavigate: () => navigateMock,
     useRouter: () => ({ history: { back: vi.fn() } }),
     useLocation: () => '/settings',
 }))
@@ -56,6 +58,17 @@ vi.mock('@/hooks/useSessionPreviewLimit', () => ({
     MAX_SESSION_PREVIEW_LIMIT: 99,
     normalizeSessionPreviewLimit: (value: number) => Number.isInteger(value) ? Math.min(99, Math.max(1, value)) : 8,
     useSessionPreviewLimit: () => ({ sessionPreviewLimit: 8, setSessionPreviewLimit: vi.fn() }),
+}))
+
+vi.mock('@/hooks/useVisibleModelFamilies', () => ({
+    useVisibleModelFamilies: () => ({
+        visibleKeys: ['composer-2'],
+        isConfigured: true,
+        isFamilyVisible: () => true,
+        setVisibleFamilies: vi.fn(),
+        clearFilter: vi.fn(),
+        summaryLabel: () => 'count' as const,
+    }),
 }))
 
 vi.mock('@/hooks/useChatSurfaceColors', () => ({
@@ -208,6 +221,15 @@ describe('SettingsPage', () => {
         expect(screen.getAllByText('Soft green').length).toBeGreaterThanOrEqual(1)
         expect(screen.getAllByText('Soft yellow').length).toBeGreaterThanOrEqual(1)
         expect(screen.getAllByLabelText('Custom color').length).toBeGreaterThanOrEqual(2)
+    })
+
+    it('renders visible models drill-down row and navigates on click', () => {
+        renderWithProviders(<SettingsPage />)
+        expect(screen.getByText('Models', { selector: '.uppercase' })).toBeInTheDocument()
+        const row = screen.getByRole('button', { name: /Visible models/i })
+        expect(row).toBeInTheDocument()
+        fireEvent.click(row)
+        expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/models' })
     })
 
     it('uses correct i18n keys for the Enter Key setting', () => {

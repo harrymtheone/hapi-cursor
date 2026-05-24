@@ -14,6 +14,11 @@ export function useAppGoBack(): () => void {
             return
         }
 
+        if (pathname === '/settings/models') {
+            navigate({ to: '/settings' })
+            return
+        }
+
         // Settings page always goes back to sessions
         if (pathname === '/settings') {
             navigate({ to: '/sessions' })
