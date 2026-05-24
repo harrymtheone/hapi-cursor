@@ -2,7 +2,9 @@
 session: test-3-runtime-switch
 phase: 01-cursor-runtime-config-contract
 test: 3
-status: diagnosed
+status: resolved
+resolved_by: "01-18-PLAN.md"
+resolved_date: "2026-05-24"
 updated: 2026-05-24T03:35:00Z
 ---
 

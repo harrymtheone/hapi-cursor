@@ -2,7 +2,9 @@
 session: session-list-spinner-stuck
 phase: 01-cursor-runtime-config-contract
 test: 5
-status: diagnosed
+status: resolved
+resolved_by: "01-19-PLAN.md, 01-20-PLAN.md"
+resolved_date: "2026-05-24"
 updated: 2026-05-24T03:35:00Z
 ---
 

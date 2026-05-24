@@ -1,5 +1,5 @@
 ---
-status: diagnosed
+status: resolved
 phase: 01-cursor-runtime-config-contract
 source:
   - .planning/phases/01-cursor-runtime-config-contract/01-01-SUMMARY.md
@@ -56,16 +56,18 @@ severity: major
 ## Summary
 
 total: 5
-passed: 3
-issues: 2
+passed: 5
+issues: 0
 pending: 0
 skipped: 0
 blocked: 0
+resolved: 2
 
 ## Gaps
 
 - truth: "在已有会话空闲时打开 composer 模型框，应能看到 Auto 和已发现的 raw Cursor model ids；选择明确模型后，composer 状态应真实显示 applied、pending、failed 或 applies-next-run。切换结果不应新增聊天时间线消息；如果 runtime 不支持热切换，应显示 applies-next-run 或安全失败状态，而不是泛化的 unavailable 门禁。"
-  status: failed
+  status: resolved
+  resolved_by: "01-18-PLAN.md"
   reason: "User reported: 创建 session 时选择的模型、chat 中显示的模型、实际调用的模型一致。chat 中支持切换模型，点击切换后会显示 applies next run，但出现两种表现：一种是当前模型名称切换成新模型，直接询问 LLM 表明实际调用仍是最初模型；另一种是当前模型只变化一瞬间然后变回最初模型，直接询问 LLM 表明实际调用仍是最初模型。"
   severity: major
   test: 3
@@ -88,7 +90,8 @@ blocked: 0
     - "Add a regression test: post `set-session-config { model: 'X' }` to a remote-mode session and assert the next `buildAgentArgs` call contains `--model X` plus `--resume <same_session_id>`."
   debug_session: ".planning/debug/test-3-runtime-switch.md"
 - truth: "检查移动端会话列表中的 idle、thinking/running、waiting、error、completed unread 和 viewed-completed 状态。空白但已连接的会话应显示 idle/灰色而不是旋转忙碌；agent 输出完成后应出现绿色 unread completed 标记；打开查看后变灰；刷新、重连或列表 refetch 后完成标记仍保持；发送新消息后旧完成标记清除并回到新工作状态。"
-  status: failed
+  status: resolved
+  resolved_by: "01-19-PLAN.md, 01-20-PLAN.md"
   reason: "User reported: 1. 在 agent running 的时候，正确切换到 spinner。如果保持在当前 chat session，spinner 正确切换到灰色点。如果切换到其他 chat session，spinner 不会自动切换，即使 agent 任务完成。2. 当页面有多个 chat session 的时候，进入一个 chat session 可以正确地将绿色点变成灰色点。一旦刷新页面，除了当前 chat session 的所有灰色点又变成了绿色点。"
   severity: major
   test: 5
