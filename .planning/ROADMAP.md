@@ -55,7 +55,7 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 01-03-PLAN.md — Machine-scoped Cursor model discovery
-- [ ] 01-15-PLAN.md — Gap closure: remove unsupported effort from CLI runner spawn contract
+- [x] 01-15-PLAN.md — Gap closure: remove unsupported effort from CLI runner spawn contract
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -166,7 +166,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 12/15 | In Progress|  |
+| 1. Cursor Runtime Config Contract | 13/15 | In Progress|  |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |

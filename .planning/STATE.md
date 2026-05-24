@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01-14-PLAN.md
-last_updated: "2026-05-24T01:55:25.870Z"
+stopped_at: Completed 01-15-PLAN.md
+last_updated: "2026-05-24T02:01:34.721Z"
 last_activity: 2026-05-24
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 15
-  completed_plans: 12
-  percent: 80
+  completed_plans: 13
+  percent: 87
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 01 (cursor-runtime-config-contract) — EXECUTING
-Plan: 3 of 15
+Plan: 4 of 15
 Status: Ready to execute
 Last activity: 2026-05-24
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 87%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [████████░░] 80%
 | Phase 01 P10 | 8min | 2 tasks | 16 files |
 | Phase 01 P11 | 3min | 1 tasks | 7 files |
 | Phase 01 P14 | 2min | 2 tasks | 7 files |
+| Phase 01 P15 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Leave session metadata effort persistence untouched for later gap plans while removing effort from the spawn path only. — Keeps 01-11 scoped to the Hub boundary.
 - [Phase 01]: Strip unsupported effort/modelReasoningEffort from active and inactive session-config writes. — Prevents post-spawn config changes from claiming unsupported effort runtime state was applied or persisted.
 - [Phase 01]: Preserve model and permissionMode behavior while filtering unsupported effort fields. — Keeps supported runtime config status truthful while closing the D-06 gap.
+- [Phase 01]: Keep CLI runner spawn options model-only for selected runtime launch until Cursor exposes verified effort support. — Prevents unsupported effort fields from reaching Cursor launch or being represented as applied runtime state.
+- [Phase 01]: Classify selected-runtime-config-rejected only when an explicit selected model was present. — Unsupported effort-shaped input should not broaden selected runtime rejection now that Hub and session-config paths block it.
 
 ### Pending Todos
 
@@ -134,8 +137,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-24T01:55:25.867Z
-Stopped at: Completed 01-14-PLAN.md
+Last session: 2026-05-24T02:01:34.719Z
+Stopped at: Completed 01-15-PLAN.md
 Resume file: None
 
 ---
