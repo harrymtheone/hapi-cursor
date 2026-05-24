@@ -165,7 +165,7 @@ describe('HappyComposer', () => {
             modelSwitchState: { status: 'applies-next-run', targetModel: 'gpt-5' },
         })
 
-        expect(screen.getByText('Applies next run')).toBeInTheDocument()
+        expect(screen.getByText('Applies next message')).toBeInTheDocument()
 
         rerender(
             <I18nProvider>

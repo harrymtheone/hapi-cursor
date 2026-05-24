@@ -178,14 +178,14 @@ describe('SessionChat model switch state', () => {
             fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
         })
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'applying', targetModel: 'cursor-next' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'applying', targetModel: 'cursor-next', previousModel: 'cursor-old' })
         })
 
         await act(async () => {
             resolveApply(applyResult)
         })
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'applied', targetModel: 'cursor-next' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'applied', targetModel: 'cursor-next', previousModel: 'cursor-old' })
         })
         expect(hapticNotification).toHaveBeenCalledWith('success')
         expect(onRefresh).toHaveBeenCalledTimes(1)
@@ -214,7 +214,7 @@ describe('SessionChat model switch state', () => {
             fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
         })
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'applies-next-run', reason: 'unknown', targetModel: 'cursor-next' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'applies-next-run', reason: 'unknown', targetModel: 'cursor-next', previousModel: 'cursor-old' })
         })
         expect(hapticNotification).toHaveBeenLastCalledWith('success')
 
@@ -224,7 +224,7 @@ describe('SessionChat model switch state', () => {
             fireEvent.click(screen.getByRole('button', { name: 'switch model' }))
         })
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'failed', reason: 'not-authenticated', targetModel: 'cursor-next' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'failed', reason: 'not-authenticated', targetModel: 'cursor-next', previousModel: 'cursor-old' })
         })
         expect(hapticNotification).toHaveBeenLastCalledWith('error')
     })
@@ -237,7 +237,7 @@ describe('SessionChat model switch state', () => {
         })
 
         await waitFor(() => {
-            expect(composerProps?.modelSwitchState).toEqual({ status: 'failed', targetModel: 'cursor-next' })
+            expect(composerProps?.modelSwitchState).toEqual({ status: 'failed', targetModel: 'cursor-next', previousModel: 'cursor-old' })
         })
         expect(hapticNotification).toHaveBeenCalledWith('error')
         expect(threadProps?.rawMessagesCount).toBe(0)
@@ -277,6 +277,7 @@ describe('SessionChat model switch state', () => {
                 status: 'applies-next-run',
                 reason: 'unknown',
                 targetModel: 'cursor-next',
+                previousModel: 'cursor-old',
             })
         })
         expect(threadProps?.rawMessagesCount).toBe(0)

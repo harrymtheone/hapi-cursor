@@ -91,7 +91,7 @@ describe('StatusBar', () => {
                 />
             </I18nProvider>
         )
-        expect(screen.getByText('Applies next run')).toBeInTheDocument()
+        expect(screen.getByText('Applies next message')).toBeInTheDocument()
     })
 
     it('renders failed status with retry using the target model', () => {

@@ -13,6 +13,7 @@ export type ModelSwitchState = {
     status: 'idle' | 'applying' | 'applied' | 'pending' | 'failed' | 'applies-next-run'
     reason?: string
     targetModel?: string | null
+    previousModel?: string | null
 }
 
 // Vibing messages for thinking state
@@ -139,7 +140,7 @@ function getModelSwitchLabel(
         return { text: t('composer.model.applied'), className: 'text-[var(--app-hint)]' }
     }
     if (state.status === 'applies-next-run') {
-        return { text: t('composer.model.appliesNextRun'), className: 'text-amber-500' }
+        return { text: t('composer.model.appliesNextMessage'), className: 'text-amber-500' }
     }
 
     const reason = formatSwitchReason(state.reason, t)
@@ -212,7 +213,14 @@ export function StatusBar(props: {
     const permissionModeTone = displayPermissionMode ? getPermissionModeTone(displayPermissionMode) : null
     const permissionModeColor = permissionModeTone ? PERMISSION_TONE_CLASSES[permissionModeTone] : 'text-[var(--app-hint)]'
     const modelSwitchLabel = getModelSwitchLabel(props.modelSwitchState, t)
-    const modelLabel = props.model?.trim() ? props.model : t('newSession.model.autoUnspecified')
+    const pendingSwitchStatus = props.modelSwitchState?.status
+    const isSwitchPending = pendingSwitchStatus === 'applying'
+        || pendingSwitchStatus === 'pending'
+        || pendingSwitchStatus === 'applies-next-run'
+    const gatedModel = isSwitchPending && props.modelSwitchState?.previousModel !== undefined
+        ? props.modelSwitchState.previousModel
+        : props.model
+    const modelLabel = gatedModel?.trim() ? gatedModel : t('newSession.model.autoUnspecified')
     const effortLabel = props.modelReasoningEffort ?? props.effort ?? null
     const canOpenModelSelector = props.canOpenModelSelector === true
     const showReadOnlyHint = !canOpenModelSelector && !modelSwitchLabel

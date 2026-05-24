@@ -334,7 +334,7 @@ export default {
   'composer.scheduleErrorTooFar': '最多只能定时 7 天。',
   'composer.model.applying': '正在应用...',
   'composer.model.applied': '已应用',
-  'composer.model.appliesNextRun': '下次运行生效',
+  'composer.model.appliesNextMessage': '下一条消息生效',
   'composer.model.switchFailed': '切换失败。重试',
   'composer.model.switchingUnavailable': '此运行时不支持切换',
   'composer.model.changesApplyBeforeLaunch': '模型变更仅在启动前生效',

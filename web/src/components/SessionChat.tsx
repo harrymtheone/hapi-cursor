@@ -241,22 +241,35 @@ export function SessionChat(props: {
 
     // Model mode change handler
     const handleModelChange = useCallback(async (model: string | null) => {
-        setModelSwitchState({ status: 'applying', targetModel: model })
+        const previousModel = props.session.model ?? null
+        setModelSwitchState({ status: 'applying', targetModel: model, previousModel })
         try {
             const result = await setModel(model)
             const reason = 'reason' in result ? result.reason : undefined
             const nextState: ModelSwitchState = reason
-                ? { status: result.status, reason, targetModel: model }
-                : { status: result.status, targetModel: model }
+                ? { status: result.status, reason, targetModel: model, previousModel }
+                : { status: result.status, targetModel: model, previousModel }
             setModelSwitchState(nextState)
             haptic.notification(result.status === 'failed' ? 'error' : 'success')
             props.onRefresh()
         } catch (e) {
-            setModelSwitchState({ status: 'failed', targetModel: model })
+            setModelSwitchState({ status: 'failed', targetModel: model, previousModel })
             haptic.notification('error')
             console.error('Failed to set model:', e)
         }
-    }, [setModel, props.onRefresh, haptic])
+    }, [setModel, props.onRefresh, haptic, props.session.model])
+
+    // Reset the local switch state once the Hub-delivered session-updated patch
+    // reports the new model in effect (next-message turn observed). This keeps
+    // the BIG label gate honest: previousModel rules until Hub confirms.
+    useEffect(() => {
+        if (
+            modelSwitchState.status === 'applies-next-run'
+            && modelSwitchState.targetModel === (props.session.model ?? null)
+        ) {
+            setModelSwitchState({ status: 'idle' })
+        }
+    }, [props.session.model, modelSwitchState.status, modelSwitchState.targetModel])
 
     // Abort handler
     const handleAbort = useCallback(async () => {

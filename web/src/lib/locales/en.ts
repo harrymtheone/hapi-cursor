@@ -332,7 +332,7 @@ export default {
   'composer.scheduleErrorTooFar': 'Maximum schedule time is 7 days.',
   'composer.model.applying': 'Applying...',
   'composer.model.applied': 'Applied',
-  'composer.model.appliesNextRun': 'Applies next run',
+  'composer.model.appliesNextMessage': 'Applies next message',
   'composer.model.switchFailed': 'Switch failed. Retry',
   'composer.model.switchingUnavailable': 'Switching unavailable for this runtime',
   'composer.model.changesApplyBeforeLaunch': 'Model changes apply before launch only',
