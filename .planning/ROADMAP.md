@@ -13,6 +13,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 ## Phases
 
 **Phase Numbering:**
+
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions, if needed later
 
@@ -25,72 +26,110 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 ## Phase Details
 
 ### Phase 1: Cursor Runtime Config Contract
+
 **Goal**: Users can discover available Cursor runtime options, start sessions with selected model/effort, switch models in-session with truthful state, and scan live status from the mobile session list.
 **Depends on**: Nothing (first phase)
 **Requirements**: CURS-01, CURS-02, CURS-03, CURS-04
 **Success Criteria** (what must be TRUE):
+
   1. User can discover available Cursor models from the local Cursor CLI before launch and sees a clear failure state when discovery fails.
   2. User can start a Cursor session with selected model and effort, then see those values persisted in session metadata.
   3. User can request an in-session model switch and see whether it applied, is pending, failed, or applies on the next run based on real CLI runtime behavior.
   4. User can scan each session's status, model, and effort from the mobile session list as live strict patches arrive.
-**Plans**: 10 plans
+
+**Plans**: 15 plans
 Plans:
+**Wave 1**
+
 - [x] 01-01-PLAN.md — Shared Cursor runtime config schemas and contracts
-- [x] 01-02-PLAN.md — CLI launch model and effort wiring
-- [x] 01-03-PLAN.md — Machine-scoped Cursor model discovery
-- [x] 01-04-PLAN.md — Hub model discovery route and RPC wiring
-- [x] 01-05-PLAN.md — Selected runtime config launch rejection handling
-- [x] 01-06-PLAN.md — Web model switch state propagation
-- [x] 01-07-PLAN.md — Composer runtime model status UI
-- [x] 01-08-PLAN.md — Compact session-list status indicators
 - [x] 01-09-PLAN.md — Gap closure: live composer runtime switch options
 - [x] 01-10-PLAN.md — Gap closure: idle and completion status markers
+- [x] 01-11-PLAN.md — Gap closure: reject unsupported effort at Hub spawn boundary
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 01-02-PLAN.md — CLI launch model and effort wiring
+- [x] 01-05-PLAN.md — Selected runtime config launch rejection handling
+- [ ] 01-14-PLAN.md — Gap closure: block unsupported effort in session-config persistence
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 01-03-PLAN.md — Machine-scoped Cursor model discovery
+- [ ] 01-15-PLAN.md — Gap closure: remove unsupported effort from CLI runner spawn contract
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [x] 01-04-PLAN.md — Hub model discovery route and RPC wiring
+- [ ] 01-12-PLAN.md — Gap closure: remove unsupported Web effort mutation
+- [ ] 01-13-PLAN.md — Gap closure: persist completion markers across refetch
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [x] 01-06-PLAN.md — Web model switch state propagation
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [x] 01-07-PLAN.md — Composer runtime model status UI
+- [x] 01-08-PLAN.md — Compact session-list status indicators
+
 **UI hint**: yes
 
 ### Phase 2: Skills Visibility and Session Policy
+
 **Goal**: Users can understand which Cursor skills are available and set session-level skill policy without changing skill files or global Cursor configuration.
 **Depends on**: Phase 1
 **Requirements**: SKIL-01, SKIL-02, SKIL-03
 **Success Criteria** (what must be TRUE):
+
   1. User can view discovered Cursor skills with source, invocation mode, description, and clear invalid metadata states.
   2. User can set a session skill policy to inherited, enabled, or disabled without editing `SKILL.md` files or global Cursor config.
   3. User can see whether each skill policy is hard-enforced by Cursor or only represented as HAPI session policy.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 3: MCP Inventory and Session Policy
+
 **Goal**: Users can safely inspect MCP availability, set session-level MCP policy, and review MCP approval context without leaking secrets or changing global MCP state.
 **Depends on**: Phase 2
 **Requirements**: MCP-01, MCP-02, MCP-03, MCP-04
 **Success Criteria** (what must be TRUE):
+
   1. User can view a redacted MCP server inventory with source, transport, status, auth/error state, and no exposed secrets.
   2. User can set session MCP policy to inherited, enabled, or disabled without mutating `mcp.json` or global Cursor MCP state.
   3. User can review MCP approval cards showing server, tool, argument summary, and policy state without changing approval semantics.
   4. User can continue a session when MCP discovery times out or fails, with stale/error state shown instead of blocking the chat.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 4: Mobile Screenshot Display
+
 **Goal**: Users can view Cursor browser and image MCP results as reliable, inspectable screenshot artifacts in the mobile timeline.
 **Depends on**: Phase 3
 **Requirements**: SHOT-01, SHOT-02
 **Success Criteria** (what must be TRUE):
+
   1. User can view `cursor-ide-browser` or image MCP results inline as mobile screenshot cards.
   2. User can open a screenshot into a larger viewer and zoom or pan without breaking the mobile timeline.
   3. User can retry failed screenshot loads and understand screenshot errors from the card or viewer.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 5: Integration Guards and Mobile E2E
+
 **Goal**: The complete v1.1 mobile control surface remains correct across reload, reconnect, restart, resume, and the repo's verification gates.
 **Depends on**: Phase 4
 **Requirements**: INTG-01, INTG-02, QUAL-01, QUAL-02, QUAL-03, QUAL-04
 **Success Criteria** (what must be TRUE):
+
   1. Session model, skill policy, and MCP policy survive PWA reload, SSE reconnect, hub restart, and session resume.
   2. Maintainer can verify v1.1 with typecheck, tests, madge, the no-cut-agent guard, and a real or mobile E2E flow.
   3. Maintainer can run a first-class lint gate or point to an explicit documented no-lint decision for this milestone.
   4. Maintainer can generate cli/web coverage with the missing Vitest coverage provider installed and decide whether CI thresholds are needed.
   5. Maintainer can run a Playwright-style mobile E2E smoke or documented equivalent, including an explicit `sseManager` coverage improvement or re-baseline.
+
 **Plans**: TBD
 **UI hint**: yes
 
@@ -127,7 +166,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 10/10 | Gaps found | - |
+| 1. Cursor Runtime Config Contract | 11/15 | In Progress|  |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |

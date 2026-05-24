@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: gaps_found
-stopped_at: Phase 01 verification found implementation gaps
-last_updated: "2026-05-23T17:46:31Z"
-last_activity: 2026-05-23
+status: executing
+stopped_at: Completed 01-11-PLAN.md
+last_updated: "2026-05-24T01:47:01.345Z"
+last_activity: 2026-05-24
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 15
+  completed_plans: 11
   percent: 0
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 01 — cursor-runtime-config-contract gap closure
+**Current focus:** Phase 01 — cursor-runtime-config-contract
 
 ## Current Position
 
-Phase: 01 (cursor-runtime-config-contract) — GAPS FOUND
-Plan: 10 of 10
-Status: Verification gaps found
-Last activity: 2026-05-23
+Phase: 01 (cursor-runtime-config-contract) — EXECUTING
+Plan: 2 of 15
+Status: Ready to execute
+Last activity: 2026-05-24
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 73%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 01 P08 | 8min | 2 tasks | 13 files |
 | Phase 01 P09 | 4min | 2 tasks | 5 files |
 | Phase 01 P10 | 8min | 2 tasks | 16 files |
+| Phase 01 P11 | 3min | 1 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -105,7 +106,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Treat active runner liveness as connection state only; real turn work is thinking, waiting, or background-task activity. — Prevents idle connected Cursor sessions from rendering as busy spinners.
 - [Phase 01]: Classify existing role-wrapped agent ready events as turn-completed activity instead of adding a new CLI event type. — Uses the existing trusted ready-event path and avoids widening the wire protocol.
 - [Phase 01]: Keep completed-marker read state local to Web; Hub only emits completionMarker values for runtime truth. — Read/viewed state is local UI state while completion markers are runtime status truth.
-
+- [Phase 01]: Reject unsupported effort/modelReasoningEffort at the Hub spawn boundary instead of forwarding fields Cursor launch cannot honor. — Preserves runtime truth until separate effort support is verified.
+- [Phase 01]: Keep selected model launch behavior unchanged by preserving raw model forwarding through the Hub spawn facades. — Closes the Hub spawn gap without changing valid model starts.
+- [Phase 01]: Leave session metadata effort persistence untouched for later gap plans while removing effort from the spawn path only. — Keeps 01-11 scoped to the Hub boundary.
 ### Pending Todos
 
 None yet.
@@ -127,8 +130,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T17:01:49.093Z
-Stopped at: Completed 01-10-PLAN.md
+Last session: 2026-05-24T01:47:01.342Z
+Stopped at: Completed 01-11-PLAN.md
 Resume file: None
 
 ---
