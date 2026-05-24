@@ -64,6 +64,18 @@ export function applyCursorSessionConfig(
     const hasModelConfigRequest = Object.prototype.hasOwnProperty.call(config, 'model');
 
     if (!hasModelConfigRequest) {
+        const hasUnsupportedEffortRequest =
+            Object.prototype.hasOwnProperty.call(config, 'effort')
+            || Object.prototype.hasOwnProperty.call(config, 'modelReasoningEffort');
+        if (hasUnsupportedEffortRequest && config.permissionMode === undefined) {
+            return CursorRuntimeConfigApplyResultSchema.parse({
+                status: 'failed',
+                model: state.currentModel ?? null,
+                modelReasoningEffort: null,
+                effort: null,
+                reason: 'unknown'
+            });
+        }
         return { applied: { permissionMode: nextPermissionMode } };
     }
 
