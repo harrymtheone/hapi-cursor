@@ -245,6 +245,27 @@ describe('session model', () => {
         })
     })
 
+    it('rebuilds completed summary from persisted turn completion marker after refresh', () => {
+        const store = new Store(':memory:')
+        const events: SyncEvent[] = []
+        const cache = new SessionCache(store, createPublisher(events))
+        const session = cache.getOrCreateSession(
+            'session-refetch-completed-marker',
+            { path: '/tmp/project', host: 'localhost' },
+            null
+        )
+        cache.handleSessionAlive({ sid: session.id, time: Date.now(), thinking: true })
+        const completionAt = session.updatedAt + 60_000
+
+        cache.recordSessionActivity(session.id, completionAt, { kind: 'turn-completed' })
+        const refreshed = cache.refreshSession(session.id)
+
+        expect(store.sessions.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
+        expect(refreshed?.turnCompletionMarker).toBe(completionAt)
+        expect(toSessionSummary(refreshed!).statusKind).toBe('completed')
+        expect(toSessionSummary(refreshed!).completionMarker).toBe(completionAt)
+    })
+
     it('touches session updatedAt when web sends a message through sync engine', async () => {
         const store = new Store(':memory:')
         const engine = new SyncEngine(

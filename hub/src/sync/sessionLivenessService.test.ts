@@ -128,6 +128,8 @@ describe('SessionLivenessService', () => {
                 errorMarker: null
             }))
         }
+        expect(repo.getSession(session.id)?.turnCompletionMarker).toBeNull()
+        expect(repo.store.sessions.getSession(session.id)?.turnCompletionMarker).toBeNull()
     })
 
     it('expireInactive flips overdue sessions to inactive and returns their ids', () => {
@@ -178,5 +180,39 @@ describe('SessionLivenessService', () => {
                 errorMarker: null
             }))
         }
+    })
+
+    it('recordSessionActivity persists the ready turn completion marker before emitting', () => {
+        const events: SyncEvent[] = []
+        const { repo, liveness } = createServices(events)
+        const session = repo.getOrCreateSession('activity-ready-persisted', sessionMetadata, null)
+        liveness.handleSessionAlive({ sid: session.id, time: Date.now(), thinking: true })
+        const completionAt = session.updatedAt + 10_000
+
+        events.length = 0
+        liveness.recordSessionActivity(session.id, completionAt, { kind: 'turn-completed' })
+
+        expect(repo.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
+        expect(repo.store.sessions.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
+        const update = events.find((e) => e.type === 'session-updated')
+        expect(update).toBeDefined()
+        if (update && update.type === 'session-updated') {
+            expect(update.data.completionMarker).toBe(completionAt)
+        }
+    })
+
+    it('handleSessionAlive keepalive preserves the durable completion marker', () => {
+        const events: SyncEvent[] = []
+        const { repo, liveness } = createServices(events)
+        const session = repo.getOrCreateSession('activity-ready-keepalive', sessionMetadata, null)
+        liveness.handleSessionAlive({ sid: session.id, time: Date.now(), thinking: true })
+        const completionAt = session.updatedAt + 10_000
+        liveness.recordSessionActivity(session.id, completionAt, { kind: 'turn-completed' })
+
+        events.length = 0
+        liveness.handleSessionAlive({ sid: session.id, time: completionAt + 1_000, thinking: false })
+
+        expect(repo.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
+        expect(repo.store.sessions.getSession(session.id)?.turnCompletionMarker).toBe(completionAt)
     })
 })
