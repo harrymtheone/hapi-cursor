@@ -49,7 +49,7 @@ Plans:
 - [x] 01-17-PLAN.md — Gap closure: guard late turn-completed after markMessageQueued (CURS-04 / CR-01)
 - [x] 01-18-PLAN.md — Gap closure: CLI hot model switch + Web copy + status semantics (CURS-03 / UAT Test 3)
 - [x] 01-19-PLAN.md — Gap closure: SessionList global SSE subscription (CURS-04 / UAT Test 5 part 1)
-- [ ] 01-20-PLAN.md — Gap closure: viewed completion markers localStorage persistence (CURS-04 / UAT Test 5 part 2)
+- [x] 01-20-PLAN.md — Gap closure: viewed completion markers localStorage persistence (CURS-04 / UAT Test 5 part 2)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -171,7 +171,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 19/20 | In Progress|  |
+| 1. Cursor Runtime Config Contract | 20/20 | Complete   | 2026-05-24 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
