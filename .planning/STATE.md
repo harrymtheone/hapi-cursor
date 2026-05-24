@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01-12-PLAN.md
-last_updated: "2026-05-24T02:09:24.397Z"
+stopped_at: Completed 01-13-PLAN.md
+last_updated: "2026-05-24T02:17:27.487Z"
 last_activity: 2026-05-24
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 15
-  completed_plans: 14
-  percent: 93
+  completed_plans: 15
+  percent: 20
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 01 (cursor-runtime-config-contract) — EXECUTING
-Plan: 5 of 15
-Status: Ready to execute
+Plan: 15 of 15
+Status: Phase complete
 Last activity: 2026-05-24
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Progress: [█████████░] 93%
 | Phase 01 P14 | 2min | 2 tasks | 7 files |
 | Phase 01 P15 | 3min | 2 tasks | 6 files |
 | Phase 01 P12 | 3min | 2 tasks | 10 files |
+| Phase 01 P13 | 5min | 2 tasks | 18 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Classify selected-runtime-config-rejected only when an explicit selected model was present. — Unsupported effort-shaped input should not broaden selected runtime rejection now that Hub and session-config paths block it.
 - [Phase 01]: Keep Web effort support display-only until Cursor exposes verified separate effort mutation support. — Closes the unsupported Web mutation gap without implying runtime support.
 - [Phase 01]: Preserve raw selected model forwarding while removing unsupported effort payload slots from Web spawn calls. — Auto launches remain unspecified and explicit launches send only the selected model id.
+- [Phase 01]: Persist only the runtime completion marker in Hub; keep viewed/read completion state local to Web. — Durable runtime truth survives refetch without moving read state out of Web.
+- [Phase 01]: Use schema version 11 and the existing fail-fast mismatch policy instead of adding runtime migrations. — Matches the repo no-backward-compatibility SQLite policy.
+- [Phase 01]: Clear durable completion markers only when new queued work starts, not on idle keepalives. — Preserves completed/unread status across reload and reconnect while avoiding stale green on new work.
 
 ### Pending Todos
 
@@ -140,8 +144,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-24T02:09:24.393Z
-Stopped at: Completed 01-12-PLAN.md
+Last session: 2026-05-24T02:17:27.483Z
+Stopped at: Completed 01-13-PLAN.md
 Resume file: None
 
 ---

@@ -17,7 +17,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions, if needed later
 
-- [ ] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (verification gaps found)
+- [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (verification gaps found) (completed 2026-05-24)
 - [ ] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files.
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
@@ -61,7 +61,7 @@ Plans:
 
 - [x] 01-04-PLAN.md — Hub model discovery route and RPC wiring
 - [x] 01-12-PLAN.md — Gap closure: remove unsupported Web effort mutation
-- [ ] 01-13-PLAN.md — Gap closure: persist completion markers across refetch
+- [x] 01-13-PLAN.md — Gap closure: persist completion markers across refetch
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
@@ -166,7 +166,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 14/15 | In Progress|  |
+| 1. Cursor Runtime Config Contract | 15/15 | Complete   | 2026-05-24 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
