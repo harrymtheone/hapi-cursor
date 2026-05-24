@@ -18,7 +18,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 - Decimal phases (2.1, 2.2): Urgent insertions, if needed later
 
 - [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (UAT gaps reopened — gap-closure plans 18-21 added 2026-05-24)
-- [ ] **Phase 01.1: Model picker UX (CURS-05)** - Family visibility filter, Auto-only new sessions, Cursor Desktop-style in-session model picker. (INSERTED)
+- [x] **Phase 01.1: Model picker UX (CURS-05)** - Family visibility filter, Auto-only new sessions, Cursor Desktop-style in-session model picker. (INSERTED) (completed 2026-05-24)
 - [ ] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files.
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
@@ -87,7 +87,7 @@ Plans:
 **Requirements**: CURS-05
 **Depends on:** Phase 1
 **Design**: `.planning/notes/model-picker-ux-design.md`, `.planning/todos/pending/model-picker-ux-implementation.md`, `.planning/sketches/model-picker-ux/` (Variant A)
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 **Success Criteria** (what must be TRUE):
 
@@ -100,15 +100,15 @@ Plans:
 
 **Wave 1**
 
-- [ ] 01.1-01-PLAN.md — Family parser + visible-families localStorage hook (foundation)
+- [x] 01.1-01-PLAN.md — Family parser + visible-families localStorage hook (foundation)
 
 **Wave 2** *(depends on 01.1-01)*
 
-- [ ] 01.1-02-PLAN.md — `/settings/models` route + Auto-only new session
+- [x] 01.1-02-PLAN.md — `/settings/models` route + Auto-only new session
 
 **Wave 3** *(depends on 01.1-01, 01.1-02)*
 
-- [ ] 01.1-03-PLAN.md — ModelPickerOverlay + StatusBar family labels + UAT updates
+- [x] 01.1-03-PLAN.md — ModelPickerOverlay + StatusBar family labels + UAT updates
 
 ### Phase 2: Skills Visibility and Session Policy
 
