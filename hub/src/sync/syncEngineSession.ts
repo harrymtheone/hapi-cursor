@@ -188,18 +188,23 @@ export class SyncEngineSession {
         const hasRuntimeConfigRequest = config.model !== undefined
             || config.modelReasoningEffort !== undefined
             || config.effort !== undefined
+        const hasSupportedConfigRequest = config.permissionMode !== undefined
+            || config.model !== undefined
         if (!session?.active) {
             // For inactive sessions, update the in-memory cache directly without
             // an RPC call — the CLI is not running yet. The updated value will be
             // passed to the spawned process when the session is resumed.
-            this.sessionCache.applySessionConfig(sessionId, config)
+            if (hasSupportedConfigRequest) {
+                this.sessionCache.applySessionConfig(sessionId, {
+                    ...(config.permissionMode !== undefined ? { permissionMode: config.permissionMode } : {}),
+                    ...(config.model !== undefined ? { model: config.model } : {})
+                })
+            }
             return CursorRuntimeConfigApplyResultSchema.parse({
                 status: hasRuntimeConfigRequest ? 'applies-next-run' : 'applied',
                 model: config.model !== undefined ? config.model : session?.model ?? null,
-                modelReasoningEffort: config.modelReasoningEffort !== undefined
-                    ? config.modelReasoningEffort
-                    : session?.modelReasoningEffort ?? null,
-                effort: config.effort !== undefined ? config.effort : session?.effort ?? null,
+                modelReasoningEffort: session?.modelReasoningEffort ?? null,
+                effort: session?.effort ?? null,
                 ...(hasRuntimeConfigRequest ? { reason: 'unknown' } : {})
             })
         }

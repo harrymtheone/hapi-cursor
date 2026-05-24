@@ -30,8 +30,6 @@ export class SessionConfigService {
 
         const hasConfigFields = config.permissionMode !== undefined
             || config.model !== undefined
-            || config.modelReasoningEffort !== undefined
-            || config.effort !== undefined
         if (!hasConfigFields) {
             return
         }
@@ -53,36 +51,6 @@ export class SessionConfigService {
                 }
             }
             session.model = config.model
-        }
-        if (config.modelReasoningEffort !== undefined) {
-            if (config.modelReasoningEffort !== session.modelReasoningEffort) {
-                const stored = this.repository.store.sessions.getSession(sessionId)
-                if (!stored) {
-                    throw new Error('Session not found')
-                }
-                const updated = this.repository.store.sessions.setSessionModelReasoningEffort(sessionId, config.modelReasoningEffort, {
-                    touchUpdatedAt: false
-                })
-                if (!updated) {
-                    throw new Error('Failed to update session model reasoning effort')
-                }
-            }
-            session.modelReasoningEffort = config.modelReasoningEffort
-        }
-        if (config.effort !== undefined) {
-            if (config.effort !== session.effort) {
-                const stored = this.repository.store.sessions.getSession(sessionId)
-                if (!stored) {
-                    throw new Error('Session not found')
-                }
-                const updated = this.repository.store.sessions.setSessionEffort(sessionId, config.effort, {
-                    touchUpdatedAt: false
-                })
-                if (!updated) {
-                    throw new Error('Failed to update session effort')
-                }
-            }
-            session.effort = config.effort
         }
 
         this.publisher.emit({ type: 'session-updated', sessionId, data: session })
