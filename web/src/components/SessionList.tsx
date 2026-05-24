@@ -34,6 +34,44 @@ export { normalizeSearch, sessionMatchesQuery } from './SessionList/useSessionLi
 export { expandSelectedSessionCollapseOverrides } from './SessionList/useSessionListSelection'
 export { getSessionTitle } from './SessionList/SessionListItem'
 
+const VIEWED_COMPLETION_MARKERS_STORAGE_KEY = 'hapi.session-list.viewed-completion-markers'
+
+function loadViewedCompletionMarkers(): Record<string, number> {
+    if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+        return {}
+    }
+    try {
+        const raw = window.localStorage.getItem(VIEWED_COMPLETION_MARKERS_STORAGE_KEY)
+        if (!raw) {
+            return {}
+        }
+        const parsed: unknown = JSON.parse(raw)
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return {}
+        }
+        const sanitized: Record<string, number> = {}
+        for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+            if (typeof value === 'number' && Number.isFinite(value)) {
+                sanitized[key] = value
+            }
+        }
+        return sanitized
+    } catch {
+        return {}
+    }
+}
+
+function saveViewedCompletionMarkers(next: Record<string, number>): void {
+    if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+        return
+    }
+    try {
+        window.localStorage.setItem(VIEWED_COMPLETION_MARKERS_STORAGE_KEY, JSON.stringify(next))
+    } catch {
+        // Silently degrade — quota / security errors must not crash the UI.
+    }
+}
+
 export function SessionList(props: {
     sessions: SessionSummary[]
     onSelect: (sessionId: string) => void
@@ -82,7 +120,7 @@ export function SessionList(props: {
         sessionPreviewLimit,
     })
     useSessionListKeyboard()
-    const [viewedCompletionMarkers, setViewedCompletionMarkers] = useState<Record<string, number>>({})
+    const [viewedCompletionMarkers, setViewedCompletionMarkers] = useState<Record<string, number>>(loadViewedCompletionMarkers)
 
     const markCompletionViewed = useCallback((session: SessionSummary) => {
         const marker = session.completionMarker
@@ -93,12 +131,42 @@ export function SessionList(props: {
             if (previous[session.id] === marker) {
                 return previous
             }
-            return {
+            const next = {
                 ...previous,
                 [session.id]: marker
             }
+            saveViewedCompletionMarkers(next)
+            return next
         })
     }, [])
+
+    useEffect(() => {
+        const liveMarkers = new Map<string, number | null>()
+        for (const session of props.sessions) {
+            liveMarkers.set(session.id, session.completionMarker)
+        }
+        setViewedCompletionMarkers((previous) => {
+            let changed = false
+            const next: Record<string, number> = {}
+            for (const [sessionId, marker] of Object.entries(previous)) {
+                if (!liveMarkers.has(sessionId)) {
+                    changed = true
+                    continue
+                }
+                const liveMarker = liveMarkers.get(sessionId)
+                if (liveMarker === null || liveMarker === undefined || liveMarker !== marker) {
+                    changed = true
+                    continue
+                }
+                next[sessionId] = marker
+            }
+            if (!changed) {
+                return previous
+            }
+            saveViewedCompletionMarkers(next)
+            return next
+        })
+    }, [props.sessions])
 
     useEffect(() => {
         if (!selectedSessionId) {

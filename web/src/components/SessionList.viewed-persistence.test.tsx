@@ -142,11 +142,17 @@ describe('SessionList viewed completion markers persistence', () => {
     })
 
     it('survives a localStorage failure (quota exceeded / SecurityError) without crashing the component', () => {
-        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-            throw new Error('QuotaExceeded')
+        const realGetItem = Storage.prototype.getItem
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key) => {
+            if (key === STORAGE_KEY) {
+                throw new Error('QuotaExceeded')
+            }
         })
-        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-            throw new Error('SecurityError')
+        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (this: Storage, key: string) {
+            if (key === STORAGE_KEY) {
+                throw new Error('SecurityError')
+            }
+            return realGetItem.call(this, key)
         })
 
         expect(() => {
