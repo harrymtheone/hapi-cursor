@@ -1,47 +1,56 @@
 ---
 phase: 01-cursor-runtime-config-contract
-verified: 2026-05-23T17:46:31Z
+verified: 2026-05-24T02:24:09Z
 status: gaps_found
 score: 2/4 must-haves verified
 overrides_applied: 0
+re_verification:
+  previous_status: gaps_found
+  previous_score: 2/4
+  gaps_closed:
+    - "Hub spawn boundary rejects unsupported effort/modelReasoningEffort before session creation."
+    - "Web no longer exposes a separate effort mutation and sends selected model only from new-session spawn."
+    - "Runner spawn contract exposes model only; selected-runtime-config-rejected is scoped to explicit model launch failure."
+    - "Durable turnCompletionMarker exists in store/schema/summary and survives basic authoritative refetch."
+  gaps_remaining:
+    - "Unsupported effort-only session-config requests still receive success-like acknowledgements on active and inactive paths."
+    - "A late ready/turn-completed event after new work can re-persist a stale completion marker and flip the row back to completed."
+  regressions: []
 gaps:
   - truth: "User can start a Cursor session with selected model and effort, then see those values persisted in session metadata."
-    status: failed
-    reason: "Effort/modelReasoningEffort are accepted and persisted through API/session metadata paths but are not passed to the spawned Cursor process, so the UI/store can claim selected runtime config while Cursor launches with defaults."
+    status: partial
+    reason: "Unsupported effort/modelReasoningEffort can no longer be sent from Web spawn or Hub spawn, but internal session-config paths still acknowledge effort-only payloads as applied/applies-next-run instead of failing/no-op reporting. That leaves the public runtime config contract success-like for unsupported effort while Cursor effort support is unverified."
     artifacts:
-      - path: "cli/src/runner/run.ts"
-        issue: "buildCliArgs emits --model but drops effort and modelReasoningEffort."
-      - path: "web/src/api/client.ts"
-        issue: "setEffort posts to /api/sessions/:id/effort, but no matching Hub route exists."
-      - path: "hub/src/web/routes/sessions/config.ts"
-        issue: "Only permission-mode and model config routes are mounted."
+      - path: "cli/src/cursor/runCursor.ts"
+        issue: "applyCursorSessionConfig({ effort, modelReasoningEffort }) returns { applied: { permissionMode } } when no model is present."
+      - path: "hub/src/sync/syncEngineSession.ts"
+        issue: "Inactive applySessionConfig returns status: applies-next-run for effort-only payloads because hasRuntimeConfigRequest includes unsupported effort fields."
+      - path: "hub/src/sync/syncEngineSession.test.ts"
+        issue: "Existing tests assert success-like effort-only behavior instead of rejection/no-op semantics."
     missing:
-      - "Either pass supported Cursor CLI effort flags at launch/resume, or remove/reject unsupported effort fields before persistence and selected-runtime rejection classification."
-      - "Add launch argument coverage for model, effort, modelReasoningEffort, and resumed-session runtime fields."
-      - "Remove or fully wire the exposed effort mutation contract."
+      - "Return an explicit failed/no-op runtime config result for effort-only or modelReasoningEffort-only active RPC payloads."
+      - "Return an explicit failed/no-op runtime config result for inactive effort-only requests instead of applies-next-run."
+      - "Add active and inactive tests proving unsupported effort-only config is not success-like and is not persisted."
   - truth: "User can scan each session's status, model, and effort from the mobile session list as live strict patches arrive."
     status: failed
-    reason: "Unread turn-completion status exists only as a transient session-updated patch. Authoritative session refetch recomputes summaries from persisted Session data and loses statusKind=completed/completionMarker for still-active sessions."
+    reason: "New work clears the durable completion marker, but a delayed ready/turn-completed event can still run after that clear and re-persist completionMarker/statusKind=completed, making an in-progress row look completed/unread."
     artifacts:
       - path: "hub/src/sync/sessionLivenessService.ts"
-        issue: "recordSessionActivity emits completionMarker/statusKind but only persists updatedAt."
-      - path: "shared/src/sessionSummary.ts"
-        issue: "toSessionSummary derives completed markers only from endReason === 'completed', not from durable ready-turn completion state."
-      - path: "hub/src/store/sessions.ts"
-        issue: "No durable per-session field stores turn-completion status or marker."
+        issue: "recordSessionActivity(..., { kind: 'turn-completed' }) unconditionally writes setSessionTurnCompletionMarker, sets thinking=false, and deletes pendingThinkingUntilBySessionId."
+      - path: "hub/src/sync/sessionLivenessService.test.ts"
+        issue: "Tests cover clear-on-new-work and persist-on-ready separately, but not late ready after new work."
     missing:
-      - "Persist turn-completion marker/status or another durable per-session attention field."
-      - "Have toSessionSummary derive completed unread state from that durable value after /api/sessions refetch."
-      - "Clear the durable completion marker when new work starts."
+      - "Ignore or demote stale turn-completed activity while a queued-thinking grace window is active for newer work."
+      - "Add a regression test: complete a turn, call markMessageQueued(), deliver late turn-completed activity, and assert thinking stays true plus in-memory/store turnCompletionMarker remain null."
 deferred: []
 ---
 
 # Phase 1: Cursor Runtime Config Contract Verification Report
 
 **Phase Goal:** Users can discover available Cursor runtime options, start sessions with selected model/effort, switch models in-session with truthful state, and scan live status from the mobile session list.
-**Verified:** 2026-05-23T17:46:31Z
+**Verified:** 2026-05-24T02:24:09Z
 **Status:** gaps_found
-**Re-verification:** No - previous report had no structured gaps; later code review introduced blocker evidence.
+**Re-verification:** Yes - after gap closure plans 01-11 through 01-15 and code review.
 
 ## Goal Achievement
 
@@ -49,10 +58,10 @@ deferred: []
 
 | # | Truth | Status | Evidence |
 |---|---|---|---|
-| 1 | User can discover available Cursor models from the local Cursor CLI before launch and sees a clear failure state when discovery fails. | VERIFIED | `cli/src/cursor/modelDiscovery.ts` runs `spawn('agent', ['models'])`, preserves raw ids, categorizes safe failures, and is wired through machine RPC, `GET /api/machines/:id/cursor/models`, `ApiClient.getCursorModels`, and `useCursorModels`. |
-| 2 | User can start a Cursor session with selected model and effort, then see those values persisted in session metadata. | FAILED | Model is passed as `--model`, but `buildCliArgs()` does not emit effort/modelReasoningEffort flags even though spawn/API/session metadata paths accept those fields. Persisted metadata can diverge from runtime launch state. |
-| 3 | User can request an in-session model switch and see whether it applied, is pending, failed, or applies on the next run based on real CLI runtime behavior. | VERIFIED | `runCursor` validates runtime config and returns status-bearing applies-next-run for unproven model/effort hot switch; Hub gates persistence on applied/applies-next-run; Web renders result in composer status without timeline messages. |
-| 4 | User can scan each session's status, model, and effort from the mobile session list as live strict patches arrive. | FAILED | Live status patches converge, but unread completion state is not durable. A normal ready-turn completion patch sets `completionMarker`; a later authoritative `/api/sessions` refetch calls `toSessionSummary()` and drops it unless `endReason === 'completed'`. |
+| 1 | User can discover available Cursor models from the local Cursor CLI before launch and sees a clear failure state when discovery fails. | VERIFIED | `cli/src/cursor/modelDiscovery.ts` and `cli/src/api/apiMachine.ts` wire `discover-cursor-models` to local Cursor model discovery; Hub exposes `GET /api/machines/:id/cursor/models`; Web uses `useCursorModels`/`ModelSelector`. Prior focused tests remain present. |
+| 2 | User can start a Cursor session with selected model and effort, then see those values persisted in session metadata. | FAILED | Spawn-time unsupported effort is blocked and Web effort mutation is removed, but effort-only session-config is still success-like: `applyCursorSessionConfig({ effort, modelReasoningEffort })` returned `{"applied":{"permissionMode":"default"}}`; inactive Hub config returns `applies-next-run` for unsupported effort-only payloads. |
+| 3 | User can request an in-session model switch and see whether it applied, is pending, failed, or applies on the next run based on real CLI runtime behavior. | VERIFIED | `POST /api/sessions/:id/model` calls `applySessionConfig({ model })`; active CLI returns a parsed status-bearing `CursorRuntimeConfigApplyResult`; Hub persists only acknowledged `model`; Web composer renders applied/pending/failed/applies-next-run locally. |
+| 4 | User can scan each session's status, model, and effort from the mobile session list as live strict patches arrive. | FAILED | Durable markers now survive basic refetch, but `recordSessionActivity(... turn-completed)` can re-persist a stale completion marker after `markMessageQueued()` has cleared it for new work. This violates the required "cleared by new work" behavior. |
 
 **Score:** 2/4 truths verified
 
@@ -60,81 +69,91 @@ deferred: []
 
 | Artifact | Expected | Status | Details |
 |---|---|---|---|
-| `shared/src/schemas.ts` | Discovery/apply schemas and strict patches | VERIFIED | Discovery/apply schemas exist; `SessionPatchSchema` includes model/effort/status marker fields and remains strict. |
-| `cli/src/cursor/modelDiscovery.ts` | Local Cursor CLI model discovery | VERIFIED | Uses argument-array spawn, timeout, safe reasons, and no static model catalog. |
-| `hub/src/web/routes/machines.ts` | Authenticated discovery and spawn route | PARTIAL | Discovery route is wired. Spawn route accepts effort/modelReasoningEffort and forwards them, but downstream runner launch drops them. |
-| `cli/src/runner/run.ts` | Explicit runtime launch | FAILED | `buildCliArgs()` emits `--model` only; selected effort fields do not reach Cursor launch. |
-| `hub/src/sync/syncEngineSession.ts` | Runtime acknowledgement persistence gate | VERIFIED | Persists acknowledged applied/applies-next-run fields and avoids failed persistence. |
-| `hub/src/web/routes/sessions/config.ts` | Runtime config routes | PARTIAL | Model route is status-bearing. Effort route is absent despite Web client/hook code exposing it. |
-| `web/src/components/AssistantChat/StatusBar.tsx` | Composer model/effort display and switch feedback | VERIFIED | Renders raw model/auto, optional effort metadata, and switch feedback in composer controls. |
-| `web/src/components/SessionList/SessionListItem.tsx` | Compact accessible list status | VERIFIED | Renders spinner/dot indicators with labels and no visible model/effort text. |
-| `hub/src/sync/sessionLivenessService.ts` | Completion marker source | PARTIAL | Emits live completion marker patches but does not persist durable marker state. |
-| `shared/src/sessionSummary.ts` | Authoritative summary derivation | PARTIAL | Correctly treats blank active sessions as idle, but cannot reconstruct live ready-turn completion after refetch. |
+| `hub/src/web/routes/machines.ts` | Reject unsupported spawn effort | VERIFIED | `hasUnsupportedRuntimeEffort()` returns 400 before `spawnBodySchema`/engine invocation. |
+| `cli/src/modules/common/rpcTypes.ts` | Runner spawn contract without unsupported effort fields | VERIFIED | `SpawnSessionOptions` has `model`, `permissionMode`, `yolo`, etc.; no `effort` or `modelReasoningEffort`. |
+| `cli/src/runner/run.ts` | Selected model launch and rejection classifier | VERIFIED | `buildCliArgs()` emits `--model` only for `options.model`; `toSafeSpawnFailure()` maps selected-runtime rejection only when `options.model` exists. |
+| `web/src/api/client.ts` | Web client without unsupported effort mutation | VERIFIED | `setModel()` exists; no `setEffort()` or `/effort` route call remains. |
+| `web/src/hooks/mutations/useSessionActions.ts` | Session actions without unsupported effort mutation | VERIFIED | Hook exposes `setModel` and permission/session actions only. |
+| `web/src/components/AssistantChat/StatusBar.tsx` | Read-only effort metadata display | VERIFIED | `effortLabel = modelReasoningEffort ?? effort ?? null` renders metadata without effort controls. |
+| `hub/src/sync/syncEngineSession.ts` | Active/inactive config persistence gate | PARTIAL | Persists only model/permissionMode, but returns success-like statuses for unsupported effort-only requests. |
+| `cli/src/cursor/runCursor.ts` | Runner set-session-config handler | PARTIAL | Model changes return applies-next-run and effort fields are stripped when model is present, but effort-only payloads return `{ applied: { permissionMode } }`. |
+| `hub/src/store/sessions.ts` / `shared/src/sessionSummary.ts` | Durable completion marker storage and summary derivation | VERIFIED | GSD artifact/key-link verification passed; `toSessionSummary()` derives completed from `turnCompletionMarker`. |
+| `hub/src/sync/sessionLivenessService.ts` | Persist ready completion and clear on new work | PARTIAL | Basic persist/clear exists, but late ready after new work is not guarded. |
+| `web/src/components/SessionList/SessionListItem.tsx` | Compact accessible status indicator | VERIFIED | Renders spinner/dot indicator from `statusKind`/`completionMarker`, with `aria-label`/`title`, and no row model/effort text. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |---|---|---|---|---|
-| Web discovery | Local Cursor CLI | `useCursorModels` -> `ApiClient.getCursorModels` -> Hub route -> `RpcGateway.discoverCursorModels` -> CLI `discoverCursorModels()` | WIRED | Source and focused tests confirm real local discovery path. |
-| Selected model launch | Cursor process | `NewSession` -> `spawnSession` -> Hub/RPC -> `buildCliArgs()` | WIRED | Explicit model becomes `--model`. |
-| Selected effort launch | Cursor process | spawn/API/RPC fields -> `buildCliArgs()` | NOT_WIRED | `buildCliArgs()` drops effort and modelReasoningEffort. |
-| In-session model switch | CLI acknowledgement | `POST /api/sessions/:id/model` -> `applySessionConfig` -> `set-session-config` | WIRED | Returns status-bearing result and does not claim unsupported hot switching. |
-| Ready-turn completion | Session list live cache | CLI ready activity -> `SessionLivenessService.recordSessionActivity` -> SSE patch -> `useSSE` | PARTIAL | Works for live patch cache, but not for authoritative refetch/reload. |
+| Web new-session | Hub machine spawn | `NewSession` -> `useSpawnSession` -> `ApiClient.spawnSession` | WIRED | New session sends `model: resolvedModel`; auto maps to `undefined`; no effort fields. |
+| Hub machine spawn | Runner spawn RPC | `spawnBodySchema` -> `SyncEngine.spawnSession` -> `RpcGateway.spawnSession` | WIRED | Unsupported effort rejected before engine; supported model forwarded. |
+| Runner spawn RPC | Cursor process args | `apiMachine` -> `spawnSession` -> `buildCliArgs()` | WIRED | Model becomes `--model`; unsupported effort fields cannot be represented in `SpawnSessionOptions`. |
+| Active session model switch | CLI runtime acknowledgement | `config.ts` -> `SyncEngineSession.applySessionConfig` -> `RpcGateway.requestSessionConfig` -> `runCursor` handler | WIRED | Model route is status-bearing and persistence is gated on `applied`/`applies-next-run`. |
+| Effort-only session config | Runtime config result | `applySessionConfig` / `applyCursorSessionConfig` | PARTIAL | Unsupported effort is not persisted, but responses are success-like instead of failed/no-op. |
+| Ready-turn completion | Authoritative summaries | `SessionLivenessService` -> store marker -> `SessionRepository.refreshSession` -> `toSessionSummary` | PARTIAL | Basic refetch path works; late ready after new work can overwrite the clear. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 |---|---|---|---|---|
-| `ModelSelector.tsx` / `useCursorModels.ts` | `result.models` | `agent models` through machine RPC | Yes | FLOWING |
-| `NewSession/index.tsx` | `resolvedModel` | User-selected discovered raw id; auto maps to undefined | Yes | FLOWING |
-| `buildCliArgs()` | `options.effort`, `options.modelReasoningEffort` | Hub spawn body / stored resume target | No | DISCONNECTED |
-| `StatusBar.tsx` | `model`, `modelReasoningEffort`, `effort`, `modelSwitchState` | Session fields plus model route result | Yes | FLOWING |
-| `SessionListItem.tsx` | `statusKind`, `completionMarker`, `completionViewed` | Live SSE patch and local viewed state | Partially | HOLLOW AFTER REFETCH |
+| `ModelSelector` / `useCursorModels` | `models` | `agent models` via runner RPC and Hub route | Yes | FLOWING |
+| `NewSession/index.tsx` | `resolvedModel` | User-selected discovered model; `auto` becomes undefined | Yes | FLOWING |
+| `buildCliArgs()` | `options.model` | Runner spawn RPC | Yes | FLOWING |
+| `buildCliArgs()` | effort fields | N/A, unsupported by contract | No accepted input | VERIFIED |
+| `applyCursorSessionConfig()` | effort-only payload | Session RPC payload | Success-like result despite unsupported input | HOLLOW |
+| `toSessionSummary()` | `completionMarker` | Durable `turnCompletionMarker` | Yes for basic refetch | FLOWING |
+| `SessionLivenessService.recordSessionActivity()` | `turnCompletionMarker` | Ready/turn-completed activity | Not correlated to current turn | HOLLOW |
+| `SessionListItem.tsx` | `statusKind`/`completionMarker` | SSE patch or authoritative summary cache | Yes when source is correct | FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |---|---|---|---|
-| Shared schema/status contracts | `cd shared && bun test sessionSummary.test.ts schemas.test.ts` | 41 pass, 0 fail | PASS |
-| Hub config/discovery/status tests | `cd hub && bun test ...sessionLivenessService... sessionModel... config... machines...` | 56 pass, 0 fail | PASS |
-| Web discovery/session/composer/list/SSE tests | `cd web && bun run test -- useSSE SessionListItem SessionChat HappyComposer useCursorModels NewSession` | 66 pass, 0 fail; duplicate React key warnings remain | PASS_WITH_WARNING |
-| CLI runtime focused tests | `cd cli && bun run test -- modelDiscovery runCursor run` | Non-integration matched files passed through `modelDiscovery`, `runCursor`, `run`, and `buildCliArgs`; command then entered known runner integration hang and was stopped | PARTIAL |
-| Root typecheck | `bun run typecheck` | Passed across CLI, Web, and Hub | PASS |
+| Focused runtime/status tests | `timeout 20s bun test hub/src/sync/sessionLivenessService.test.ts hub/src/sync/syncEngineSession.test.ts shared/src/sessionSummary.test.ts cli/src/cursor/runCursor.test.ts cli/src/runner/run.test.ts` | 38 pass, 0 fail | PASS_WITH_GAP |
+| Effort-only active config probe | `bun -e "import { applyCursorSessionConfig } ..."` | Returned `{"applied":{"permissionMode":"default"}}` for `{ effort, modelReasoningEffort }` | FAIL |
+| Plan artifact verification | `gsd-sdk query verify.artifacts` for 01-13/01-14/01-15 | All declared artifacts exist and pass basic checks | PASS |
+| Plan key-link verification | `gsd-sdk query verify.key-links` for 01-13/01-14/01-15 | Declared patterns found | PASS_WITH_GAP |
+
+`PASS_WITH_GAP` means the existing tests pass, but they do not assert the failed edge case or currently encode the wrong success-like behavior.
 
 ### Probe Execution
 
-No phase-specific `scripts/**/tests/probe-*.sh` probes were declared or discovered for this phase.
+No phase-specific `scripts/**/tests/probe-*.sh` probes were declared or discovered.
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |---|---|---|---|---|
-| CURS-01 | 01-01, 01-02, 01-03, 01-04 | Discover available Cursor models from local CLI with clear failure state. | SATISFIED | Discovery runs through local `agent models`, safe schemas, Hub route, Web hook, and selector states. |
-| CURS-02 | 01-04 | Start a Cursor session with selected model/effort and see values persisted in session metadata. | BLOCKED | Model launch works. Effort/modelReasoningEffort can be accepted/persisted but are not passed to Cursor launch args. |
-| CURS-03 | 01-01, 01-05, 01-06, 01-07, 01-09 | Request in-session model switch and see truthful applied/pending/failed/applies-next-run state. | SATISFIED | Model route and composer state use status-bearing apply results; unproven hot switch returns applies-next-run. |
-| CURS-04 | 01-01, 01-07, 01-08, 01-10 | Scan session status/model/effort from mobile, updated live through strict patches. | BLOCKED | Live patches work, but unread completion status can be erased by normal authoritative refetch. |
+| CURS-01 | 01-01, 01-02, 01-03, 01-04 | Discover available Cursor models from local CLI with clear failure state. | SATISFIED | Model discovery path is wired from local Cursor CLI through runner RPC, Hub route, Web hook, and selector. |
+| CURS-02 | 01-04, 01-11, 01-12, 01-14, 01-15 | Start session with selected model/effort and keep runtime metadata truthful. | BLOCKED | Spawn/Web/runner effort surfaces were removed, but active and inactive effort-only session-config requests still acknowledge unsupported effort as successful/applies-next-run. |
+| CURS-03 | 01-01, 01-05, 01-06, 01-07, 01-09 | Request in-session model switch and see applied/pending/failed/applies-next-run. | SATISFIED | Model route and composer state remain status-bearing; failed/applies-next-run are rendered composer-local. |
+| CURS-04 | 01-01, 01-07, 01-08, 01-10, 01-13 | Scan session status/model/effort from mobile list through strict patches and authoritative summary convergence. | BLOCKED | Basic strict patch/refetch paths exist, but late ready after new work can reintroduce stale completed/unread status. |
+
+No additional Phase 1 requirement IDs are mapped in `.planning/REQUIREMENTS.md`; CURS-01 through CURS-04 are accounted for.
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |---|---:|---|---|---|
-| `web/src/api/client.ts` | 358 | Exposed `setEffort()` posts to missing route | WARNING | Partially implemented effort mutation contract; compounds the selected-effort gap. |
-| `web/src/components/SessionChat.test.tsx` | n/a | Duplicate React key warning during tests | WARNING | Known existing warning; not a blocker for Phase 1 goal, but should be cleaned up. |
+| `cli/src/cursor/runCursor.test.ts` | 83 | Test name says effort-only payloads are not runtime config changes but expects `{ applied: { permissionMode: 'default' } }` | WARNING | Encodes the success-like acknowledgement that review flagged. |
+| `hub/src/sync/syncEngineSession.test.ts` | 102 | Effort-only inactive config test expects `status: 'applies-next-run'` | WARNING | Confirms unsupported effort-only input is not persisted but still treated as future success. |
+
+No unreferenced `TBD`, `FIXME`, or `XXX` debt markers were found in the focused phase files.
 
 ### Human Verification Required
 
-Human mobile UAT should wait until the blocker gaps are closed. Current failures are observable in source and do not require a human decision.
+None at this stage. The blockers are observable in source and direct probes; mobile/manual UAT should wait until gaps are closed.
 
 ### Gaps Summary
 
-Two blockers prevent Phase 1 from achieving the roadmap goal:
+Two gaps block Phase 1 goal achievement:
 
-1. The selected runtime launch contract is incomplete for effort/modelReasoningEffort. The system accepts and persists these fields, and even labels failures as selected-runtime-config failures, but the runner only passes `--model` to Cursor.
-2. Session-list unread completion status is not durable. Live SSE patches can show the green completion indicator, but a refetch/reload/reconnect convergence path rebuilds summaries from persisted sessions and loses that state.
+1. Unsupported effort-only session-config requests still get success-like acknowledgements. The implementation prevents persistence in the tested paths, but the runtime contract remains misleading for effort/modelReasoningEffort while Cursor effort support is unverified.
+2. Durable completion markers are not protected against late ready events. New work clears the marker, but a stale turn-completed event can immediately re-persist it and make active work appear completed.
 
-Next recommended action: run `/gsd-plan-phase --gaps` for Phase 01 and close these two gaps before proceeding.
+Structured gaps are in frontmatter for `/gsd-plan-phase --gaps`.
 
 ---
 
-_Verified: 2026-05-23T17:46:31Z_
+_Verified: 2026-05-24T02:24:09Z_
 _Verifier: Claude (gsd-verifier)_
