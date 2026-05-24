@@ -37,7 +37,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
   3. User can request an in-session model switch and see whether it applied, is pending, failed, or applies on the next run based on real CLI runtime behavior.
   4. User can scan each session's status, model, and effort from the mobile session list as live strict patches arrive.
 
-**Plans**: 15 plans
+**Plans**: 17 plans
 Plans:
 **Wave 1**
 
@@ -45,6 +45,8 @@ Plans:
 - [x] 01-09-PLAN.md — Gap closure: live composer runtime switch options
 - [x] 01-10-PLAN.md — Gap closure: idle and completion status markers
 - [x] 01-11-PLAN.md — Gap closure: reject unsupported effort at Hub spawn boundary
+- [ ] 01-16-PLAN.md — Gap closure: flip effort-only set-session-config to failed (CURS-02 / WR-01)
+- [ ] 01-17-PLAN.md — Gap closure: guard late turn-completed after markMessageQueued (CURS-04 / CR-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
