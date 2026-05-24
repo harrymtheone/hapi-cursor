@@ -271,12 +271,12 @@ function AppInner() {
         })
     }, [addToast, translateIncomingToast])
 
-    const eventSubscription = useMemo(() => {
-        if (selectedSessionId) {
-            return { sessionId: selectedSessionId }
-        }
-        return { all: true }
-    }, [selectedSessionId])
+    // CURS-04 / 01-19: SessionList must keep converging on idle/thinking/running/
+    // waiting/error/completed for ALL sessions even while a chat session is open.
+    // The previous per-session narrowing branch caused the Hub to filter
+    // `session-updated` events to a single session, freezing other rows'
+    // spinners. See .planning/debug/session-list-spinner-stuck.md.
+    const eventSubscription = useMemo(() => ({ all: true }), [])
 
     const { subscriptionId } = useSSE({
         enabled: Boolean(api && token),
