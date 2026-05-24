@@ -119,8 +119,7 @@ export function SessionChat(props: {
         abortSession,
         switchSession,
         setPermissionMode,
-        setModel,
-        setEffort
+        setModel
     } = useSessionActions(
         props.api,
         props.session.id,
@@ -258,17 +257,6 @@ export function SessionChat(props: {
             console.error('Failed to set model:', e)
         }
     }, [setModel, props.onRefresh, haptic])
-
-    const handleEffortChange = useCallback(async (effort: string | null) => {
-        try {
-            await setEffort(effort)
-            haptic.notification('success')
-            props.onRefresh()
-        } catch (e) {
-            haptic.notification('error')
-            console.error('Failed to set effort:', e)
-        }
-    }, [setEffort, props.onRefresh, haptic])
 
     // Abort handler
     const handleAbort = useCallback(async () => {
@@ -443,7 +431,6 @@ export function SessionChat(props: {
                         controlledByUser={controlledByUser}
                         onPermissionModeChange={handlePermissionModeChange}
                         onModelChange={handleModelChange}
-                        onEffortChange={handleEffortChange}
                         onSwitchToRemote={handleSwitchToRemote}
                         onTerminal={props.session.active && terminalSupported ? handleViewTerminal : undefined}
                         terminalUnsupported={props.session.active && !terminalSupported}

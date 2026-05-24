@@ -35,8 +35,6 @@ export interface HappyComposerProps {
     availableModelOptions?: Array<{ value: string | null; label: string }>
     onPermissionModeChange?: (mode: PermissionMode) => void
     onModelChange?: (model: string | null) => void
-    onModelReasoningEffortChange?: (modelReasoningEffort: string | null) => void
-    onEffortChange?: (effort: string | null) => void
     onSwitchToRemote?: () => void
     onTerminal?: () => void
     terminalUnsupported?: boolean

@@ -355,13 +355,6 @@ export class ApiClient {
         })
     }
 
-    async setEffort(sessionId: string, effort: string | null): Promise<void> {
-        await this.request(`/api/sessions/${encodeURIComponent(sessionId)}/effort`, {
-            method: 'POST',
-            body: JSON.stringify({ effort })
-        })
-    }
-
     async approvePermission(
         sessionId: string,
         requestId: string,
@@ -437,12 +430,11 @@ export class ApiClient {
         model?: string,
         yolo?: boolean,
         sessionType?: 'simple' | 'worktree',
-        worktreeName?: string,
-        effort?: string
+        worktreeName?: string
     ): Promise<SpawnResponse> {
         return await this.request<SpawnResponse>(`/api/machines/${encodeURIComponent(machineId)}/spawn`, {
             method: 'POST',
-            body: JSON.stringify({ directory, agent, model, yolo, sessionType, worktreeName, effort })
+            body: JSON.stringify({ directory, agent, model, yolo, sessionType, worktreeName })
         })
     }
 

@@ -9,7 +9,6 @@ type SpawnInput = {
     directory: string
     agent?: 'cursor'
     model?: string
-    effort?: string
     yolo?: boolean
     sessionType?: 'simple' | 'worktree'
     worktreeName?: string
@@ -35,8 +34,7 @@ export function useSpawnSession(api: ApiClient | null): {
                 input.model,
                 input.yolo,
                 input.sessionType,
-                input.worktreeName,
-                input.effort
+                input.worktreeName
             )
             if (result.type === 'error' && result.code === 'selected-runtime-config-rejected') {
                 return {
