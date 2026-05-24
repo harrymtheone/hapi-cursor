@@ -141,6 +141,75 @@ describe('SessionList viewed completion markers persistence', () => {
         })
     })
 
+    it('does not prune persisted viewed markers during a transient empty loading render', async () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ sessionA: 10, sessionB: 20 }))
+
+        const queryClient = new QueryClient({
+            defaultOptions: {
+                queries: { retry: false },
+                mutations: { retry: false },
+            },
+        })
+
+        const { rerender } = render(
+            <QueryClientProvider client={queryClient}>
+                <I18nProvider>
+                    <SessionList
+                        sessions={[]}
+                        selectedSessionId={'sessionB'}
+                        onSelect={vi.fn()}
+                        onNewSession={vi.fn()}
+                        onRefresh={vi.fn()}
+                        isLoading={true}
+                        renderHeader={false}
+                        api={null}
+                    />
+                </I18nProvider>
+            </QueryClientProvider>
+        )
+
+        await waitFor(() => {
+            const raw = localStorage.getItem(STORAGE_KEY)
+            expect(raw).not.toBeNull()
+            expect(JSON.parse(raw!)).toEqual({ sessionA: 10, sessionB: 20 })
+        })
+
+        rerender(
+            <QueryClientProvider client={queryClient}>
+                <I18nProvider>
+                    <SessionList
+                    sessions={[
+                        makeSession({
+                            id: 'sessionA',
+                            statusKind: 'completed',
+                            completionMarker: 10,
+                            metadata: { name: 'Previously viewed A', path: '' },
+                        }),
+                        makeSession({
+                            id: 'sessionB',
+                            statusKind: 'completed',
+                            completionMarker: 20,
+                            metadata: { name: 'Previously viewed B (selected)', path: '' },
+                        }),
+                    ]}
+                    selectedSessionId={'sessionB'}
+                    onSelect={vi.fn()}
+                    onNewSession={vi.fn()}
+                    onRefresh={vi.fn()}
+                    isLoading={false}
+                    renderHeader={false}
+                    api={null}
+                />
+                </I18nProvider>
+            </QueryClientProvider>
+        )
+
+        await waitFor(() => {
+            expect(screen.getAllByLabelText('Viewed')).toHaveLength(2)
+        })
+        expect(screen.queryByLabelText('Unread result')).toBeNull()
+    })
+
     it('survives a localStorage failure (quota exceeded / SecurityError) without crashing the component', () => {
         const realGetItem = Storage.prototype.getItem
         vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key) => {
