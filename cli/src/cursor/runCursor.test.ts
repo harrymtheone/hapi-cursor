@@ -94,7 +94,38 @@ describe('applyCursorSessionConfig', () => {
             }
         );
 
-        expect(result).toEqual({ applied: { permissionMode: 'default' } });
+        expect(result).toEqual({
+            status: 'failed',
+            model: 'cursor-runtime-model-current',
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'unknown'
+        });
+        expect(syncPermissionMode).not.toHaveBeenCalled();
+    });
+
+    it('does not persist effort-only payloads as runtime config changes', () => {
+        const syncPermissionMode = vi.fn();
+
+        const result = applyCursorSessionConfig(
+            { effort: 'high' },
+            {
+                currentPermissionMode: 'default',
+                currentModel: 'cursor-runtime-model-current',
+                currentModelReasoningEffort: null,
+                currentEffort: null,
+                syncPermissionMode
+            }
+        );
+
+        expect(result).toEqual({
+            status: 'failed',
+            model: 'cursor-runtime-model-current',
+            modelReasoningEffort: null,
+            effort: null,
+            reason: 'unknown'
+        });
+        expect(result).not.toEqual({ applied: { permissionMode: 'default' } });
         expect(syncPermissionMode).not.toHaveBeenCalled();
     });
 
