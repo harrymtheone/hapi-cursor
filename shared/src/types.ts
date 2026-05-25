@@ -25,6 +25,7 @@ export type {
     ThreadGoal,
     ThreadGoalStatus,
     TodoItem,
+    ToolCallProjection,
     UserMessage,
     WorktreeMetadata
 } from './schemas'

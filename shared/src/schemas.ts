@@ -277,6 +277,24 @@ export const MessageContentSchema = z.union([UserMessageSchema, AgentMessageSche
 
 export type MessageContent = z.infer<typeof MessageContentSchema>
 
+export const ToolCallProjectionSchema = z.object({
+    callId: z.string().min(1),
+    name: z.string().min(1),
+    input: z.unknown(),
+    status: z.enum(['pending', 'in_progress', 'completed', 'failed']),
+    result: z.unknown().optional(),
+    error: z.unknown().optional(),
+    startedAt: z.number(),
+    completedAt: z.number().optional(),
+    permission: z.object({
+        toolName: z.string().optional(),
+        input: z.unknown().optional(),
+        decision: z.string().optional()
+    }).strict().optional()
+}).strict()
+
+export type ToolCallProjection = z.infer<typeof ToolCallProjectionSchema>
+
 export const CursorModelSummarySchema = z.object({
     id: z.string().min(1),
     label: z.string().min(1).optional(),
