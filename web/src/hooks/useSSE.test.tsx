@@ -10,6 +10,7 @@ import {
     RECONNECT_MAX_DELAY_MS,
 } from './useSSE'
 import { queryKeys } from '@/lib/query-keys'
+import * as projStoreModule from '@/lib/toolProjectionStore'
 
 vi.mock('@/lib/message-window-store', () => ({
     clearMessageWindow: vi.fn(),
@@ -19,6 +20,16 @@ vi.mock('@/lib/message-window-store', () => ({
     removeOptimisticMessage: vi.fn(),
     updateMessageStatus: vi.fn(),
 }))
+
+vi.mock('@/lib/toolProjectionStore', async () => {
+    const actual = await vi.importActual<typeof import('@/lib/toolProjectionStore')>('@/lib/toolProjectionStore')
+    return {
+        patchProjection: vi.fn(actual.patchProjection),
+        clearProjectionsForSession: vi.fn(actual.clearProjectionsForSession),
+        mergePageToolCalls: vi.fn(actual.mergePageToolCalls),
+        getProjectionsForSession: vi.fn(actual.getProjectionsForSession),
+    }
+})
 
 class MockEventSource {
     static CONNECTING = 0
@@ -749,5 +760,98 @@ describe('useSSE reconnect convergence (REFT-02)', () => {
 
         const cache = queryClient.getQueryData<{ sessions: SessionSummary[] }>(queryKeys.sessions)
         expect(cache?.sessions.map((s) => s.id)).toEqual(['session-C'])
+    })
+})
+
+describe('useSSE tool-call-projection-updated', () => {
+    let originalEventSource: typeof globalThis.EventSource | undefined
+    let actualProjStore: typeof import('@/lib/toolProjectionStore')
+
+    beforeEach(async () => {
+        originalEventSource = globalThis.EventSource
+        ;(globalThis as unknown as Record<string, unknown>).EventSource = MockEventSource
+        MockEventSource.reset()
+
+        // Get actual implementation to use as passthrough and for state cleanup
+        actualProjStore = await vi.importActual<typeof import('@/lib/toolProjectionStore')>('@/lib/toolProjectionStore')
+
+        // Restore real implementations (may have been wiped by vi.resetAllMocks in other describes)
+        vi.mocked(projStoreModule.patchProjection).mockImplementation(actualProjStore.patchProjection)
+        vi.mocked(projStoreModule.clearProjectionsForSession).mockImplementation(actualProjStore.clearProjectionsForSession)
+        vi.mocked(projStoreModule.mergePageToolCalls).mockImplementation(actualProjStore.mergePageToolCalls)
+        vi.mocked(projStoreModule.getProjectionsForSession).mockImplementation(actualProjStore.getProjectionsForSession)
+
+        // Clean store state from prior tests, then reset call history
+        actualProjStore.clearProjectionsForSession('session-proj')
+        actualProjStore.clearProjectionsForSession('session-gone')
+        vi.clearAllMocks()
+
+        // Re-apply after clearAllMocks (vi.clearAllMocks does not reset implementations,
+        // but being explicit avoids subtle ordering surprises)
+        vi.mocked(projStoreModule.patchProjection).mockImplementation(actualProjStore.patchProjection)
+        vi.mocked(projStoreModule.clearProjectionsForSession).mockImplementation(actualProjStore.clearProjectionsForSession)
+        vi.mocked(projStoreModule.mergePageToolCalls).mockImplementation(actualProjStore.mergePageToolCalls)
+        vi.mocked(projStoreModule.getProjectionsForSession).mockImplementation(actualProjStore.getProjectionsForSession)
+    })
+
+    afterEach(() => {
+        ;(globalThis as unknown as Record<string, unknown>).EventSource = originalEventSource
+    })
+
+    it('tool-call-projection-updated event calls patchProjection and projection is retrievable via getProjectionsForSession', async () => {
+        const { wrapper } = createHarness()
+        mountUseSSE(wrapper)
+        const source = activeSource()
+        await act(async () => { source.emitOpen() })
+
+        await act(async () => {
+            source.dispatch({
+                type: 'tool-call-projection-updated',
+                sessionId: 'session-proj',
+                callId: 'call-abc',
+                projection: {
+                    callId: 'call-abc',
+                    name: 'Bash',
+                    input: { command: 'ls' },
+                    status: 'completed',
+                    startedAt: 1_700_000_000_000,
+                },
+            } satisfies SyncEvent)
+        })
+
+        expect(projStoreModule.patchProjection).toHaveBeenCalledWith(
+            'session-proj',
+            'call-abc',
+            expect.objectContaining({ name: 'Bash' })
+        )
+        const stored = projStoreModule.getProjectionsForSession('session-proj')
+        expect(stored['call-abc']?.name).toBe('Bash')
+    })
+
+    it('session-removed clears projection store for that sessionId', async () => {
+        const { queryClient, wrapper } = createHarness()
+        queryClient.setQueryData(queryKeys.sessions, { sessions: [] })
+        mountUseSSE(wrapper)
+        const source = activeSource()
+        await act(async () => { source.emitOpen() })
+
+        // Seed some state so we can verify it gets cleared
+        actualProjStore.mergePageToolCalls('session-gone', {
+            'call-1': { callId: 'call-1', name: 'Read', input: {}, status: 'completed', startedAt: 1_700_000_000_000 }
+        })
+        vi.clearAllMocks()
+        vi.mocked(projStoreModule.clearProjectionsForSession).mockImplementation(actualProjStore.clearProjectionsForSession)
+        vi.mocked(projStoreModule.getProjectionsForSession).mockImplementation(actualProjStore.getProjectionsForSession)
+
+        await act(async () => {
+            source.dispatch({
+                type: 'session-removed',
+                sessionId: 'session-gone',
+            } satisfies SyncEvent)
+        })
+
+        expect(projStoreModule.clearProjectionsForSession).toHaveBeenCalledWith('session-gone')
+        const stored = projStoreModule.getProjectionsForSession('session-gone')
+        expect(Object.keys(stored)).toHaveLength(0)
     })
 })

@@ -13,6 +13,7 @@ import type {
 } from '@/types/api'
 import { queryKeys } from '@/lib/query-keys'
 import { clearMessageWindow, getMessageWindowState, ingestIncomingMessages, markMessagesConsumed, removeOptimisticMessage, updateMessageStatus } from '@/lib/message-window-store'
+import { clearProjectionsForSession, patchProjection } from '@/lib/toolProjectionStore'
 
 type SSESubscription = {
     all?: boolean
@@ -386,6 +387,10 @@ export function useSSE(options: {
                 removeOptimisticMessage(event.sessionId, event.messageId)
             }
 
+            if (event.type === 'tool-call-projection-updated') {
+                patchProjection(event.sessionId, event.callId, event.projection)
+            }
+
             if (event.type === 'message-received') {
                 ingestIncomingMessages(event.sessionId, [event.message])
             }
@@ -409,6 +414,7 @@ export function useSSE(options: {
                 removeSessionSummary(event.sessionId)
                 void queryClient.removeQueries({ queryKey: queryKeys.session(event.sessionId) })
                 clearMessageWindow(event.sessionId)
+                clearProjectionsForSession(event.sessionId)
             }
 
             if (event.type === 'machine-updated') {
