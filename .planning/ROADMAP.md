@@ -19,7 +19,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 
 - [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (UAT gaps reopened — gap-closure plans 18-21 added 2026-05-24)
 - [x] **Phase 01.1: Model picker UX (CURS-05)** - Family visibility filter, Auto-only new sessions, Cursor Desktop-style in-session model picker. (INSERTED) (completed 2026-05-24)
-- [ ] **Phase 01.2: Fix durable tool call projection in Hub** - Hub maintains a canonical tool call projection so Web can render complete tool cards across pagination, reload, and reconnect. (INSERTED)
+- [x] **Phase 01.2: Fix durable tool call projection in Hub** - Hub maintains a canonical tool call projection so Web can render complete tool cards across pagination, reload, and reconnect. (INSERTED) (completed 2026-05-25)
 - [ ] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files.
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
@@ -116,7 +116,7 @@ Plans:
 **Goal:** Hub maintains a durable, canonical tool call projection keyed by `callId` so Web can render complete tool cards even when the current message window contains only a result-side event.
 **Requirements:** BUG-TOOL-01
 **Depends on:** Phase 01.1
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 
@@ -135,7 +135,7 @@ Plans:
 
 **Wave 3** *(depends on Wave 2)*
 
-- [ ] 01.2-05-PLAN.md — Integration tests + typecheck/test phase gate
+- [x] 01.2-05-PLAN.md — Integration tests + typecheck/test phase gate
 
 **Success Criteria** (what must be TRUE):
 
@@ -238,7 +238,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-25 |
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
-| 01.2 Fix durable tool call projection in Hub | 4/5 | In Progress|  |
+| 01.2 Fix durable tool call projection in Hub | 5/5 | Complete   | 2026-05-25 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
