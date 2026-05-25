@@ -179,19 +179,38 @@ function variantMatchesSelection(flags: VariantFlags, selection: ModelOptionSele
 
 function flagsToSelection(flags: VariantFlags): ModelOptionSelection {
     const selection: ModelOptionSelection = {}
-    if (flags.thinking) {
-        selection.thinking = true
-    }
-    if (flags.fast) {
-        selection.fast = true
-    }
-    if (flags.context1m) {
-        selection.context1m = true
-    }
+    selection.thinking = flags.thinking
+    selection.fast = flags.fast
+    selection.context1m = flags.context1m
     if (flags.effort) {
         selection.effort = flags.effort
     }
     return selection
+}
+
+/** Whether any variant matches base selection with patch applied. */
+export function selectionSupportsOption(
+    family: ModelFamily,
+    patch: Partial<ModelOptionSelection>,
+    base: ModelOptionSelection = {}
+): boolean {
+    return composeVariantId(family, { ...base, ...patch }) !== null
+}
+
+export type ContextMode = 'standard' | '1m'
+
+export function getEnabledContextModes(
+    family: ModelFamily,
+    base: ModelOptionSelection = {}
+): ContextMode[] {
+    const modes: ContextMode[] = []
+    if (selectionSupportsOption(family, { context1m: false }, base)) {
+        modes.push('standard')
+    }
+    if (selectionSupportsOption(family, { context1m: true }, base)) {
+        modes.push('1m')
+    }
+    return modes
 }
 
 export function groupModelsIntoFamilies(models: CursorModelSummary[]): ModelFamily[] {

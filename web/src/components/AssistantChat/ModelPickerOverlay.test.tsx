@@ -50,9 +50,7 @@ describe('ModelPickerOverlay', () => {
             )!
         )
         fireEvent.click(screen.getByRole('button', { name: 'composer.modelPicker.effort.high' }))
-        const fastCheckbox = screen.getByText('composer.modelPicker.option.fast').closest('label')?.querySelector('input')
-        expect(fastCheckbox).toBeTruthy()
-        fireEvent.click(fastCheckbox!)
+        fireEvent.click(screen.getByRole('button', { name: 'composer.modelPicker.fast.on' }))
         fireEvent.click(screen.getByRole('button', { name: 'composer.modelPicker.apply' }))
 
         expect(onModelChange).toHaveBeenCalledWith('gpt-5.3-codex-high-fast')

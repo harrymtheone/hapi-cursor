@@ -3,23 +3,25 @@ import { useNavigate } from '@tanstack/react-router'
 import {
     composeVariantId,
     decomposeModelId,
+    getEnabledContextModes,
+    selectionSupportsOption,
+    type ContextMode,
     type ModelFamily,
     type ModelOptionSelection,
 } from '@/lib/cursorModelFamilies'
 
 type PickerPanel = 'primary' | 'options'
 
+const EFFORT_LEVELS: Array<NonNullable<ModelOptionSelection['effort']>> = [
+    'low',
+    'medium',
+    'high',
+    'xhigh',
+    'max',
+]
+
 function emptySelection(): ModelOptionSelection {
     return {}
-}
-
-function variantSupportsOption(
-    family: ModelFamily,
-    option: keyof ModelOptionSelection,
-    value: boolean | ModelOptionSelection['effort']
-): boolean {
-    const probe: ModelOptionSelection = { [option]: value } as ModelOptionSelection
-    return composeVariantId(family, probe) !== null
 }
 
 export function ModelPickerOverlay(props: {
@@ -70,25 +72,37 @@ export function ModelPickerOverlay(props: {
         }
     }, [editingFamily, optionSelection, props])
 
+    const enabledContextModes = useMemo(
+        () => (editingFamily ? getEnabledContextModes(editingFamily, optionSelection) : []),
+        [editingFamily, optionSelection]
+    )
+    const contextSelection: ContextMode | undefined =
+        optionSelection.context1m === true
+            ? '1m'
+            : optionSelection.context1m === false
+              ? 'standard'
+              : undefined
     const thinkingEnabled = editingFamily
-        ? variantSupportsOption(editingFamily, 'thinking', true)
+        ? selectionSupportsOption(editingFamily, { thinking: true }, optionSelection)
+        : false
+    const thinkingOffEnabled = editingFamily
+        ? selectionSupportsOption(editingFamily, { thinking: false }, optionSelection)
         : false
     const fastEnabled = editingFamily
-        ? variantSupportsOption(editingFamily, 'fast', true)
+        ? selectionSupportsOption(editingFamily, { fast: true }, optionSelection)
         : false
-    const contextEnabled = editingFamily
-        ? variantSupportsOption(editingFamily, 'context1m', true)
+    const fastOffEnabled = editingFamily
+        ? selectionSupportsOption(editingFamily, { fast: false }, optionSelection)
         : false
-    const effortLevels: Array<NonNullable<ModelOptionSelection['effort']>> = [
-        'low',
-        'medium',
-        'high',
-        'xhigh',
-        'max',
-    ]
-    const enabledEfforts = editingFamily
-        ? effortLevels.filter((effort) => variantSupportsOption(editingFamily, 'effort', effort))
-        : []
+    const enabledEfforts = useMemo(
+        () =>
+            editingFamily
+                ? EFFORT_LEVELS.filter((effort) =>
+                      selectionSupportsOption(editingFamily, { effort }, optionSelection)
+                  )
+                : [],
+        [editingFamily, optionSelection]
+    )
     const canApplyOptions = editingFamily
         ? composeVariantId(editingFamily, optionSelection) !== null
         : false
@@ -109,48 +123,129 @@ export function ModelPickerOverlay(props: {
                     </span>
                 </div>
                 <div className="space-y-1 px-2.5">
-                    <label className="flex items-center gap-2 text-xs">
-                        <input
-                            type="checkbox"
-                            disabled={!thinkingEnabled || props.controlsDisabled}
-                            checked={optionSelection.thinking === true}
-                            onChange={(event) =>
-                                setOptionSelection((current) => ({
-                                    ...current,
-                                    thinking: event.target.checked ? true : undefined,
-                                }))
-                            }
-                        />
-                        <span>{props.t('composer.modelPicker.option.thinking')}</span>
-                    </label>
-                    <label className="flex items-center gap-2 text-xs">
-                        <input
-                            type="checkbox"
-                            disabled={!fastEnabled || props.controlsDisabled}
-                            checked={optionSelection.fast === true}
-                            onChange={(event) =>
-                                setOptionSelection((current) => ({
-                                    ...current,
-                                    fast: event.target.checked ? true : undefined,
-                                }))
-                            }
-                        />
-                        <span>{props.t('composer.modelPicker.option.fast')}</span>
-                    </label>
-                    <label className="flex items-center gap-2 text-xs">
-                        <input
-                            type="checkbox"
-                            disabled={!contextEnabled || props.controlsDisabled}
-                            checked={optionSelection.context1m === true}
-                            onChange={(event) =>
-                                setOptionSelection((current) => ({
-                                    ...current,
-                                    context1m: event.target.checked ? true : undefined,
-                                }))
-                            }
-                        />
-                        <span>{props.t('composer.modelPicker.option.context')}</span>
-                    </label>
+                    {(thinkingEnabled || thinkingOffEnabled) ? (
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] text-[var(--app-hint)]">
+                                {props.t('composer.modelPicker.option.thinking')}
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                                <button
+                                    type="button"
+                                    disabled={props.controlsDisabled || !thinkingOffEnabled}
+                                    className={`rounded-full border px-1.5 py-0.5 text-[10px] ${
+                                        optionSelection.thinking === false
+                                            ? 'border-[var(--app-link)] text-[var(--app-link)]'
+                                            : 'border-[var(--app-border)]'
+                                    }`}
+                                    onClick={() =>
+                                        setOptionSelection((current) => ({
+                                            ...current,
+                                            thinking: false,
+                                        }))
+                                    }
+                                >
+                                    {props.t('composer.modelPicker.thinking.off')}
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={props.controlsDisabled || !thinkingEnabled}
+                                    className={`rounded-full border px-1.5 py-0.5 text-[10px] ${
+                                        optionSelection.thinking === true
+                                            ? 'border-[var(--app-link)] text-[var(--app-link)]'
+                                            : 'border-[var(--app-border)]'
+                                    }`}
+                                    onClick={() =>
+                                        setOptionSelection((current) => ({
+                                            ...current,
+                                            thinking: true,
+                                        }))
+                                    }
+                                >
+                                    {props.t('composer.modelPicker.thinking.on')}
+                                </button>
+                            </div>
+                        </div>
+                    ) : null}
+                    {(fastEnabled || fastOffEnabled) ? (
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] text-[var(--app-hint)]">
+                                {props.t('composer.modelPicker.option.fast')}
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                                <button
+                                    type="button"
+                                    disabled={props.controlsDisabled || !fastOffEnabled}
+                                    className={`rounded-full border px-1.5 py-0.5 text-[10px] ${
+                                        optionSelection.fast === false
+                                            ? 'border-[var(--app-link)] text-[var(--app-link)]'
+                                            : 'border-[var(--app-border)]'
+                                    }`}
+                                    onClick={() =>
+                                        setOptionSelection((current) => ({
+                                            ...current,
+                                            fast: false,
+                                        }))
+                                    }
+                                >
+                                    {props.t('composer.modelPicker.fast.off')}
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={props.controlsDisabled || !fastEnabled}
+                                    className={`rounded-full border px-1.5 py-0.5 text-[10px] ${
+                                        optionSelection.fast === true
+                                            ? 'border-[var(--app-link)] text-[var(--app-link)]'
+                                            : 'border-[var(--app-border)]'
+                                    }`}
+                                    onClick={() =>
+                                        setOptionSelection((current) => ({
+                                            ...current,
+                                            fast: true,
+                                        }))
+                                    }
+                                >
+                                    {props.t('composer.modelPicker.fast.on')}
+                                </button>
+                            </div>
+                        </div>
+                    ) : null}
+                    {enabledContextModes.length > 0 ? (
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] text-[var(--app-hint)]">
+                                {props.t('composer.modelPicker.option.context')}
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                                {(['standard', '1m'] as const).map((mode) => {
+                                    const enabled = enabledContextModes.includes(mode)
+                                    const selected = contextSelection === mode
+                                    return (
+                                        <button
+                                            key={mode}
+                                            type="button"
+                                            disabled={props.controlsDisabled || !enabled}
+                                            className={`rounded-full border px-1.5 py-0.5 text-[10px] ${
+                                                selected
+                                                    ? 'border-[var(--app-link)] text-[var(--app-link)]'
+                                                    : 'border-[var(--app-border)]'
+                                            } ${!enabled ? 'opacity-40' : ''}`}
+                                            onClick={() =>
+                                                setOptionSelection((current) => ({
+                                                    ...current,
+                                                    context1m: mode === '1m',
+                                                }))
+                                            }
+                                        >
+                                            {props.t(
+                                                mode === '1m'
+                                                    ? 'composer.modelPicker.context.1m'
+                                                    : 'composer.modelPicker.context.standard'
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    ) : null}
                     {enabledEfforts.length > 0 ? (
                         <div className="flex flex-col gap-0.5">
                             <span className="text-[10px] text-[var(--app-hint)]">

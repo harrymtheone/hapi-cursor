@@ -4,7 +4,9 @@ import {
     composeVariantId,
     decomposeModelId,
     formatFamilySummary,
+    getEnabledContextModes,
     groupModelsIntoFamilies,
+    selectionSupportsOption,
 } from './cursorModelFamilies'
 
 /** Fixture ids from live `agent models` samples (RESEARCH). */
@@ -125,6 +127,35 @@ describe('groupModelsIntoFamilies', () => {
     })
 })
 
+describe('selectionSupportsOption', () => {
+    it('picks standard context when context1m is false', () => {
+        const models: CursorModelSummary[] = [
+            { id: 'gpt-5.5-medium', label: 'GPT-5.5 1M' },
+            { id: 'gpt-5.5-medium-fast', label: 'GPT-5.5 Fast' },
+        ]
+        const families = groupModelsIntoFamilies(models)
+        const family = families.find((f) => f.key === 'gpt-5.5')!
+        expect(composeVariantId(family, { context1m: false })).toBe('gpt-5.5-medium-fast')
+        expect(getEnabledContextModes(family)).toEqual(['standard', '1m'])
+    })
+
+    it('reports no thinking support for families without thinking variants', () => {
+        const models: CursorModelSummary[] = [{ id: 'gpt-5.5-medium', label: 'GPT-5.5 1M' }]
+        const family = groupModelsIntoFamilies(models)[0]!
+        expect(selectionSupportsOption(family, { thinking: true })).toBe(false)
+    })
+
+    it('enables thinking when a matching variant exists for the current effort', () => {
+        const models: CursorModelSummary[] = [
+            { id: 'claude-opus-4-7-medium', label: 'Opus 4.7 1M Medium' },
+            { id: 'claude-opus-4-7-thinking-medium', label: 'Opus 4.7 1M Medium Thinking' },
+        ]
+        const family = groupModelsIntoFamilies(models)[0]!
+        expect(selectionSupportsOption(family, { thinking: true }, { effort: 'medium' })).toBe(true)
+        expect(selectionSupportsOption(family, { thinking: true }, { effort: 'low' })).toBe(false)
+    })
+})
+
 describe('composeVariantId', () => {
     it('returns only ids that exist on family.variants', () => {
         const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
@@ -161,6 +192,15 @@ describe('composeVariantId', () => {
 })
 
 describe('decomposeModelId', () => {
+    it('decomposes non-1m variant with context1m false', () => {
+        const models: CursorModelSummary[] = [
+            { id: 'gpt-5.5-medium-fast', label: 'GPT-5.5 Fast' },
+        ]
+        const families = groupModelsIntoFamilies(models)
+        const decomposed = decomposeModelId('gpt-5.5-medium-fast', families)
+        expect(decomposed?.selection.context1m).toBe(false)
+    })
+
     it('round-trips composed ids for fixture families', () => {
         const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
         for (const family of families) {
