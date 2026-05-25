@@ -8,6 +8,7 @@ import type { SyncEvent } from '../../../sync/syncEngine'
 import { extractTodoWriteTodosFromMessageContent } from '../../../sync/todos'
 import { extractTeamStateFromMessageContent, applyTeamStateDelta } from '../../../sync/teams'
 import { extractBackgroundTaskDelta } from '../../../sync/backgroundTasks'
+import { extractToolCallEventsFromMessageContent, mergeToolCallProjection } from '../../../sync/toolCallProjection'
 import type { CliSocketWithData } from '../../socketTypes'
 import type { SessionEndReason } from '@hapi/protocol'
 import type { AccessErrorReason, AccessResult } from './types'
@@ -129,6 +130,21 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
         const bgDelta = extractBackgroundTaskDelta(content)
         if (bgDelta) {
             onBackgroundTaskDelta?.(sid, bgDelta)
+        }
+
+        // Upsert durable tool-call projections and emit SSE before message-received
+        // so Web receives projection identity before it renders the tool card (D-08, Pitfall 3).
+        const toolCallEvents = extractToolCallEventsFromMessageContent(content, msg.createdAt)
+        for (const event of toolCallEvents) {
+            const existing = store.toolCalls.getBySessionAndCallIds(sid, [event.callId])
+            const prev = existing[event.callId] ?? null
+            const projection = mergeToolCallProjection(prev, event)
+            try {
+                store.toolCalls.upsert(sid, event.callId, projection)
+            } catch {
+                // Oversize or schema violation — skip silently (non-critical sidecar)
+            }
+            onWebappEvent?.({ type: 'tool-call-projection-updated', sessionId: sid, callId: event.callId, projection })
         }
 
         const update = {

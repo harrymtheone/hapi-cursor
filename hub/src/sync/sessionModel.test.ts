@@ -403,6 +403,129 @@ describe('session model', () => {
         expect(activity).toHaveLength(0)
     })
 
+    it('upserts tool_calls projection after tool-call ingest', () => {
+        const store = new Store(':memory:')
+        const events: SyncEvent[] = []
+        const cache = new SessionCache(store, createPublisher(events))
+        const session = cache.getOrCreateSession(
+            'session-tool-call-upsert',
+            { path: '/tmp/project', host: 'localhost' },
+            null
+        )
+        const handlers = new Map<string, (payload: unknown) => void>()
+        const webappEvents: SyncEvent[] = []
+
+        registerSessionHandlers({
+            on: (event: string, handler: (payload: unknown) => void) => {
+                handlers.set(event, handler)
+            },
+            to: () => ({ emit() {} })
+        } as never, {
+            store,
+            resolveSessionAccess: (sessionId) => {
+                const stored = store.sessions.getSession(sessionId)
+                return stored ? { ok: true, value: stored } : { ok: false, reason: 'not-found' }
+            },
+            emitAccessError: () => {},
+            onWebappEvent: (event) => { webappEvents.push(event) }
+        })
+
+        handlers.get('message')?.({
+            sid: session.id,
+            message: JSON.stringify({
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call',
+                        name: 'CursorBash',
+                        callId: 'call-upsert-1',
+                        input: { cmd: 'ls' }
+                    }
+                }
+            })
+        })
+        handlers.get('message')?.({
+            sid: session.id,
+            message: JSON.stringify({
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call-result',
+                        callId: 'call-upsert-1',
+                        output: { stdout: 'file.txt' }
+                    }
+                }
+            })
+        })
+
+        const projections = store.toolCalls.getBySessionAndCallIds(session.id, ['call-upsert-1'])
+        expect(projections['call-upsert-1']).toBeDefined()
+        expect(projections['call-upsert-1'].name).toBe('CursorBash')
+        expect(projections['call-upsert-1'].status).toBe('completed')
+
+        // Messages table unaffected
+        expect(store.messages.getMessages(session.id, 10)).toHaveLength(2)
+    })
+
+    it('emits tool-call-projection-updated before message-received on ingest', () => {
+        const store = new Store(':memory:')
+        const events: SyncEvent[] = []
+        const cache = new SessionCache(store, createPublisher(events))
+        const session = cache.getOrCreateSession(
+            'session-tool-call-ordering',
+            { path: '/tmp/project', host: 'localhost' },
+            null
+        )
+        const handlers = new Map<string, (payload: unknown) => void>()
+        const webappEvents: SyncEvent[] = []
+
+        registerSessionHandlers({
+            on: (event: string, handler: (payload: unknown) => void) => {
+                handlers.set(event, handler)
+            },
+            to: () => ({ emit() {} })
+        } as never, {
+            store,
+            resolveSessionAccess: (sessionId) => {
+                const stored = store.sessions.getSession(sessionId)
+                return stored ? { ok: true, value: stored } : { ok: false, reason: 'not-found' }
+            },
+            emitAccessError: () => {},
+            onWebappEvent: (event) => { webappEvents.push(event) }
+        })
+
+        handlers.get('message')?.({
+            sid: session.id,
+            message: JSON.stringify({
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call',
+                        name: 'CursorBash',
+                        callId: 'call-order-1',
+                        input: { cmd: 'date' }
+                    }
+                }
+            })
+        })
+
+        const projUpdatedIdx = webappEvents.findIndex((e) => e.type === 'tool-call-projection-updated')
+        const msgReceivedIdx = webappEvents.findIndex((e) => e.type === 'message-received')
+        expect(projUpdatedIdx).toBeGreaterThanOrEqual(0)
+        expect(msgReceivedIdx).toBeGreaterThanOrEqual(0)
+        expect(projUpdatedIdx).toBeLessThan(msgReceivedIdx)
+
+        const projEvent = webappEvents[projUpdatedIdx]
+        expect(projEvent.type).toBe('tool-call-projection-updated')
+        if (projEvent.type === 'tool-call-projection-updated') {
+            expect(projEvent.callId).toBe('call-order-1')
+            expect(projEvent.projection.name).toBe('CursorBash')
+        }
+    })
+
     it('passes the stored model when respawning a resumed session', async () => {
         const store = new Store(':memory:')
         const engine = new SyncEngine(
