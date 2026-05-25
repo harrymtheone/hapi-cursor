@@ -116,7 +116,7 @@ Plans:
 **Goal:** Hub maintains a durable, canonical tool call projection keyed by `callId` so Web can render complete tool cards even when the current message window contains only a result-side event.
 **Requirements:** BUG-TOOL-01
 **Depends on:** Phase 01.1
-**Plans:** 2/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 
@@ -127,11 +127,11 @@ Plans:
 
 **Wave 1** *(depends on Wave 0)*
 
-- [ ] 01.2-03-PLAN.md — Ingest upsert, reconcile gate, getMessagesPage toolCalls enrichment
+- [x] 01.2-03-PLAN.md — Ingest upsert, reconcile gate, getMessagesPage toolCalls enrichment
 
 **Wave 2** *(depends on Wave 1)*
 
-- [ ] 01.2-04-PLAN.md — Web projection store, pagination/SSE merge, reducer hydration
+- [x] 01.2-04-PLAN.md — Web projection store, pagination/SSE merge, reducer hydration
 
 **Wave 3** *(depends on Wave 2)*
 
@@ -238,7 +238,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-25 |
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
-| 01.2 Fix durable tool call projection in Hub | 2/5 | In Progress|  |
+| 01.2 Fix durable tool call projection in Hub | 4/5 | In Progress|  |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
