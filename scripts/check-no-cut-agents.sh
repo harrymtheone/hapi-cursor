@@ -61,6 +61,12 @@ WHITELIST=(
   --glob '!CLAUDE.md'
   --glob '!refactor.md'
   --glob '!.cursor/rules/**'
+
+  # === Cursor model-ID family keys (phase 01.1 model picker — not external agents)
+  --glob '!web/src/lib/cursorModelFamilies.ts'
+  --glob '!web/src/lib/cursorModelFamilies.test.ts'
+  --glob '!web/src/hooks/useVisibleModelFamilies.test.ts'
+  --glob '!web/src/components/AssistantChat/ModelPickerOverlay.test.tsx'
 )
 
 PHASE4_WHITELIST=(
