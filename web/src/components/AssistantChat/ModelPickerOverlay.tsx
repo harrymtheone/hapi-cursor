@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
+    applyLockedBooleanOptions,
     composeVariantId,
     decomposeModelId,
-    getBinaryOptionAvailability,
-    normalizeOptionSelection,
-    type BinaryOptionAvailability,
+    getBooleanOptionUiMode,
+    type BooleanModelOption,
+    type BooleanOptionUiMode,
     type ModelFamily,
     type ModelOptionSelection,
 } from '@/lib/cursorModelFamilies'
@@ -18,48 +19,42 @@ function emptySelection(): ModelOptionSelection {
 
 function variantSupportsOption(
     family: ModelFamily,
-    option: keyof ModelOptionSelection,
-    value: boolean | ModelOptionSelection['effort']
+    option: 'effort',
+    value: ModelOptionSelection['effort']
 ): boolean {
-    const probe: ModelOptionSelection = { [option]: value } as ModelOptionSelection
+    const probe: ModelOptionSelection = { effort: value }
     return composeVariantId(family, probe) !== null
 }
 
-function isBinaryOptionChecked(
-    availability: BinaryOptionAvailability,
-    value: boolean | undefined
-): boolean {
-    if (availability === 'locked-on') {
-        return true
-    }
-    return value === true
-}
+const BOOLEAN_OPTIONS: Array<{
+    key: BooleanModelOption
+    labelKey: string
+}> = [
+    { key: 'thinking', labelKey: 'composer.modelPicker.option.thinking' },
+    { key: 'fast', labelKey: 'composer.modelPicker.option.fast' },
+    { key: 'context1m', labelKey: 'composer.modelPicker.option.context' },
+]
 
-function BinaryOptionCheckbox(props: {
-    availability: BinaryOptionAvailability
-    checked: boolean
+function BooleanOptionRow(props: {
+    mode: BooleanOptionUiMode
     label: string
+    checked: boolean
     controlsDisabled: boolean
     onToggle: (enabled: boolean) => void
 }) {
-    if (props.availability === 'hidden') {
+    if (props.mode === 'hidden') {
         return null
     }
-    const locked = props.availability === 'locked-on'
-    const disabled = locked || props.controlsDisabled
+    const locked = props.mode === 'locked-on'
     return (
         <label
-            className={`flex items-center gap-2 text-xs ${disabled ? 'cursor-default opacity-50' : 'cursor-pointer'}`}
+            className={`flex items-center gap-2 text-xs ${locked ? 'cursor-default opacity-60' : ''}`}
         >
             <input
                 type="checkbox"
-                disabled={disabled}
+                disabled={locked || props.controlsDisabled}
                 checked={props.checked}
-                onChange={
-                    locked
-                        ? undefined
-                        : (event) => props.onToggle(event.target.checked)
-                }
+                onChange={(event) => props.onToggle(event.target.checked)}
             />
             <span>{props.label}</span>
         </label>
@@ -87,7 +82,7 @@ export function ModelPickerOverlay(props: {
         const decomposed = props.currentModelId
             ? decomposeModelId(props.currentModelId, props.families)
             : null
-        const initial = normalizeOptionSelection(
+        const initial = applyLockedBooleanOptions(
             family,
             decomposed?.familyKey === family.key ? decomposed.selection : emptySelection()
         )
@@ -112,22 +107,21 @@ export function ModelPickerOverlay(props: {
         }
         const composed = composeVariantId(
             editingFamily,
-            normalizeOptionSelection(editingFamily, optionSelection)
+            applyLockedBooleanOptions(editingFamily, optionSelection)
         )
         if (composed) {
             props.onModelChange(composed)
         }
     }, [editingFamily, optionSelection, props])
 
-    const thinkingAvailability = editingFamily
-        ? getBinaryOptionAvailability(editingFamily, 'thinking')
-        : 'hidden'
-    const contextAvailability = editingFamily
-        ? getBinaryOptionAvailability(editingFamily, 'context1m')
-        : 'hidden'
-    const fastEnabled = editingFamily
-        ? variantSupportsOption(editingFamily, 'fast', true)
-        : false
+    const booleanOptionModes = useMemo(() => {
+        if (!editingFamily) {
+            return null
+        }
+        return Object.fromEntries(
+            BOOLEAN_OPTIONS.map(({ key }) => [key, getBooleanOptionUiMode(editingFamily, key)])
+        ) as Record<BooleanModelOption, BooleanOptionUiMode>
+    }, [editingFamily])
     const effortLevels: Array<NonNullable<ModelOptionSelection['effort']>> = [
         'low',
         'medium',
@@ -139,10 +133,8 @@ export function ModelPickerOverlay(props: {
         ? effortLevels.filter((effort) => variantSupportsOption(editingFamily, 'effort', effort))
         : []
     const canApplyOptions = editingFamily
-        ? composeVariantId(
-              editingFamily,
-              normalizeOptionSelection(editingFamily, optionSelection)
-          ) !== null
+        ? composeVariantId(editingFamily, applyLockedBooleanOptions(editingFamily, optionSelection)) !==
+          null
         : false
 
     if (panel === 'options' && editingFamily) {
@@ -161,44 +153,26 @@ export function ModelPickerOverlay(props: {
                     </span>
                 </div>
                 <div className="space-y-1 px-2.5">
-                    <BinaryOptionCheckbox
-                        availability={thinkingAvailability}
-                        checked={isBinaryOptionChecked(thinkingAvailability, optionSelection.thinking)}
-                        label={props.t('composer.modelPicker.option.thinking')}
-                        controlsDisabled={props.controlsDisabled}
-                        onToggle={(enabled) =>
-                            setOptionSelection((current) => ({
-                                ...current,
-                                thinking: enabled ? true : false,
-                            }))
-                        }
-                    />
-                    <label className="flex items-center gap-2 text-xs">
-                        <input
-                            type="checkbox"
-                            disabled={!fastEnabled || props.controlsDisabled}
-                            checked={optionSelection.fast === true}
-                            onChange={(event) =>
-                                setOptionSelection((current) => ({
-                                    ...current,
-                                    fast: event.target.checked ? true : undefined,
-                                }))
-                            }
-                        />
-                        <span>{props.t('composer.modelPicker.option.fast')}</span>
-                    </label>
-                    <BinaryOptionCheckbox
-                        availability={contextAvailability}
-                        checked={isBinaryOptionChecked(contextAvailability, optionSelection.context1m)}
-                        label={props.t('composer.modelPicker.option.context')}
-                        controlsDisabled={props.controlsDisabled}
-                        onToggle={(enabled) =>
-                            setOptionSelection((current) => ({
-                                ...current,
-                                context1m: enabled ? true : false,
-                            }))
-                        }
-                    />
+                    {BOOLEAN_OPTIONS.map(({ key, labelKey }) => {
+                        const mode = booleanOptionModes?.[key] ?? 'hidden'
+                        const checked =
+                            mode === 'locked-on' ? true : optionSelection[key] === true
+                        return (
+                            <BooleanOptionRow
+                                key={key}
+                                mode={mode}
+                                label={props.t(labelKey)}
+                                checked={checked}
+                                controlsDisabled={props.controlsDisabled}
+                                onToggle={(enabled) =>
+                                    setOptionSelection((current) => ({
+                                        ...current,
+                                        [key]: enabled ? true : false,
+                                    }))
+                                }
+                            />
+                        )
+                    })}
                     {enabledEfforts.length > 0 ? (
                         <div className="flex flex-col gap-0.5">
                             <span className="text-[10px] text-[var(--app-hint)]">

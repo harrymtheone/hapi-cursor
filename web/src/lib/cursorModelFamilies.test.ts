@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { CursorModelSummary } from '@hapi/protocol/types'
 import {
+    applyLockedBooleanOptions,
     composeVariantId,
     decomposeModelId,
     formatFamilySummary,
-    getBinaryOptionAvailability,
+    getBooleanOptionUiMode,
     groupModelsIntoFamilies,
-    type ModelFamily,
 } from './cursorModelFamilies'
 
 /** Fixture ids from live `agent models` samples (RESEARCH). */
@@ -162,51 +162,6 @@ describe('composeVariantId', () => {
     })
 })
 
-describe('getBinaryOptionAvailability', () => {
-    const toggleableThinking: ModelFamily = {
-        key: 'test-thinking',
-        displayName: 'Test',
-        variants: [
-            { id: 'test', label: 'Test' },
-            { id: 'test-thinking', label: 'Test Thinking' },
-        ],
-    }
-
-    it('classifies thinking and context options for picker UI', () => {
-        expect(getBinaryOptionAvailability(toggleableThinking, 'thinking')).toBe('toggleable')
-        expect(
-            getBinaryOptionAvailability(
-                {
-                    key: 'thinking-only',
-                    displayName: 'Thinking Only',
-                    variants: [{ id: 'x-thinking', label: 'X Thinking' }],
-                },
-                'thinking'
-            )
-        ).toBe('locked-on')
-        expect(
-            getBinaryOptionAvailability(
-                {
-                    key: 'no-thinking',
-                    displayName: 'Composer',
-                    variants: [{ id: 'composer-2', label: 'Composer 2' }],
-                },
-                'thinking'
-            )
-        ).toBe('hidden')
-
-        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
-        const opus = families.find((f) => f.key === 'claude-opus-4-7')
-        expect(opus).toBeDefined()
-        expect(getBinaryOptionAvailability(opus!, 'context1m')).toBe('locked-on')
-
-        const opus45 = families.find((f) => f.key === 'claude-4.5-opus')
-        if (opus45) {
-            expect(getBinaryOptionAvailability(opus45, 'context1m')).toBe('hidden')
-        }
-    })
-})
-
 describe('decomposeModelId', () => {
     it('round-trips composed ids for fixture families', () => {
         const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
@@ -218,6 +173,46 @@ describe('decomposeModelId', () => {
                 expect(composeVariantId(family, decomposed!.selection)).toBe(variant.id)
             }
         }
+    })
+})
+
+describe('getBooleanOptionUiMode', () => {
+    it('returns hidden when no variant has the option', () => {
+        const families = groupModelsIntoFamilies([
+            { id: 'composer-2', label: 'Composer 2' },
+            { id: 'composer-2-fast', label: 'Composer 2 Fast' },
+        ])
+        const composer = families[0]!
+        expect(getBooleanOptionUiMode(composer, 'thinking')).toBe('hidden')
+        expect(getBooleanOptionUiMode(composer, 'fast')).toBe('toggle')
+    })
+
+    it('returns locked-on when every variant has the option', () => {
+        const families = groupModelsIntoFamilies([
+            { id: 'claude-4.6-opus-high-thinking', label: 'Opus 4.6 1M Thinking' },
+        ])
+        const opus = families[0]!
+        expect(getBooleanOptionUiMode(opus, 'thinking')).toBe('locked-on')
+        expect(getBooleanOptionUiMode(opus, 'context1m')).toBe('locked-on')
+    })
+
+    it('returns toggle when both on and off variants exist', () => {
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        const composer = families.find((f) => f.key === 'composer-2')!
+        const opus = families.find((f) => f.key === 'claude-opus-4-7')!
+        expect(getBooleanOptionUiMode(composer, 'fast')).toBe('toggle')
+        expect(getBooleanOptionUiMode(opus, 'thinking')).toBe('locked-on')
+    })
+
+    it('applyLockedBooleanOptions forces locked flags before compose', () => {
+        const families = groupModelsIntoFamilies([
+            { id: 'claude-opus-4-7-medium', label: 'Opus 4.7 1M Medium' },
+            { id: 'claude-opus-4-7-thinking-medium', label: 'Opus 4.7 1M Medium Thinking' },
+        ])
+        const opus = families[0]!
+        expect(getBooleanOptionUiMode(opus, 'context1m')).toBe('locked-on')
+        const composed = composeVariantId(opus, applyLockedBooleanOptions(opus, {}))
+        expect(composed).toBe('claude-opus-4-7-medium')
     })
 })
 

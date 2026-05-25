@@ -133,6 +133,56 @@ function extractEffortFromLabel(label: string): ModelEffort | undefined {
     return undefined
 }
 
+export type BooleanModelOption = 'thinking' | 'fast' | 'context1m'
+
+/** How a boolean model option should render in the picker options panel. */
+export type BooleanOptionUiMode = 'hidden' | 'locked-on' | 'toggle'
+
+function variantHasBooleanOption(
+    variant: CursorModelSummary,
+    option: BooleanModelOption,
+    enabled: boolean
+): boolean {
+    const flags = parseVariantFlags(variant.id, variant.label)
+    if (option === 'thinking') {
+        return flags.thinking === enabled
+    }
+    if (option === 'fast') {
+        return flags.fast === enabled
+    }
+    return flags.context1m === enabled
+}
+
+export function getBooleanOptionUiMode(
+    family: ModelFamily,
+    option: BooleanModelOption
+): BooleanOptionUiMode {
+    const hasOn = family.variants.some((variant) => variantHasBooleanOption(variant, option, true))
+    if (!hasOn) {
+        return 'hidden'
+    }
+    const hasOff = family.variants.some((variant) => variantHasBooleanOption(variant, option, false))
+    if (!hasOff) {
+        return 'locked-on'
+    }
+    return 'toggle'
+}
+
+/** Merge locked-on boolean options so composeVariantId always receives valid selection. */
+export function applyLockedBooleanOptions(
+    family: ModelFamily,
+    selection: ModelOptionSelection
+): ModelOptionSelection {
+    const merged: ModelOptionSelection = { ...selection }
+    const booleanOptions: BooleanModelOption[] = ['thinking', 'fast', 'context1m']
+    for (const option of booleanOptions) {
+        if (getBooleanOptionUiMode(family, option) === 'locked-on') {
+            merged[option] = true
+        }
+    }
+    return merged
+}
+
 export function parseVariantFlags(id: string, label?: string): VariantFlags {
     const lbl = label ?? ''
     return {
@@ -141,48 +191,6 @@ export function parseVariantFlags(id: string, label?: string): VariantFlags {
         context1m: /\b1M\b/.test(lbl) || id.includes('[1m]'),
         effort: extractEffortFromId(id) ?? extractEffortFromLabel(lbl),
     }
-}
-
-/** How a binary model option (thinking / 1M context) should appear in the picker. */
-export type BinaryOptionAvailability = 'hidden' | 'locked-on' | 'toggleable'
-
-export function getBinaryOptionAvailability(
-    family: ModelFamily,
-    flag: 'thinking' | 'context1m'
-): BinaryOptionAvailability {
-    let hasOn = false
-    let hasOff = false
-    for (const variant of family.variants) {
-        const flags = parseVariantFlags(variant.id, variant.label)
-        const on = flag === 'thinking' ? flags.thinking : flags.context1m
-        if (on) {
-            hasOn = true
-        } else {
-            hasOff = true
-        }
-    }
-    if (!hasOn) {
-        return 'hidden'
-    }
-    if (!hasOff) {
-        return 'locked-on'
-    }
-    return 'toggleable'
-}
-
-/** Apply locked-on flags so composeVariantId matches discovery-only variants. */
-export function normalizeOptionSelection(
-    family: ModelFamily,
-    selection: ModelOptionSelection
-): ModelOptionSelection {
-    const normalized = { ...selection }
-    if (getBinaryOptionAvailability(family, 'thinking') === 'locked-on') {
-        normalized.thinking = true
-    }
-    if (getBinaryOptionAvailability(family, 'context1m') === 'locked-on') {
-        normalized.context1m = true
-    }
-    return normalized
 }
 
 function modifierScore(flags: VariantFlags): number {
