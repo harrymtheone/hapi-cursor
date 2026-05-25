@@ -236,7 +236,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-24 |
+| 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-25 |
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
 | 01.2 Fix durable tool call projection in Hub | 2/5 | In Progress|  |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
