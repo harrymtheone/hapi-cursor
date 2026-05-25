@@ -1,6 +1,7 @@
 import type { ApiClient } from '@/api/client'
 import type { DecryptedMessage, MessagesResponse } from '@/types/api'
 import { mergeMessages } from '@/lib/messages'
+import { mergePageToolCalls } from '@/lib/toolProjectionStore'
 import {
     COLD_LOAD_BACKFILL_PAGE_SIZE,
     COLD_LOAD_REGULAR_TARGET,
@@ -93,9 +94,11 @@ export async function backfillColdLoadMessages(
             break
         }
 
+        mergePageToolCalls(sessionId, older.toolCalls)
         combined = {
             messages: mergeMessages(older.messages, combined.messages),
-            page: older.page
+            page: older.page,
+            toolCalls: { ...(combined.toolCalls ?? {}), ...(older.toolCalls ?? {}) }
         }
         regularCount = countRegularMessages(combined.messages)
     }
@@ -112,6 +115,7 @@ export async function fetchLatestMessages(api: ApiClient, sessionId: string): Pr
 
     try {
         const firstResponse = await api.getMessages(sessionId, { limit: PAGE_SIZE })
+        mergePageToolCalls(sessionId, firstResponse.toolCalls)
         const response = initial.atBottom
             ? await backfillColdLoadMessages(api, sessionId, firstResponse, () => isCurrentGeneration(sessionId, 'latest', generation))
             : firstResponse
@@ -181,6 +185,7 @@ export async function fetchOlderMessages(api: ApiClient, sessionId: string): Pro
             beforeSeq: initial.oldestPositionSeq,
             limit: PAGE_SIZE
         })
+        mergePageToolCalls(sessionId, response.toolCalls)
 
         const nextBeforeAt = response.page.nextBeforeAt
         const nextBeforeSeq = response.page.nextBeforeSeq
