@@ -1,9 +1,10 @@
-import type { AttachmentMetadata, DecryptedMessage } from '@hapi/protocol/types'
+import type { AttachmentMetadata, DecryptedMessage, ToolCallProjection } from '@hapi/protocol/types'
 import { isRedundantGoalStatusEventContent } from '@hapi/protocol/messages'
 import type { Server } from 'socket.io'
 import { randomUUID } from 'node:crypto'
 import type { Store, CancelQueuedMessageResult } from '../store'
 import { EventPublisher } from './eventPublisher'
+import { reconcileSessionToolCalls, collectCallIdsFromDecryptedMessages } from './toolCallProjection'
 
 type StoredMessageForDelivery = ReturnType<Store['messages']['getMessages']>[number]
 
@@ -36,6 +37,8 @@ export class MessageService {
     ) {
     }
 
+    private readonly reconciledSessions = new Set<string>()
+
     getMessages(sessionId: string, limit: number = 200): DecryptedMessage[] {
         const stored = this.store.messages.getMessages(sessionId, limit)
         return toVisibleDecryptedMessages(stored)
@@ -52,7 +55,14 @@ export class MessageService {
             nextBeforeAt: number | null
             hasMore: boolean
         }
+        toolCalls: Record<string, ToolCallProjection>
     } {
+        // One-time full-scan reconcile per session per process lifetime (D-04, T-01.2-03).
+        if (!this.reconciledSessions.has(sessionId)) {
+            reconcileSessionToolCalls(sessionId, this.store)
+            this.reconciledSessions.add(sessionId)
+        }
+
         let before = options.before ?? undefined
         let pageRows = this.store.messages.getMessagesByPosition(sessionId, options.limit, before)
 
@@ -127,7 +137,12 @@ export class MessageService {
                 nextBeforeSeq: oldestSeq,
                 nextBeforeAt: oldestPositionAt,
                 hasMore
-            }
+            },
+            toolCalls: (() => {
+                const callIds = collectCallIdsFromDecryptedMessages(messages)
+                if (callIds.size === 0) return {}
+                return this.store.toolCalls.getBySessionAndCallIds(sessionId, [...callIds])
+            })()
         }
     }
 

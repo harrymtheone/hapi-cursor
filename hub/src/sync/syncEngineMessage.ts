@@ -3,7 +3,7 @@
  *
  * Constructor accepts `sessionCache` for the markMessageQueued side effect on send.
  */
-import type { DecryptedMessage } from '@hapi/protocol/types'
+import type { DecryptedMessage, ToolCallProjection } from '@hapi/protocol/types'
 import type { CancelQueuedMessageResult } from '../store'
 import type { MessageService } from './messageService'
 import type { SessionCache } from './sessionCache'
@@ -25,6 +25,7 @@ export class SyncEngineMessage {
             nextBeforeAt: number | null
             hasMore: boolean
         }
+        toolCalls: Record<string, ToolCallProjection>
     } {
         return this.messageService.getMessagesPage(sessionId, options)
     }

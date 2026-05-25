@@ -1130,3 +1130,142 @@ describe('MessageService.sweepImmediateQueuedOnSessionEnd — scheduled rows are
         expect(stillQueued.find((m) => m.localId === 'local-future')?.invokedAt).toBeNull()
     })
 })
+
+// ---------------------------------------------------------------------------
+// getMessagesPage toolCalls enrichment
+// ---------------------------------------------------------------------------
+
+describe('MessageService.getMessagesPage toolCalls enrichment', () => {
+    const CURSOR_PAYLOAD_TYPE = 'cursor' as const
+
+    function makeToolCallContent(callId: string, name: string, input: unknown) {
+        return {
+            role: 'agent',
+            content: {
+                type: CURSOR_PAYLOAD_TYPE,
+                data: { type: 'tool-call', callId, name, input }
+            }
+        }
+    }
+
+    function makeToolResultContent(callId: string, output: unknown) {
+        return {
+            role: 'agent',
+            content: {
+                type: CURSOR_PAYLOAD_TYPE,
+                data: { type: 'tool-call-result', callId, output }
+            }
+        }
+    }
+
+    function makeNoopIo(): Server {
+        return {
+            of: (_ns: string) => ({
+                to: (_room: string) => ({ emit: () => {} }),
+                adapter: { rooms: { get: () => undefined } }
+            })
+        } as unknown as Server
+    }
+
+    it('returns toolCalls with projection for callId after reconcile on first page', () => {
+        const store = makeStore()
+        const session = makeSession(store, 'tc-enrich-basic')
+
+        store.messages.addMessage(session.id, makeToolCallContent('call-a', 'CursorBash', { cmd: 'ls' }))
+        store.messages.addMessage(session.id, makeToolResultContent('call-a', { stdout: 'ok' }))
+
+        const publisher = makePublisher()
+        const service = new MessageService(store, makeNoopIo(), publisher as any)
+
+        const result = service.getMessagesPage(session.id, { limit: 10 })
+
+        expect(result.toolCalls).toBeDefined()
+        expect(result.toolCalls!['call-a']).toBeDefined()
+        expect(result.toolCalls!['call-a'].name).toBe('CursorBash')
+        expect(result.toolCalls!['call-a'].status).toBe('completed')
+    })
+
+    it('toolCalls map only contains callIds from the returned messages page', () => {
+        const store = makeStore()
+        const session = makeSession(store, 'tc-enrich-scoped')
+
+        store.messages.addMessage(session.id, makeToolCallContent('call-b', 'CursorBash', {}))
+        store.messages.addMessage(session.id, makeToolResultContent('call-b', {}))
+
+        // Manually add a projection for a callId NOT in any message on this page
+        store.toolCalls.upsert(session.id, 'call-other', {
+            callId: 'call-other',
+            name: 'OtherTool',
+            input: null,
+            status: 'completed',
+            startedAt: Date.now(),
+            completedAt: Date.now(),
+            result: {}
+        })
+
+        const publisher = makePublisher()
+        const service = new MessageService(store, makeNoopIo(), publisher as any)
+        const result = service.getMessagesPage(session.id, { limit: 10 })
+
+        expect(result.toolCalls!['call-b']).toBeDefined()
+        expect(result.toolCalls!['call-other']).toBeUndefined()
+    })
+
+    it('reconcile runs once per session per MessageService instance', () => {
+        const store = makeStore()
+        const session = makeSession(store, 'tc-reconcile-once')
+
+        store.messages.addMessage(session.id, makeToolCallContent('call-once', 'CursorBash', {}))
+        store.messages.addMessage(session.id, makeToolResultContent('call-once', {}))
+
+        const publisher = makePublisher()
+        const service = new MessageService(store, makeNoopIo(), publisher as any)
+
+        // First call: reconcile runs, projection is stored
+        const r1 = service.getMessagesPage(session.id, { limit: 10 })
+        expect(r1.toolCalls!['call-once']).toBeDefined()
+
+        // Now add a new message for call-new WITHOUT going through ingest upsert path
+        // so no projection exists in tool_calls yet for call-new.
+        store.messages.addMessage(session.id, makeToolCallContent('call-new', 'NewTool', {}))
+
+        // Second call: reconciledSessions gate must prevent re-scan.
+        // Since reconcile doesn't run again, call-new has no projection in store yet.
+        const r2 = service.getMessagesPage(session.id, { limit: 10 })
+        // call-new appears in messages (collectCallIds finds it) but store has no projection → absent
+        expect(r2.toolCalls!['call-new']).toBeUndefined()
+        // call-once is still enriched from the store
+        expect(r2.toolCalls!['call-once']).toBeDefined()
+    })
+
+    it('returns empty toolCalls object when no tool calls in messages', () => {
+        const store = makeStore()
+        const session = makeSession(store, 'tc-enrich-empty')
+        store.messages.addMessage(session.id, { role: 'user', content: { type: 'text', text: 'hi' } })
+
+        const publisher = makePublisher()
+        const service = new MessageService(store, makeNoopIo(), publisher as any)
+        const result = service.getMessagesPage(session.id, { limit: 10 })
+
+        expect(result.toolCalls).toBeDefined()
+        expect(Object.keys(result.toolCalls!)).toHaveLength(0)
+    })
+
+    it('pagination cursors are unchanged vs baseline (hasMore, nextBeforeSeq)', () => {
+        const store = makeStore()
+        const session = makeSession(store, 'tc-pagination-cursor')
+
+        for (let i = 0; i < 5; i++) {
+            store.messages.addMessage(session.id, { role: 'user', content: { type: 'text', text: `msg${i}` } })
+        }
+
+        const publisher = makePublisher()
+        const service = new MessageService(store, makeNoopIo(), publisher as any)
+        const result = service.getMessagesPage(session.id, { limit: 3 })
+
+        expect(result.page.hasMore).toBe(true)
+        expect(result.page.nextBeforeSeq).not.toBeNull()
+        expect(result.messages).toHaveLength(3)
+        expect(result.toolCalls).toBeDefined()
+    })
+})
