@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-last_updated: "2026-05-24T17:17:46.648Z"
-last_activity: 2026-05-25 - Completed quick task 260525-ex3: model option tri-state UI (thinking/fast/context)
+last_updated: "2026-05-25T18:00:00.000Z"
+last_activity: 2026-05-25 - Phase 01.2 discuss-phase context gathered (Hub tool_calls table + page enrichment + SSE)
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 2
   total_plans: 24
   completed_plans: 24
-  percent: 33
+  percent: 29
 ---
 
 # Project State
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 01.1 — model picker UX (CURS-05)
+**Current focus:** Phase 01.2 — durable Hub tool call projection bugfix
 
 ## Current Position
 
-Phase: 01.1
+Phase: 01.2
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-24 -- Phase 01.1 planning complete
+Status: Ready to plan
+Last activity: 2026-05-25 -- Phase 01.2 CONTEXT.md captured (discuss-phase)
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -49,6 +49,8 @@ Progress: [██████████] 100%
 | 4. Mobile Screenshot Display | TBD | - | - |
 | 5. Integration Guards and Mobile E2E | TBD | - | - |
 | 01 | 21 | - | - |
+| 01.1 Model picker UX | 3/3 | - | - |
+| 01.2 Fix durable tool call projection in Hub | TBD | - | - |
 
 **Recent Trend:**
 
@@ -81,6 +83,7 @@ Progress: [██████████] 100%
 ### Roadmap Evolution
 
 - Phase 01.1 inserted after Phase 1: Model picker UX — family visibility filter, Auto-only new sessions, Cursor-style composer picker (CURS-05) (URGENT)
+- Phase 01.2 inserted after Phase 01.1: Fix durable tool call projection in Hub so Web tool cards survive pagination, reload, and reconnect (URGENT)
 
 ### Decisions
 
