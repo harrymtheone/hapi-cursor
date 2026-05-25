@@ -109,7 +109,8 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         text: '',
         selection: { start: 0, end: 0 }
     })
-    const [showSettings, setShowSettings] = useState(false)
+    const [settingsOverlay, setSettingsOverlay] = useState<'model' | 'permission' | null>(null)
+    const showSettings = settingsOverlay !== null
     const [isAborting, setIsAborting] = useState(false)
     const [isSwitching, setIsSwitching] = useState(false)
     const [showContinueHint, setShowContinueHint] = useState(false)
@@ -234,7 +235,8 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         inputState,
         setInputState,
         showSettings,
-        setShowSettings,
+        settingsOverlay,
+        setSettingsOverlay,
         isAborting,
         setIsAborting,
         isSwitching,

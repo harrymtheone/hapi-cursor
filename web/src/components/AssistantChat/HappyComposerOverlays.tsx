@@ -6,7 +6,7 @@ import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { ModelPickerOverlay } from './ModelPickerOverlay'
 
 export interface HappyComposerOverlaysProps {
-    showSettings: boolean
+    settingsOverlay: 'model' | 'permission' | null
     showPermissionSettings: boolean
     showModelSettings: boolean
     permissionMode: PermissionMode
@@ -24,7 +24,7 @@ export interface HappyComposerOverlaysProps {
 
 export function HappyComposerOverlays(props: HappyComposerOverlaysProps) {
     const {
-        showSettings,
+        settingsOverlay,
         showPermissionSettings,
         showModelSettings,
         permissionMode,
@@ -40,60 +40,60 @@ export function HappyComposerOverlays(props: HappyComposerOverlaysProps) {
         t,
     } = props
 
-    if (showSettings && (showPermissionSettings || showModelSettings)) {
+    if (settingsOverlay === 'permission' && showPermissionSettings) {
         return (
-            <div className="absolute bottom-[100%] mb-2 w-full">
-                <FloatingOverlay maxHeight={400}>
-                    {showPermissionSettings ? (
-                        <div className="py-2">
-                            <div className="px-3 pb-1 text-xs font-semibold text-[var(--app-hint)]">
-                                {t('misc.permissionMode')}
-                            </div>
-                            {permissionModeOptions.map((option) => (
-                                <button
-                                    key={option.mode}
-                                    type="button"
-                                    disabled={controlsDisabled}
-                                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                                        controlsDisabled
-                                            ? 'cursor-not-allowed opacity-50'
-                                            : 'cursor-pointer hover:bg-[var(--app-secondary-bg)]'
-                                    }`}
-                                    onClick={() => onPermissionChange(option.mode)}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                >
-                                    <div
-                                        className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                                            permissionMode === option.mode
-                                                ? 'border-[var(--app-link)]'
-                                                : 'border-[var(--app-hint)]'
-                                        }`}
-                                    >
-                                        {permissionMode === option.mode && (
-                                            <div className="h-2 w-2 rounded-full bg-[var(--app-link)]" />
-                                        )}
-                                    </div>
-                                    <span className={permissionMode === option.mode ? 'text-[var(--app-link)]' : ''}>
-                                        {option.label}
-                                    </span>
-                                </button>
-                            ))}
+            <div className="absolute bottom-[100%] left-0 mb-2 flex w-full justify-start">
+                <FloatingOverlay maxHeight={200} className="w-[min(100%,240px)]">
+                    <div className="py-1">
+                        <div className="px-2.5 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--app-hint)]">
+                            {t('misc.permissionMode')}
                         </div>
-                    ) : null}
+                        {permissionModeOptions.map((option) => (
+                            <button
+                                key={option.mode}
+                                type="button"
+                                disabled={controlsDisabled}
+                                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors ${
+                                    controlsDisabled
+                                        ? 'cursor-not-allowed opacity-50'
+                                        : 'cursor-pointer hover:bg-[var(--app-secondary-bg)]'
+                                }`}
+                                onClick={() => onPermissionChange(option.mode)}
+                                onMouseDown={(e) => e.preventDefault()}
+                            >
+                                <div
+                                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                        permissionMode === option.mode
+                                            ? 'border-[var(--app-link)]'
+                                            : 'border-[var(--app-hint)]'
+                                    }`}
+                                >
+                                    {permissionMode === option.mode && (
+                                        <div className="h-1.5 w-1.5 rounded-full bg-[var(--app-link)]" />
+                                    )}
+                                </div>
+                                <span className={permissionMode === option.mode ? 'text-[var(--app-link)]' : ''}>
+                                    {option.label}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                </FloatingOverlay>
+            </div>
+        )
+    }
 
-                    {showPermissionSettings && showModelSettings ? (
-                        <div className="mx-3 h-px bg-[var(--app-divider)]" />
-                    ) : null}
-
-                    {showModelSettings ? (
-                        <ModelPickerOverlay
-                            families={modelFamilies}
-                            currentModelId={model}
-                            onModelChange={onModelChange}
-                            controlsDisabled={controlsDisabled}
-                            t={t}
-                        />
-                    ) : null}
+    if (settingsOverlay === 'model' && showModelSettings) {
+        return (
+            <div className="absolute bottom-[100%] right-0 mb-2 flex w-full justify-end">
+                <FloatingOverlay maxHeight={280} className="w-[min(100%,260px)]">
+                    <ModelPickerOverlay
+                        families={modelFamilies}
+                        currentModelId={model}
+                        onModelChange={onModelChange}
+                        controlsDisabled={controlsDisabled}
+                        t={t}
+                    />
                 </FloatingOverlay>
             </div>
         )

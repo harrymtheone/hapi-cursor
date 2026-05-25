@@ -62,7 +62,7 @@ export function HappyComposer(props: HappyComposerProps) {
         controlsDisabled,
         hasAttachments,
         canSend,
-        showSettings,
+        settingsOverlay,
         showContinueHint,
         pendingSchedule,
         setPendingSchedule,
@@ -98,7 +98,7 @@ export function HappyComposer(props: HappyComposerProps) {
             <div className="mx-auto w-full max-w-content">
                 <ComposerPrimitive.Root className="relative" onSubmit={handlers.handleSubmit}>
                     <HappyComposerOverlays
-                        showSettings={showSettings}
+                        settingsOverlay={settingsOverlay}
                         showPermissionSettings={showPermissionSettings}
                         showModelSettings={showModelSettings}
                         permissionMode={permissionMode}
@@ -130,7 +130,7 @@ export function HappyComposer(props: HappyComposerProps) {
                         agentFlavor={props.agentFlavor}
                         modelSwitchState={props.modelSwitchState}
                         canOpenModelSelector={canOpenModelSelector}
-                        onModelInfoClick={handlers.handleSettingsToggle}
+                        onModelInfoClick={handlers.handleModelOverlayToggle}
                         onModelRetry={handlers.handleModelChange}
                     />
 

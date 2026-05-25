@@ -42,7 +42,7 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
         autocompletePrefixes,
         setInputState,
         setShowContinueHint,
-        setShowSettings,
+        setSettingsOverlay,
         setIsAborting,
         setIsSwitching,
         abortDisabled,
@@ -230,8 +230,13 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
 
     const handleSettingsToggle = useCallback(() => {
         haptic('light')
-        setShowSettings(prev => !prev)
-    }, [haptic, setShowSettings])
+        setSettingsOverlay((prev) => (prev === 'permission' ? null : 'permission'))
+    }, [haptic, setSettingsOverlay])
+
+    const handleModelOverlayToggle = useCallback(() => {
+        haptic('light')
+        setSettingsOverlay((prev) => (prev === 'model' ? null : 'model'))
+    }, [haptic, setSettingsOverlay])
 
     const handleSubmit = useCallback((event?: ReactFormEvent<HTMLFormElement>) => {
         if (event && !attachmentsReady) {
@@ -244,16 +249,16 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
     const handlePermissionChange = useCallback((mode: PermissionMode) => {
         if (!onPermissionModeChange || controlsDisabled) return
         onPermissionModeChange(mode)
-        setShowSettings(false)
+        setSettingsOverlay(null)
         haptic('light')
-    }, [onPermissionModeChange, controlsDisabled, haptic, setShowSettings])
+    }, [onPermissionModeChange, controlsDisabled, haptic, setSettingsOverlay])
 
     const handleModelChange = useCallback((nextModel: string | null) => {
         if (!onModelChange || !canOpenModelSelector) return
         onModelChange(nextModel)
-        setShowSettings(false)
+        setSettingsOverlay(null)
         haptic('light')
-    }, [onModelChange, canOpenModelSelector, haptic, setShowSettings])
+    }, [onModelChange, canOpenModelSelector, haptic, setSettingsOverlay])
 
     const handleSend = useCallback(() => {
         api.composer().send()
@@ -269,6 +274,7 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
         handleSelect,
         handlePaste,
         handleSettingsToggle,
+        handleModelOverlayToggle,
         handleSubmit,
         handlePermissionChange,
         handleModelChange,

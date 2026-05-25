@@ -155,7 +155,7 @@ describe('HappyComposer', () => {
         expect(screen.getByText('Opus 4.7')).toBeInTheDocument()
         expect(screen.queryByText('Switching unavailable for this runtime')).not.toBeInTheDocument()
 
-        fireEvent.click(screen.getAllByRole('button', { name: /Select/ })[0]!)
+        fireEvent.click(screen.getByRole('button', { name: 'Opus 4.7' }))
 
         expect(onModelChange).toHaveBeenCalled()
     })

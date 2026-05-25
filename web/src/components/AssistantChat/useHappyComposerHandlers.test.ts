@@ -21,7 +21,7 @@ function makeState(overrides: StubOverrides = {}) {
     const haptic = overrides.haptic ?? vi.fn()
     const setIsAborting = overrides.setIsAborting ?? vi.fn()
     const setIsSwitching = overrides.setIsSwitching ?? vi.fn()
-    const setShowSettings = vi.fn()
+    const setSettingsOverlay = vi.fn()
     const setShowContinueHint = vi.fn()
     const setInputState = vi.fn()
     const api = {
@@ -54,7 +54,7 @@ function makeState(overrides: StubOverrides = {}) {
         autocompletePrefixes: ['@'],
         setInputState,
         setShowContinueHint,
-        setShowSettings,
+        setSettingsOverlay,
         setIsAborting,
         setIsSwitching,
         abortDisabled: overrides.abortDisabled ?? false,
