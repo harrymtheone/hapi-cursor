@@ -8,7 +8,8 @@ import {
     MetadataSchema,
     SessionPatchSchema,
     SessionSchema,
-    SyncEventSchema
+    SyncEventSchema,
+    ToolCallProjectionSchema
 } from './schemas'
 
 describe('CursorModelDiscoveryResultSchema', () => {
@@ -282,6 +283,98 @@ describe('MessageContentSchema', () => {
             content: { type: 'text', text: 'x' }
         })
         expect(result.success).toBe(false)
+    })
+})
+
+describe('ToolCallProjectionSchema', () => {
+    const validCompleted = {
+        callId: 'call-abc-123',
+        name: 'Bash',
+        input: { command: 'ls -la' },
+        status: 'completed',
+        startedAt: 1_000_000,
+        completedAt: 1_001_000,
+        result: { output: 'file1 file2' }
+    }
+
+    it('accepts a complete completed projection', () => {
+        expect(ToolCallProjectionSchema.safeParse(validCompleted).success).toBe(true)
+    })
+
+    it('accepts a minimal in-progress projection (no result/completedAt)', () => {
+        expect(ToolCallProjectionSchema.safeParse({
+            callId: 'call-xyz',
+            name: 'Read',
+            input: { path: '/tmp/file.txt' },
+            status: 'in_progress',
+            startedAt: 1_000_000
+        }).success).toBe(true)
+    })
+
+    it('accepts pending status', () => {
+        expect(ToolCallProjectionSchema.safeParse({
+            callId: 'call-p',
+            name: 'Bash',
+            input: {},
+            status: 'pending',
+            startedAt: 1_000_000
+        }).success).toBe(true)
+    })
+
+    it('accepts failed status with error payload', () => {
+        expect(ToolCallProjectionSchema.safeParse({
+            callId: 'call-f',
+            name: 'Bash',
+            input: {},
+            status: 'failed',
+            startedAt: 1_000_000,
+            error: { message: 'exit code 1' }
+        }).success).toBe(true)
+    })
+
+    it('accepts optional permission object when present', () => {
+        expect(ToolCallProjectionSchema.safeParse({
+            ...validCompleted,
+            permission: { toolName: 'Bash', input: { command: 'ls' }, decision: 'approved' }
+        }).success).toBe(true)
+    })
+
+    it('accepts projection without permission (omitted)', () => {
+        const { ...rest } = validCompleted
+        expect(ToolCallProjectionSchema.safeParse(rest).success).toBe(true)
+    })
+
+    it('rejects missing callId', () => {
+        const { callId: _, ...rest } = validCompleted
+        expect(ToolCallProjectionSchema.safeParse(rest).success).toBe(false)
+    })
+
+    it('rejects empty callId', () => {
+        expect(ToolCallProjectionSchema.safeParse({ ...validCompleted, callId: '' }).success).toBe(false)
+    })
+
+    it('rejects empty name', () => {
+        expect(ToolCallProjectionSchema.safeParse({ ...validCompleted, name: '' }).success).toBe(false)
+    })
+
+    it('rejects unknown status enum value', () => {
+        expect(ToolCallProjectionSchema.safeParse({ ...validCompleted, status: 'running' }).success).toBe(false)
+    })
+
+    it('rejects extra keys (strict)', () => {
+        expect(ToolCallProjectionSchema.safeParse({ ...validCompleted, createdAt: 999 }).success).toBe(false)
+    })
+
+    it('rejects extra keys in permission object (strict)', () => {
+        expect(ToolCallProjectionSchema.safeParse({
+            ...validCompleted,
+            permission: { toolName: 'Bash', unknownField: true }
+        }).success).toBe(false)
+    })
+
+    it('rejects missing startedAt', () => {
+        const { startedAt: _, ...rest } = validCompleted
+        expect(ToolCallProjectionSchema.safeParse(rest).success).toBe(false)
     })
 })
 
