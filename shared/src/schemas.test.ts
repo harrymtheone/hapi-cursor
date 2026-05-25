@@ -378,6 +378,55 @@ describe('ToolCallProjectionSchema', () => {
     })
 })
 
+describe('SyncEventSchema tool-call-projection-updated arm', () => {
+    const minimalProjection = {
+        callId: 'call-abc-123',
+        name: 'Bash',
+        input: { command: 'ls' },
+        status: 'completed',
+        startedAt: 1_000_000
+    }
+
+    it('accepts a valid tool-call-projection-updated event', () => {
+        const result = SyncEventSchema.safeParse({
+            type: 'tool-call-projection-updated',
+            sessionId: 'session-1',
+            callId: 'call-abc-123',
+            projection: minimalProjection
+        })
+        expect(result.success).toBe(true)
+    })
+
+    it('rejects wrong type literal', () => {
+        const result = SyncEventSchema.safeParse({
+            type: 'tool-call-projection-WRONG',
+            sessionId: 'session-1',
+            callId: 'call-abc-123',
+            projection: minimalProjection
+        })
+        expect(result.success).toBe(false)
+    })
+
+    it('rejects projection missing required callId field', () => {
+        const result = SyncEventSchema.safeParse({
+            type: 'tool-call-projection-updated',
+            sessionId: 'session-1',
+            callId: 'call-abc-123',
+            projection: { name: 'Bash', input: {}, status: 'completed', startedAt: 1 }
+        })
+        expect(result.success).toBe(false)
+    })
+
+    it('rejects event missing callId top-level field', () => {
+        const result = SyncEventSchema.safeParse({
+            type: 'tool-call-projection-updated',
+            sessionId: 'session-1',
+            projection: minimalProjection
+        })
+        expect(result.success).toBe(false)
+    })
+})
+
 describe('MetadataSchema strip behavior — Pitfall #1', () => {
     it('strips a legacy flavor key (not strict — silent strip)', () => {
         const result = MetadataSchema.safeParse({
