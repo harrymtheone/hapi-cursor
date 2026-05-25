@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.1
-milestone_name: milestone
+milestone_name: Cursor mobile features
 status: executing
-stopped_at: Completed 01.1-03-PLAN.md
-last_updated: "2026-05-25T15:56:30.028Z"
-last_activity: 2026-05-25 -- Phase 01.2 planning complete (5 plans)
+last_updated: "2026-05-25T16:02:18.213Z"
+last_activity: 2026-05-25
 progress:
   total_phases: 7
   completed_phases: 2
-  total_plans: 34
-  completed_plans: 24
+  total_plans: 29
+  completed_plans: 25
   percent: 29
 ---
 
@@ -21,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 01.2 — durable Hub tool call projection bugfix
+**Current focus:** Phase 01.2 — fix-durable-tool-call-projection-in-hub
 
 ## Current Position
 
-Phase: 01.2
-Plan: 0/5
+Phase: 01.2 (fix-durable-tool-call-projection-in-hub) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-05-25 -- Phase null planning complete
+Last activity: 2026-05-25
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -78,6 +77,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P01-20 | 6m | 2 tasks | 2 files |
 | Phase 01 P21 | 4m | 2 tasks | 2 files |
 | Phase 01.1 P03 | 52 | 6 tasks | 28 files |
+| Phase 01.2 P01 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -168,7 +168,7 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-24T17:17:46.645Z
+Last session: 2026-05-25T16:02:18.209Z
 Stopped at: Completed 01.1-03-PLAN.md
 Resume file: None
 
