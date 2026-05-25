@@ -4,7 +4,7 @@ milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
 last_updated: "2026-05-24T17:17:46.648Z"
-last_activity: 2026-05-25 - Completed quick task 260525-de4: context chips and model option matching fixes
+last_activity: 2026-05-25 - Completed quick task 260525-ebo: thinking/1M three-state model option UI
 progress:
   total_phases: 6
   completed_phases: 2
@@ -145,7 +145,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260525-cnj | 修复 visible models 设置页重复显示同名 model family（deriveFamilyKey 对 gpt-5.x 分组过细） | 2026-05-25 | 200c1c4 | [260525-cnj-visible-models-model-family-derivefamily](./quick/260525-cnj-visible-models-model-family-derivefamily/) |
 | 260525-ctq | 缩小 chat session 模型选择弹窗，对齐 Cursor Desktop 紧凑样式 | 2026-05-25 | ff89fbb | [260525-ctq-chat-session-cursor-desktop](./quick/260525-ctq-chat-session-cursor-desktop/) |
-| 260525-de4 | 1M context 改为 effort 式多选；修复 Claude 无法关 1M、GPT-5.5 无法开 thinking | 2026-05-25 | 1fe727e | [260525-de4-1m-context-effort-claude-1m-gpt-5-5-thin](./quick/260525-de4-1m-context-effort-claude-1m-gpt-5-5-thin/) |
+| 260525-ebo | 模型选项 thinking/1M 三态 UI：可切换、仅支持时锁定勾选、不支持时隐藏 | 2026-05-25 | 0ebf0bb | [260525-ebo-thinking-1m-ui](./quick/260525-ebo-thinking-1m-ui/) |
 
 ### Blockers / Concerns
 
