@@ -4,9 +4,9 @@ import {
     composeVariantId,
     decomposeModelId,
     formatFamilySummary,
-    getEnabledContextModes,
+    getBinaryOptionAvailability,
     groupModelsIntoFamilies,
-    selectionSupportsOption,
+    type ModelFamily,
 } from './cursorModelFamilies'
 
 /** Fixture ids from live `agent models` samples (RESEARCH). */
@@ -127,35 +127,6 @@ describe('groupModelsIntoFamilies', () => {
     })
 })
 
-describe('selectionSupportsOption', () => {
-    it('picks standard context when context1m is false', () => {
-        const models: CursorModelSummary[] = [
-            { id: 'gpt-5.5-medium', label: 'GPT-5.5 1M' },
-            { id: 'gpt-5.5-medium-fast', label: 'GPT-5.5 Fast' },
-        ]
-        const families = groupModelsIntoFamilies(models)
-        const family = families.find((f) => f.key === 'gpt-5.5')!
-        expect(composeVariantId(family, { context1m: false })).toBe('gpt-5.5-medium-fast')
-        expect(getEnabledContextModes(family)).toEqual(['standard', '1m'])
-    })
-
-    it('reports no thinking support for families without thinking variants', () => {
-        const models: CursorModelSummary[] = [{ id: 'gpt-5.5-medium', label: 'GPT-5.5 1M' }]
-        const family = groupModelsIntoFamilies(models)[0]!
-        expect(selectionSupportsOption(family, { thinking: true })).toBe(false)
-    })
-
-    it('enables thinking when a matching variant exists for the current effort', () => {
-        const models: CursorModelSummary[] = [
-            { id: 'claude-opus-4-7-medium', label: 'Opus 4.7 1M Medium' },
-            { id: 'claude-opus-4-7-thinking-medium', label: 'Opus 4.7 1M Medium Thinking' },
-        ]
-        const family = groupModelsIntoFamilies(models)[0]!
-        expect(selectionSupportsOption(family, { thinking: true }, { effort: 'medium' })).toBe(true)
-        expect(selectionSupportsOption(family, { thinking: true }, { effort: 'low' })).toBe(false)
-    })
-})
-
 describe('composeVariantId', () => {
     it('returns only ids that exist on family.variants', () => {
         const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
@@ -191,16 +162,52 @@ describe('composeVariantId', () => {
     })
 })
 
-describe('decomposeModelId', () => {
-    it('decomposes non-1m variant with context1m false', () => {
-        const models: CursorModelSummary[] = [
-            { id: 'gpt-5.5-medium-fast', label: 'GPT-5.5 Fast' },
-        ]
-        const families = groupModelsIntoFamilies(models)
-        const decomposed = decomposeModelId('gpt-5.5-medium-fast', families)
-        expect(decomposed?.selection.context1m).toBe(false)
-    })
+describe('getBinaryOptionAvailability', () => {
+    const toggleableThinking: ModelFamily = {
+        key: 'test-thinking',
+        displayName: 'Test',
+        variants: [
+            { id: 'test', label: 'Test' },
+            { id: 'test-thinking', label: 'Test Thinking' },
+        ],
+    }
 
+    it('classifies thinking and context options for picker UI', () => {
+        expect(getBinaryOptionAvailability(toggleableThinking, 'thinking')).toBe('toggleable')
+        expect(
+            getBinaryOptionAvailability(
+                {
+                    key: 'thinking-only',
+                    displayName: 'Thinking Only',
+                    variants: [{ id: 'x-thinking', label: 'X Thinking' }],
+                },
+                'thinking'
+            )
+        ).toBe('locked-on')
+        expect(
+            getBinaryOptionAvailability(
+                {
+                    key: 'no-thinking',
+                    displayName: 'Composer',
+                    variants: [{ id: 'composer-2', label: 'Composer 2' }],
+                },
+                'thinking'
+            )
+        ).toBe('hidden')
+
+        const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
+        const opus = families.find((f) => f.key === 'claude-opus-4-7')
+        expect(opus).toBeDefined()
+        expect(getBinaryOptionAvailability(opus!, 'context1m')).toBe('locked-on')
+
+        const opus45 = families.find((f) => f.key === 'claude-4.5-opus')
+        if (opus45) {
+            expect(getBinaryOptionAvailability(opus45, 'context1m')).toBe('hidden')
+        }
+    })
+})
+
+describe('decomposeModelId', () => {
     it('round-trips composed ids for fixture families', () => {
         const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
         for (const family of families) {

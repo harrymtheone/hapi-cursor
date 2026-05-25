@@ -143,6 +143,48 @@ export function parseVariantFlags(id: string, label?: string): VariantFlags {
     }
 }
 
+/** How a binary model option (thinking / 1M context) should appear in the picker. */
+export type BinaryOptionAvailability = 'hidden' | 'locked-on' | 'toggleable'
+
+export function getBinaryOptionAvailability(
+    family: ModelFamily,
+    flag: 'thinking' | 'context1m'
+): BinaryOptionAvailability {
+    let hasOn = false
+    let hasOff = false
+    for (const variant of family.variants) {
+        const flags = parseVariantFlags(variant.id, variant.label)
+        const on = flag === 'thinking' ? flags.thinking : flags.context1m
+        if (on) {
+            hasOn = true
+        } else {
+            hasOff = true
+        }
+    }
+    if (!hasOn) {
+        return 'hidden'
+    }
+    if (!hasOff) {
+        return 'locked-on'
+    }
+    return 'toggleable'
+}
+
+/** Apply locked-on flags so composeVariantId matches discovery-only variants. */
+export function normalizeOptionSelection(
+    family: ModelFamily,
+    selection: ModelOptionSelection
+): ModelOptionSelection {
+    const normalized = { ...selection }
+    if (getBinaryOptionAvailability(family, 'thinking') === 'locked-on') {
+        normalized.thinking = true
+    }
+    if (getBinaryOptionAvailability(family, 'context1m') === 'locked-on') {
+        normalized.context1m = true
+    }
+    return normalized
+}
+
 function modifierScore(flags: VariantFlags): number {
     let score = 0
     if (flags.thinking) score += 1
@@ -179,38 +221,19 @@ function variantMatchesSelection(flags: VariantFlags, selection: ModelOptionSele
 
 function flagsToSelection(flags: VariantFlags): ModelOptionSelection {
     const selection: ModelOptionSelection = {}
-    selection.thinking = flags.thinking
-    selection.fast = flags.fast
-    selection.context1m = flags.context1m
+    if (flags.thinking) {
+        selection.thinking = true
+    }
+    if (flags.fast) {
+        selection.fast = true
+    }
+    if (flags.context1m) {
+        selection.context1m = true
+    }
     if (flags.effort) {
         selection.effort = flags.effort
     }
     return selection
-}
-
-/** Whether any variant matches base selection with patch applied. */
-export function selectionSupportsOption(
-    family: ModelFamily,
-    patch: Partial<ModelOptionSelection>,
-    base: ModelOptionSelection = {}
-): boolean {
-    return composeVariantId(family, { ...base, ...patch }) !== null
-}
-
-export type ContextMode = 'standard' | '1m'
-
-export function getEnabledContextModes(
-    family: ModelFamily,
-    base: ModelOptionSelection = {}
-): ContextMode[] {
-    const modes: ContextMode[] = []
-    if (selectionSupportsOption(family, { context1m: false }, base)) {
-        modes.push('standard')
-    }
-    if (selectionSupportsOption(family, { context1m: true }, base)) {
-        modes.push('1m')
-    }
-    return modes
 }
 
 export function groupModelsIntoFamilies(models: CursorModelSummary[]): ModelFamily[] {

@@ -50,7 +50,9 @@ describe('ModelPickerOverlay', () => {
             )!
         )
         fireEvent.click(screen.getByRole('button', { name: 'composer.modelPicker.effort.high' }))
-        fireEvent.click(screen.getByRole('button', { name: 'composer.modelPicker.fast.on' }))
+        const fastCheckbox = screen.getByText('composer.modelPicker.option.fast').closest('label')?.querySelector('input')
+        expect(fastCheckbox).toBeTruthy()
+        fireEvent.click(fastCheckbox!)
         fireEvent.click(screen.getByRole('button', { name: 'composer.modelPicker.apply' }))
 
         expect(onModelChange).toHaveBeenCalledWith('gpt-5.3-codex-high-fast')
@@ -59,5 +61,33 @@ describe('ModelPickerOverlay', () => {
     it('shows manage visible models navigation control', () => {
         renderOverlay()
         expect(screen.getByText('composer.modelPicker.manageVisible')).toBeInTheDocument()
+    })
+
+    it('hides thinking for families without thinking variants', () => {
+        renderOverlay()
+        const composerRow = screen.getByText('Composer 2').parentElement?.parentElement
+        fireEvent.click(
+            Array.from(composerRow!.querySelectorAll('button')).find((button) =>
+                button.textContent?.includes('composer.modelPicker.edit')
+            )!
+        )
+        expect(screen.queryByText('composer.modelPicker.option.thinking')).not.toBeInTheDocument()
+    })
+
+    it('locks context when family only has 1M variants', () => {
+        renderOverlay()
+        const opusRow = screen.getByText('Opus 4.7').parentElement?.parentElement
+        fireEvent.click(
+            Array.from(opusRow!.querySelectorAll('button')).find((button) =>
+                button.textContent?.includes('composer.modelPicker.edit')
+            )!
+        )
+        const contextCheckbox = screen
+            .getByText('composer.modelPicker.option.context')
+            .closest('label')
+            ?.querySelector('input')
+        expect(contextCheckbox).toBeTruthy()
+        expect(contextCheckbox).toBeDisabled()
+        expect(contextCheckbox).toBeChecked()
     })
 })
