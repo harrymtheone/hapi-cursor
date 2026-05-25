@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { reduceTimeline } from './reducerTimeline'
 import type { TracedMessage } from './tracer'
+import type { ToolCallProjection } from '@hapi/protocol'
 
-function makeContext() {
+function makeContext(projectionsByCallId?: Map<string, ToolCallProjection>) {
     return {
         permissionsById: new Map(),
         groups: new Map(),
         consumedGroupIds: new Set<string>(),
         titleChangesByToolUseId: new Map(),
-        emittedTitleChangeToolUseIds: new Set<string>()
+        emittedTitleChangeToolUseIds: new Set<string>(),
+        projectionsByCallId: projectionsByCallId ?? new Map(),
     }
 }
 
@@ -438,6 +440,134 @@ describe('reduceTimeline', () => {
         // the same object reference, so that subsequent permission/result
         // mutations land on the rendered block instead of a stale clone.
         expect(toolBlocksById.get('tc-1')).toBe(toolBlock)
+    })
+
+    it('result-only window: projection map entry yields real tool name instead of Tool placeholder', () => {
+        // Simulate a result-only window: only the tool-result message is in the visible
+        // window (the tool-call message was trimmed off the top). Without a projection,
+        // the tool name would fall back to 'Tool'. With a projection, it should show
+        // the real tool name (D-10, D-11, D-12, SPEC-4).
+        const toolResultMsg: TracedMessage = {
+            id: 'msg-result-only',
+            localId: null,
+            createdAt: 1_700_000_001_000,
+            role: 'agent',
+            content: [{
+                type: 'tool-result',
+                tool_use_id: 'tc-result-only',
+                content: 'file contents here',
+                is_error: false,
+                uuid: 'u-res',
+                parentUUID: null
+            }],
+            isSidechain: false
+        } as TracedMessage
+
+        const projection: ToolCallProjection = {
+            callId: 'tc-result-only',
+            name: 'Read',
+            input: { file_path: '/foo.ts' },
+            status: 'completed',
+            startedAt: 1_700_000_000_000,
+            completedAt: 1_700_000_001_000,
+        }
+
+        const ctx = makeContext(new Map([['tc-result-only', projection]]))
+        const { blocks } = reduceTimeline([toolResultMsg], ctx)
+
+        const toolBlock = blocks.find(b => b.kind === 'tool-call') as any
+        expect(toolBlock).toBeDefined()
+        expect(toolBlock.tool.name).toBe('Read')
+        expect(toolBlock.tool.input).toEqual({ file_path: '/foo.ts' })
+    })
+
+    it('result-only window: permissionsById still provides name when projection is absent', () => {
+        // When projection is absent but permissionsById has the tool name,
+        // use that as the fallback (D-11). Final fallback is 'Tool'.
+        const toolResultMsg: TracedMessage = {
+            id: 'msg-res-perm',
+            localId: null,
+            createdAt: 1_700_000_001_000,
+            role: 'agent',
+            content: [{
+                type: 'tool-result',
+                tool_use_id: 'tc-perm-only',
+                content: 'ok',
+                is_error: false,
+                uuid: 'u-r2',
+                parentUUID: null
+            }],
+            isSidechain: false
+        } as TracedMessage
+
+        const ctx = {
+            ...makeContext(),
+            permissionsById: new Map([['tc-perm-only', {
+                toolName: 'Bash',
+                input: { command: 'echo hi' },
+                permission: { id: 'tc-perm-only', status: 'approved' as const, createdAt: 1_700_000_000_000 }
+            }]])
+        }
+
+        const { blocks } = reduceTimeline([toolResultMsg], ctx)
+        const toolBlock = blocks.find(b => b.kind === 'tool-call') as any
+        expect(toolBlock).toBeDefined()
+        expect(toolBlock.tool.name).toBe('Bash')
+    })
+
+    it('start+result both in window: existing behavior unchanged (SPEC-6)', () => {
+        // When the tool-call message is in the window, the real name comes from
+        // the tool-call content and the projection does not interfere.
+        const toolCallMsg: TracedMessage = {
+            id: 'msg-call-happy',
+            localId: null,
+            createdAt: 1_700_000_000_000,
+            invokedAt: 1_700_000_000_500,
+            role: 'agent',
+            content: [{
+                type: 'tool-call',
+                id: 'tc-happy',
+                name: 'Glob',
+                input: { pattern: '**/*.ts' },
+                description: null,
+                uuid: 'u-c1',
+                parentUUID: null
+            }],
+            isSidechain: false
+        } as TracedMessage
+        const toolResultMsg: TracedMessage = {
+            id: 'msg-result-happy',
+            localId: null,
+            createdAt: 1_700_000_001_000,
+            invokedAt: 1_700_000_002_000,
+            role: 'agent',
+            content: [{
+                type: 'tool-result',
+                tool_use_id: 'tc-happy',
+                content: ['file.ts'],
+                is_error: false,
+                uuid: 'u-r1',
+                parentUUID: null
+            }],
+            isSidechain: false
+        } as TracedMessage
+
+        // Even with a projection present, the tool-call name wins (real name from content)
+        const projection: ToolCallProjection = {
+            callId: 'tc-happy',
+            name: 'WrongName',
+            input: null,
+            status: 'completed',
+            startedAt: 1_700_000_000_000,
+        }
+        const ctx = makeContext(new Map([['tc-happy', projection]]))
+        const { blocks } = reduceTimeline([toolCallMsg, toolResultMsg], ctx)
+
+        const toolBlock = blocks.find(b => b.kind === 'tool-call') as any
+        expect(toolBlock).toBeDefined()
+        expect(toolBlock.tool.name).toBe('Glob')
+        // invokedAt from the tool-call message is preserved (existing regression test contract)
+        expect(toolBlock.invokedAt).toBe(1_700_000_000_500)
     })
 
 })

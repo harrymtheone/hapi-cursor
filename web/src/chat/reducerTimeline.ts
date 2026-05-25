@@ -1,3 +1,4 @@
+import type { ToolCallProjection } from '@hapi/protocol'
 import type { AgentReasoningBlock, AgentTextBlock, ChatBlock, CliOutputBlock, ToolCallBlock, ToolPermission } from '@/chat/types'
 import type { TracedMessage } from '@/chat/tracer'
 import { createCliOutputBlock, isCliOutputText, mergeCliOutputBlocks } from '@/chat/reducerCliOutput'
@@ -12,6 +13,7 @@ export function reduceTimeline(
         consumedGroupIds: Set<string>
         titleChangesByToolUseId: Map<string, string>
         emittedTitleChangeToolUseIds: Set<string>
+        projectionsByCallId?: Map<string, ToolCallProjection>
     }
 ): { blocks: ChatBlock[]; toolBlocksById: Map<string, ToolCallBlock>; hasReadyEvent: boolean } {
     const blocks: ChatBlock[] = []
@@ -291,6 +293,7 @@ export function reduceTimeline(
                     }
 
                     const permissionEntry = context.permissionsById.get(c.tool_use_id)
+                    const projection = context.projectionsByCallId?.get(c.tool_use_id)
                     const permissionFromResult = c.permissions ? ({
                         id: c.tool_use_id,
                         status: c.permissions.result === 'approved' ? 'approved' : 'denied',
@@ -312,15 +315,22 @@ export function reduceTimeline(
                         return permissionFromResult ?? permissionEntry?.permission
                     })()
 
+                    // Seed name/input/createdAt from Hub projection (D-10, D-11, D-12).
+                    // If the tool-call message is already in the window, the block exists
+                    // and its real name must not be overwritten — pass 'Tool' so
+                    // ensureToolBlock's upgrade rules leave the existing non-placeholder
+                    // name untouched (SPEC-6). In a result-only window the block does not
+                    // exist yet and the projection provides canonical identity.
+                    const blockAlreadyExists = toolBlocksById.has(c.tool_use_id)
                     const block = ensureToolBlock(blocks, toolBlocksById, c.tool_use_id, {
-                        createdAt: msg.createdAt,
+                        createdAt: blockAlreadyExists ? msg.createdAt : (projection?.startedAt ?? msg.createdAt),
                         invokedAt: msg.invokedAt,
                         usage: msg.usage,
                         model: msg.model,
                         localId: msg.localId,
                         meta: msg.meta,
-                        name: permissionEntry?.toolName ?? 'Tool',
-                        input: permissionEntry?.input ?? null,
+                        name: blockAlreadyExists ? 'Tool' : (projection?.name ?? permissionEntry?.toolName ?? 'Tool'),
+                        input: blockAlreadyExists ? null : (projection?.input ?? permissionEntry?.input ?? null),
                         description: null,
                         permission
                     })

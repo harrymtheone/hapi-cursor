@@ -6,6 +6,7 @@ import { dedupeAgentEvents, foldApiErrorEvents } from '@/chat/reducerEvents'
 import { collectTitleChanges, collectToolIdsFromMessages, ensureToolBlock, getPermissions } from '@/chat/reducerTools'
 import { reduceTimeline } from '@/chat/reducerTimeline'
 import { isRedundantGoalStatusMessageText } from '@hapi/protocol/messages'
+import { getProjectionsForSession } from '@/lib/toolProjectionStore'
 
 // Calculate context size from usage data
 function calculateContextSize(usage: UsageData): number {
@@ -31,6 +32,7 @@ export type LatestUsage = {
 
 export type ReduceChatBlocksOptions = {
     goalStateMessages?: NormalizedMessage[]
+    sessionId?: string
 }
 
 function getLatestThreadGoal(normalized: NormalizedMessage[]): ThreadGoal | null {
@@ -112,9 +114,14 @@ export function reduceChatBlocks(
         }
     }
 
+    // Build projectionsByCallId from the session-scoped store (D-10).
+    // The Map is always populated; callers that don't pass sessionId get an empty Map.
+    const projRecord = options.sessionId ? getProjectionsForSession(options.sessionId) : {}
+    const projectionsByCallId = new Map(Object.entries(projRecord))
+
     const consumedGroupIds = new Set<string>()
     const emittedTitleChangeToolUseIds = new Set<string>()
-    const reducerContext = { permissionsById, groups, consumedGroupIds, titleChangesByToolUseId, emittedTitleChangeToolUseIds }
+    const reducerContext = { permissionsById, groups, consumedGroupIds, titleChangesByToolUseId, emittedTitleChangeToolUseIds, projectionsByCallId }
     const rootResult = reduceTimeline(root, reducerContext)
     let hasReadyEvent = rootResult.hasReadyEvent
 
