@@ -144,7 +144,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260525-cnj | 修复 visible models 设置页重复显示同名 model family（deriveFamilyKey 对 gpt-5.x 分组过细） | 2026-05-25 | 200c1c4 | [260525-cnj-visible-models-model-family-derivefamily](./quick/260525-cnj-visible-models-model-family-derivefamily/) |
-| 260525-ctq | 缩小 chat session 模型选择弹窗，对齐 Cursor Desktop 紧凑样式 | 2026-05-25 | (see code commit) | [260525-ctq-chat-session-cursor-desktop](./quick/260525-ctq-chat-session-cursor-desktop/) |
+| 260525-ctq | 缩小 chat session 模型选择弹窗，对齐 Cursor Desktop 紧凑样式 | 2026-05-25 | ff89fbb | [260525-ctq-chat-session-cursor-desktop](./quick/260525-ctq-chat-session-cursor-desktop/) |
 
 ### Blockers / Concerns
 
