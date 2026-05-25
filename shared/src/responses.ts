@@ -1,4 +1,4 @@
-import type { DecryptedMessage, Machine, Session } from './schemas'
+import type { DecryptedMessage, Machine, Session, ToolCallProjection } from './schemas'
 import type { SessionSummary } from './sessionSummary'
 
 export type SessionsResponse = { sessions: SessionSummary[] }
@@ -13,6 +13,7 @@ export type MessagesResponse = {
         nextBeforeAt: number | null
         hasMore: boolean
     }
+    toolCalls?: Record<string, ToolCallProjection>
 }
 
 export type MachinesResponse = { machines: Machine[] }

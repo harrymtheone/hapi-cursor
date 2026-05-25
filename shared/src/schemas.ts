@@ -476,6 +476,11 @@ export const SyncEventSchema = z.discriminatedUnion('type', [
             status: z.string(),
             subscriptionId: z.string().optional()
         }).optional()
+    }),
+    SessionChangedSchema.extend({
+        type: z.literal('tool-call-projection-updated'),
+        callId: z.string().min(1),
+        projection: ToolCallProjectionSchema
     })
 ])
 
