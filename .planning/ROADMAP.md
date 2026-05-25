@@ -19,6 +19,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 
 - [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (UAT gaps reopened — gap-closure plans 18-21 added 2026-05-24)
 - [x] **Phase 01.1: Model picker UX (CURS-05)** - Family visibility filter, Auto-only new sessions, Cursor Desktop-style in-session model picker. (INSERTED) (completed 2026-05-24)
+- [ ] **Phase 01.2: Fix durable tool call projection in Hub** - Hub maintains a canonical tool call projection so Web can render complete tool cards across pagination, reload, and reconnect. (INSERTED)
 - [ ] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files.
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
@@ -110,6 +111,39 @@ Plans:
 
 - [x] 01.1-03-PLAN.md — ModelPickerOverlay + StatusBar family labels + UAT updates
 
+### Phase 01.2: Fix durable tool call projection in Hub (INSERTED)
+
+**Goal:** Hub maintains a durable, canonical tool call projection keyed by `callId` so Web can render complete tool cards even when the current message window contains only a result-side event.
+**Requirements:** BUG-TOOL-01
+**Depends on:** Phase 01.1
+**Plans:** 5 plans
+
+Plans:
+
+**Wave 0**
+
+- [ ] 01.2-01-PLAN.md — Protocol: ToolCallProjectionSchema, MessagesResponse.toolCalls, SSE event
+- [ ] 01.2-02-PLAN.md — Hub schema v12, tool_calls store, merge/reconcile module + DB rebuild docs
+
+**Wave 1** *(depends on Wave 0)*
+
+- [ ] 01.2-03-PLAN.md — Ingest upsert, reconcile gate, getMessagesPage toolCalls enrichment
+
+**Wave 2** *(depends on Wave 1)*
+
+- [ ] 01.2-04-PLAN.md — Web projection store, pagination/SSE merge, reducer hydration
+
+**Wave 3** *(depends on Wave 2)*
+
+- [ ] 01.2-05-PLAN.md — Integration tests + typecheck/test phase gate
+
+**Success Criteria** (what must be TRUE):
+
+  1. Hub persists raw/standardized agent messages as today and additionally maintains merged tool call state by `callId`.
+  2. A completed tool call projection includes tool name, input, status, result/error, created/start/completion timestamps, and enough metadata for Web tool cards.
+  3. Web can render correct tool name/input/result after refresh, SSE reconnect, or pagination when the visible message window contains only the result-side message.
+  4. Existing normal start+result tool rendering remains unchanged, including grouped tool activity.
+
 ### Phase 2: Skills Visibility and Session Policy
 
 **Goal**: Users can understand which Cursor skills are available and set session-level skill policy without changing skill files or global Cursor configuration.
@@ -198,11 +232,13 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
+Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-24 |
+| 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
+| 01.2 Fix durable tool call projection in Hub | 0/5 | Not started | - |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
