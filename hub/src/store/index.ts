@@ -6,6 +6,7 @@ import { MachineStore } from './machineStore'
 import { MessageStore } from './messageStore'
 import { PushStore } from './pushStore'
 import { SessionStore } from './sessionStore'
+import { ToolCallStore } from './toolCallStore'
 
 export type {
     StoredMachine,
@@ -19,13 +20,15 @@ export { MachineStore } from './machineStore'
 export { MessageStore } from './messageStore'
 export { PushStore } from './pushStore'
 export { SessionStore } from './sessionStore'
+export { ToolCallStore } from './toolCallStore'
 
-const SCHEMA_VERSION: number = 11
+const SCHEMA_VERSION: number = 12
 const REQUIRED_TABLES = [
     'sessions',
     'machines',
     'messages',
-    'push_subscriptions'
+    'push_subscriptions',
+    'tool_calls'
 ] as const
 
 export class Store {
@@ -37,6 +40,7 @@ export class Store {
     readonly machines: MachineStore
     readonly messages: MessageStore
     readonly push: PushStore
+    readonly toolCalls: ToolCallStore
 
     constructor(dbPath: string) {
         this.dbPath = dbPath
@@ -77,6 +81,7 @@ export class Store {
         this.machines = new MachineStore(this.db)
         this.messages = new MessageStore(this.db)
         this.push = new PushStore(this.db)
+        this.toolCalls = new ToolCallStore(this.db)
     }
 
     close(): void {
@@ -175,6 +180,16 @@ export class Store {
                 created_at INTEGER NOT NULL,
                 UNIQUE(endpoint)
             );
+
+            CREATE TABLE IF NOT EXISTS tool_calls (
+                session_id TEXT NOT NULL,
+                call_id TEXT NOT NULL,
+                projection TEXT NOT NULL,
+                updated_at INTEGER NOT NULL,
+                PRIMARY KEY (session_id, call_id),
+                FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_tool_calls_session ON tool_calls(session_id);
         `)
     }
 
