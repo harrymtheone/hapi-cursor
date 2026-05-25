@@ -40,6 +40,21 @@ describe('groupModelsIntoFamilies', () => {
         ])
     })
 
+    it('keeps composer-2 and composer-2.5 as separate families', () => {
+        const models: CursorModelSummary[] = [
+            { id: 'composer-2', label: 'Composer 2' },
+            { id: 'composer-2-fast', label: 'Composer 2 Fast' },
+            { id: 'composer-2.5', label: 'Composer 2.5' },
+            { id: 'composer-2.5-fast', label: 'Composer 2.5 Fast (default)' },
+        ]
+        const families = groupModelsIntoFamilies(models)
+        expect(families.map((f) => f.key).sort()).toEqual(['composer-2', 'composer-2.5'])
+        const c25 = families.find((f) => f.key === 'composer-2.5')
+        expect(c25?.displayName).toBe('Composer 2.5')
+        expect(c25?.variants).toHaveLength(2)
+        expect(composeVariantId(c25!, {})).toBe('composer-2.5')
+    })
+
     it('assigns human-readable display names from labels', () => {
         const families = groupModelsIntoFamilies(RESEARCH_MODEL_FIXTURES)
         const byKey = Object.fromEntries(families.map((f) => [f.key, f.displayName]))

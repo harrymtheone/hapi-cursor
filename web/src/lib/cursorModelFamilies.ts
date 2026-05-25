@@ -71,8 +71,10 @@ function deriveFamilyKey(id: string): string {
     if (gptBaseMatch) {
         return `gpt-${gptBaseMatch[1]}`
     }
-    if (id.startsWith('composer-2')) {
-        return 'composer-2'
+    const composerMatch = id.match(/^composer-2(?:\.(\d+))?(?:-|$)/)
+    if (composerMatch) {
+        const minor = composerMatch[1]
+        return minor ? `composer-2.${minor}` : 'composer-2'
     }
     const parts = id.split('-')
     return parts.slice(0, Math.min(3, parts.length)).join('-')
