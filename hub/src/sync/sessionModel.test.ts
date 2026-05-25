@@ -5,6 +5,7 @@ import { Store } from '../store'
 import { RpcRegistry } from '../socket/rpcRegistry'
 import { registerSessionHandlers } from '../socket/handlers/cli/sessionHandlers'
 import type { EventPublisher } from './eventPublisher'
+import { MessageService } from './messageService'
 import { SessionCache } from './sessionCache'
 import { SyncEngine } from './syncEngine'
 import { KeepaliveScheduler } from '../utils/scheduler'
@@ -902,6 +903,77 @@ describe('session model', () => {
         } finally {
             engine.shutdown()
         }
+    })
+
+    it('getMessagesPage toolCalls enrichment covers callId from result-only page window (SPEC-5)', () => {
+        const store = new Store(':memory:')
+        const events: SyncEvent[] = []
+        const cache = new SessionCache(store, createPublisher(events))
+        const session = cache.getOrCreateSession(
+            'session-page-result-only',
+            { path: '/tmp/project', host: 'localhost' },
+            null
+        )
+        const handlers = new Map<string, (payload: unknown) => void>()
+
+        registerSessionHandlers({
+            on: (event: string, handler: (payload: unknown) => void) => {
+                handlers.set(event, handler)
+            },
+            to: () => ({ emit() {} })
+        } as never, {
+            store,
+            resolveSessionAccess: (sessionId) => {
+                const stored = store.sessions.getSession(sessionId)
+                return stored ? { ok: true, value: stored } : { ok: false, reason: 'not-found' }
+            },
+            emitAccessError: () => {},
+            onWebappEvent: () => {}
+        })
+
+        // Ingest tool-call start — upserts projection with name
+        handlers.get('message')?.({
+            sid: session.id,
+            message: JSON.stringify({
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call',
+                        name: 'CursorBash',
+                        callId: 'call-ro-1',
+                        input: { cmd: 'date' }
+                    }
+                }
+            })
+        })
+
+        // Ingest tool-call-result — completes the projection
+        handlers.get('message')?.({
+            sid: session.id,
+            message: JSON.stringify({
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call-result',
+                        callId: 'call-ro-1',
+                        output: { stdout: 'Mon May 26' }
+                    }
+                }
+            })
+        })
+
+        // getMessagesPage with limit=1 returns the newest message only (result side).
+        // The start message is outside this page window — projection must still carry
+        // the tool name sourced from the ingest-time upsert (SPEC-5 durability path).
+        const service = new MessageService(store, {} as never, createPublisher([]))
+        const page = service.getMessagesPage(session.id, { limit: 1, before: null })
+
+        expect(page.toolCalls['call-ro-1']).toBeDefined()
+        expect(page.toolCalls['call-ro-1'].name).toBe('CursorBash')
+        // SPEC-3: raw message row count unaffected by projection logic
+        expect(store.messages.getMessages(session.id, 10)).toHaveLength(2)
     })
 
     describe('session dedup by agent session ID', () => {
