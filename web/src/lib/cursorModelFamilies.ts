@@ -55,9 +55,21 @@ function deriveFamilyKey(id: string): string {
     if (id.startsWith('claude-4.6-sonnet')) {
         return 'claude-4.6-sonnet'
     }
+    const codexMaxMatch = id.match(/^gpt-(\d+\.\d+)-codex-max/)
+    if (codexMaxMatch) {
+        return `gpt-${codexMaxMatch[1]}-codex-max`
+    }
     const codexMatch = id.match(/^gpt-(\d+\.\d+)-codex/)
     if (codexMatch) {
         return `gpt-${codexMatch[1]}-codex`
+    }
+    const gptSizeMatch = id.match(/^gpt-(\d+\.\d+)-(mini|nano)(?:-|$)/)
+    if (gptSizeMatch) {
+        return `gpt-${gptSizeMatch[1]}-${gptSizeMatch[2]}`
+    }
+    const gptBaseMatch = id.match(/^gpt-(\d+\.\d+)(?:-|$)/)
+    if (gptBaseMatch) {
+        return `gpt-${gptBaseMatch[1]}`
     }
     if (id.startsWith('composer-2')) {
         return 'composer-2'

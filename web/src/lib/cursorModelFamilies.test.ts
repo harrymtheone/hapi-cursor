@@ -49,6 +49,65 @@ describe('groupModelsIntoFamilies', () => {
         expect(byKey['claude-4.6-opus']).toBe('Opus 4.6')
         expect(byKey['claude-4.6-sonnet']).toBe('Sonnet 4.6')
     })
+
+    it('groups gpt-5.x effort variants into one family per version', () => {
+        const models: CursorModelSummary[] = [
+            { id: 'gpt-5.2', label: 'GPT-5.2' },
+            { id: 'gpt-5.2-low', label: 'GPT-5.2 Low' },
+            { id: 'gpt-5.2-high', label: 'GPT-5.2 High' },
+            { id: 'gpt-5.2-high-fast', label: 'GPT-5.2 High Fast' },
+            { id: 'gpt-5.5-medium', label: 'GPT-5.5 1M' },
+            { id: 'gpt-5.5-extra-high-fast', label: 'GPT-5.5 Extra High Fast' },
+        ]
+        const families = groupModelsIntoFamilies(models)
+        const keys = families.map((f) => f.key).sort()
+        expect(keys).toEqual(['gpt-5.2', 'gpt-5.5'])
+        const gpt52 = families.find((f) => f.key === 'gpt-5.2')
+        expect(gpt52?.variants).toHaveLength(4)
+        expect(gpt52?.displayName).toBe('GPT-5.2')
+    })
+
+    it('keeps gpt mini and nano as separate families from base gpt-5.4', () => {
+        const models: CursorModelSummary[] = [
+            { id: 'gpt-5.4-medium', label: 'GPT-5.4 1M' },
+            { id: 'gpt-5.4-mini-medium', label: 'GPT-5.4 Mini' },
+            { id: 'gpt-5.4-nano-low', label: 'GPT-5.4 Nano Low' },
+        ]
+        const families = groupModelsIntoFamilies(models)
+        expect(families.map((f) => f.key).sort()).toEqual([
+            'gpt-5.4',
+            'gpt-5.4-mini',
+            'gpt-5.4-nano',
+        ])
+    })
+
+    it('groups gpt-5.1-codex-max variants under codex-max family key', () => {
+        const models: CursorModelSummary[] = [
+            { id: 'gpt-5.1-codex-max-medium', label: 'Codex 5.1 Max' },
+            { id: 'gpt-5.1-codex-max-high-fast', label: 'Codex 5.1 Max High Fast' },
+        ]
+        const families = groupModelsIntoFamilies(models)
+        expect(families).toHaveLength(1)
+        expect(families[0]!.key).toBe('gpt-5.1-codex-max')
+        expect(families[0]!.variants).toHaveLength(2)
+    })
+
+    it('has unique display names across families', () => {
+        const models: CursorModelSummary[] = [
+            { id: 'gpt-5.1', label: 'GPT-5.1' },
+            { id: 'gpt-5.1-low', label: 'GPT-5.1 Low' },
+            { id: 'gpt-5.1-high', label: 'GPT-5.1 High' },
+            { id: 'gpt-5.2', label: 'GPT-5.2' },
+            { id: 'gpt-5.2-xhigh', label: 'GPT-5.2 Extra High' },
+            { id: 'gpt-5.4-low', label: 'GPT-5.4 1M Low' },
+            { id: 'gpt-5.4-medium', label: 'GPT-5.4 1M' },
+            { id: 'gpt-5.5-none', label: 'GPT-5.5 1M None' },
+            { id: 'gpt-5.5-medium', label: 'GPT-5.5 1M' },
+        ]
+        const families = groupModelsIntoFamilies(models)
+        const displayNames = families.map((f) => f.displayName)
+        expect(new Set(displayNames).size).toBe(displayNames.length)
+    })
 })
 
 describe('composeVariantId', () => {
