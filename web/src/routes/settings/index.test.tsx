@@ -89,6 +89,28 @@ vi.mock('@/hooks/useChatSurfaceColors', () => ({
     toCustomChatSurfaceColorPreference: (value: string) => `custom:${value}`,
 }))
 
+vi.mock('@/lib/app-context', () => ({
+    useAppContext: () => ({ api: {}, token: 't', baseUrl: 'http://localhost' }),
+}))
+
+vi.mock('@/hooks/queries/useSessions', () => ({
+    useSessions: () => ({
+        sessions: [{ id: 'session-1', active: true, activeAt: 1, updatedAt: 1 }],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+    }),
+}))
+
+vi.mock('@/hooks/queries/useSkills', () => ({
+    useSkills: () => ({
+        skills: [],
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+    }),
+}))
+
 // Mock useTheme hook
 vi.mock('@/hooks/useTheme', () => ({
     useAppearance: () => ({ appearance: 'system', setAppearance: vi.fn() }),
