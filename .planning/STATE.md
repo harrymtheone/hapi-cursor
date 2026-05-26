@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-last_updated: "2026-05-26T09:12:04.210Z"
+last_updated: "2026-05-26T09:12:08.875Z"
 last_activity: 2026-05-26
 progress:
   total_phases: 9
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 02.1
-Plan: 3 of 5 complete (02.1-01, 02.1-02 done)
-Status: Ready to execute
-Last activity: 2026-05-26
+Plan: 3 of 5 complete (02.1-01, 02.1-02, 02.1-03 done)
+Status: Ready to execute — 02.1-04
+Last activity: 2026-05-26 — Completed 02.1-03 Web policy removal and / autocomplete
 
 Progress: [██████████] 96%
 
@@ -180,7 +180,7 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-05-26T09:12:04.205Z
-Stopped at: Completed 02.1-02-PLAN.md
+Stopped at: Completed 02.1-03-PLAN.md
 Resume file: None
 
 ---
