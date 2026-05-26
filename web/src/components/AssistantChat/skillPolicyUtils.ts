@@ -11,9 +11,9 @@ export function sortSkills(skills: SkillSummary[]): SkillSummary[] {
 
 export function getSkillSourceLabelKey(
     source: SkillSummary['source'] | undefined,
-    namespace: 'settings' | 'session' = 'session'
+    labelScope: 'settings' | 'session' = 'session'
 ): string {
-    if (namespace === 'session') {
+    if (labelScope === 'session') {
         if (source === 'project') {
             return 'session.skills.scope.local'
         }
