@@ -123,8 +123,52 @@ describe('cursorEventConverter', () => {
     });
 
     describe('captured fixtures', () => {
+        function expectCanonicalInput(
+            name: string,
+            input: unknown
+        ): void {
+            expect(input).toBeTruthy();
+            expect(typeof input).toBe('object');
+            const record = input as Record<string, unknown>;
+
+            switch (name) {
+                case 'Task': {
+                    const description =
+                        typeof record.description === 'string' ? record.description : '';
+                    const prompt = typeof record.prompt === 'string' ? record.prompt : '';
+                    expect(description.length > 0 || prompt.length > 0).toBe(true);
+                    break;
+                }
+                case 'Agent': {
+                    expect(typeof record.prompt === 'string' && record.prompt.length > 0).toBe(
+                        true
+                    );
+                    break;
+                }
+                case 'NotebookEdit':
+                case 'NotebookRead': {
+                    expect(
+                        typeof record.notebook_path === 'string' && record.notebook_path.length > 0
+                    ).toBe(true);
+                    break;
+                }
+                case 'Skill': {
+                    expect(typeof record.skill === 'string' && record.skill.length > 0).toBe(true);
+                    break;
+                }
+                case 'AskUserQuestion': {
+                    expect(Array.isArray(record.questions) && record.questions.length > 0).toBe(
+                        true
+                    );
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
         it.each(CAPTURED_FIXTURES_MAPPING_READY)(
-            'started %s converts to expected HAPI name',
+            'started %s converts to expected HAPI name and canonical input',
             (key, fixture) => {
                 void key;
                 const event = parseCursorEvent(fixture.started);
@@ -136,20 +180,17 @@ describe('cursorEventConverter', () => {
                     name: fixture.expectedName,
                     status: 'in_progress',
                 });
+                if (msg && msg.type === 'tool_call') {
+                    expectCanonicalInput(fixture.expectedName, msg.input);
+                }
             }
         );
 
-        it.each(
-            Object.entries(CURSOR_TOOL_CALL_NDJSON_CAPTURED_FIXTURES).filter(
+        it('all captured fixtures are mapping-ready after Plan 01.3-02', () => {
+            const pending = Object.entries(CURSOR_TOOL_CALL_NDJSON_CAPTURED_FIXTURES).filter(
                 ([, f]) => f.pendingMapping
-            )
-        )('started %s pending Plan 01.3-02 mapping', (key, fixture) => {
-            const event = parseCursorEvent(fixture.started);
-            expect(event?.type).toBe('tool_call');
-            const msg = convertCursorEventToAgentMessage(event as CursorStreamEvent);
-            expect(msg && 'name' in msg ? msg.name : '').not.toBe(fixture.expectedName);
-            expect(fixture.captureNote).toBeDefined();
-            void key;
+            );
+            expect(pending).toEqual([]);
         });
     });
 });

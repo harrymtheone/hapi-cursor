@@ -87,7 +87,6 @@ export const CURSOR_TOOL_CALL_NDJSON_CAPTURED_FIXTURES: Record<string, CapturedT
     editToolCall_ipynb_notebookEdit: {
         callId: 'tool_2c9e8e70-eabf-40b4-96e8-3e604ead25f',
         expectedName: 'NotebookEdit',
-        pendingMapping: true,
         captureNote:
             'Captured EditNotebook uses editToolCall on .ipynb; Plan 01.3-02 infers NotebookEdit from path + cell result message',
         started: line(
@@ -124,7 +123,6 @@ export const CURSOR_TOOL_CALL_NDJSON_CAPTURED_FIXTURES: Record<string, CapturedT
     subagentToolCall: {
         callId: 'captured-subagent-fixture-1',
         expectedName: 'Agent',
-        pendingMapping: true,
         captureNote: 'Synthetic — zero agentToolCall/subagentToolCall wire in capture session',
         started: line(
             toolCallEvent('started', 'captured-subagent-fixture-1', {

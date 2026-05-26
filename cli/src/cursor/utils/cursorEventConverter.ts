@@ -5,6 +5,7 @@
 
 import type { AgentMessage } from '@/agent/types';
 import { findNativeToolCallVariant, resolveHapiToolName } from '@hapi/protocol/cursor';
+import { normalizeToolInputForName } from './normalizeToolArgs';
 
 export type CursorStreamEvent =
     | { type: 'system'; subtype: 'init'; session_id: string; cwd?: string; model?: string }
@@ -54,10 +55,19 @@ function extractToolName(toolCall: Record<string, unknown>): string {
     return resolveHapiToolName(toolCall);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function extractToolInput(toolCall: Record<string, unknown>): unknown {
     const native = findNativeToolCallVariant(toolCall);
     if (native) {
-        return native.variant.args ?? {};
+        const name = resolveHapiToolName(toolCall);
+        const args = native.variant.args;
+        if (isRecord(args)) {
+            return normalizeToolInputForName(name, native.key, args);
+        }
+        return normalizeToolInputForName(name, native.key, {});
     }
     if (toolCall.function && typeof toolCall.function === 'object') {
         const fn = toolCall.function as Record<string, unknown>;
