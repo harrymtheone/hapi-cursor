@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: executing
-last_updated: "2026-05-26T05:42:17.967Z"
-last_activity: 2026-05-26 -- Phase 02 planning complete
+status: planning
+last_updated: "2026-05-26T08:30:43.312Z"
+last_activity: 2026-05-26 -- Phase 02.1 inserted after Phase 2
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 5
   total_plans: 41
   completed_plans: 41
-  percent: 63
+  percent: 56
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 2 — skills visibility and session policy
+**Current focus:** Phase 02.1 — skills auto-enable and header skills UI
 
 ## Current Position
 
-Phase: 2
+Phase: 02.1
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-26 -- Phase 02 planning complete
+Status: Ready to plan
+Last activity: 2026-05-26 -- Phase 02.1 inserted after Phase 2
 
 Progress: [██████████] 100%
 
@@ -90,6 +90,7 @@ Progress: [██████████] 100%
 - Phase 01.1 inserted after Phase 1: Model picker UX — family visibility filter, Auto-only new sessions, Cursor-style composer picker (CURS-05) (URGENT)
 - Phase 01.2 inserted after Phase 01.1: Fix durable tool call projection in Hub so Web tool cards survive pagination, reload, and reconnect (URGENT)
 - Phase 01.3 inserted after Phase 1: Cursor 活动审计 — 抓真实 session NDJSON，补全 *ToolCall 映射表（含 Task/Agent/Notebook/Skill/AskUserQuestion） (URGENT)
+- Phase 02.1 inserted after Phase 2: Skills auto-enable on CLI discovery (no disable); relocate session skills UI to header Files bar with simplified list (Global/Local names only) (URGENT)
 
 ### Decisions
 
@@ -175,9 +176,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-26T05:42:17.964Z
-Stopped at: Phase 2 context gathered
-Resume file: None
+Last session: 2026-05-26T08:30:43.308Z
+Stopped at: Phase 02.1 context gathered
+Resume file: .planning/phases/02.1-skills-auto-enable-on-cli-discovery-no-disable-relocate-sess/02.1-CONTEXT.md
 
 ---
 
