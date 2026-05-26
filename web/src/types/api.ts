@@ -146,16 +146,11 @@ export type SlashCommandsResponse = {
     error?: string
 }
 
-export type SkillSummary = {
-    name: string
-    description?: string
-}
-
-export type SkillsResponse = {
-    success: boolean
-    skills?: SkillSummary[]
-    error?: string
-}
+export type {
+    ListSkillsResponse,
+    SkillPolicyState,
+    SkillSummary,
+} from '@hapi/protocol/types'
 
 export type PushSubscriptionKeys = {
     p256dh: string

@@ -16,7 +16,7 @@ import type {
     PushUnsubscribePayload,
     PushVapidPublicKeyResponse,
     SlashCommandsResponse,
-    SkillsResponse,
+    ListSkillsResponse,
     SpawnResponse,
     UploadFileResponse,
     VisibilityPayload,
@@ -24,6 +24,7 @@ import type {
     SessionsResponse
 } from '@/types/api'
 import type { CursorPermissionMode, CursorRuntimeConfigApplyResult } from '@hapi/protocol'
+import type { SkillPolicyState } from '@hapi/protocol/types'
 import type { CancelMessageResponse } from '@hapi/protocol/schemas'
 
 type ApiClientOptions = {
@@ -444,10 +445,37 @@ export class ApiClient {
         )
     }
 
-    async getSkills(sessionId: string): Promise<SkillsResponse> {
-        return await this.request<SkillsResponse>(
+    async getSkills(sessionId: string): Promise<ListSkillsResponse> {
+        return await this.request<ListSkillsResponse>(
             `/api/sessions/${encodeURIComponent(sessionId)}/skills`
         )
+    }
+
+    async setSkillPolicy(
+        sessionId: string,
+        payload: { name: string; state: SkillPolicyState }
+    ): Promise<void> {
+        await this.request(`/api/sessions/${encodeURIComponent(sessionId)}/skill-policy`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+    }
+
+    async applySkillPolicy(
+        sessionId: string,
+        skillPolicy: Record<string, SkillPolicyState>
+    ): Promise<void> {
+        await this.request(`/api/sessions/${encodeURIComponent(sessionId)}/skill-policy`, {
+            method: 'POST',
+            body: JSON.stringify({ skillPolicy })
+        })
+    }
+
+    async resetSkillPolicy(sessionId: string): Promise<void> {
+        await this.request(`/api/sessions/${encodeURIComponent(sessionId)}/skill-policy`, {
+            method: 'POST',
+            body: JSON.stringify({ reset: true })
+        })
     }
 
     async renameSession(sessionId: string, name: string): Promise<void> {
