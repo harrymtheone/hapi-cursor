@@ -42,7 +42,8 @@ function renderSheet(overrides: Partial<Parameters<typeof SkillsPolicySheet>[0]>
         <I18nProvider>
             <SkillsPolicySheet
                 open
-                onOpenChange={vi.fn()}
+                onClose={vi.fn()}
+                anchorPoint={{ x: 320, y: 48 }}
                 api={{} as never}
                 sessionId="session-1"
                 {...overrides}
@@ -76,5 +77,11 @@ describe('SkillsPolicySheet', () => {
         renderSheet()
         expect(screen.getByText('Local')).toBeInTheDocument()
         expect(screen.getByText('Global')).toBeInTheDocument()
+    })
+
+    it('renders as anchored panel without dialog role', () => {
+        renderSheet()
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        expect(screen.getByRole('region', { name: 'Skills' })).toBeInTheDocument()
     })
 })

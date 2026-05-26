@@ -2,6 +2,7 @@ import { useId, useMemo, useRef, useState } from 'react'
 import type { Session } from '@/types/api'
 import type { ApiClient } from '@/api/client'
 import { useSessionActions } from '@/hooks/mutations/useSessionActions'
+import { SkillsPolicySheet } from '@/components/AssistantChat/SkillsPolicySheet'
 import { SessionActionMenu } from '@/components/SessionActionMenu'
 import { RenameSessionDialog } from '@/components/RenameSessionDialog'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -108,8 +109,6 @@ export function SessionHeader(props: {
     session: Session
     onBack: () => void
     onViewFiles?: () => void
-    onOpenSkills?: () => void
-    skillsSheetOpen?: boolean
     onOpenOutline?: () => void
     api: ApiClient | null
     onSessionDeleted?: () => void
@@ -124,6 +123,9 @@ export function SessionHeader(props: {
     const [menuAnchorPoint, setMenuAnchorPoint] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
     const menuId = useId()
     const menuAnchorRef = useRef<HTMLButtonElement | null>(null)
+    const skillsAnchorRef = useRef<HTMLButtonElement | null>(null)
+    const [skillsOpen, setSkillsOpen] = useState(false)
+    const [skillsAnchorPoint, setSkillsAnchorPoint] = useState({ x: 0, y: 0 })
     const [renameOpen, setRenameOpen] = useState(false)
     const [archiveOpen, setArchiveOpen] = useState(false)
     const [deleteOpen, setDeleteOpen] = useState(false)
@@ -145,6 +147,16 @@ export function SessionHeader(props: {
             setMenuAnchorPoint({ x: rect.right, y: rect.bottom })
         }
         setMenuOpen((open) => !open)
+    }
+
+    const showSkillsMenu = Boolean(api && session.id)
+
+    const handleSkillsToggle = () => {
+        if (!skillsOpen && skillsAnchorRef.current) {
+            const rect = skillsAnchorRef.current.getBoundingClientRect()
+            setSkillsAnchorPoint({ x: rect.right, y: rect.bottom })
+        }
+        setSkillsOpen((open) => !open)
     }
 
     return (
@@ -204,18 +216,21 @@ export function SessionHeader(props: {
                         </button>
                     ) : null}
 
-                    {props.onOpenSkills ? (
+                    {showSkillsMenu ? (
                         <button
+                            ref={skillsAnchorRef}
                             type="button"
-                            onClick={props.onOpenSkills}
+                            onClick={handleSkillsToggle}
+                            onPointerDown={(e) => e.stopPropagation()}
                             className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-[var(--app-secondary-bg)] ${
-                                props.skillsSheetOpen
+                                skillsOpen
                                     ? 'text-[var(--app-link)]'
                                     : 'text-[var(--app-hint)] hover:text-[var(--app-fg)]'
                             }`}
                             title={t('session.skills.title')}
                             aria-label={t('session.skills.title')}
-                            aria-expanded={props.skillsSheetOpen ?? false}
+                            aria-expanded={skillsOpen}
+                            aria-haspopup="true"
                         >
                             <SkillsIcon />
                         </button>
@@ -248,6 +263,17 @@ export function SessionHeader(props: {
                     </button>
                 </div>
             </div>
+
+            {showSkillsMenu ? (
+                <SkillsPolicySheet
+                    open={skillsOpen}
+                    onClose={() => setSkillsOpen(false)}
+                    anchorPoint={skillsAnchorPoint}
+                    anchorRef={skillsAnchorRef}
+                    api={api}
+                    sessionId={session.id}
+                />
+            ) : null}
 
             <SessionActionMenu
                 isOpen={menuOpen}

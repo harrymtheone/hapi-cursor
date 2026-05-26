@@ -11,29 +11,25 @@ export function SessionSkillsRow(props: SessionSkillsRowProps) {
     const { skill } = props
     const showScopePill = skill.source === 'project' || skill.source === 'user'
 
-    const invalid = !skill.valid
     return (
-        <span
-            className={
-                'inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-xs leading-5 ' +
-                (invalid
-                    ? 'border-[var(--app-badge-error-border)] bg-[var(--app-badge-error-bg)] text-[var(--app-badge-error-text)]'
-                    : 'border-[var(--app-border)] bg-[var(--app-subtle-bg)] text-[var(--app-fg)]')
-            }
+        <div
+            className="flex min-h-[36px] items-center justify-between gap-2 py-1.5"
             data-testid={`session-skill-row-${skill.name}`}
             title={skill.description ?? undefined}
         >
-            <span className="min-w-0 truncate font-medium">{skill.name}</span>
-            {showScopePill ? (
-                <span className="shrink-0 text-[10px] uppercase tracking-wide text-[var(--app-hint)]">
-                    {t(getSkillSourceLabelKey(skill.source, 'session'))}
-                </span>
-            ) : null}
-            {invalid ? (
-                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide">
-                    {t('session.skills.invalidTag')}
-                </span>
-            ) : null}
-        </span>
+            <span className="min-w-0 truncate text-sm font-medium text-[var(--app-fg)]">{skill.name}</span>
+            <div className="flex shrink-0 items-center gap-1">
+                {showScopePill ? (
+                    <span className="rounded-full border border-[var(--app-border)] bg-[var(--app-subtle-bg)] px-1.5 py-0.5 text-[10px] font-normal uppercase tracking-wide text-[var(--app-hint)]">
+                        {t(getSkillSourceLabelKey(skill.source, 'session'))}
+                    </span>
+                ) : null}
+                {!skill.valid ? (
+                    <span className="rounded-full border border-[var(--app-badge-error-border)] bg-[var(--app-badge-error-bg)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--app-badge-error-text)]">
+                        {t('session.skills.invalidTag')}
+                    </span>
+                ) : null}
+            </div>
+        </div>
     )
 }

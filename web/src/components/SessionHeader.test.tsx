@@ -13,6 +13,11 @@ vi.mock('@/hooks/mutations/useSessionActions', () => ({
     }),
 }))
 
+vi.mock('@/components/AssistantChat/SkillsPolicySheet', () => ({
+    SkillsPolicySheet: (props: { open: boolean }) =>
+        props.open ? <div role="region" aria-label="Skills" /> : null,
+}))
+
 function createSession(overrides: Partial<Session> = {}): Session {
     return {
         id: 'session-1',
@@ -45,7 +50,7 @@ function renderHeader(overrides: Partial<Parameters<typeof SessionHeader>[0]> = 
             <SessionHeader
                 session={createSession()}
                 onBack={vi.fn()}
-                api={null}
+                api={{} as never}
                 {...overrides}
             />
         </I18nProvider>
@@ -55,32 +60,32 @@ function renderHeader(overrides: Partial<Parameters<typeof SessionHeader>[0]> = 
 describe('SessionHeader Skills button', () => {
     afterEach(() => cleanup())
 
-    it('renders Skills button between Files and Outline when onOpenSkills provided', () => {
-        const onOpenSkills = vi.fn()
+    it('renders Skills button between Files and Outline when api is provided', () => {
         renderHeader({
             onViewFiles: vi.fn(),
             onOpenOutline: vi.fn(),
-            onOpenSkills,
         })
 
         const skillsButton = screen.getByRole('button', { name: 'Skills' })
         expect(skillsButton).toBeInTheDocument()
         expect(skillsButton).toHaveAttribute('aria-expanded', 'false')
-
-        fireEvent.click(skillsButton)
-        expect(onOpenSkills).toHaveBeenCalledTimes(1)
     })
 
-    it('does not render Skills button when onOpenSkills is omitted', () => {
-        renderHeader({ onViewFiles: vi.fn(), onOpenOutline: vi.fn() })
+    it('does not render Skills button when api is null', () => {
+        renderHeader({ api: null, onViewFiles: vi.fn(), onOpenOutline: vi.fn() })
         expect(screen.queryByRole('button', { name: 'Skills' })).not.toBeInTheDocument()
     })
 
-    it('reflects skillsSheetOpen in aria-expanded', () => {
-        renderHeader({
-            onOpenSkills: vi.fn(),
-            skillsSheetOpen: true,
-        })
-        expect(screen.getByRole('button', { name: 'Skills' })).toHaveAttribute('aria-expanded', 'true')
+    it('toggles skills dropdown on button click', () => {
+        renderHeader({ onViewFiles: vi.fn(), onOpenOutline: vi.fn() })
+
+        const skillsButton = screen.getByRole('button', { name: 'Skills' })
+        fireEvent.click(skillsButton)
+        expect(skillsButton).toHaveAttribute('aria-expanded', 'true')
+        expect(screen.getByRole('region', { name: 'Skills' })).toBeInTheDocument()
+
+        fireEvent.click(skillsButton)
+        expect(skillsButton).toHaveAttribute('aria-expanded', 'false')
+        expect(screen.queryByRole('region', { name: 'Skills' })).not.toBeInTheDocument()
     })
 })
