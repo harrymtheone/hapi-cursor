@@ -6,6 +6,7 @@ import { Store } from '../store'
 import {
     collectCallIdsFromDecryptedMessages,
     extractToolCallEventsFromMessageContent,
+    inferToolNameFromPayload,
     mergeToolCallProjection,
     reconcileSessionToolCalls,
     type ToolCallEvent
@@ -112,6 +113,82 @@ describe('extractToolCallEventsFromMessageContent', () => {
         const copy = JSON.parse(JSON.stringify(content))
         extractToolCallEventsFromMessageContent(content, 1000)
         expect(content).toEqual(copy)
+    })
+})
+
+describe('inferToolNameFromPayload', () => {
+    it('maps command/cmd to Bash', () => {
+        expect(inferToolNameFromPayload({ command: 'ls' }, null)).toBe('Bash')
+        expect(inferToolNameFromPayload({ cmd: 'npm test' }, null)).toBe('Bash')
+    })
+
+    it('maps pattern+path to Grep and glob patterns to Glob', () => {
+        expect(inferToolNameFromPayload({ pattern: 'foo', path: '/src' }, null)).toBe('Grep')
+        expect(inferToolNameFromPayload({ pattern: '**/*.ts' }, null)).toBe('Glob')
+        expect(inferToolNameFromPayload({ pattern: '*.ts' }, null)).toBe('Glob')
+    })
+
+    it('maps path+read result to Read and path+fileText to Write', () => {
+        expect(
+            inferToolNameFromPayload({ path: '/foo' }, { success: { content: '...' } })
+        ).toBe('Read')
+        expect(inferToolNameFromPayload({ path: '/foo', fileText: 'x' }, null)).toBe('Write')
+    })
+
+    it('returns null when ambiguous', () => {
+        expect(inferToolNameFromPayload({}, null)).toBeNull()
+        expect(inferToolNameFromPayload({ path: '/foo' }, null)).toBeNull()
+    })
+})
+
+describe('mergeToolCallProjection legacy unknown', () => {
+    it('upgrades unknown start name from recognizable input', () => {
+        const startEvent: ToolCallEvent = {
+            kind: 'start',
+            callId: 'call-legacy',
+            name: 'unknown',
+            input: { command: 'echo hi' },
+            at: 1000
+        }
+        const proj = mergeToolCallProjection(null, startEvent)
+        expect(proj.name).toBe('Bash')
+    })
+
+    it('does not downgrade existing non-placeholder name', () => {
+        const prev = mergeToolCallProjection(null, {
+            kind: 'start',
+            callId: 'call-1',
+            name: 'Grep',
+            input: { pattern: 'x', path: '/src' },
+            at: 1000
+        })
+        const proj = mergeToolCallProjection(prev, {
+            kind: 'start',
+            callId: 'call-1',
+            name: 'unknown',
+            input: { command: 'ls' },
+            at: 2000
+        })
+        expect(proj.name).toBe('Grep')
+    })
+
+    it('upgrades result-only bootstrap from output-shaped Read', () => {
+        const resultEvent: ToolCallEvent = {
+            kind: 'result',
+            callId: 'call-ro',
+            output: { success: { content: 'file body' } },
+            isError: false,
+            at: 2000
+        }
+        const afterResult = mergeToolCallProjection(null, resultEvent)
+        const proj = mergeToolCallProjection(afterResult, {
+            kind: 'start',
+            callId: 'call-ro',
+            name: 'unknown',
+            input: { path: '/foo' },
+            at: 1000
+        })
+        expect(proj.name).toBe('Read')
     })
 })
 
