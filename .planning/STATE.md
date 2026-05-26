@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 02.1
-Plan: 3 of 5 complete (02.1-01 done)
-Status: Ready to execute
-Last activity: 2026-05-26
+Plan: 2 of 5 complete (02.1-01, 02.1-02 done)
+Status: Executing — ready for 02.1-03
+Last activity: 2026-05-26 — Completed 02.1-02 CLI per-message skill refresh
 
 Progress: [█████████░] 93%
 
@@ -82,6 +82,7 @@ Progress: [█████████░] 93%
 | Phase 01.2 P01 | 2min | 2 tasks | 4 files |
 | Phase 01.2-fix-durable-tool-call-projection-in-hub P02 | 18min | 3 tasks | 8 files |
 | Phase 01.2-fix-durable-tool-call-projection-in-hub P05 | 12min | 2 tasks | 1 files |
+| Phase 02.1 P02 | 4min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -147,6 +148,7 @@ Recent decisions affecting current work:
 - [Phase ?]: Shared CursorRuntimeConfigApplyResult enum unchanged; rename is locale-only (composer.model.appliesNextMessage)
 - [Phase ?]: [Phase 01]: SessionList prune effect must distinguish transient empty loading from authoritative empty list to prevent localStorage wipe on refresh.
 - [Phase 02.1]: Removed session skillPolicy from MetadataSchema and Hub; SCHEMA_VERSION 13 — recreate Hub SQLite on mismatch.
+- [Phase 02.1]: Per-message listSkills refresh in runCursor with single-flight coalescing; deleted CLI skill-policy preamble (02.1-02).
 
 ### Pending Todos
 
@@ -178,7 +180,7 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-05-26T09:08:25.248Z
-Stopped at: Completed 02.1-01-PLAN.md
+Stopped at: Completed 02.1-02-PLAN.md
 Resume file: None
 
 ---
