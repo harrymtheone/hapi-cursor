@@ -22,7 +22,8 @@ export { PushStore } from './pushStore'
 export { SessionStore } from './sessionStore'
 export { ToolCallStore } from './toolCallStore'
 
-const SCHEMA_VERSION: number = 12
+// v13: session metadata no longer carries skillPolicy (02.1); orphan keys in old rows are ignored — recreate Hub SQLite on mismatch.
+const SCHEMA_VERSION: number = 13
 const REQUIRED_TABLES = [
     'sessions',
     'machines',
