@@ -224,7 +224,7 @@ Plans:
 **Goal:** When the CLI agent discovers skills, they are enabled automatically for the session with no user disable path; the session skills UI moves from the chat composer to the header Files bar as a read-only name list (Global/Local).
 **Requirements**: SKIL-01, SKIL-02, SKIL-03 (gap closure — supersedes session-policy UX from Phase 2)
 **Depends on:** Phase 2
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 **Success Criteria** (what must be TRUE):
 
@@ -236,7 +236,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 02.1-01-PLAN.md — Remove skillPolicy from protocol + Hub; SCHEMA_VERSION 13
+- [x] 02.1-01-PLAN.md — Remove skillPolicy from protocol + Hub; SCHEMA_VERSION 13
 
 **Wave 2** *(depends on 02.1-01)*
 

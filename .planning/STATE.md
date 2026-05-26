@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-last_updated: "2026-05-26T08:45:56.516Z"
-last_activity: 2026-05-26 -- Phase 02.1 planning complete
+last_updated: "2026-05-26T09:10:00.000Z"
+last_activity: 2026-05-26 -- Completed 02.1-01 protocol and Hub policy removal
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 46
-  completed_plans: 41
-  percent: 56
+  completed_plans: 42
+  percent: 91
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 02.1
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-26 -- Phase 02.1 planning complete
+Plan: 02 of 5 complete (02.1-01 done)
+Status: Executing wave 2
+Last activity: 2026-05-26 -- Completed 02.1-01 protocol and Hub policy removal
 
-Progress: [██████████] 100%
+Progress: [█████████░] 91%
 
 ## Performance Metrics
 
@@ -146,6 +146,7 @@ Recent decisions affecting current work:
 - [Phase ?]: Web-side previousModel gate (not Hub-schema) closes UAT Test 3 flicker; BIG label gated until session-updated patch confirms
 - [Phase ?]: Shared CursorRuntimeConfigApplyResult enum unchanged; rename is locale-only (composer.model.appliesNextMessage)
 - [Phase ?]: [Phase 01]: SessionList prune effect must distinguish transient empty loading from authoritative empty list to prevent localStorage wipe on refresh.
+- [Phase 02.1]: Removed session skillPolicy from MetadataSchema and Hub; SCHEMA_VERSION 13 — recreate Hub SQLite on mismatch.
 
 ### Pending Todos
 
@@ -176,9 +177,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-26T08:30:43.308Z
-Stopped at: Phase 02.1 context gathered
-Resume file: .planning/phases/02.1-skills-auto-enable-on-cli-discovery-no-disable-relocate-sess/02.1-CONTEXT.md
+Last session: 2026-05-26T09:10:00.000Z
+Stopped at: Completed 02.1-01-PLAN.md
+Resume file: None
 
 ---
 
