@@ -80,11 +80,25 @@ describe('sessions read routes', () => {
     it('lists skills via engine', async () => {
         const session = createSession({ active: true })
         const { app } = createApp(session, {
-            listSkills: (async () => ({ success: true, skills: ['skill-a'] })) as never
+            listSkills: (async () => ({
+                success: true,
+                skills: [{
+                    name: 'skill-a',
+                    source: 'project',
+                    valid: true
+                }]
+            })) as never
         })
 
         const response = await app.request('/api/sessions/session-1/skills')
         expect(response.status).toBe(200)
-        expect(await response.json()).toEqual({ success: true, skills: ['skill-a'] })
+        expect(await response.json()).toEqual({
+            success: true,
+            skills: [{
+                name: 'skill-a',
+                source: 'project',
+                valid: true
+            }]
+        })
     })
 })
