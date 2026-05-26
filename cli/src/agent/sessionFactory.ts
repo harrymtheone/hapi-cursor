@@ -105,7 +105,6 @@ function pickExistingSessionMetadata(metadata: Metadata | null | undefined): Par
     if (metadata.tools !== undefined) preserved.tools = metadata.tools
     if (metadata.slashCommands !== undefined) preserved.slashCommands = metadata.slashCommands
     if (metadata.worktree !== undefined) preserved.worktree = metadata.worktree
-    if (metadata.skillPolicy !== undefined) preserved.skillPolicy = metadata.skillPolicy
 
     return preserved
 }
