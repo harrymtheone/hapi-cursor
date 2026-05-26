@@ -4,7 +4,7 @@
  */
 
 import type { AgentMessage } from '@/agent/types';
-import { findNativeToolCallVariant, resolveHapiToolName } from './cursorToolCallMapping';
+import { findNativeToolCallVariant, resolveHapiToolName } from '@hapi/protocol/cursor';
 
 export type CursorStreamEvent =
     | { type: 'system'; subtype: 'init'; session_id: string; cwd?: string; model?: string }
