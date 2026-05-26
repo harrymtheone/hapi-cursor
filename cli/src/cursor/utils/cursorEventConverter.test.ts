@@ -4,6 +4,10 @@ import {
     convertCursorEventToAgentMessage,
     type CursorStreamEvent
 } from './cursorEventConverter';
+import {
+    CAPTURED_FIXTURES_MAPPING_READY,
+    CURSOR_TOOL_CALL_NDJSON_CAPTURED_FIXTURES,
+} from './fixtures/cursorToolCallNdjson.captured';
 import { CURSOR_TOOL_CALL_NDJSON_FIXTURES } from './fixtures/cursorToolCallNdjson';
 
 describe('cursorEventConverter', () => {
@@ -115,6 +119,37 @@ describe('cursorEventConverter', () => {
                 name: fixture.expectedName,
                 status: 'in_progress',
             });
+        });
+    });
+
+    describe('captured fixtures', () => {
+        it.each(CAPTURED_FIXTURES_MAPPING_READY)(
+            'started %s converts to expected HAPI name',
+            (key, fixture) => {
+                void key;
+                const event = parseCursorEvent(fixture.started);
+                expect(event?.type).toBe('tool_call');
+                const msg = convertCursorEventToAgentMessage(event as CursorStreamEvent);
+                expect(msg).toMatchObject({
+                    type: 'tool_call',
+                    id: fixture.callId,
+                    name: fixture.expectedName,
+                    status: 'in_progress',
+                });
+            }
+        );
+
+        it.each(
+            Object.entries(CURSOR_TOOL_CALL_NDJSON_CAPTURED_FIXTURES).filter(
+                ([, f]) => f.pendingMapping
+            )
+        )('started %s pending Plan 01.3-02 mapping', (key, fixture) => {
+            const event = parseCursorEvent(fixture.started);
+            expect(event?.type).toBe('tool_call');
+            const msg = convertCursorEventToAgentMessage(event as CursorStreamEvent);
+            expect(msg && 'name' in msg ? msg.name : '').not.toBe(fixture.expectedName);
+            expect(fixture.captureNote).toBeDefined();
+            void key;
         });
     });
 });
