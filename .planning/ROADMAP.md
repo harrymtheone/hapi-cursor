@@ -191,7 +191,31 @@ Plans:
   2. User can set a session skill policy to inherited, enabled, or disabled without editing `SKILL.md` files or global Cursor config.
   3. User can see whether each skill policy is hard-enforced by Cursor or only represented as HAPI session policy.
 
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+
+**Wave 1**
+
+- [ ] 02-01-PLAN.md — Shared SkillSummary/skillPolicy schemas + CLI Cursor-aligned discovery
+
+**Wave 2** *(depends on 02-01)*
+
+- [ ] 02-02-PLAN.md — Hub skill-policy route, metadata persistence, resume merge
+
+**Wave 3** *(depends on 02-01, 02-02)*
+
+- [ ] 02-03-PLAN.md — Web client, useSkills policy filter, remove duplicate types
+- [ ] 02-04-PLAN.md — CLI runCursor skill policy preamble (HAPI-only enforcement)
+
+**Wave 4** *(depends on 02-03)*
+
+- [ ] 02-05-PLAN.md — Read-only /settings/skills catalog drill-down
+
+**Wave 5** *(depends on 02-03, 02-05)*
+
+- [ ] 02-06-PLAN.md — Session SkillsPolicySheet + composer affordance + SKIL-03 badges
+
 **UI hint**: yes
 
 ### Phase 3: MCP Inventory and Session Policy
@@ -276,7 +300,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 01.3 -> 2 -> 3 -> 4 -> 5
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
 | 01.2 Fix durable tool call projection in Hub | 6/7 | CLI *ToolCall parser done; legacy recovery pending | 2026-05-26 |
 | 01.3 Cursor 活动审计 | 4/4 | Complete    | 2026-05-26 |
-| 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
+| 2. Skills Visibility and Session Policy | 0/6 | Planned | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
 | 5. Integration Guards and Mobile E2E | 0/TBD | Not started | - |
