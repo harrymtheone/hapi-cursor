@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { reduceTimeline } from './reducerTimeline'
 import type { TracedMessage } from './tracer'
 import type { ToolCallProjection } from '@hapi/protocol'
+import { getToolPresentation } from '@/components/ToolCard/knownTools'
+import { isAskUserQuestionToolName } from '@/components/ToolCard/askUserQuestion'
 
 function makeContext(projectionsByCallId?: Map<string, ToolCallProjection>) {
     return {
@@ -604,4 +606,128 @@ describe('reduceTimeline', () => {
         expect(toolBlock.invokedAt).toBe(1_700_000_000_500)
     })
 
+})
+
+describe('advanced tool presentation hydration (01.3-04)', () => {
+    it('isAskUserQuestionToolName recognizes Cursor-resolved AskUserQuestion (D-15)', () => {
+        expect(isAskUserQuestionToolName('AskUserQuestion')).toBe(true)
+        expect(isAskUserQuestionToolName('ask_user_question')).toBe(true)
+        expect(isAskUserQuestionToolName('Task')).toBe(false)
+    })
+
+    const projectionCases = [
+        {
+            label: 'Task',
+            name: 'Task',
+            callId: 'tc-adv-task',
+            input: { description: 'Audit repo' },
+            titleContains: 'Audit',
+        },
+        {
+            label: 'Agent',
+            name: 'Agent',
+            callId: 'tc-adv-agent',
+            input: { prompt: 'explore structure', subagent_type: 'explore' },
+            titleContains: 'Launch Agent',
+        },
+        {
+            label: 'NotebookRead',
+            name: 'NotebookRead',
+            callId: 'tc-adv-nb',
+            input: { notebook_path: '/work/a.ipynb' },
+            titleContains: 'a.ipynb',
+        },
+        {
+            label: 'Skill',
+            name: 'Skill',
+            callId: 'tc-adv-skill',
+            input: { skill: 'gitnexus-exploring' },
+            titleContains: 'gitnexus-exploring',
+        },
+        {
+            label: 'AskUserQuestion',
+            name: 'AskUserQuestion',
+            callId: 'tc-adv-ask',
+            input: {
+                questions: [{
+                    header: 'Scope',
+                    question: 'Which area?',
+                    options: [{ label: 'CLI', description: null }],
+                    multiSelect: false,
+                }],
+            },
+            titleContains: 'Scope',
+        },
+    ] as const
+
+    for (const c of projectionCases) {
+        it(`result-only projection hydrates ${c.label} — real name and non-placeholder title (D-13)`, () => {
+            const toolResultMsg: TracedMessage = {
+                id: `msg-${c.callId}`,
+                localId: null,
+                createdAt: 1_700_000_001_000,
+                role: 'agent',
+                content: [{
+                    type: 'tool-result',
+                    tool_use_id: c.callId,
+                    content: 'ok',
+                    is_error: false,
+                    uuid: `u-${c.callId}`,
+                    parentUUID: null,
+                }],
+                isSidechain: false,
+            } as TracedMessage
+
+            const projection: ToolCallProjection = {
+                callId: c.callId,
+                name: c.name,
+                input: c.input,
+                status: 'completed',
+                startedAt: 1_700_000_000_000,
+                completedAt: 1_700_000_001_000,
+            }
+
+            const { blocks } = reduceTimeline(
+                [toolResultMsg],
+                makeContext(new Map([[c.callId, projection]])),
+            )
+            const toolBlock = blocks.find(b => b.kind === 'tool-call') as {
+                tool: { name: string; input: unknown }
+            } | undefined
+
+            expect(toolBlock).toBeDefined()
+            expect(toolBlock?.tool.name).toBe(c.name)
+            expect(toolBlock?.tool.name).not.toBe('unknown')
+            expect(toolBlock?.tool.name).not.toBe('Tool')
+
+            const presentation = getToolPresentation({
+                toolName: toolBlock!.tool.name,
+                input: toolBlock!.tool.input,
+                result: null,
+                childrenCount: 0,
+                description: null,
+                metadata: null,
+            })
+            expect(presentation.title).not.toBe('Tool')
+            expect(presentation.title).not.toBe('unknown')
+            expect(presentation.title).toContain(c.titleContains)
+
+            if (c.name === 'AskUserQuestion') {
+                expect(isAskUserQuestionToolName(toolBlock!.tool.name)).toBe(true)
+            }
+        })
+    }
+
+    it('getToolPresentation for Task canonical input is not generic Tool placeholder', () => {
+        const presentation = getToolPresentation({
+            toolName: 'Task',
+            input: { description: 'Audit' },
+            result: null,
+            childrenCount: 0,
+            description: null,
+            metadata: null,
+        })
+        expect(presentation.title).toContain('Audit')
+        expect(presentation.title).not.toBe('Tool')
+    })
 })
