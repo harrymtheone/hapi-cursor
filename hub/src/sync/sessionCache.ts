@@ -1,3 +1,4 @@
+import type { SkillPolicyState } from '@hapi/protocol/schemas'
 import type { PermissionMode, Session } from '@hapi/protocol/types'
 import type { Store } from '../store'
 import { EventPublisher } from './eventPublisher'
@@ -114,6 +115,24 @@ export class SessionCache {
 
     async renameSession(sessionId: string, name: string): Promise<void> {
         await this.config.renameSession(sessionId, name)
+    }
+
+    async applySkillPolicy(
+        sessionId: string,
+        update: { name: string; state: SkillPolicyState }
+    ): Promise<void> {
+        await this.config.applySkillPolicy(sessionId, update)
+    }
+
+    async applySkillPolicyBatch(
+        sessionId: string,
+        skillPolicy: Record<string, SkillPolicyState>
+    ): Promise<void> {
+        await this.config.applySkillPolicyBatch(sessionId, skillPolicy)
+    }
+
+    async resetSessionSkillPolicy(sessionId: string): Promise<void> {
+        await this.config.resetSessionSkillPolicy(sessionId)
     }
 
     async deleteSession(sessionId: string): Promise<void> {
