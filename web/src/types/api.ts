@@ -151,8 +151,6 @@ export type {
     SkillSummary,
 } from '@hapi/protocol/types'
 
-export type { SkillPolicyState } from '@/components/AssistantChat/skillPolicyUtils'
-
 export type PushSubscriptionKeys = {
     p256dh: string
     auth: string

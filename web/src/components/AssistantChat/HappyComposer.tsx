@@ -1,5 +1,4 @@
 import { ComposerPrimitive } from '@assistant-ui/react'
-import type { SkillPolicyState } from './skillPolicyUtils'
 import type { ApiClient } from '@/api/client'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
@@ -48,9 +47,6 @@ export interface HappyComposerProps {
     onSchedule?: (pending: PendingSchedule) => void
     onClearSchedule?: () => void
     api?: ApiClient | null
-    skillPolicy?: Record<string, SkillPolicyState>
-    onSetSkillPolicy?: (name: string, state: SkillPolicyState) => Promise<void>
-    onResetSkillPolicy?: () => Promise<void>
 }
 
 export function HappyComposer(props: HappyComposerProps) {
@@ -97,19 +93,7 @@ export function HappyComposer(props: HappyComposerProps) {
         switchDisabled,
         isAborting,
         isSwitching,
-        skillsSheetOpen,
-        setSkillsSheetOpen,
-        toggleSkillsSheet,
-        showSkillsPolicyButton,
-        skillsPolicyActive,
     } = state
-
-    const canShowSkillsSheet = Boolean(
-        props.sessionId
-        && props.api
-        && props.onSetSkillPolicy
-        && props.onResetSkillPolicy
-    )
 
     return (
         <div className={`px-3 ${bottomPaddingClass} pt-2 bg-[var(--app-bg)]`}>
@@ -179,10 +163,6 @@ export function HappyComposer(props: HappyComposerProps) {
                         <ComposerButtons
                             canSend={canSend}
                             controlsDisabled={controlsDisabled}
-                            showSkillsPolicyButton={showSkillsPolicyButton && canShowSkillsSheet}
-                            skillsPolicyActive={skillsPolicyActive}
-                            skillsSheetOpen={skillsSheetOpen}
-                            onSkillsPolicyToggle={toggleSkillsSheet}
                             showSettingsButton={showSettingsButton}
                             onSettingsToggle={handlers.handleSettingsToggle}
                             showTerminalButton={showTerminalButton}
