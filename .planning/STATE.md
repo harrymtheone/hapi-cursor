@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 ## Current Position
 
-Phase: 01.2 (fix-durable-tool-call-projection-in-hub) — EXECUTING
-Plan: 7 of 7 (01.2-06 complete; 01.2-07 pending)
-Status: Ready to execute
-Last activity: 2026-05-26
+Phase: 01.2 (fix-durable-tool-call-projection-in-hub) — COMPLETE
+Plan: 7 of 7 complete
+Status: Phase 01.2 plans finished — human UAT re-run for tests 2 & 3 recommended
+Last activity: 2026-05-26 — Completed 01.2-07-PLAN.md
 
 Progress: [██████████] 100%
 
@@ -139,6 +139,7 @@ Recent decisions affecting current work:
 - [Phase 01]: Use schema version 11 and the existing fail-fast mismatch policy instead of adding runtime migrations. — Matches the repo no-backward-compatibility SQLite policy.
 - [Phase 01]: Clear durable completion markers only when new queued work starts, not on idle keepalives. — Preserves completed/unread status across reload and reconnect while avoiding stale green on new work.
 - [Phase 01.2]: CLI native *ToolCall conversion uses allowlisted knownTools names (Read/Grep/Bash) via cursorToolCallMapping — closes upstream unknown placeholder root cause for new ingests
+- [Phase 01.2]: Hub inferToolNameFromPayload upgrades legacy unknown projections from stored payload shape during merge (no new reconcile triggers)
 - [Phase ?]: Web-side previousModel gate (not Hub-schema) closes UAT Test 3 flicker; BIG label gated until session-updated patch confirms
 - [Phase ?]: Shared CursorRuntimeConfigApplyResult enum unchanged; rename is locale-only (composer.model.appliesNextMessage)
 - [Phase ?]: [Phase 01]: SessionList prune effect must distinguish transient empty loading from authoritative empty list to prevent localStorage wipe on refresh.
@@ -173,7 +174,7 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-05-26T01:03:22.925Z
-Stopped at: Completed 01.2-06-PLAN.md
+Stopped at: Completed 01.2-07-PLAN.md
 Resume file: None
 
 ---
