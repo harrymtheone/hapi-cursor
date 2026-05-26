@@ -4,6 +4,7 @@ import {
     convertCursorEventToAgentMessage,
     type CursorStreamEvent
 } from './cursorEventConverter';
+import { CURSOR_TOOL_CALL_NDJSON_FIXTURES } from './fixtures/cursorToolCallNdjson';
 
 describe('cursorEventConverter', () => {
     describe('parseCursorEvent', () => {
@@ -57,6 +58,63 @@ describe('cursorEventConverter', () => {
             const event = { type: 'result', subtype: 'success', session_id: 's1' } as CursorStreamEvent;
             const msg = convertCursorEventToAgentMessage(event);
             expect(msg).toEqual({ type: 'turn_complete', stopReason: 'success' });
+        });
+    });
+
+    describe('native ToolCall NDJSON fixtures', () => {
+        const nativeVariants = Object.entries(CURSOR_TOOL_CALL_NDJSON_FIXTURES).filter(
+            ([key]) => key !== 'functionMcp'
+        );
+
+        it.each(nativeVariants)(
+            'started %s converts to expected HAPI name with non-empty input',
+            (_variantKey, fixture) => {
+                const event = parseCursorEvent(fixture.started);
+                expect(event?.type).toBe('tool_call');
+                const msg = convertCursorEventToAgentMessage(event as CursorStreamEvent);
+                expect(msg).toMatchObject({
+                    type: 'tool_call',
+                    id: fixture.callId,
+                    name: fixture.expectedName,
+                    status: 'in_progress',
+                });
+                expect(msg && 'input' in msg && msg.input).not.toEqual({});
+            }
+        );
+
+        it.each(nativeVariants)(
+            'completed %s converts to tool_result with output',
+            (_variantKey, fixture) => {
+                const event = parseCursorEvent(fixture.completed);
+                const msg = convertCursorEventToAgentMessage(event as CursorStreamEvent);
+                expect(msg).toMatchObject({
+                    type: 'tool_result',
+                    id: fixture.callId,
+                    status: 'completed',
+                });
+                expect(msg && 'output' in msg && msg.output).toBeDefined();
+                expect(msg && 'output' in msg && msg.output).not.toEqual({});
+            }
+        );
+
+        it('grepToolCall and shellToolCall no longer emit name unknown', () => {
+            for (const key of ['grepToolCall', 'shellToolCall'] as const) {
+                const fixture = CURSOR_TOOL_CALL_NDJSON_FIXTURES[key];
+                const event = parseCursorEvent(fixture.started);
+                const msg = convertCursorEventToAgentMessage(event as CursorStreamEvent);
+                expect(msg && 'name' in msg ? msg.name : '').not.toBe('unknown');
+            }
+        });
+
+        it('function.name MCP fixture preserves custom tool name', () => {
+            const fixture = CURSOR_TOOL_CALL_NDJSON_FIXTURES.functionMcp;
+            const event = parseCursorEvent(fixture.started);
+            const msg = convertCursorEventToAgentMessage(event as CursorStreamEvent);
+            expect(msg).toMatchObject({
+                type: 'tool_call',
+                name: fixture.expectedName,
+                status: 'in_progress',
+            });
         });
     });
 });
