@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-last_updated: "2026-05-26T00:58:36.463Z"
+last_updated: "2026-05-26T01:03:22.928Z"
 last_activity: 2026-05-26
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 31
-  completed_plans: 30
-  percent: 29
+  completed_plans: 31
+  percent: 43
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 01.2 (fix-durable-tool-call-projection-in-hub) — EXECUTING
-Plan: 6 of 7 (01.2-06 complete; 01.2-07 pending)
-Status: Executing Phase 01.2
-Last activity: 2026-05-26 — Completed 01.2-06-PLAN.md
+Plan: 7 of 7 (01.2-06 complete; 01.2-07 pending)
+Status: Ready to execute
+Last activity: 2026-05-26
 
-Progress: [██████████] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -172,7 +172,7 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-26T00:58:36.460Z
+Last session: 2026-05-26T01:03:22.925Z
 Stopped at: Completed 01.2-06-PLAN.md
 Resume file: None
 
