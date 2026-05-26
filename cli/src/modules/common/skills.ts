@@ -4,7 +4,7 @@ import { homedir } from 'os';
 import { parse as parseYaml } from 'yaml';
 import type { SkillSummary } from '@hapi/protocol/schemas';
 
-export type { SkillSummary, ListSkillsResponse } from '@hapi/protocol/schemas';
+export type { SkillSummary } from '@hapi/protocol/schemas';
 
 export interface ListSkillsRequest {
 }

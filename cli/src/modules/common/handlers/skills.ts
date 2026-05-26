@@ -1,6 +1,7 @@
 import { logger } from '@/ui/logger'
 import type { RpcHandlerManager } from '@/api/rpc/RpcHandlerManager'
-import { listSkills, type ListSkillsRequest, type ListSkillsResponse } from '../skills'
+import type { ListSkillsResponse } from '@hapi/protocol/schemas'
+import { listSkills, type ListSkillsRequest } from '../skills'
 import { getErrorMessage, rpcError } from '../rpcResponses'
 
 export function registerSkillsHandlers(rpcHandlerManager: RpcHandlerManager, workingDirectory: string): void {
