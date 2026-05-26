@@ -13,6 +13,11 @@ import {
 import type { CursorSession } from './session';
 import type { CursorStreamEvent } from './utils/cursorEventConverter';
 import { parseCursorEvent, convertCursorEventToAgentMessage } from './utils/cursorEventConverter';
+import {
+    appendRedactedNdjsonLine,
+    getCapturePathForSession,
+    isNdjsonCaptureEnabled,
+} from './utils/cursorNdjsonCapture';
 import { permissionModeToCursorArgs } from '@/agent/modeConfig';
 import type { PermissionMode } from './modes';
 
@@ -107,39 +112,48 @@ class CursorRemoteLauncher extends RemoteLauncherBase {
             session.onThinkingChange(true);
 
             try {
-                const exitCode = await this.runAgentProcess(args, session.path, (event) => {
-                    if (event.type === 'system' && event.subtype === 'init' && event.session_id) {
-                        cursorSessionId = event.session_id;
-                        session.onSessionFound(event.session_id);
-                    } else if (event.type === 'thinking') {
-                        if (event.subtype === 'completed') {
-                            // keep thinking until we get assistant/result
-                        }
-                    } else if (event.type === 'assistant' || event.type === 'tool_call' || event.type === 'result') {
-                        const agentMsg = convertCursorEventToAgentMessage(event);
-                        if (agentMsg) {
-                            const wireMsg = convertAgentMessage(agentMsg);
-                            if (wireMsg) {
-                                session.sendAgentMessage(wireMsg);
+                const exitCode = await this.runAgentProcess(
+                    args,
+                    session.path,
+                    cursorSessionId ?? 'no-session',
+                    (event) => {
+                        if (event.type === 'system' && event.subtype === 'init' && event.session_id) {
+                            cursorSessionId = event.session_id;
+                            session.onSessionFound(event.session_id);
+                        } else if (event.type === 'thinking') {
+                            if (event.subtype === 'completed') {
+                                // keep thinking until we get assistant/result
                             }
-                            switch (agentMsg.type) {
-                                case 'text':
-                                    messageBuffer.addMessage(agentMsg.text, 'assistant');
-                                    break;
-                                case 'tool_call':
-                                    messageBuffer.addMessage(`Tool: ${agentMsg.name}`, 'tool');
-                                    break;
-                                case 'tool_result':
-                                    messageBuffer.addMessage('Tool result', 'result');
-                                    break;
-                                case 'turn_complete':
-                                    break;
-                                default:
-                                    break;
+                        } else if (
+                            event.type === 'assistant' ||
+                            event.type === 'tool_call' ||
+                            event.type === 'result'
+                        ) {
+                            const agentMsg = convertCursorEventToAgentMessage(event);
+                            if (agentMsg) {
+                                const wireMsg = convertAgentMessage(agentMsg);
+                                if (wireMsg) {
+                                    session.sendAgentMessage(wireMsg);
+                                }
+                                switch (agentMsg.type) {
+                                    case 'text':
+                                        messageBuffer.addMessage(agentMsg.text, 'assistant');
+                                        break;
+                                    case 'tool_call':
+                                        messageBuffer.addMessage(`Tool: ${agentMsg.name}`, 'tool');
+                                        break;
+                                    case 'tool_result':
+                                        messageBuffer.addMessage('Tool result', 'result');
+                                        break;
+                                    case 'turn_complete':
+                                        break;
+                                    default:
+                                        break;
+                                }
                             }
                         }
                     }
-                });
+                );
 
                 if (exitCode !== 0 && exitCode !== null) {
                     logger.debug(`[cursor-remote] Agent exited with code ${exitCode}`);
@@ -162,9 +176,13 @@ class CursorRemoteLauncher extends RemoteLauncherBase {
     private runAgentProcess(
         args: string[],
         cwd: string,
+        captureSessionKey: string,
         onEvent: (event: ReturnType<typeof parseCursorEvent> & object) => void
     ): Promise<number | null> {
         return new Promise((resolve, reject) => {
+            const capturePath = isNdjsonCaptureEnabled()
+                ? getCapturePathForSession(captureSessionKey)
+                : null;
             const child = spawn('agent', args, {
                 cwd,
                 env: process.env,
@@ -194,6 +212,9 @@ class CursorRemoteLauncher extends RemoteLauncherBase {
 
             const rl = createInterface({ input: child.stdout, crlfDelay: Infinity });
             rl.on('line', (line) => {
+                if (capturePath) {
+                    appendRedactedNdjsonLine(capturePath, line);
+                }
                 const event = parseCursorEvent(line);
                 if (event) {
                     onEvent(event);
