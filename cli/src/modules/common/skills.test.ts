@@ -48,6 +48,57 @@ describe('listSkills', () => {
         const skills = await listSkills()
 
         expect(skills.map((skill) => skill.name)).toEqual(['amis'])
+        expect(skills[0]).toMatchObject({
+            name: 'amis',
+            description: 'AMIS guide',
+            source: 'user',
+            valid: true,
+        })
+        expect(skills[0].pathHint).toMatch(/^~\/.agents\/skills\/amis\/SKILL\.md$/)
+    })
+
+    it('discovers nested SKILL.md under .cursor/skills', async () => {
+        await writeSkill(join(homeDir, '.cursor', 'skills', 'parent', 'nested-skill'), 'nested-skill', 'Nested skill')
+
+        const skills = await listSkills()
+
+        expect(skills.map((skill) => skill.name)).toContain('nested-skill')
+        expect(skills.find((skill) => skill.name === 'nested-skill')).toMatchObject({
+            source: 'user',
+            valid: true,
+        })
+    })
+
+    it('lists invalid skills with valid false and invalidReason', async () => {
+        const skillDir = join(homeDir, '.agents', 'skills', 'broken')
+        await mkdir(skillDir, { recursive: true })
+        await writeFile(join(skillDir, 'SKILL.md'), [
+            '---',
+            'name: [unclosed',
+            'description: broken',
+            '---',
+            '',
+            '# broken',
+        ].join('\n'))
+
+        const skills = await listSkills()
+        const broken = skills.find((skill) => skill.name === 'broken')
+
+        expect(broken).toMatchObject({
+            source: 'user',
+            valid: false,
+            invalidReason: expect.any(String),
+        })
+    })
+
+    it('redacts user pathHint to tilde-prefixed paths', async () => {
+        await writeSkill(join(homeDir, '.cursor', 'skills', 'redacted'), 'redacted', 'Redacted skill')
+
+        const skills = await listSkills()
+        const skill = skills.find((entry) => entry.name === 'redacted')
+
+        expect(skill?.pathHint).toMatch(/^~\/.cursor\/skills\/redacted\/SKILL\.md$/)
+        expect(skill?.pathHint).not.toContain(homeDir)
     })
 
     it('falls back to directory name when frontmatter is missing', async () => {
@@ -56,7 +107,13 @@ describe('listSkills', () => {
         await writeFile(join(skillDir, 'SKILL.md'), '# No Frontmatter\n')
 
         await expect(listSkills()).resolves.toEqual([
-            { name: 'no-frontmatter', description: undefined }
+            {
+                name: 'no-frontmatter',
+                description: undefined,
+                source: 'user',
+                valid: true,
+                pathHint: '~/.agents/skills/no-frontmatter/SKILL.md',
+            }
         ])
     })
 
@@ -74,6 +131,7 @@ describe('listSkills', () => {
         const skills = await listSkills(workingDirectory)
 
         expect(skills.map((skill) => skill.name)).toEqual(['local-skill', 'package-skill', 'root-skill'])
+        expect(skills.every((skill) => skill.source === 'project' && skill.valid === true)).toBe(true)
     })
 
     it('uses only cwd project skills outside a git repository', async () => {
@@ -101,9 +159,31 @@ describe('listSkills', () => {
         const sharedSkills = skills.filter((skill) => skill.name === 'shared')
 
         expect(sharedSkills).toHaveLength(1)
-        expect(sharedSkills[0]).toEqual({
+        expect(sharedSkills[0]).toMatchObject({
             name: 'shared',
-            description: 'Local shared skill'
+            description: 'Local shared skill',
+            source: 'project',
+            valid: true,
+        })
+    })
+
+    it('prefers project skill over user skill when names collide', async () => {
+        const repoRoot = join(sandboxDir, 'repo')
+        const workingDirectory = join(repoRoot, 'apps', 'web')
+
+        await mkdir(join(repoRoot, '.git'), { recursive: true })
+        await writeSkill(join(homeDir, '.cursor', 'skills', 'shared'), 'shared', 'User shared skill')
+        await writeSkill(join(repoRoot, '.cursor', 'skills', 'shared'), 'shared', 'Project shared skill')
+
+        const skills = await listSkills(workingDirectory)
+        const sharedSkills = skills.filter((skill) => skill.name === 'shared')
+
+        expect(sharedSkills).toHaveLength(1)
+        expect(sharedSkills[0]).toMatchObject({
+            name: 'shared',
+            description: 'Project shared skill',
+            source: 'project',
+            valid: true,
         })
     })
 })

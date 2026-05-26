@@ -1,20 +1,21 @@
 import { access, readdir, readFile } from 'fs/promises';
-import { basename, dirname, join, resolve } from 'path';
+import { basename, dirname, join, relative, resolve } from 'path';
 import { homedir } from 'os';
 import { parse as parseYaml } from 'yaml';
+import type { SkillSummary } from '@hapi/protocol/schemas';
 
-export interface SkillSummary {
-    name: string;
-    description?: string;
-}
+export type { SkillSummary, ListSkillsResponse } from '@hapi/protocol/schemas';
 
 export interface ListSkillsRequest {
 }
 
-export interface ListSkillsResponse {
-    success: boolean;
-    skills?: SkillSummary[];
-    error?: string;
+async function pathExists(path: string): Promise<boolean> {
+    try {
+        await access(path);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 function getHomeDirectory(): string {
@@ -25,21 +26,31 @@ function getUserSkillsRoots(): string[] {
     const home = getHomeDirectory();
     return [
         join(home, '.agents', 'skills'),
+        join(home, '.cursor', 'skills'),
     ];
 }
 
 function getProjectSkillsRoots(directory: string): string[] {
     return [
         join(directory, '.agents', 'skills'),
+        join(directory, '.cursor', 'skills'),
     ];
 }
 
-async function pathExists(path: string): Promise<boolean> {
-    try {
-        await access(path);
-        return true;
-    } catch {
-        return false;
+async function findGitRoot(startDirectory: string): Promise<string | null> {
+    let currentDirectory = resolve(startDirectory);
+
+    while (true) {
+        if (await pathExists(join(currentDirectory, '.git'))) {
+            return currentDirectory;
+        }
+
+        const parentDirectory = dirname(currentDirectory);
+        if (parentDirectory === currentDirectory) {
+            return null;
+        }
+
+        currentDirectory = parentDirectory;
     }
 }
 
@@ -67,7 +78,11 @@ async function listProjectSkillsRoots(workingDirectory?: string): Promise<string
     }
 }
 
-function parseFrontmatter(fileContent: string): { frontmatter?: Record<string, unknown>; body: string } {
+function parseFrontmatter(fileContent: string): {
+    frontmatter?: Record<string, unknown>;
+    body: string;
+    frontmatterError?: string;
+} {
     const match = fileContent.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
     if (!match) {
         return { body: fileContent.trim() };
@@ -77,56 +92,145 @@ function parseFrontmatter(fileContent: string): { frontmatter?: Record<string, u
     const body = match[2].trim();
     try {
         const parsed = parseYaml(yamlContent) as Record<string, unknown> | null;
-        return { frontmatter: parsed ?? undefined, body };
-    } catch {
-        return { body: fileContent.trim() };
+        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return { body, frontmatterError: 'Frontmatter must be a YAML object' };
+        }
+
+        return { frontmatter: parsed, body };
+    } catch (error) {
+        return {
+            body,
+            frontmatterError: error instanceof Error ? error.message : 'Invalid YAML frontmatter',
+        };
     }
 }
 
-function extractSkillSummary(skillDir: string, fileContent: string): SkillSummary | null {
-    const parsed = parseFrontmatter(fileContent);
-    const nameFromFrontmatter = typeof parsed.frontmatter?.name === 'string' ? parsed.frontmatter.name.trim() : '';
-    const name = nameFromFrontmatter || basename(skillDir);
-    if (!name) {
-        return null;
+function buildPathHint(
+    skillMdPath: string,
+    source: SkillSummary['source'],
+    context: { home: string; gitRoot: string | null; anchorDirectory: string }
+): string {
+    const normalizedPath = resolve(skillMdPath);
+
+    if (source === 'user') {
+        const home = resolve(context.home);
+        if (normalizedPath === home || normalizedPath.startsWith(`${home}/`)) {
+            return `~${normalizedPath.slice(home.length)}`;
+        }
+
+        return normalizedPath.replace(context.home, '~');
     }
+
+    const base = context.gitRoot ?? context.anchorDirectory;
+    return relative(resolve(base), normalizedPath);
+}
+
+function readInvocationMode(frontmatter?: Record<string, unknown>): SkillSummary['invocationMode'] | undefined {
+    if (frontmatter?.['disable-model-invocation'] === true) {
+        return 'manual';
+    }
+
+    const raw = frontmatter?.invocationMode;
+    if (raw === 'auto' || raw === 'manual') {
+        return raw;
+    }
+
+    return undefined;
+}
+
+function extractSkillSummary(
+    skillMdPath: string,
+    fileContent: string,
+    source: SkillSummary['source'],
+    context: { home: string; gitRoot: string | null; anchorDirectory: string }
+): SkillSummary {
+    const skillDir = dirname(skillMdPath);
+    const nameFallback = basename(skillDir);
+    const pathHint = buildPathHint(skillMdPath, source, context);
+    const parsed = parseFrontmatter(fileContent);
+
+    if (parsed.frontmatterError) {
+        const nameFromFrontmatter = typeof parsed.frontmatter?.name === 'string'
+            ? parsed.frontmatter.name.trim()
+            : '';
+        const name = nameFromFrontmatter || nameFallback;
+
+        return {
+            name,
+            source,
+            valid: false,
+            invalidReason: parsed.frontmatterError,
+            pathHint,
+        };
+    }
+
+    const nameFromFrontmatter = typeof parsed.frontmatter?.name === 'string'
+        ? parsed.frontmatter.name.trim()
+        : '';
+    const name = nameFromFrontmatter || nameFallback;
 
     const description = typeof parsed.frontmatter?.description === 'string'
         ? parsed.frontmatter.description.trim()
         : undefined;
 
-    return { name, description };
+    const invocationMode = readInvocationMode(parsed.frontmatter);
+
+    return {
+        name,
+        description,
+        source,
+        invocationMode,
+        valid: true,
+        pathHint,
+    };
 }
 
-async function listTopLevelSkillDirs(skillsRoot: string): Promise<string[]> {
-    try {
-        const entries = await readdir(skillsRoot, { withFileTypes: true });
-        const result: string[] = [];
+async function collectSkillMdFiles(skillsRoot: string): Promise<string[]> {
+    const result: string[] = [];
+
+    async function walk(directory: string): Promise<void> {
+        let entries;
+        try {
+            entries = await readdir(directory, { withFileTypes: true });
+        } catch {
+            return;
+        }
 
         for (const entry of entries) {
-            if (!entry.isDirectory()) {
-                continue;
-            }
-
             if (entry.name.startsWith('.')) {
                 continue;
             }
 
-            result.push(join(skillsRoot, entry.name));
-        }
+            const entryPath = join(directory, entry.name);
+            if (entry.isDirectory()) {
+                await walk(entryPath);
+                continue;
+            }
 
-        return result;
-    } catch {
-        return [];
+            if (entry.isFile() && entry.name === 'SKILL.md') {
+                result.push(entryPath);
+            }
+        }
     }
+
+    await walk(skillsRoot);
+    return result;
 }
 
-async function readSkillsFromDirs(skillDirs: string[]): Promise<SkillSummary[]> {
-    const skills = await Promise.all(skillDirs.map(async (dir): Promise<SkillSummary | null> => {
-        const filePath = join(dir, 'SKILL.md');
+async function readSkillsFromRoot(
+    skillsRoot: string,
+    source: SkillSummary['source'],
+    context: { home: string; gitRoot: string | null; anchorDirectory: string }
+): Promise<SkillSummary[]> {
+    if (!(await pathExists(skillsRoot))) {
+        return [];
+    }
+
+    const skillMdPaths = await collectSkillMdFiles(skillsRoot);
+    const skills = await Promise.all(skillMdPaths.map(async (skillMdPath) => {
         try {
-            const fileContent = await readFile(filePath, 'utf-8');
-            return extractSkillSummary(dir, fileContent);
+            const fileContent = await readFile(skillMdPath, 'utf-8');
+            return extractSkillSummary(skillMdPath, fileContent, source, context);
         } catch {
             return null;
         }
@@ -136,17 +240,31 @@ async function readSkillsFromDirs(skillDirs: string[]): Promise<SkillSummary[]> 
 }
 
 export async function listSkills(workingDirectory?: string): Promise<SkillSummary[]> {
-    const projectRoots = await listProjectSkillsRoots(workingDirectory);
+    const home = getHomeDirectory();
+    const resolvedWorkingDirectory = workingDirectory ? resolve(workingDirectory) : undefined;
+    const gitRoot = resolvedWorkingDirectory ? await findGitRoot(resolvedWorkingDirectory) : null;
+    const projectRoots = [...new Set(await listProjectSkillsRoots(resolvedWorkingDirectory))];
     const userRoots = getUserSkillsRoots();
-    const [projectSkillDirs, userSkillDirs] = await Promise.all([
-        Promise.all(projectRoots.map(async (root) => await listTopLevelSkillDirs(root))).then((dirs) => dirs.flat()),
-        Promise.all(userRoots.map(async (root) => await listTopLevelSkillDirs(root))).then((dirs) => dirs.flat()),
+
+    const projectContext = {
+        home,
+        gitRoot,
+        anchorDirectory: resolvedWorkingDirectory ?? gitRoot ?? home,
+    };
+
+    const userContext = {
+        home,
+        gitRoot: null,
+        anchorDirectory: home,
+    };
+
+    const [projectSkillsByRoot, userSkillsByRoot] = await Promise.all([
+        Promise.all(projectRoots.map((root) => readSkillsFromRoot(root, 'project', projectContext))),
+        Promise.all(userRoots.map((root) => readSkillsFromRoot(root, 'user', userContext))),
     ]);
 
-    const [projectSkills, userSkills] = await Promise.all([
-        readSkillsFromDirs(projectSkillDirs),
-        readSkillsFromDirs(userSkillDirs),
-    ]);
+    const projectSkills = projectSkillsByRoot.flat();
+    const userSkills = userSkillsByRoot.flat();
 
     const dedupedSkills = new Map<string, SkillSummary>();
     for (const skill of [
