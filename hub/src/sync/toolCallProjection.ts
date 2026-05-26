@@ -79,6 +79,69 @@ export function extractToolCallEventsFromMessageContent(
     return events
 }
 
+function payloadString(obj: Record<string, unknown>, keys: string[]): string | null {
+    for (const key of keys) {
+        const value = obj[key]
+        if (typeof value === 'string' && value.length > 0) return value
+    }
+    return null
+}
+
+function isPlaceholderProjectionName(name: string | undefined): boolean {
+    const normalized = (name ?? '').trim().toLowerCase()
+    return normalized === '' || normalized === 'unknown'
+}
+
+function hasReadShapedResult(output: unknown): boolean {
+    if (!isObject(output)) return false
+    const success = output.success
+    return isObject(success) && 'content' in success
+}
+
+/**
+ * Infer HAPI knownTools name from stored tool input/output when wire name was placeholder.
+ * Returns null when ambiguous — never guess over wrong label (T-01.2-10).
+ */
+export function inferToolNameFromPayload(input: unknown, output: unknown): string | null {
+    const inObj = isObject(input) ? input : null
+    const outObj = isObject(output) ? output : null
+
+    if (inObj) {
+        if (payloadString(inObj, ['command', 'cmd'])) return 'Bash'
+        if (Array.isArray(inObj.todos) || inObj.merge === true) return 'TodoWrite'
+
+        const pattern = payloadString(inObj, ['pattern'])
+        if (pattern) {
+            if (pattern.includes('*')) return 'Glob'
+            if (payloadString(inObj, ['path', 'file_path', 'glob_pattern'])) return 'Grep'
+            return null
+        }
+
+        const path = payloadString(inObj, ['file_path', 'path', 'file'])
+        if (path) {
+            if ('fileText' in inObj || payloadString(inObj, ['content', 'text'])) return 'Write'
+            if ('old_string' in inObj || 'new_string' in inObj || Array.isArray(inObj.edits)) {
+                return 'Edit'
+            }
+            if (hasReadShapedResult(outObj)) return 'Read'
+            return null
+        }
+    }
+
+    if (!inObj && outObj && hasReadShapedResult(outObj)) return 'Read'
+
+    return null
+}
+
+function resolveProjectionName(
+    candidate: string,
+    input: unknown,
+    output: unknown
+): string {
+    if (!isPlaceholderProjectionName(candidate)) return candidate
+    return inferToolNameFromPayload(input, output) ?? candidate
+}
+
 /**
  * Pure merge of a ToolCallEvent into a previous projection (or null for first event).
  * Converges regardless of event order — result before start produces the same final state.
@@ -90,24 +153,25 @@ export function mergeToolCallProjection(
 ): ToolCallProjection {
     if (event.kind === 'start') {
         const incoming = event
+        const mergeInput = prev?.input !== undefined && prev?.input !== null ? prev.input : incoming.input
         if (!prev) {
+            const name = resolveProjectionName(incoming.name || 'unknown', incoming.input, null)
             return {
                 callId: incoming.callId,
-                name: incoming.name || 'unknown',
+                name,
                 input: incoming.input,
                 status: 'in_progress',
                 startedAt: incoming.at
             }
         }
-        // Merge start into existing projection
+        const candidateName = (prev.name && prev.name !== 'unknown') ? prev.name
+            : (incoming.name || prev.name || 'unknown')
+        const name = resolveProjectionName(candidateName, mergeInput, prev.result ?? null)
         return {
             ...prev,
-            // Never downgrade a non-placeholder name
-            name: (prev.name && prev.name !== 'unknown') ? prev.name
-                : (incoming.name || prev.name || 'unknown'),
-            input: prev.input !== undefined && prev.input !== null ? prev.input : incoming.input,
+            name,
+            input: mergeInput,
             startedAt: Math.min(prev.startedAt, incoming.at),
-            // Only promote to in_progress if not already completed/failed
             status: (prev.status === 'completed' || prev.status === 'failed')
                 ? prev.status
                 : 'in_progress'
@@ -119,9 +183,10 @@ export function mergeToolCallProjection(
     const status: ToolCallProjection['status'] = incoming.isError ? 'failed' : 'completed'
 
     if (!prev) {
+        const name = resolveProjectionName('unknown', null, incoming.output)
         return {
             callId: incoming.callId,
-            name: 'unknown',
+            name,
             input: null,
             status,
             result: incoming.output,
@@ -130,8 +195,10 @@ export function mergeToolCallProjection(
         }
     }
 
+    const name = resolveProjectionName(prev.name, prev.input, incoming.output)
     return {
         ...prev,
+        name,
         status,
         result: incoming.output,
         completedAt: incoming.at
