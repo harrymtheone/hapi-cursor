@@ -248,7 +248,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-24 |
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
-| 01.2 Fix durable tool call projection in Hub | 1/5 | In Progress|  |
+| 01.2 Fix durable tool call projection in Hub | 5/7 | UAT gap closure pending | 2026-05-25 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
