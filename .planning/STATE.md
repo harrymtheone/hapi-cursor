@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 02.1
-Plan: 5 of 5 complete (02.1-01, 02.1-02, 02.1-03, 02.1-04 done)
-Status: Ready to execute
-Last activity: 2026-05-26
+Plan: 5 of 5 complete (02.1-01 through 02.1-05)
+Status: Phase 02.1 complete
+Last activity: 2026-05-26 — Completed 02.1-05 composer policy removal and i18n cleanup
 
 Progress: [██████████] 100%
 
