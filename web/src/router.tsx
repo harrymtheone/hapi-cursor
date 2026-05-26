@@ -42,6 +42,7 @@ import FilePage from '@/routes/sessions/file'
 import TerminalPage from '@/routes/sessions/terminal'
 import SettingsPage from '@/routes/settings'
 import ModelsSettingsPage from '@/routes/settings/models'
+import SkillsSettingsPage from '@/routes/settings/skills'
 
 function BackIcon(props: { className?: string }) {
     return (
@@ -668,6 +669,12 @@ const settingsModelsRoute = createRoute({
     component: ModelsSettingsPage,
 })
 
+const settingsSkillsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/settings/skills',
+    component: SkillsSettingsPage,
+})
+
 export const routeTree = rootRoute.addChildren([
     indexRoute,
     sessionsRoute.addChildren([
@@ -682,6 +689,7 @@ export const routeTree = rootRoute.addChildren([
     browseRoute,
     settingsRoute,
     settingsModelsRoute,
+    settingsSkillsRoute,
 ])
 
 type RouterHistory = Parameters<typeof createRouter>[0]['history']

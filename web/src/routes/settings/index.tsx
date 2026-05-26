@@ -7,6 +7,7 @@ import { DisplaySection } from './_sections/DisplaySection'
 import { ChatSection } from './_sections/ChatSection'
 import { AboutSection } from './_sections/AboutSection'
 import { ModelsSection } from './_sections/ModelsSection'
+import { SkillsSection } from './_sections/SkillsSection'
 
 export default function SettingsPage() {
     const { t } = useTranslation()
@@ -41,6 +42,7 @@ export default function SettingsPage() {
                         terminalToolDisplayDropdown={state.terminalToolDisplay}
                     />
                     <ModelsSection />
+                    <SkillsSection />
                     <AboutSection />
                 </div>
             </div>

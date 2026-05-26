@@ -14,7 +14,7 @@ export function useAppGoBack(): () => void {
             return
         }
 
-        if (pathname === '/settings/models') {
+        if (pathname === '/settings/models' || pathname === '/settings/skills') {
             navigate({ to: '/settings' })
             return
         }
