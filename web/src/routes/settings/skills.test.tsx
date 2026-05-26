@@ -72,14 +72,12 @@ describe('SkillsSettingsPage', () => {
         expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     })
 
-    it('shows per-session policy footer note', () => {
+    it('shows read-only catalog footer note', () => {
         render(
             <I18nProvider>
                 <SkillsSettingsPage />
             </I18nProvider>
         )
-        expect(
-            screen.getByText('Policy is set per session in chat. This list is read-only.')
-        ).toBeInTheDocument()
+        expect(screen.getByText('This catalog is read-only.')).toBeInTheDocument()
     })
 })

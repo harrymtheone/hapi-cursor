@@ -6,7 +6,7 @@ import { useAppGoBack } from '@/hooks/useAppGoBack'
 import { useSessions } from '@/hooks/queries/useSessions'
 import { useSkills } from '@/hooks/queries/useSkills'
 import { queryKeys } from '@/lib/query-keys'
-import { sortSkills } from '@/components/AssistantChat/skillPolicyUtils'
+import { getSkillSourceLabelKey, sortSkills } from '@/components/AssistantChat/skillPolicyUtils'
 import { pickSkillsCatalogSessionId } from '@/routes/settings/skillsSession'
 import { BackIcon } from './_sections/_icons'
 
@@ -108,7 +108,7 @@ export default function SkillsSettingsPage() {
                                     ) : null}
                                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--app-hint)]">
                                         <span className="rounded-full border border-[var(--app-border)] px-1.5 py-0.5">
-                                            {t(`settings.skills.catalog.source.${skill.source}`)}
+                                            {t(getSkillSourceLabelKey(skill.source, 'settings'))}
                                         </span>
                                         {skill.invocationMode ? (
                                             <span>

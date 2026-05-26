@@ -1,8 +1,5 @@
 import type { SkillSummary } from '@hapi/protocol/types'
 
-/** Legacy tri-state until SkillsPolicySheet is removed in 02.1-04. */
-export type SkillPolicyState = 'inherited' | 'enabled' | 'disabled'
-
 export function sortSkills(skills: SkillSummary[]): SkillSummary[] {
     return [...skills].sort((a, b) => {
         if (a.source !== b.source) {
@@ -26,24 +23,11 @@ export function getSkillSourceLabelKey(
         return 'session.skills.source.unknown'
     }
     const base = 'settings.skills.catalog.source'
-    if (source === 'project' || source === 'user') {
-        return `${base}.${source}`
+    if (source === 'project') {
+        return `${base}.local`
+    }
+    if (source === 'user') {
+        return `${base}.global`
     }
     return `${base}.unknown`
-}
-
-export function getSkillPolicyState(
-    name: string,
-    policy: Record<string, SkillPolicyState> | undefined
-): SkillPolicyState {
-    return policy?.[name] ?? 'inherited'
-}
-
-export function hasExplicitSkillPolicy(
-    policy: Record<string, SkillPolicyState> | undefined
-): boolean {
-    if (!policy) {
-        return false
-    }
-    return Object.values(policy).some((state) => state === 'enabled' || state === 'disabled')
 }

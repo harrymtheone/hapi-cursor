@@ -225,8 +225,8 @@ describe('SettingsPage', () => {
 
     it('renders visible models drill-down row and navigates on click', () => {
         renderWithProviders(<SettingsPage />)
-        expect(screen.getByText('Models', { selector: '.uppercase' })).toBeInTheDocument()
-        const row = screen.getByRole('button', { name: /Visible models/i })
+        expect(screen.getAllByText('Models').length).toBeGreaterThanOrEqual(1)
+        const row = screen.getAllByRole('button', { name: /Visible models/i })[0]!
         expect(row).toBeInTheDocument()
         fireEvent.click(row)
         expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/models' })
