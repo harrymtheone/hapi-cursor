@@ -58,12 +58,12 @@ describe('getEffectiveSkillSuggestions', () => {
         expect(suggestions.map((item) => item.key)).toEqual(['/gamma', '/alpha'])
     })
 
-    it('labels skill suggestions for scanability', () => {
+    it('shows skill name only without description body', () => {
         const suggestions = getEffectiveSkillSuggestions(
             [skill({ name: 'deploy', description: 'Ship it' })],
             '/'
         )
-        expect(suggestions[0]?.description).toContain('Skill')
-        expect(suggestions[0]?.description).toContain('Ship it')
+        expect(suggestions[0]?.label).toBe('/deploy')
+        expect(suggestions[0]?.description).toBeUndefined()
     })
 })

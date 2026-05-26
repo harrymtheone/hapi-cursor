@@ -14,12 +14,10 @@ function filterValidSkills(skills: SkillSummary[]): SkillSummary[] {
 
 function toSuggestion(skill: SkillSummary): Suggestion {
     const slashName = `/${skill.name}`
-    const descriptionParts = [skill.description, 'Skill'].filter(Boolean)
     return {
         key: slashName,
         text: slashName,
         label: slashName,
-        description: descriptionParts.join(' · '),
         source: 'builtin',
     }
 }

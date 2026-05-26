@@ -1,3 +1,4 @@
+import type { RefObject } from 'react'
 import { FloatingOverlay } from '@/components/ChatInput/FloatingOverlay'
 import { Autocomplete } from '@/components/ChatInput/Autocomplete'
 import type { ModelFamily } from '@/lib/cursorModelFamilies'
@@ -19,6 +20,8 @@ export interface HappyComposerOverlaysProps {
     onPermissionChange: (mode: PermissionMode) => void
     onModelChange: (model: string | null) => void
     onSuggestionSelect: (index: number) => void
+    autocompleteOverlayRef?: RefObject<HTMLDivElement | null>
+    autocompleteAnchorLeft?: number | null
     t: (key: string) => string
 }
 
@@ -37,6 +40,8 @@ export function HappyComposerOverlays(props: HappyComposerOverlaysProps) {
         onPermissionChange,
         onModelChange,
         onSuggestionSelect,
+        autocompleteOverlayRef,
+        autocompleteAnchorLeft,
         t,
     } = props
 
@@ -100,8 +105,20 @@ export function HappyComposerOverlays(props: HappyComposerOverlaysProps) {
     }
 
     if (suggestions.length > 0) {
+        const anchored = typeof autocompleteAnchorLeft === 'number'
+        const style = anchored
+            ? { left: `${Math.max(0, autocompleteAnchorLeft)}px` }
+            : undefined
         return (
-            <div className="absolute bottom-[100%] mb-2 w-full">
+            <div
+                ref={autocompleteOverlayRef}
+                className={
+                    anchored
+                        ? 'absolute bottom-[100%] mb-2 w-[min(220px,calc(100%-1rem))]'
+                        : 'absolute bottom-[100%] mb-2 w-[min(220px,calc(100%-1rem))] left-0'
+                }
+                style={style}
+            >
                 <FloatingOverlay>
                     <Autocomplete
                         suggestions={suggestions}

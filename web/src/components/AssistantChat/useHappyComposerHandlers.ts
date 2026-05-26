@@ -28,6 +28,8 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
         moveUp,
         moveDown,
         clearSuggestions,
+        dismissAutocomplete,
+        setAutocompleteSuppressed,
         composerEnterBehavior,
         canSend,
         threadIsRunning,
@@ -91,7 +93,8 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
         }, 0)
 
         haptic('light')
-    }, [api, suggestions, inputState, autocompletePrefixes, haptic, textareaRef, setInputState])
+        setAutocompleteSuppressed(false)
+    }, [api, suggestions, inputState, autocompletePrefixes, haptic, textareaRef, setInputState, setAutocompleteSuppressed])
 
     const handleAbort = useCallback(() => {
         if (abortDisabled) return
@@ -144,7 +147,7 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
                 handleSuggestionSelect(selectedIndex >= 0 ? selectedIndex : 0)
                 return
             }
-            if (key === 'Escape') { e.preventDefault(); clearSuggestions(); return }
+            if (key === 'Escape') { e.preventDefault(); dismissAutocomplete(); return }
         }
         if (key === 'Escape' && threadIsRunning) {
             e.preventDefault()
@@ -164,6 +167,7 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
         moveUp,
         moveDown,
         clearSuggestions,
+        dismissAutocomplete,
         handleSuggestionSelect,
         threadIsRunning,
         handleAbort,
@@ -191,12 +195,13 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
     }, [model, onModelChange, haptic, agentFlavor, modelOptions, canOpenModelSelector])
 
     const handleChange = useCallback((e: ReactChangeEvent<HTMLTextAreaElement>) => {
+        setAutocompleteSuppressed(false)
         const selection = {
             start: e.target.selectionStart,
             end: e.target.selectionEnd
         }
         setInputState({ text: e.target.value, selection })
-    }, [setInputState])
+    }, [setInputState, setAutocompleteSuppressed])
 
     const handleSelect = useCallback((e: ReactSyntheticEvent<HTMLTextAreaElement>) => {
         const target = e.target as HTMLTextAreaElement
@@ -279,6 +284,7 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
         handlePermissionChange,
         handleModelChange,
         handleSend,
+        dismissAutocomplete,
     }
 }
 

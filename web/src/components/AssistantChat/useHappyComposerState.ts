@@ -4,6 +4,7 @@ import { getPermissionModeOptionsForFlavor } from '@hapi/protocol'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { useActiveWord } from '@/hooks/useActiveWord'
+import { findActiveWord } from '@/utils/findActiveWord'
 import { useActiveSuggestions } from '@/hooks/useActiveSuggestions'
 import { usePlatform } from '@/hooks/usePlatform'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
@@ -110,6 +111,7 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         selection: { start: 0, end: 0 }
     })
     const [settingsOverlay, setSettingsOverlay] = useState<'model' | 'permission' | null>(null)
+    const [autocompleteSuppressed, setAutocompleteSuppressed] = useState(false)
     const showSettings = settingsOverlay !== null
     const [isAborting, setIsAborting] = useState(false)
     const [isSwitching, setIsSwitching] = useState(false)
@@ -147,11 +149,21 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
     const isIOSPWA = isIOS && isStandalone
     const bottomPaddingClass = isIOSPWA ? 'pb-0' : 'pb-3'
     const activeWord = useActiveWord(inputState.text, inputState.selection, autocompletePrefixes)
+    const activeWordOffset = useMemo(() => {
+        const w = findActiveWord(inputState.text, inputState.selection, autocompletePrefixes)
+        return w ? w.offset : null
+    }, [inputState.text, inputState.selection.start, inputState.selection.end, autocompletePrefixes])
+    const autocompleteQuery = autocompleteSuppressed ? null : activeWord
     const [suggestions, selectedIndex, moveUp, moveDown, clearSuggestions] = useActiveSuggestions(
-        activeWord,
+        autocompleteQuery,
         autocompleteSuggestions,
         { clampSelection: true, wrapAround: true }
     )
+
+    const dismissAutocomplete = useCallback(() => {
+        setAutocompleteSuppressed(true)
+        clearSuggestions()
+    }, [clearSuggestions])
 
     const haptic = useCallback((type: 'light' | 'success' | 'error' = 'light') => {
         if (type === 'light') {
@@ -252,6 +264,10 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         isTouch,
         bottomPaddingClass,
         activeWord,
+        activeWordOffset,
+        autocompleteSuppressed,
+        setAutocompleteSuppressed,
+        dismissAutocomplete,
         suggestions,
         selectedIndex,
         moveUp,

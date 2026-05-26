@@ -1,3 +1,5 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { getTextareaCaretCoordinates } from '@/utils/textareaCaret'
 import { ComposerPrimitive } from '@assistant-ui/react'
 import type { ApiClient } from '@/api/client'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
@@ -58,6 +60,10 @@ export function HappyComposer(props: HappyComposerProps) {
         agentFlavor: props.agentFlavor,
     })
 
+    const autocompleteOverlayRef = useRef<HTMLDivElement>(null)
+    const composerRootRef = useRef<HTMLFormElement>(null)
+    const [autocompleteAnchorLeft, setAutocompleteAnchorLeft] = useState<number | null>(null)
+
     const {
         t,
         attachments,
@@ -93,12 +99,41 @@ export function HappyComposer(props: HappyComposerProps) {
         switchDisabled,
         isAborting,
         isSwitching,
+        activeWordOffset,
     } = state
+
+    useLayoutEffect(() => {
+        const textarea = textareaRef.current
+        const root = composerRootRef.current
+        if (!textarea || !root || suggestions.length === 0 || activeWordOffset == null) {
+            setAutocompleteAnchorLeft(null)
+            return
+        }
+        const coords = getTextareaCaretCoordinates(textarea, activeWordOffset)
+        const taRect = textarea.getBoundingClientRect()
+        const rootRect = root.getBoundingClientRect()
+        const left = (taRect.left - rootRect.left) + coords.left - textarea.scrollLeft
+        setAutocompleteAnchorLeft(left)
+    }, [suggestions.length, activeWordOffset, textareaRef])
+
+    useEffect(() => {
+        if (suggestions.length === 0) return
+
+        function handlePointerDown(event: PointerEvent) {
+            const target = event.target as Node
+            if (textareaRef.current?.contains(target)) return
+            if (autocompleteOverlayRef.current?.contains(target)) return
+            handlers.dismissAutocomplete()
+        }
+
+        document.addEventListener('pointerdown', handlePointerDown)
+        return () => document.removeEventListener('pointerdown', handlePointerDown)
+    }, [suggestions.length, textareaRef, handlers.dismissAutocomplete])
 
     return (
         <div className={`px-3 ${bottomPaddingClass} pt-2 bg-[var(--app-bg)]`}>
             <div className="mx-auto w-full max-w-content">
-                <ComposerPrimitive.Root className="relative" onSubmit={handlers.handleSubmit}>
+                <ComposerPrimitive.Root ref={composerRootRef} className="relative" onSubmit={handlers.handleSubmit}>
                     <HappyComposerOverlays
                         settingsOverlay={settingsOverlay}
                         showPermissionSettings={showPermissionSettings}
@@ -113,6 +148,8 @@ export function HappyComposer(props: HappyComposerProps) {
                         onPermissionChange={handlers.handlePermissionChange}
                         onModelChange={handlers.handleModelChange}
                         onSuggestionSelect={handlers.handleSuggestionSelect}
+                        autocompleteOverlayRef={autocompleteOverlayRef}
+                        autocompleteAnchorLeft={autocompleteAnchorLeft}
                         t={t}
                     />
 
