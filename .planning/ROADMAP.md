@@ -160,17 +160,17 @@ Plans:
 **Goal:** Audit real Cursor session NDJSON and complete the `*ToolCall` mapping table so Web can render all agent activity types (Task/Agent/Notebook/Skill/AskUserQuestion and other native Cursor tool variants).
 **Requirements:** TOOL-AUDIT-01, TOOL-AUDIT-02, TOOL-AUDIT-03, TOOL-AUDIT-04, TOOL-AUDIT-05, BUG-TOOL-01
 **Depends on:** Phase 01.2
-**Plans:** 4 plans
+**Plans:** 2/4 plans executed
 
 Plans:
 
 **Wave 0** *(capture + redacted fixtures)*
 
-- [ ] 01.3-01-PLAN.md — Dev NDJSON capture (HAPI_CURSOR_NDJSON_CAPTURE) + redacted captured fixtures
+- [x] 01.3-01-PLAN.md — Dev NDJSON capture (HAPI_CURSOR_NDJSON_CAPTURE) + redacted captured fixtures
 
 **Wave 1** *(depends on 01.3-01)*
 
-- [ ] 01.3-02-PLAN.md — Shared mapping module, allowlist, per-tool normalizers, CLI converter wiring
+- [x] 01.3-02-PLAN.md — Shared mapping module, allowlist, per-tool normalizers, CLI converter wiring
 
 **Wave 2** *(depends on 01.3-02)*
 
@@ -275,7 +275,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 01.3 -> 2 -> 3 -> 4 -> 5
 | 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-24 |
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
 | 01.2 Fix durable tool call projection in Hub | 6/7 | CLI *ToolCall parser done; legacy recovery pending | 2026-05-26 |
-| 01.3 Cursor 活动审计 | 0/4 | Planned | - |
+| 01.3 Cursor 活动审计 | 2/4 | In Progress|  |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
