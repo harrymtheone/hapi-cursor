@@ -39,11 +39,11 @@ function getTableSql(db: Database, table: string): string {
 describe('Store owner-only schema', () => {
     const removedScopeColumn = ['name', 'space'].join('')
 
-    it('creates schema version 12 with tool_calls and without users or scoped columns', () => {
+    it('creates schema version 13 with tool_calls and without users or scoped columns', () => {
         const store = new Store(':memory:')
         const rawDb = (store as unknown as { db: Database }).db
 
-        expect(rawDb.query<{ user_version: number }, []>('PRAGMA user_version').get()?.user_version).toBe(12)
+        expect(rawDb.query<{ user_version: number }, []>('PRAGMA user_version').get()?.user_version).toBe(13)
         expect(getTableNames(rawDb)).toEqual(['machines', 'messages', 'push_subscriptions', 'sessions', 'tool_calls'])
         expect(getColumnNames(rawDb, 'sessions')).not.toContain(removedScopeColumn)
         expect(getColumnNames(rawDb, 'machines')).not.toContain(removedScopeColumn)
