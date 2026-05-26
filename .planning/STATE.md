@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: executing
-last_updated: "2026-05-26T01:03:22.928Z"
-last_activity: 2026-05-26
+status: Phase 01.2 plans finished — human UAT re-run for tests 2 & 3 recommended
+last_updated: "2026-05-26T01:32:28.633Z"
+last_activity: 2026-05-26 — Completed 01.2-07-PLAN.md
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 3
   total_plans: 31
   completed_plans: 31
-  percent: 43
+  percent: 38
 ---
 
 # Project State
@@ -88,6 +88,7 @@ Progress: [██████████] 100%
 
 - Phase 01.1 inserted after Phase 1: Model picker UX — family visibility filter, Auto-only new sessions, Cursor-style composer picker (CURS-05) (URGENT)
 - Phase 01.2 inserted after Phase 01.1: Fix durable tool call projection in Hub so Web tool cards survive pagination, reload, and reconnect (URGENT)
+- Phase 01.3 inserted after Phase 1: Cursor 活动审计 — 抓真实 session NDJSON，补全 *ToolCall 映射表（含 Task/Agent/Notebook/Skill/AskUserQuestion） (URGENT)
 
 ### Decisions
 
@@ -173,9 +174,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-26T01:03:22.925Z
-Stopped at: Completed 01.2-07-PLAN.md
-Resume file: None
+Last session: 2026-05-26T01:32:28.630Z
+Stopped at: Phase 01.3 context gathered
+Resume file: .planning/phases/01.3-cursor-session-ndjson-toolcall-task-agent-notebook-skill-ask/01.3-CONTEXT.md
 
 ---
 
