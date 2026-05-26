@@ -350,7 +350,7 @@ function SessionPage() {
     } = useSlashCommands(api, sessionId, agentType)
     const {
         getSuggestions: getSkillSuggestions,
-    } = useSkills(api, sessionId)
+    } = useSkills(api, sessionId, session?.metadata?.skillPolicy)
 
     const getAutocompleteSuggestions = useCallback(async (query: string) => {
         if (query.startsWith('$')) {
