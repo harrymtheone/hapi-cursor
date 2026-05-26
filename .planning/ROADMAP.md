@@ -22,7 +22,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 - [ ] **Phase 01.2: Fix durable tool call projection in Hub** - Hub maintains a canonical tool call projection so Web can render complete tool cards across pagination, reload, and reconnect. (INSERTED)
 - [x] **Phase 01.3: Cursor 活动审计** - Capture real session NDJSON samples and complete the `*ToolCall` mapping table (Task/Agent/Notebook/Skill/AskUserQuestion). (INSERTED) (completed 2026-05-26)
 - [x] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files. (completed 2026-05-26)
-- [ ] **Phase 02.1: Skills auto-enable and header skills UI** - CLI-discovered skills auto-enable with no user disable; session skills panel moves to header Files bar as a simplified Global/Local name list. (INSERTED, 5 plans)
+- [x] **Phase 02.1: Skills auto-enable and header skills UI** - CLI-discovered skills auto-enable with no user disable; session skills panel moves to header Files bar as a simplified Global/Local name list. (INSERTED, 5 plans) (completed 2026-05-26)
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
 - [ ] **Phase 5: Integration Guards and Mobile E2E** - The full v1.1 mobile flow survives lifecycle events and passes the milestone quality gates.
@@ -224,7 +224,7 @@ Plans:
 **Goal:** When the CLI agent discovers skills, they are enabled automatically for the session with no user disable path; the session skills UI moves from the chat composer to the header Files bar as a read-only name list (Global/Local).
 **Requirements**: SKIL-01, SKIL-02, SKIL-03 (gap closure — supersedes session-policy UX from Phase 2)
 **Depends on:** Phase 2
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 **Success Criteria** (what must be TRUE):
 
@@ -246,7 +246,7 @@ Plans:
 **Wave 3** *(depends on 02.1-02, 02.1-03)*
 
 - [x] 02.1-04-PLAN.md — Header Skills button and read-only session sheet
-- [ ] 02.1-05-PLAN.md — Composer policy UI removal; i18n cleanup and settings copy
+- [x] 02.1-05-PLAN.md — Composer policy UI removal; i18n cleanup and settings copy
 
 ### Phase 3: MCP Inventory and Session Policy
 
