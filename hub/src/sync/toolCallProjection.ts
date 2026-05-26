@@ -126,6 +126,29 @@ export function inferToolNameFromPayload(input: unknown, output: unknown): strin
             if (hasReadShapedResult(outObj)) return 'Read'
             return null
         }
+
+        if (Array.isArray(inObj.questions) && inObj.questions.length > 0) return 'AskUserQuestion'
+
+        if (payloadString(inObj, ['skill'])) return 'Skill'
+
+        const notebookPath = payloadString(inObj, ['notebook_path'])
+        if (notebookPath) {
+            if (
+                'edit_mode' in inObj
+                || 'old_string' in inObj
+                || 'new_string' in inObj
+                || Array.isArray(inObj.edits)
+            ) {
+                return 'NotebookEdit'
+            }
+            return 'NotebookRead'
+        }
+
+        if (payloadString(inObj, ['description', 'team_name'])) return 'Task'
+
+        if (payloadString(inObj, ['prompt'])) {
+            return 'Agent'
+        }
     }
 
     if (!inObj && outObj && hasReadShapedResult(outObj)) return 'Read'
