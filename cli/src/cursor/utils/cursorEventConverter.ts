@@ -4,6 +4,7 @@
  */
 
 import type { AgentMessage } from '@/agent/types';
+import { findNativeToolCallVariant, resolveHapiToolName } from './cursorToolCallMapping';
 
 export type CursorStreamEvent =
     | { type: 'system'; subtype: 'init'; session_id: string; cwd?: string; model?: string }
@@ -50,23 +51,13 @@ export function parseCursorEvent(line: string): CursorStreamEvent | null {
 }
 
 function extractToolName(toolCall: Record<string, unknown>): string {
-    if (toolCall.readToolCall) return 'read_file';
-    if (toolCall.writeToolCall) return 'write_file';
-    if (toolCall.function && typeof toolCall.function === 'object') {
-        const fn = toolCall.function as Record<string, unknown>;
-        return typeof fn.name === 'string' ? fn.name : 'unknown';
-    }
-    return 'unknown';
+    return resolveHapiToolName(toolCall);
 }
 
 function extractToolInput(toolCall: Record<string, unknown>): unknown {
-    if (toolCall.readToolCall && typeof toolCall.readToolCall === 'object') {
-        const r = (toolCall.readToolCall as Record<string, unknown>).args;
-        return r ?? {};
-    }
-    if (toolCall.writeToolCall && typeof toolCall.writeToolCall === 'object') {
-        const w = (toolCall.writeToolCall as Record<string, unknown>).args;
-        return w ?? {};
+    const native = findNativeToolCallVariant(toolCall);
+    if (native) {
+        return native.variant.args ?? {};
     }
     if (toolCall.function && typeof toolCall.function === 'object') {
         const fn = toolCall.function as Record<string, unknown>;
@@ -76,13 +67,13 @@ function extractToolInput(toolCall: Record<string, unknown>): unknown {
 }
 
 function extractToolResult(toolCall: Record<string, unknown>): unknown {
-    if (toolCall.readToolCall && typeof toolCall.readToolCall === 'object') {
-        const r = toolCall.readToolCall as Record<string, unknown>;
-        return r.result ?? r;
+    const native = findNativeToolCallVariant(toolCall);
+    if (native) {
+        return native.variant.result ?? {};
     }
-    if (toolCall.writeToolCall && typeof toolCall.writeToolCall === 'object') {
-        const w = toolCall.writeToolCall as Record<string, unknown>;
-        return w.result ?? w;
+    if (toolCall.function && typeof toolCall.function === 'object') {
+        const fn = toolCall.function as Record<string, unknown>;
+        return fn.result ?? {};
     }
     return {};
 }
