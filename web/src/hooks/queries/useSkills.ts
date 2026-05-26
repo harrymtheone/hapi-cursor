@@ -1,41 +1,37 @@
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useMemo } from 'react'
-import { isSkillSuggestible } from '@hapi/protocol'
-import type { SkillPolicyState, SkillSummary } from '@hapi/protocol/types'
+import { isValidSkillForAutocomplete, normalizeSkillSummaryForWire } from '@hapi/protocol'
+import type { SkillSummary } from '@hapi/protocol/types'
 import type { ApiClient } from '@/api/client'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { queryKeys } from '@/lib/query-keys'
 import { getRecentSkills } from '@/lib/recent-skills'
 import { levenshteinDistance } from '@/lib/fuzzyMatch'
 
-function filterSuggestibleSkills(
-    skills: SkillSummary[],
-    skillPolicy: Record<string, SkillPolicyState> | undefined
-): SkillSummary[] {
-    return skills.filter(
-        (skill) => skill.valid && isSkillSuggestible(skill.name, skillPolicy)
-    )
+function filterValidSkills(skills: SkillSummary[]): SkillSummary[] {
+    return skills.filter(isValidSkillForAutocomplete)
 }
 
 function toSuggestion(skill: SkillSummary): Suggestion {
+    const slashName = `/${skill.name}`
+    const descriptionParts = [skill.description, 'Skill'].filter(Boolean)
     return {
-        key: `$${skill.name}`,
-        text: `$${skill.name}`,
-        label: `$${skill.name}`,
-        description: skill.description,
+        key: slashName,
+        text: slashName,
+        label: slashName,
+        description: descriptionParts.join(' · '),
         source: 'builtin',
     }
 }
 
 export function getEffectiveSkillSuggestions(
     skills: SkillSummary[],
-    skillPolicy: Record<string, SkillPolicyState> | undefined,
     queryText: string
 ): Suggestion[] {
-    const allowed = filterSuggestibleSkills(skills, skillPolicy)
+    const allowed = filterValidSkills(skills)
     const recent = getRecentSkills()
     const getRecency = (name: string) => recent[name] ?? 0
-    const searchTerm = queryText.startsWith('$')
+    const searchTerm = queryText.startsWith('/')
         ? queryText.slice(1).toLowerCase()
         : queryText.toLowerCase()
 
@@ -66,8 +62,7 @@ export function getEffectiveSkillSuggestions(
 
 export function useSkills(
     api: ApiClient | null,
-    sessionId: string | null,
-    skillPolicy?: Record<string, SkillPolicyState> | undefined
+    sessionId: string | null
 ): {
     skills: SkillSummary[]
     isLoading: boolean
@@ -93,14 +88,14 @@ export function useSkills(
 
     const skills = useMemo(() => {
         if (query.data?.success && query.data.skills) {
-            return query.data.skills
+            return query.data.skills.map(normalizeSkillSummaryForWire)
         }
         return []
     }, [query.data])
 
     const getSuggestions = useCallback(async (queryText: string): Promise<Suggestion[]> => {
-        return getEffectiveSkillSuggestions(skills, skillPolicy, queryText)
-    }, [skillPolicy, skills])
+        return getEffectiveSkillSuggestions(skills, queryText)
+    }, [skills])
 
     return {
         skills,

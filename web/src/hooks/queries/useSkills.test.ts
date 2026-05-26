@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SkillPolicyState, SkillSummary } from '@hapi/protocol/types'
+import type { SkillSummary } from '@hapi/protocol/types'
 import { getEffectiveSkillSuggestions } from './useSkills'
 
 vi.mock('@/lib/recent-skills', () => ({
@@ -27,60 +27,43 @@ describe('getEffectiveSkillSuggestions', () => {
         skill({ name: 'gamma' }),
     ]
 
-    it('omits disabled skills from suggestions', () => {
-        const suggestions = getEffectiveSkillSuggestions(
-            discoverySkills,
-            { gamma: 'disabled' },
-            '$'
-        )
-        const labels = suggestions.map((item) => item.label)
-        expect(labels).not.toContain('$gamma')
-        expect(labels).toContain('$alpha')
-    })
-
-    it('includes enabled skills when discovery lists them', () => {
-        const suggestions = getEffectiveSkillSuggestions(
-            [skill({ name: 'deploy' })],
-            { deploy: 'enabled' },
-            '$'
-        )
-        expect(suggestions.map((item) => item.label)).toContain('$deploy')
-    })
-
-    it('includes inherited skills when policy has no row', () => {
-        const suggestions = getEffectiveSkillSuggestions(
-            [skill({ name: 'deploy' })],
-            undefined,
-            '$'
-        )
-        expect(suggestions.map((item) => item.label)).toContain('$deploy')
+    it('suggests valid skills with / prefix keys', () => {
+        const suggestions = getEffectiveSkillSuggestions(discoverySkills, '/')
+        const keys = suggestions.map((item) => item.key)
+        expect(keys).toContain('/alpha')
+        expect(keys).toContain('/gamma')
+        expect(keys.every((key) => key.startsWith('/'))).toBe(true)
+        expect(keys.some((key) => key.startsWith('$'))).toBe(false)
     })
 
     it('never suggests invalid skills', () => {
-        const suggestions = getEffectiveSkillSuggestions(discoverySkills, {}, '$')
-        expect(suggestions.map((item) => item.label)).not.toContain('$beta')
+        const suggestions = getEffectiveSkillSuggestions(discoverySkills, '/')
+        expect(suggestions.map((item) => item.key)).not.toContain('/beta')
     })
 
-    it('reorders only suggestible skills by recency and skips disabled recent names', () => {
+    it('strips leading / from search term', () => {
+        const suggestions = getEffectiveSkillSuggestions(
+            [skill({ name: 'deploy' })],
+            '/dep'
+        )
+        expect(suggestions.map((item) => item.key)).toEqual(['/deploy'])
+    })
+
+    it('reorders valid skills by recency', () => {
         vi.mocked(getRecentSkills).mockReturnValue({
-            blocked: 3_000,
+            gamma: 3_000,
             alpha: 1_000,
         })
-        const suggestions = getEffectiveSkillSuggestions(
-            [skill({ name: 'alpha' }), skill({ name: 'blocked' })],
-            { blocked: 'disabled' } satisfies Record<string, SkillPolicyState>,
-            '$'
-        )
-        expect(suggestions.map((item) => item.label)).toEqual(['$alpha'])
+        const suggestions = getEffectiveSkillSuggestions(discoverySkills, '/')
+        expect(suggestions.map((item) => item.key)).toEqual(['/gamma', '/alpha'])
     })
 
-    it('filters disabled skills from fuzzy matches', () => {
+    it('labels skill suggestions for scanability', () => {
         const suggestions = getEffectiveSkillSuggestions(
-            [skill({ name: 'deploy' }), skill({ name: 'rollback' })],
-            { rollback: 'disabled' },
-            '$roll'
+            [skill({ name: 'deploy', description: 'Ship it' })],
+            '/'
         )
-        expect(suggestions.map((item) => item.label)).not.toContain('$rollback')
-        expect(suggestions).toHaveLength(0)
+        expect(suggestions[0]?.description).toContain('Skill')
+        expect(suggestions[0]?.description).toContain('Ship it')
     })
 })

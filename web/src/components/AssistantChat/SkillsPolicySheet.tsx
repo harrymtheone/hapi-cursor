@@ -25,7 +25,7 @@ export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const queryClient = useQueryClient()
-    const { skills, isLoading, error } = useSkills(props.api, props.sessionId, props.skillPolicy)
+    const { skills, isLoading, error } = useSkills(props.api, props.sessionId)
     const [searchQuery, setSearchQuery] = useState('')
     const [optimisticPolicy, setOptimisticPolicy] = useState(props.skillPolicy)
     const [pendingSkill, setPendingSkill] = useState<string | null>(null)
