@@ -315,6 +315,10 @@ export class ApiSessionClient extends EventEmitter {
         this.socket.connect()
     }
 
+    getMetadata(): Metadata | null {
+        return this.metadata
+    }
+
     onUserMessage(callback: (data: UserMessage, localId?: string) => void): void {
         this.pendingMessageCallback = callback
         while (this.pendingMessages.length > 0) {

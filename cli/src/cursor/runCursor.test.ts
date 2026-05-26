@@ -1,6 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { applyCursorSessionConfig, resolvePermissionMode } from './runCursor';
+import type { SkillSummary } from '@hapi/protocol/schemas';
+import type { SkillPolicyState } from '@hapi/protocol/types';
+import { applyCursorSessionConfig, applySkillPolicyToFormattedMessage, resolvePermissionMode } from './runCursor';
+import { HAPI_SESSION_SKILL_POLICY_MARKER } from './skillPolicyPreamble';
 import { UnknownPermissionModeError } from '@hapi/protocol/modes';
+
+function skill(name: string): SkillSummary {
+    return { name, source: 'project', valid: true, pathHint: name };
+}
 
 describe('resolvePermissionMode (RPC-boundary regression sentry — D-104 #3b / VALIDATION dim 3)', () => {
     it('throws UnknownPermissionModeError for invalid string payload', () => {
@@ -30,6 +37,33 @@ describe('resolvePermissionMode (RPC-boundary regression sentry — D-104 #3b / 
 
     it('returns the validated PermissionMode for valid cursor mode', () => {
         expect(resolvePermissionMode('plan')).toBe('plan');
+    });
+});
+
+describe('applySkillPolicyToFormattedMessage (runCursor user message batch)', () => {
+    it('prepends preamble once per formatted batch when policy allows skills', () => {
+        const formatted = applySkillPolicyToFormattedMessage(
+            'hello world',
+            [skill('allowed'), skill('blocked')],
+            { allowed: 'enabled', blocked: 'disabled' } satisfies Record<string, SkillPolicyState>
+        );
+
+        expect(formatted).toContain(HAPI_SESSION_SKILL_POLICY_MARKER);
+        expect(formatted).toContain('allowed');
+        expect(formatted).not.toContain('blocked');
+        expect(formatted.endsWith('hello world')).toBe(true);
+        expect(formatted.indexOf('hello world')).toBeGreaterThan(formatted.indexOf(HAPI_SESSION_SKILL_POLICY_MARKER));
+    });
+
+    it('leaves user text unchanged when disabled policy excludes all skills', () => {
+        const formatted = applySkillPolicyToFormattedMessage(
+            'user only',
+            [skill('blocked')],
+            { blocked: 'disabled' }
+        );
+
+        expect(formatted).toBe('user only');
+        expect(formatted).not.toContain(HAPI_SESSION_SKILL_POLICY_MARKER);
     });
 });
 

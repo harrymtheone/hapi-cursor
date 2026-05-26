@@ -16,7 +16,11 @@ import { CursorRuntimeConfigApplyResultSchema, PermissionModeSchema } from '@hap
 import type { CursorRuntimeConfigApplyResult } from '@hapi/protocol/types';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
 import { getInvokedCwd } from '@/utils/invokedCwd';
+import { listSkills, type SkillSummary } from '@/modules/common/skills';
+import { applySkillPolicyToFormattedMessage } from '@/cursor/skillPolicyPreamble';
 import { z } from 'zod';
+
+export { applySkillPolicyToFormattedMessage } from '@/cursor/skillPolicyPreamble';
 
 export const resolvePermissionMode = (value: unknown): PermissionMode => {
     const parsed = PermissionModeSchema.safeParse(value);
@@ -145,6 +149,15 @@ export async function runCursor(
 
     const sessionWrapperRef: { current: CursorSession | null } = { current: null };
 
+    let cachedSkills: SkillSummary[] = [];
+    void listSkills(workingDirectory)
+        .then((skills) => {
+            cachedSkills = skills;
+        })
+        .catch((error) => {
+            logger.debug('[cursor] listSkills failed; skill policy preamble disabled', error);
+        });
+
     let currentPermissionMode: PermissionMode = opts.permissionMode ?? 'default';
     let currentModel: string | undefined = opts.model;
 
@@ -173,7 +186,9 @@ export async function runCursor(
             model: currentModel
         };
         const formattedText = formatMessageWithAttachments(message.content.text, message.content.attachments);
-        messageQueue.push(formattedText, enhancedMode, localId);
+        const skillPolicy = session.getMetadata()?.skillPolicy;
+        const textWithPolicy = applySkillPolicyToFormattedMessage(formattedText, cachedSkills, skillPolicy);
+        messageQueue.push(textWithPolicy, enhancedMode, localId);
     });
 
     session.onCancelQueuedMessage((localId) => {
