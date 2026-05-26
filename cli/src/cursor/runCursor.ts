@@ -17,10 +17,7 @@ import type { CursorRuntimeConfigApplyResult } from '@hapi/protocol/types';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
 import { getInvokedCwd } from '@/utils/invokedCwd';
 import { listSkills, type SkillSummary } from '@/modules/common/skills';
-import { applySkillPolicyToFormattedMessage } from '@/cursor/skillPolicyPreamble';
 import { z } from 'zod';
-
-export { applySkillPolicyToFormattedMessage } from '@/cursor/skillPolicyPreamble';
 
 export const resolvePermissionMode = (value: unknown): PermissionMode => {
     const parsed = PermissionModeSchema.safeParse(value);
@@ -150,13 +147,25 @@ export async function runCursor(
     const sessionWrapperRef: { current: CursorSession | null } = { current: null };
 
     let cachedSkills: SkillSummary[] = [];
-    void listSkills(workingDirectory)
-        .then((skills) => {
-            cachedSkills = skills;
-        })
-        .catch((error) => {
-            logger.debug('[cursor] listSkills failed; skill policy preamble disabled', error);
-        });
+    let refreshInFlight: Promise<SkillSummary[]> | null = null;
+
+    const refreshSkills = (): Promise<SkillSummary[]> => {
+        if (!refreshInFlight) {
+            refreshInFlight = listSkills(workingDirectory)
+                .then((skills) => {
+                    cachedSkills = skills;
+                    return skills;
+                })
+                .catch((error) => {
+                    logger.debug('[cursor] listSkills failed; using last cache', error);
+                    return cachedSkills;
+                })
+                .finally(() => {
+                    refreshInFlight = null;
+                });
+        }
+        return refreshInFlight;
+    };
 
     let currentPermissionMode: PermissionMode = opts.permissionMode ?? 'default';
     let currentModel: string | undefined = opts.model;
@@ -180,15 +189,14 @@ export async function runCursor(
         logger.debug(`[cursor] Synced session permission mode: ${currentPermissionMode}`);
     };
 
-    session.onUserMessage((message, localId) => {
+    session.onUserMessage(async (message, localId) => {
+        await refreshSkills();
         const enhancedMode: EnhancedMode = {
             permissionMode: currentPermissionMode ?? 'default',
             model: currentModel
         };
         const formattedText = formatMessageWithAttachments(message.content.text, message.content.attachments);
-        const skillPolicy = session.getMetadata()?.skillPolicy;
-        const textWithPolicy = applySkillPolicyToFormattedMessage(formattedText, cachedSkills, skillPolicy);
-        messageQueue.push(textWithPolicy, enhancedMode, localId);
+        messageQueue.push(formattedText, enhancedMode, localId);
     });
 
     session.onCancelQueuedMessage((localId) => {
