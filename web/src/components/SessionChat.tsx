@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { AssistantRuntimeProvider } from '@assistant-ui/react'
 import type { ApiClient } from '@/api/client'
-import type { SkillPolicyState } from '@hapi/protocol/types'
 import type {
     AttachmentMetadata,
     DecryptedMessage,
@@ -121,8 +120,6 @@ export function SessionChat(props: {
         switchSession,
         setPermissionMode,
         setModel,
-        setSkillPolicy,
-        resetSkillPolicy,
     } = useSessionActions(
         props.api,
         props.session.id,
@@ -262,28 +259,6 @@ export function SessionChat(props: {
             console.error('Failed to set model:', e)
         }
     }, [setModel, props.onRefresh, haptic, props.session.model])
-
-    const handleSetSkillPolicy = useCallback(async (name: string, state: SkillPolicyState) => {
-        try {
-            await setSkillPolicy(name, state)
-            haptic.notification('success')
-            props.onRefresh()
-        } catch (e) {
-            haptic.notification('error')
-            console.error('Failed to set skill policy:', e)
-        }
-    }, [setSkillPolicy, props.onRefresh, haptic])
-
-    const handleResetSkillPolicy = useCallback(async () => {
-        try {
-            await resetSkillPolicy()
-            haptic.notification('success')
-            props.onRefresh()
-        } catch (e) {
-            haptic.notification('error')
-            console.error('Failed to reset skill policy:', e)
-        }
-    }, [resetSkillPolicy, props.onRefresh, haptic])
 
     // Reset the local switch state once the Hub-delivered session-updated patch
     // reports the new model in effect (next-message turn observed). This keeps
@@ -447,9 +422,6 @@ export function SessionChat(props: {
                         key={props.session.id}
                         sessionId={props.session.id}
                         api={props.api}
-                        skillPolicy={props.session.metadata?.skillPolicy}
-                        onSetSkillPolicy={handleSetSkillPolicy}
-                        onResetSkillPolicy={handleResetSkillPolicy}
                         disabled={props.isSending}
                         pendingSchedule={pendingSchedule}
                         onSchedule={setPendingSchedule}

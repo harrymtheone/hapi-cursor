@@ -85,6 +85,24 @@ describe('useSessionActions model mutation', () => {
         expect(invalidateQueries).toHaveBeenCalled()
     })
 
+    it('does not expose skill policy mutation actions', () => {
+        const api = createApi({
+            status: 'applied',
+            model: 'cursor-fast',
+            modelReasoningEffort: null,
+            effort: null
+        })
+        const { Wrapper } = createWrapper()
+        const { result } = renderHook(
+            () => useSessionActions(api, 'session-1', 'cursor'),
+            { wrapper: Wrapper }
+        )
+
+        expect(result.current).not.toHaveProperty('setSkillPolicy')
+        expect(result.current).not.toHaveProperty('applySkillPolicy')
+        expect(result.current).not.toHaveProperty('resetSkillPolicy')
+    })
+
     it('rejects HTTP failures without synthesizing a model apply result', async () => {
         const error = new Error('HTTP 409 Conflict')
         const api = {
