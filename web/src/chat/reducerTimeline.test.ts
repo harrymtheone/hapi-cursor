@@ -442,6 +442,40 @@ describe('reduceTimeline', () => {
         expect(toolBlocksById.get('tc-1')).toBe(toolBlock)
     })
 
+    it('result-only window: recovered Bash projection hydrates non-placeholder tool card (UAT gap 3)', () => {
+        const toolResultMsg: TracedMessage = {
+            id: 'msg-legacy-bash',
+            localId: null,
+            createdAt: 1_700_000_001_000,
+            role: 'agent',
+            content: [{
+                type: 'tool-result',
+                tool_use_id: 'tc-legacy-bash',
+                content: { stdout: 'ok' },
+                is_error: false,
+                uuid: 'u-bash',
+                parentUUID: null
+            }],
+            isSidechain: false
+        } as TracedMessage
+
+        const projection: ToolCallProjection = {
+            callId: 'tc-legacy-bash',
+            name: 'Bash',
+            input: { command: 'npm test' },
+            status: 'completed',
+            startedAt: 1_700_000_000_000,
+            completedAt: 1_700_000_001_000,
+        }
+
+        const { blocks } = reduceTimeline([toolResultMsg], makeContext(new Map([['tc-legacy-bash', projection]])))
+        const toolBlock = blocks.find(b => b.kind === 'tool-call') as { tool: { name: string } } | undefined
+        expect(toolBlock).toBeDefined()
+        expect(toolBlock?.tool.name).toBe('Bash')
+        expect(toolBlock?.tool.name).not.toBe('unknown')
+        expect(toolBlock?.tool.name).not.toBe('Tool')
+    })
+
     it('result-only window: projection map entry yields real tool name instead of Tool placeholder', () => {
         // Simulate a result-only window: only the tool-result message is in the visible
         // window (the tool-call message was trimmed off the top). Without a projection,

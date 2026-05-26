@@ -7,6 +7,7 @@ import { registerSessionHandlers } from '../socket/handlers/cli/sessionHandlers'
 import type { EventPublisher } from './eventPublisher'
 import { MessageService } from './messageService'
 import { SessionCache } from './sessionCache'
+import { reconcileSessionToolCalls } from './toolCallProjection'
 import { SyncEngine } from './syncEngine'
 import { KeepaliveScheduler } from '../utils/scheduler'
 
@@ -974,6 +975,53 @@ describe('session model', () => {
         expect(page.toolCalls['call-ro-1'].name).toBe('CursorBash')
         // SPEC-3: raw message row count unaffected by projection logic
         expect(store.messages.getMessages(session.id, 10)).toHaveLength(2)
+    })
+
+    it('legacy unknown wire name upgrades to Bash on result-only page after reconcile (UAT gap 2)', () => {
+        const store = new Store(':memory:')
+        const session = store.sessions.getOrCreateSession(
+            'session-legacy-unknown',
+            { path: '/tmp/project', host: 'localhost' },
+            null
+        )
+
+        store.messages.addMessage(
+            session.id,
+            {
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call',
+                        name: 'unknown',
+                        callId: 'call-legacy-uat',
+                        input: { command: 'npm test' }
+                    }
+                }
+            }
+        )
+        store.messages.addMessage(
+            session.id,
+            {
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call-result',
+                        callId: 'call-legacy-uat',
+                        output: { stdout: 'ok' }
+                    }
+                }
+            }
+        )
+
+        reconcileSessionToolCalls(session.id, store)
+
+        const service = new MessageService(store, {} as never, createPublisher([]))
+        const page = service.getMessagesPage(session.id, { limit: 1, before: null })
+
+        expect(page.toolCalls['call-legacy-uat']).toBeDefined()
+        expect(page.toolCalls['call-legacy-uat'].name).toBe('Bash')
     })
 
     describe('session dedup by agent session ID', () => {
