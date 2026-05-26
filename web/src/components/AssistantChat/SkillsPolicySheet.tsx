@@ -45,18 +45,23 @@ export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
     return (
         <Dialog open={props.open} onOpenChange={props.onOpenChange}>
             <DialogContent
-                className="fixed inset-x-0 bottom-0 top-auto max-h-[min(85vh,640px)] w-full max-w-none translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none p-0"
-                style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+                className="fixed bottom-0 left-1/2 top-auto z-50 max-h-[min(75vh,560px)] w-[min(calc(100vw-2rem),18rem)] max-w-none -translate-x-1/2 translate-y-0 rounded-t-2xl rounded-b-none p-0"
+                style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
             >
-                <div className="flex max-h-[min(85vh,640px)] flex-col">
-                    <DialogHeader className="shrink-0 space-y-2 border-b border-[var(--app-divider)] px-6 py-4 text-left">
+                <div className="flex max-h-[min(75vh,560px)] flex-col">
+                    <DialogHeader className="shrink-0 space-y-1 border-b border-[var(--app-divider)] px-3 py-2 text-left">
                         <div className="flex items-center justify-between gap-2">
-                            <DialogTitle className="text-base font-semibold">
+                            <DialogTitle className="text-sm font-semibold">
                                 {t('session.skills.title')}
+                                {!isLoading && !error ? (
+                                    <span className="ml-1.5 text-xs font-normal text-[var(--app-hint)]">
+                                        {sortedSkills.length}
+                                    </span>
+                                ) : null}
                             </DialogTitle>
                             <button
                                 type="button"
-                                className="text-sm font-medium text-[var(--app-link)]"
+                                className="text-xs font-medium text-[var(--app-link)]"
                                 onClick={() => props.onOpenChange(false)}
                             >
                                 {t('session.skills.done')}
@@ -64,15 +69,15 @@ export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
                         </div>
                     </DialogHeader>
 
-                    <div className="min-h-0 flex-1 overflow-y-auto px-6">
+                    <div className="min-h-0 flex-1 overflow-y-auto px-3">
                         {showSearch ? (
-                            <div className="sticky top-0 z-10 bg-[var(--app-dialog-bg)] pb-2 pt-3">
+                            <div className="sticky top-0 z-10 bg-[var(--app-dialog-bg)] pb-2 pt-2">
                                 <input
                                     type="search"
                                     value={searchQuery}
                                     onChange={(event) => setSearchQuery(event.target.value)}
                                     placeholder={t('session.skills.searchPlaceholder')}
-                                    className="w-full rounded-lg border border-[var(--app-divider)] bg-[var(--app-bg)] px-3 py-2 text-sm text-[var(--app-fg)] focus:outline-none focus:ring-2 focus:ring-[var(--app-link)]"
+                                    className="w-full rounded-lg border border-[var(--app-divider)] bg-[var(--app-bg)] px-2.5 py-1.5 text-xs text-[var(--app-fg)] focus:outline-none focus:ring-2 focus:ring-[var(--app-link)]"
                                 />
                             </div>
                         ) : null}
@@ -105,7 +110,7 @@ export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
                         ) : null}
 
                         {!isLoading && !error && filteredSkills.length > 0 ? (
-                            <div className="divide-y divide-[var(--app-divider)]">
+                            <div className="flex flex-wrap gap-1.5 py-2">
                                 {filteredSkills.map((skill) => (
                                     <SessionSkillsRow key={skill.name} skill={skill} />
                                 ))}
