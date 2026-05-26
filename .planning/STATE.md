@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
 status: executing
-last_updated: "2026-05-26T09:12:08.875Z"
+last_updated: "2026-05-26T09:15:52.847Z"
 last_activity: 2026-05-26
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 46
-  completed_plans: 44
+  completed_plans: 45
   percent: 56
 ---
 
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 ## Current Position
 
 Phase: 02.1
-Plan: 3 of 5 complete (02.1-01, 02.1-02, 02.1-03 done)
-Status: Ready to execute — 02.1-04
-Last activity: 2026-05-26 — Completed 02.1-03 Web policy removal and / autocomplete
+Plan: 4 of 5 complete (02.1-01, 02.1-02, 02.1-03 done)
+Status: Ready to execute
+Last activity: 2026-05-26
 
-Progress: [██████████] 96%
+Progress: [██████████] 98%
 
 ## Performance Metrics
 
@@ -83,6 +83,7 @@ Progress: [██████████] 96%
 | Phase 01.2-fix-durable-tool-call-projection-in-hub P02 | 18min | 3 tasks | 8 files |
 | Phase 01.2-fix-durable-tool-call-projection-in-hub P05 | 12min | 2 tasks | 1 files |
 | Phase 02.1 P02 | 4min | 2 tasks | 5 files |
+| Phase 02.1-skills-auto-enable-on-cli-discovery-no-disable-relocate-sess P04 | 2min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -149,6 +150,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 01]: SessionList prune effect must distinguish transient empty loading from authoritative empty list to prevent localStorage wipe on refresh.
 - [Phase 02.1]: Removed session skillPolicy from MetadataSchema and Hub; SCHEMA_VERSION 13 — recreate Hub SQLite on mismatch.
 - [Phase 02.1]: Per-message listSkills refresh in runCursor with single-flight coalescing; deleted CLI skill-policy preamble (02.1-02).
+- [Phase 02.1]: Session sheet uses scope.global/scope.local i18n keys; composer sheet mount removed when read-only props broke typecheck — Plan 04 read-only sheet refactor; early composer mount removal unblocks typecheck before plan 05
 
 ### Pending Todos
 
@@ -179,8 +181,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-26T09:12:04.205Z
-Stopped at: Completed 02.1-03-PLAN.md
+Last session: 2026-05-26T09:15:52.841Z
+Stopped at: Completed 02.1-04-PLAN.md
 Resume file: None
 
 ---

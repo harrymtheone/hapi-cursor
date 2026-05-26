@@ -224,7 +224,7 @@ Plans:
 **Goal:** When the CLI agent discovers skills, they are enabled automatically for the session with no user disable path; the session skills UI moves from the chat composer to the header Files bar as a read-only name list (Global/Local).
 **Requirements**: SKIL-01, SKIL-02, SKIL-03 (gap closure — supersedes session-policy UX from Phase 2)
 **Depends on:** Phase 2
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 **Success Criteria** (what must be TRUE):
 
@@ -245,7 +245,7 @@ Plans:
 
 **Wave 3** *(depends on 02.1-02, 02.1-03)*
 
-- [ ] 02.1-04-PLAN.md — Header Skills button and read-only session sheet
+- [x] 02.1-04-PLAN.md — Header Skills button and read-only session sheet
 - [ ] 02.1-05-PLAN.md — Composer policy UI removal; i18n cleanup and settings copy
 
 ### Phase 3: MCP Inventory and Session Policy
