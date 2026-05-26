@@ -1024,6 +1024,87 @@ describe('session model', () => {
         expect(page.toolCalls['call-legacy-uat'].name).toBe('Bash')
     })
 
+    const advancedToolInferCases: Array<{
+        label: string
+        callId: string
+        input: Record<string, unknown>
+        expectedName: string
+    }> = [
+        {
+            label: 'Task',
+            callId: 'call-adv-task',
+            input: { description: 'audit task', prompt: 'run audit' },
+            expectedName: 'Task'
+        },
+        {
+            label: 'AskUserQuestion',
+            callId: 'call-adv-ask',
+            input: { questions: [{ question: 'Pick one?' }] },
+            expectedName: 'AskUserQuestion'
+        },
+        {
+            label: 'Agent',
+            callId: 'call-adv-agent',
+            input: { prompt: 'go', subagent_type: 'explore' },
+            expectedName: 'Agent'
+        },
+        {
+            label: 'NotebookRead',
+            callId: 'call-adv-nb-read',
+            input: { notebook_path: '/x.ipynb' },
+            expectedName: 'NotebookRead'
+        },
+        {
+            label: 'Skill',
+            callId: 'call-adv-skill',
+            input: { skill: 'gitnexus-exploring' },
+            expectedName: 'Skill'
+        }
+    ]
+
+    for (const { label, callId, input, expectedName } of advancedToolInferCases) {
+        it(`legacy unknown upgrades to ${label} on result-only page after reconcile`, () => {
+            const store = new Store(':memory:')
+            const session = store.sessions.getOrCreateSession(
+                `session-legacy-unknown-${label.toLowerCase()}`,
+                { path: '/tmp/project', host: 'localhost' },
+                null
+            )
+
+            store.messages.addMessage(session.id, {
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call',
+                        name: 'unknown',
+                        callId,
+                        input
+                    }
+                }
+            })
+            store.messages.addMessage(session.id, {
+                role: 'agent',
+                content: {
+                    type: AGENT_MESSAGE_PAYLOAD_TYPE,
+                    data: {
+                        type: 'tool-call-result',
+                        callId,
+                        output: { ok: true }
+                    }
+                }
+            })
+
+            reconcileSessionToolCalls(session.id, store)
+
+            const service = new MessageService(store, {} as never, createPublisher([]))
+            const page = service.getMessagesPage(session.id, { limit: 1, before: null })
+
+            expect(page.toolCalls[callId]).toBeDefined()
+            expect(page.toolCalls[callId].name).toBe(expectedName)
+        })
+    }
+
     describe('session dedup by agent session ID', () => {
         it('merges duplicate when cursorSessionId collides', async () => {
             const store = new Store(':memory:')
