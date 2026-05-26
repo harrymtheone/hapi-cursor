@@ -197,7 +197,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — Shared SkillSummary/skillPolicy schemas + CLI Cursor-aligned discovery
+- [x] 02-01-PLAN.md — Shared SkillSummary/skillPolicy schemas + CLI Cursor-aligned discovery
 
 **Wave 2** *(depends on 02-01)*
 
@@ -300,7 +300,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 01.3 -> 2 -> 3 -> 4 -> 5
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
 | 01.2 Fix durable tool call projection in Hub | 6/7 | CLI *ToolCall parser done; legacy recovery pending | 2026-05-26 |
 | 01.3 Cursor 活动审计 | 4/4 | Complete    | 2026-05-26 |
-| 2. Skills Visibility and Session Policy | 0/6 | Planned | - |
+| 2. Skills Visibility and Session Policy | 1/6 | In Progress|  |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |
 | 5. Integration Guards and Mobile E2E | 0/TBD | Not started | - |
