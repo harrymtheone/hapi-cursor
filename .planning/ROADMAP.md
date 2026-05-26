@@ -116,7 +116,7 @@ Plans:
 **Goal:** Hub maintains a durable, canonical tool call projection keyed by `callId` so Web can render complete tool cards even when the current message window contains only a result-side event.
 **Requirements:** BUG-TOOL-01
 **Depends on:** Phase 01.1
-**Plans:** 5/7 plans complete (2 gap-closure plans pending UAT fix)
+**Plans:** 6/7 plans complete (1 gap-closure plan pending)
 
 Plans:
 
@@ -141,7 +141,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 01.2-06-PLAN.md — Generic Cursor *ToolCall parser, knownTools mapping, NDJSON fixture tests
+- [x] 01.2-06-PLAN.md — Generic Cursor *ToolCall parser, knownTools mapping, NDJSON fixture tests
 
 **Wave 2** *(depends on 01.2-06)*
 
@@ -248,7 +248,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-24 |
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
-| 01.2 Fix durable tool call projection in Hub | 5/7 | UAT gap closure pending | 2026-05-25 |
+| 01.2 Fix durable tool call projection in Hub | 6/7 | CLI *ToolCall parser done; legacy recovery pending | 2026-05-26 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |

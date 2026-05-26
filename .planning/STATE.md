@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: ready_to_plan
-last_updated: 2026-05-25T16:52:20.083Z
-last_activity: 2026-05-25
+status: executing
+last_updated: "2026-05-26T00:58:36.463Z"
+last_activity: 2026-05-26
 progress:
   total_phases: 7
-  completed_phases: 3
-  total_plans: 29
-  completed_plans: 29
-  percent: 43
-stopped_at: Phase 01.2 complete (5/5) — ready to discuss Phase 2
+  completed_phases: 2
+  total_plans: 31
+  completed_plans: 30
+  percent: 29
 ---
 
 # Project State
@@ -21,16 +20,16 @@ stopped_at: Phase 01.2 complete (5/5) — ready to discuss Phase 2
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 2 — skills visibility and session policy
+**Current focus:** Phase 01.2 — fix-durable-tool-call-projection-in-hub
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-05-25
+Phase: 01.2 (fix-durable-tool-call-projection-in-hub) — EXECUTING
+Plan: 6 of 7 (01.2-06 complete; 01.2-07 pending)
+Status: Executing Phase 01.2
+Last activity: 2026-05-26 — Completed 01.2-06-PLAN.md
 
-Progress: [██████████] 100%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
@@ -139,6 +138,7 @@ Recent decisions affecting current work:
 - [Phase 01]: Persist only the runtime completion marker in Hub; keep viewed/read completion state local to Web. — Durable runtime truth survives refetch without moving read state out of Web.
 - [Phase 01]: Use schema version 11 and the existing fail-fast mismatch policy instead of adding runtime migrations. — Matches the repo no-backward-compatibility SQLite policy.
 - [Phase 01]: Clear durable completion markers only when new queued work starts, not on idle keepalives. — Preserves completed/unread status across reload and reconnect while avoiding stale green on new work.
+- [Phase 01.2]: CLI native *ToolCall conversion uses allowlisted knownTools names (Read/Grep/Bash) via cursorToolCallMapping — closes upstream unknown placeholder root cause for new ingests
 - [Phase ?]: Web-side previousModel gate (not Hub-schema) closes UAT Test 3 flicker; BIG label gated until session-updated patch confirms
 - [Phase ?]: Shared CursorRuntimeConfigApplyResult enum unchanged; rename is locale-only (composer.model.appliesNextMessage)
 - [Phase ?]: [Phase 01]: SessionList prune effect must distinguish transient empty loading from authoritative empty list to prevent localStorage wipe on refresh.
@@ -172,8 +172,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-25T16:43:10.720Z
-Stopped at: Completed 01.1-03-PLAN.md
+Last session: 2026-05-26T00:58:36.460Z
+Stopped at: Completed 01.2-06-PLAN.md
 Resume file: None
 
 ---
