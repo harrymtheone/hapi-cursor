@@ -73,6 +73,7 @@ export function useSkills(
     isLoading: boolean
     error: string | null
     getSuggestions: (query: string) => Promise<Suggestion[]>
+    refetch: () => Promise<unknown>
 } {
     const resolvedSessionId = sessionId ?? 'unknown'
 
@@ -106,5 +107,6 @@ export function useSkills(
         isLoading: query.isLoading,
         error: query.error instanceof Error ? query.error.message : query.error ? 'Failed to load skills' : null,
         getSuggestions,
+        refetch: () => query.refetch(),
     }
 }
