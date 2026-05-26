@@ -140,23 +140,32 @@ describe('SkillSummarySchema', () => {
     })
 })
 
-describe('MetadataSchema skillPolicy', () => {
-    it('accepts optional skillPolicy on metadata', () => {
+describe('MetadataSchema', () => {
+    it('parses metadata without skillPolicy', () => {
+        const result = MetadataSchema.safeParse({
+            path: '/tmp/project',
+            host: 'devbox',
+        })
+
+        expect(result.success).toBe(true)
+        if (result.success) {
+            expect(result.data).not.toHaveProperty('skillPolicy')
+        }
+    })
+
+    it('strips legacy skillPolicy keys from metadata', () => {
         const result = MetadataSchema.safeParse({
             path: '/tmp/project',
             host: 'devbox',
             skillPolicy: {
                 deploy: 'enabled',
-                lint: 'disabled'
-            }
+                lint: 'disabled',
+            },
         })
 
         expect(result.success).toBe(true)
         if (result.success) {
-            expect(result.data.skillPolicy).toEqual({
-                deploy: 'enabled',
-                lint: 'disabled'
-            })
+            expect(result.data).not.toHaveProperty('skillPolicy')
         }
     })
 })

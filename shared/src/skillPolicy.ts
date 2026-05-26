@@ -1,33 +1,19 @@
-import type { SkillPolicyState } from './schemas'
+import type { SkillSummary } from './schemas'
 
 /**
- * Whether a skill should appear in HAPI autocomplete / discovery UX.
- * Missing policy rows are inherited (included). Cursor may still auto-invoke skills (D-10).
+ * Coerce RPC/HTTP payloads that omit Phase 2 SkillSummary fields (stale agent or narrow typings).
  */
-export function isSkillSuggestible(
-    name: string,
-    policy: Record<string, SkillPolicyState> | undefined
-): boolean {
-    return policy?.[name] !== 'disabled'
+export function normalizeSkillSummaryForWire(skill: SkillSummary): SkillSummary {
+    const source: SkillSummary['source'] =
+        skill.source === 'project' || skill.source === 'user' ? skill.source : 'user'
+    return {
+        ...skill,
+        source,
+        valid: skill.valid ?? true,
+    }
 }
 
-/**
- * Whether a valid skill is allowed for session policy (composer, preamble).
- * Enabled overrides inherited-off; manual invocationMode does not block allowance.
- */
-export function isEffectivelyAllowed(
-    name: string,
-    policy: Record<string, SkillPolicyState> | undefined,
-    skillValid = true
-): boolean {
-    if (!skillValid) {
-        return false
-    }
-
-    const state = policy?.[name]
-    if (state === 'disabled') {
-        return false
-    }
-
-    return true
+/** Whether a discovered skill may appear in `/` autocomplete (valid discovery only). */
+export function isValidSkillForAutocomplete(skill: SkillSummary): boolean {
+    return skill.valid === true
 }

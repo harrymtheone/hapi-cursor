@@ -17,7 +17,6 @@ export type {
     RunnerState,
     Session,
     SessionPatch,
-    SkillPolicyState,
     SkillSummary,
     ListSkillsResponse,
     SyncEvent,
