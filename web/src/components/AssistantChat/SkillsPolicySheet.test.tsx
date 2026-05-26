@@ -1,11 +1,9 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SkillSummary } from '@hapi/protocol/types'
 import { I18nProvider } from '@/lib/i18n-context'
-import { EnforcementBadge } from './EnforcementBadge'
 import { SkillsPolicySheet } from './SkillsPolicySheet'
 
-const navigateMock = vi.fn()
 const mockSkills: SkillSummary[] = [
     {
         name: 'valid-skill',
@@ -21,9 +19,7 @@ const mockSkills: SkillSummary[] = [
     },
 ]
 
-vi.mock('@tanstack/react-router', () => ({
-    useNavigate: () => navigateMock,
-}))
+const refetchMock = vi.fn().mockResolvedValue(undefined)
 
 vi.mock('@tanstack/react-query', () => ({
     useQueryClient: () => ({
@@ -37,68 +33,48 @@ vi.mock('@/hooks/queries/useSkills', () => ({
         isLoading: false,
         error: null,
         getSuggestions: vi.fn(),
+        refetch: refetchMock,
     }),
 }))
 
 function renderSheet(overrides: Partial<Parameters<typeof SkillsPolicySheet>[0]> = {}) {
-    const onSetSkillPolicy = vi.fn().mockResolvedValue(undefined)
-    const onResetSkillPolicy = vi.fn().mockResolvedValue(undefined)
-    const view = render(
+    return render(
         <I18nProvider>
             <SkillsPolicySheet
                 open
                 onOpenChange={vi.fn()}
                 api={{} as never}
                 sessionId="session-1"
-                skillPolicy={{}}
-                onSetSkillPolicy={onSetSkillPolicy}
-                onResetSkillPolicy={onResetSkillPolicy}
                 {...overrides}
             />
         </I18nProvider>
     )
-    return { ...view, onSetSkillPolicy, onResetSkillPolicy }
 }
-
-describe('EnforcementBadge', () => {
-    afterEach(() => cleanup())
-
-    it('shows HAPI session policy copy by default', () => {
-        render(
-            <I18nProvider>
-                <EnforcementBadge />
-            </I18nProvider>
-        )
-        expect(screen.getByText('HAPI session policy')).toBeInTheDocument()
-        expect(screen.queryByText('Cursor enforced')).not.toBeInTheDocument()
-    })
-})
 
 describe('SkillsPolicySheet', () => {
     afterEach(() => cleanup())
 
-    it('disables tri-state for invalid skills', () => {
+    it('shows Invalid pill for invalid skills', () => {
         renderSheet()
-        const row = screen.getByText('broken-skill').closest('.min-h-\\[56px\\]')
-        expect(row).toBeTruthy()
-        const radios = row!.querySelectorAll('button[role="radio"]')
-        expect(radios.length).toBe(3)
-        for (const radio of radios) {
-            expect(radio).toBeDisabled()
-        }
+        expect(screen.getByText('Invalid')).toBeInTheDocument()
+        expect(screen.getByText('broken-skill')).toBeInTheDocument()
     })
 
-    it('calls resetSkillPolicy when reset footer is clicked', async () => {
-        const { onResetSkillPolicy } = renderSheet()
-        fireEvent.click(screen.getByRole('button', { name: 'Reset all to inherited' }))
-        await waitFor(() => {
-            expect(onResetSkillPolicy).toHaveBeenCalledTimes(1)
-        })
+    it('does not render tri-state radiogroup controls', () => {
+        renderSheet()
+        expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument()
+        expect(screen.queryAllByRole('radio')).toHaveLength(0)
     })
 
-    it('does not render Cursor enforced badge in sheet rows', () => {
+    it('does not render policy footer actions', () => {
         renderSheet()
-        expect(screen.getAllByText('HAPI session policy').length).toBeGreaterThan(0)
-        expect(screen.queryByText('Cursor enforced')).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Reset all to inherited' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Browse skills catalog' })).not.toBeInTheDocument()
+    })
+
+    it('shows scope pills for Global and Local skills', () => {
+        renderSheet()
+        expect(screen.getByText('Local')).toBeInTheDocument()
+        expect(screen.getByText('Global')).toBeInTheDocument()
     })
 })
