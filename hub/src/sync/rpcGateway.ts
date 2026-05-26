@@ -1,4 +1,4 @@
-import { CursorModelDiscoveryResultSchema } from '@hapi/protocol/schemas'
+import { CursorModelDiscoveryResultSchema, type ListSkillsResponse } from '@hapi/protocol/schemas'
 import type { CursorModelDiscoveryResult, PermissionMode } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
 import type { RpcRegistry } from '../socket/rpcRegistry'
@@ -260,16 +260,8 @@ export class RpcGateway {
         }
     }
 
-    async listSkills(sessionId: string): Promise<{
-        success: boolean
-        skills?: Array<{ name: string; description?: string }>
-        error?: string
-    }> {
-        return await this.sessionRpc(sessionId, 'listSkills', {}) as {
-            success: boolean
-            skills?: Array<{ name: string; description?: string }>
-            error?: string
-        }
+    async listSkills(sessionId: string): Promise<ListSkillsResponse> {
+        return await this.sessionRpc(sessionId, 'listSkills', {}) as ListSkillsResponse
     }
 
     private async sessionRpc(

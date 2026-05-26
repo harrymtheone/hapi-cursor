@@ -1,4 +1,5 @@
-import { toSessionSummary } from '@hapi/protocol'
+import { normalizeSkillSummaryForWire, toSessionSummary } from '@hapi/protocol'
+import type { ListSkillsResponse } from '@hapi/protocol/schemas'
 import { Hono } from 'hono'
 import type { Session, SyncEngine } from '../../../sync/syncEngine'
 import type { WebAppEnv } from '../../middleware/auth'
@@ -103,7 +104,13 @@ export function createReadRoutes(
         const engine = c.get('engine')
         const session = c.get('session')
         try {
-            const result = await engine.listSkills(session.id)
+            const result = await engine.listSkills(session.id) as ListSkillsResponse
+            if (result.success && result.skills) {
+                return c.json({
+                    ...result,
+                    skills: result.skills.map((skill) => normalizeSkillSummaryForWire(skill)),
+                })
+            }
             return c.json(result)
         } catch (error) {
             return c.json({

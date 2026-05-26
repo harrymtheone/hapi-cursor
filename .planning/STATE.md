@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: executing
-last_updated: "2026-05-26T09:18:32.170Z"
+status: ready_to_plan
+last_updated: 2026-05-26T10:11:02.769Z
 last_activity: 2026-05-26
 progress:
   total_phases: 9
@@ -11,6 +11,7 @@ progress:
   total_plans: 46
   completed_plans: 46
   percent: 67
+stopped_at: Phase 02.1 complete (5/5) — ready to discuss Phase 3
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 02.1 — skills auto-enable and header skills UI
+**Current focus:** Phase 3 — mcp inventory and session policy
 
 ## Current Position
 
-Phase: 02.1
-Plan: 5 of 5 complete (02.1-01 through 02.1-05)
-Status: Phase 02.1 complete
-Last activity: 2026-05-26 — Completed 02.1-05 composer policy removal and i18n cleanup
+Phase: 3
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-05-26
 
 Progress: [██████████] 100%
 
@@ -35,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 70
+- Total plans completed: 75
 - Average duration: 4min
 - Total execution time: 0.18 hours
 
@@ -53,6 +54,7 @@ Progress: [██████████] 100%
 | 01.2 Fix durable tool call projection in Hub | TBD | - | - |
 | 01.2 | 5 | - | - |
 | 01.3 | 4 | - | - |
+| 02.1 | 5 | - | - |
 
 **Recent Trend:**
 
