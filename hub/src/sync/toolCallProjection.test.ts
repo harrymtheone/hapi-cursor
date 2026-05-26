@@ -139,6 +139,47 @@ describe('inferToolNameFromPayload', () => {
         expect(inferToolNameFromPayload({}, null)).toBeNull()
         expect(inferToolNameFromPayload({ path: '/foo' }, null)).toBeNull()
     })
+
+    it('maps questions[] to AskUserQuestion', () => {
+        expect(
+            inferToolNameFromPayload({ questions: [{ question: 'Pick?' }] }, null)
+        ).toBe('AskUserQuestion')
+    })
+
+    it('maps skill to Skill', () => {
+        expect(inferToolNameFromPayload({ skill: 'gitnexus-guide' }, null)).toBe('Skill')
+    })
+
+    it('maps notebook_path to NotebookRead or NotebookEdit', () => {
+        expect(inferToolNameFromPayload({ notebook_path: '/nb.ipynb' }, null)).toBe('NotebookRead')
+        expect(
+            inferToolNameFromPayload({ notebook_path: '/nb.ipynb', edit_mode: 'replace' }, null)
+        ).toBe('NotebookEdit')
+        expect(
+            inferToolNameFromPayload({ notebook_path: '/nb.ipynb', old_string: 'a' }, null)
+        ).toBe('NotebookEdit')
+        expect(
+            inferToolNameFromPayload({ notebook_path: '/nb.ipynb', edits: [{ old_string: 'a' }] }, null)
+        ).toBe('NotebookEdit')
+    })
+
+    it('maps description or team_name to Task', () => {
+        expect(inferToolNameFromPayload({ description: 'Run tests' }, null)).toBe('Task')
+        expect(inferToolNameFromPayload({ team_name: 'explore' }, null)).toBe('Task')
+    })
+
+    it('maps prompt to Agent (with or without subagent_type)', () => {
+        expect(
+            inferToolNameFromPayload({ prompt: 'x', subagent_type: 'explore' }, null)
+        ).toBe('Agent')
+        expect(inferToolNameFromPayload({ prompt: 'go' }, null)).toBe('Agent')
+    })
+
+    it('prefers Task over prompt-only Agent when description present', () => {
+        expect(
+            inferToolNameFromPayload({ description: 'audit task', prompt: 'go' }, null)
+        ).toBe('Task')
+    })
 })
 
 describe('mergeToolCallProjection legacy unknown', () => {
@@ -170,6 +211,28 @@ describe('mergeToolCallProjection legacy unknown', () => {
             at: 2000
         })
         expect(proj.name).toBe('Grep')
+    })
+
+    it('upgrades unknown start with description to Task', () => {
+        const proj = mergeToolCallProjection(null, {
+            kind: 'start',
+            callId: 'call-task',
+            name: 'unknown',
+            input: { description: 'x' },
+            at: 1000
+        })
+        expect(proj.name).toBe('Task')
+    })
+
+    it('upgrades unknown start with questions to AskUserQuestion', () => {
+        const proj = mergeToolCallProjection(null, {
+            kind: 'start',
+            callId: 'call-ask',
+            name: 'unknown',
+            input: { questions: [{ question: 'Pick?' }] },
+            at: 1000
+        })
+        expect(proj.name).toBe('AskUserQuestion')
     })
 
     it('upgrades result-only bootstrap from output-shaped Read', () => {
