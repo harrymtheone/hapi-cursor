@@ -1,7 +1,9 @@
 import { useAssistantApi, useAssistantState } from '@assistant-ui/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getPermissionModeOptionsForFlavor } from '@hapi/protocol'
+import type { SkillPolicyState } from '@hapi/protocol/types'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
+import { hasExplicitSkillPolicy } from './skillPolicyUtils'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
 import { useActiveWord } from '@/hooks/useActiveWord'
 import { useActiveSuggestions } from '@/hooks/useActiveSuggestions'
@@ -50,6 +52,7 @@ export interface UseHappyComposerStateProps {
     pendingSchedule?: PendingSchedule | null
     onSchedule?: (pending: PendingSchedule) => void
     onClearSchedule?: () => void
+    skillPolicy?: Record<string, SkillPolicyState>
 }
 
 const defaultSuggestionHandler = async (): Promise<Suggestion[]> => []
@@ -110,6 +113,7 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         selection: { start: 0, end: 0 }
     })
     const [settingsOverlay, setSettingsOverlay] = useState<'model' | 'permission' | null>(null)
+    const [skillsSheetOpen, setSkillsSheetOpen] = useState(false)
     const showSettings = settingsOverlay !== null
     const [isAborting, setIsAborting] = useState(false)
     const [isSwitching, setIsSwitching] = useState(false)
@@ -220,6 +224,12 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
     const showModelSettings = canOpenModelSelector
     const showSettingsButton = Boolean(showPermissionSettings || showModelSettings)
     const showAbortButton = true
+    const showSkillsPolicyButton = Boolean(sessionId)
+    const skillsPolicyActive = hasExplicitSkillPolicy(props.skillPolicy)
+
+    const toggleSkillsSheet = useCallback(() => {
+        setSkillsSheetOpen((open) => !open)
+    }, [])
 
     return {
         t,
@@ -276,6 +286,11 @@ export function useHappyComposerState(props: UseHappyComposerStateProps) {
         showSettingsButton,
         showAbortButton,
         autocompletePrefixes,
+        skillsSheetOpen,
+        setSkillsSheetOpen,
+        toggleSkillsSheet,
+        showSkillsPolicyButton,
+        skillsPolicyActive,
     }
 }
 
