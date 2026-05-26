@@ -46,13 +46,6 @@ vi.mock('@/hooks/queries/useSessions', () => ({
     }),
 }))
 
-const setSkillPolicyMock = vi.fn()
-const resetSkillPolicyMock = vi.fn()
-
-vi.mock('@/api/client', () => ({
-    ApiClient: class {},
-}))
-
 vi.mock('@/hooks/queries/useSkills', () => ({
     useSkills: () => ({
         skills: mockSkills,
@@ -62,20 +55,13 @@ vi.mock('@/hooks/queries/useSkills', () => ({
     }),
 }))
 
-vi.mock('@/hooks/mutations/useSessionActions', () => ({
-    useSessionActions: () => ({
-        setSkillPolicy: setSkillPolicyMock,
-        resetSkillPolicy: resetSkillPolicyMock,
-    }),
-}))
-
 describe('SkillsSettingsPage', () => {
     afterEach(() => {
         cleanup()
         vi.clearAllMocks()
     })
 
-    it('renders read-only catalog without policy mutations', () => {
+    it('renders read-only catalog without tri-state controls', () => {
         render(
             <I18nProvider>
                 <SkillsSettingsPage />
@@ -83,8 +69,7 @@ describe('SkillsSettingsPage', () => {
         )
         expect(screen.getByText('deploy')).toBeInTheDocument()
         expect(screen.getByText('Invalid YAML')).toBeInTheDocument()
-        expect(setSkillPolicyMock).not.toHaveBeenCalled()
-        expect(resetSkillPolicyMock).not.toHaveBeenCalled()
+        expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     })
 
     it('shows per-session policy footer note', () => {
