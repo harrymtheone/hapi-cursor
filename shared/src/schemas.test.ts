@@ -8,6 +8,7 @@ import {
     MetadataSchema,
     SessionPatchSchema,
     SessionSchema,
+    SkillSummarySchema,
     SyncEventSchema,
     ToolCallProjectionSchema
 } from './schemas'
@@ -108,6 +109,57 @@ const minimalMachine = {
     runnerState: null,
     runnerStateVersion: 1
 }
+
+describe('SkillSummarySchema', () => {
+    it('accepts a valid project skill row', () => {
+        expect(SkillSummarySchema.safeParse({
+            name: 'deploy',
+            description: 'Deploy helper',
+            source: 'project',
+            invocationMode: 'auto',
+            valid: true,
+            pathHint: '.cursor/skills/deploy/SKILL.md'
+        }).success).toBe(true)
+    })
+
+    it('accepts an invalid skill row with invalidReason', () => {
+        expect(SkillSummarySchema.safeParse({
+            name: 'broken',
+            source: 'user',
+            valid: false,
+            invalidReason: 'Invalid YAML frontmatter'
+        }).success).toBe(true)
+    })
+
+    it('rejects invalid rows without a name', () => {
+        expect(SkillSummarySchema.safeParse({
+            source: 'user',
+            valid: false,
+            invalidReason: 'missing name'
+        }).success).toBe(false)
+    })
+})
+
+describe('MetadataSchema skillPolicy', () => {
+    it('accepts optional skillPolicy on metadata', () => {
+        const result = MetadataSchema.safeParse({
+            path: '/tmp/project',
+            host: 'devbox',
+            skillPolicy: {
+                deploy: 'enabled',
+                lint: 'disabled'
+            }
+        })
+
+        expect(result.success).toBe(true)
+        if (result.success) {
+            expect(result.data.skillPolicy).toEqual({
+                deploy: 'enabled',
+                lint: 'disabled'
+            })
+        }
+    })
+})
 
 describe('SessionPatchSchema', () => {
     it('accepts an empty patch (all fields optional)', () => {

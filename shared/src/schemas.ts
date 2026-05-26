@@ -24,6 +24,11 @@ export const WorktreeMetadataSchema = z.object({
 
 export type WorktreeMetadata = z.infer<typeof WorktreeMetadataSchema>
 
+export const SkillPolicyStateSchema = z.enum(['inherited', 'enabled', 'disabled'])
+export type SkillPolicyState = z.infer<typeof SkillPolicyStateSchema>
+
+export const SkillPolicyMapSchema = z.record(z.string(), SkillPolicyStateSchema)
+
 export const MetadataSchema = z.object({
     path: z.string(),
     host: z.string(),
@@ -47,7 +52,8 @@ export const MetadataSchema = z.object({
     archivedBy: z.string().optional(),
     archiveReason: z.string().optional(),
     capabilities: SessionCapabilitiesSchema.optional(),
-    worktree: WorktreeMetadataSchema.optional()
+    worktree: WorktreeMetadataSchema.optional(),
+    skillPolicy: SkillPolicyMapSchema.optional()
 })
 
 export type Metadata = z.infer<typeof MetadataSchema>
@@ -332,6 +338,26 @@ const CursorRuntimeConfigStateSchema = {
     modelReasoningEffort: z.string().nullable(),
     effort: z.string().nullable()
 }
+
+export const SkillSummarySchema = z.object({
+    name: z.string().min(1),
+    description: z.string().optional(),
+    source: z.enum(['project', 'user']),
+    invocationMode: z.enum(['auto', 'manual']).optional(),
+    valid: z.boolean(),
+    invalidReason: z.string().optional(),
+    pathHint: z.string().optional()
+}).strict()
+
+export type SkillSummary = z.infer<typeof SkillSummarySchema>
+
+export const ListSkillsResponseSchema = z.object({
+    success: z.boolean(),
+    skills: z.array(SkillSummarySchema).optional(),
+    error: z.string().optional()
+}).strict()
+
+export type ListSkillsResponse = z.infer<typeof ListSkillsResponseSchema>
 
 export const CursorRuntimeConfigApplyResultSchema = z.discriminatedUnion('status', [
     z.object({
