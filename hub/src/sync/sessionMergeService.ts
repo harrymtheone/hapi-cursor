@@ -204,27 +204,6 @@ export class SessionMergeService {
             changed = true
         }
 
-        const oldSkillPolicy = oldObj.skillPolicy
-        const newSkillPolicy = newObj.skillPolicy
-        if (
-            (oldSkillPolicy && typeof oldSkillPolicy === 'object')
-            || (newSkillPolicy && typeof newSkillPolicy === 'object')
-        ) {
-            const oldMap = (oldSkillPolicy && typeof oldSkillPolicy === 'object'
-                ? oldSkillPolicy
-                : {}) as Record<string, unknown>
-            const newMap = (newSkillPolicy && typeof newSkillPolicy === 'object'
-                ? newSkillPolicy
-                : {}) as Record<string, unknown>
-            const mergedPolicy = { ...oldMap, ...newMap }
-            const newOnly = JSON.stringify(mergedPolicy)
-            const prior = JSON.stringify(newMap)
-            if (newOnly !== prior || Object.keys(oldMap).length > 0) {
-                merged.skillPolicy = mergedPolicy
-                changed = true
-            }
-        }
-
         return changed ? merged : newMetadata
     }
 

@@ -1,5 +1,4 @@
 import type { LocalResumeTarget, ResumableSession } from '@hapi/protocol'
-import type { SkillPolicyState } from '@hapi/protocol/schemas'
 import type { CursorModelDiscoveryResult, CursorRuntimeConfigApplyResult, DecryptedMessage, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
 import type { Server } from 'socket.io'
 import type { Store, CancelQueuedMessageResult } from '../store'
@@ -243,24 +242,6 @@ export class SyncEngine {
 
     async renameSession(sessionId: string, name: string): Promise<void> {
         await this.session.renameSession(sessionId, name)
-    }
-
-    async applySkillPolicy(
-        sessionId: string,
-        update: { name: string; state: SkillPolicyState }
-    ): Promise<void> {
-        await this.session.applySkillPolicy(sessionId, update)
-    }
-
-    async applySkillPolicyBatch(
-        sessionId: string,
-        skillPolicy: Record<string, SkillPolicyState>
-    ): Promise<void> {
-        await this.session.applySkillPolicyBatch(sessionId, skillPolicy)
-    }
-
-    async resetSessionSkillPolicy(sessionId: string): Promise<void> {
-        await this.session.resetSessionSkillPolicy(sessionId)
     }
 
     async deleteSession(sessionId: string): Promise<void> {

@@ -14,7 +14,7 @@
  */
 import type { ResumableSession } from '@hapi/protocol'
 import type { CursorRuntimeConfigApplyResult, PermissionMode, Session, SyncEvent } from '@hapi/protocol/types'
-import { CursorRuntimeConfigApplyResultSchema, type SkillPolicyState } from '@hapi/protocol/schemas'
+import { CursorRuntimeConfigApplyResultSchema } from '@hapi/protocol/schemas'
 import type { EventPublisher } from './eventPublisher'
 import type { MachineCache } from './machineCache'
 import type { MessageService } from './messageService'
@@ -169,24 +169,6 @@ export class SyncEngineSession {
 
     async renameSession(sessionId: string, name: string): Promise<void> {
         await this.sessionCache.renameSession(sessionId, name)
-    }
-
-    async applySkillPolicy(
-        sessionId: string,
-        update: { name: string; state: SkillPolicyState }
-    ): Promise<void> {
-        await this.sessionCache.applySkillPolicy(sessionId, update)
-    }
-
-    async applySkillPolicyBatch(
-        sessionId: string,
-        skillPolicy: Record<string, SkillPolicyState>
-    ): Promise<void> {
-        await this.sessionCache.applySkillPolicyBatch(sessionId, skillPolicy)
-    }
-
-    async resetSessionSkillPolicy(sessionId: string): Promise<void> {
-        await this.sessionCache.resetSessionSkillPolicy(sessionId)
     }
 
     async deleteSession(sessionId: string): Promise<void> {
