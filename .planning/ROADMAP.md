@@ -17,9 +17,10 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions, if needed later
 
-- [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (UAT gaps reopened — gap-closure plans 18-21 added 2026-05-24)
+- [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (UAT gaps reopened — gap-closure plans 17-21 added 2026-05-24)
 - [x] **Phase 01.1: Model picker UX (CURS-05)** - Family visibility filter, Auto-only new sessions, Cursor Desktop-style in-session model picker. (INSERTED) (completed 2026-05-24)
-- [x] **Phase 01.2: Fix durable tool call projection in Hub** - Hub maintains a canonical tool call projection so Web can render complete tool cards across pagination, reload, and reconnect. (INSERTED) (completed 2026-05-26)
+- [ ] **Phase 01.2: Fix durable tool call projection in Hub** - Hub maintains a canonical tool call projection so Web can render complete tool cards across pagination, reload, and reconnect. (INSERTED)
+- [ ] **Phase 01.3: Cursor 活动审计** - Capture real session NDJSON samples and complete the `*ToolCall` mapping table (Task/Agent/Notebook/Skill/AskUserQuestion). (INSERTED)
 - [ ] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files.
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
@@ -116,7 +117,7 @@ Plans:
 **Goal:** Hub maintains a durable, canonical tool call projection keyed by `callId` so Web can render complete tool cards even when the current message window contains only a result-side event.
 **Requirements:** BUG-TOOL-01
 **Depends on:** Phase 01.1
-**Plans:** 7/7 plans complete
+**Plans:** 6/7 plans complete (1 gap-closure plan pending)
 
 Plans:
 
@@ -145,7 +146,7 @@ Plans:
 
 **Wave 2** *(depends on 01.2-06)*
 
-- [x] 01.2-07-PLAN.md — Hub legacy unknown recovery + end-to-end gap closure gate
+- [ ] 01.2-07-PLAN.md — Hub legacy unknown recovery + end-to-end gap closure gate
 
 **Success Criteria** (what must be TRUE):
 
@@ -153,6 +154,31 @@ Plans:
   2. A completed tool call projection includes tool name, input, status, result/error, created/start/completion timestamps, and enough metadata for Web tool cards.
   3. Web can render correct tool name/input/result after refresh, SSE reconnect, or pagination when the visible message window contains only the result-side message.
   4. Existing normal start+result tool rendering remains unchanged, including grouped tool activity.
+
+### Phase 01.3: Cursor 活动审计 — 抓真实 session NDJSON，补全 *ToolCall 映射表（含 Task/Agent/Notebook/Skill/AskUserQuestion） (INSERTED)
+
+**Goal:** Audit real Cursor session NDJSON and complete the `*ToolCall` mapping table so Web can render all agent activity types (Task/Agent/Notebook/Skill/AskUserQuestion and other native Cursor tool variants).
+**Requirements:** TOOL-AUDIT-01, TOOL-AUDIT-02, TOOL-AUDIT-03, TOOL-AUDIT-04, TOOL-AUDIT-05, BUG-TOOL-01
+**Depends on:** Phase 01.2
+**Plans:** 4 plans
+
+Plans:
+
+**Wave 0** *(capture + redacted fixtures)*
+
+- [ ] 01.3-01-PLAN.md — Dev NDJSON capture (HAPI_CURSOR_NDJSON_CAPTURE) + redacted captured fixtures
+
+**Wave 1** *(depends on 01.3-01)*
+
+- [ ] 01.3-02-PLAN.md — Shared mapping module, allowlist, per-tool normalizers, CLI converter wiring
+
+**Wave 2** *(depends on 01.3-02)*
+
+- [ ] 01.3-03-PLAN.md — Hub infer extension + legacy unknown recovery for advanced tools
+
+**Wave 3** *(depends on 01.3-03)*
+
+- [ ] 01.3-04-PLAN.md — Web wire audit (Trace deferral) + minimal alias/hydration verification
 
 ### Phase 2: Skills Visibility and Session Policy
 
@@ -242,13 +268,14 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 2 -> 3 -> 4 -> 5
+Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 01.3 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-24 |
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
-| 01.2 Fix durable tool call projection in Hub | 7/7 | Complete   | 2026-05-26 |
+| 01.2 Fix durable tool call projection in Hub | 6/7 | CLI *ToolCall parser done; legacy recovery pending | 2026-05-26 |
+| 01.3 Cursor 活动审计 | 0/4 | Planned | - |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |

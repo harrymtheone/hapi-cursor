@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: Phase 01.2 plans finished — human UAT re-run for tests 2 & 3 recommended
-last_updated: "2026-05-26T01:32:28.633Z"
-last_activity: 2026-05-26 — Completed 01.2-07-PLAN.md
+status: executing
+last_updated: "2026-05-26T01:44:39.952Z"
+last_activity: 2026-05-26 -- Phase 01.3 planning complete
 progress:
   total_phases: 8
   completed_phases: 3
-  total_plans: 31
+  total_plans: 35
   completed_plans: 31
   percent: 38
 ---
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 Phase: 01.2 (fix-durable-tool-call-projection-in-hub) — COMPLETE
 Plan: 7 of 7 complete
-Status: Phase 01.2 plans finished — human UAT re-run for tests 2 & 3 recommended
-Last activity: 2026-05-26 — Completed 01.2-07-PLAN.md
+Status: Ready to execute
+Last activity: 2026-05-26 -- Phase 01.3 planning complete
 
 Progress: [██████████] 100%
 
