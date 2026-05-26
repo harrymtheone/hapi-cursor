@@ -16,7 +16,16 @@ export function getSkillSourceLabelKey(
     source: SkillSummary['source'] | undefined,
     namespace: 'settings' | 'session' = 'session'
 ): string {
-    const base = namespace === 'settings' ? 'settings.skills.catalog.source' : 'session.skills.source'
+    if (namespace === 'session') {
+        if (source === 'project') {
+            return 'session.skills.scope.local'
+        }
+        if (source === 'user') {
+            return 'session.skills.scope.global'
+        }
+        return 'session.skills.source.unknown'
+    }
+    const base = 'settings.skills.catalog.source'
     if (source === 'project' || source === 'user') {
         return `${base}.${source}`
     }

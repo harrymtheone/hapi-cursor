@@ -1,39 +1,31 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import type { SkillPolicyState } from './skillPolicyUtils'
 import type { ApiClient } from '@/api/client'
 import { useSkills } from '@/hooks/queries/useSkills'
 import { queryKeys } from '@/lib/query-keys'
 import { useTranslation } from '@/lib/use-translation'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { SkillPolicyRow } from './SkillPolicyRow'
-import { getSkillPolicyState, sortSkills } from './skillPolicyUtils'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { SessionSkillsRow } from './SessionSkillsRow'
+import { sortSkills } from './skillPolicyUtils'
 
 export interface SkillsPolicySheetProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     api: ApiClient | null
     sessionId: string
-    skillPolicy: Record<string, SkillPolicyState> | undefined
-    controlsDisabled?: boolean
-    onSetSkillPolicy: (name: string, state: SkillPolicyState) => Promise<void>
-    onResetSkillPolicy: () => Promise<void>
 }
 
 export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
     const { t } = useTranslation()
-    const navigate = useNavigate()
     const queryClient = useQueryClient()
-    const { skills, isLoading, error } = useSkills(props.api, props.sessionId)
+    const { skills, isLoading, error, refetch } = useSkills(props.api, props.sessionId)
     const [searchQuery, setSearchQuery] = useState('')
-    const [optimisticPolicy, setOptimisticPolicy] = useState(props.skillPolicy)
-    const [pendingSkill, setPendingSkill] = useState<string | null>(null)
-    const [isResetting, setIsResetting] = useState(false)
 
     useEffect(() => {
-        setOptimisticPolicy(props.skillPolicy)
-    }, [props.skillPolicy])
+        if (props.open) {
+            void refetch()
+        }
+    }, [props.open, refetch])
 
     const sortedSkills = useMemo(() => sortSkills(skills), [skills])
     const filteredSkills = useMemo(() => {
@@ -41,41 +33,10 @@ export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
         if (!query) {
             return sortedSkills
         }
-        return sortedSkills.filter((skill) =>
-            skill.name.toLowerCase().includes(query)
-            || (skill.description?.toLowerCase().includes(query) ?? false)
-        )
+        return sortedSkills.filter((skill) => skill.name.toLowerCase().includes(query))
     }, [searchQuery, sortedSkills])
 
     const showSearch = sortedSkills.length > 8
-
-    const handlePolicyChange = useCallback(async (name: string, state: SkillPolicyState) => {
-        setOptimisticPolicy((current) => {
-            const next = { ...(current ?? {}) }
-            if (state === 'inherited') {
-                delete next[name]
-            } else {
-                next[name] = state
-            }
-            return Object.keys(next).length > 0 ? next : undefined
-        })
-        setPendingSkill(name)
-        try {
-            await props.onSetSkillPolicy(name, state)
-        } finally {
-            setPendingSkill(null)
-        }
-    }, [props])
-
-    const handleReset = useCallback(async () => {
-        setIsResetting(true)
-        setOptimisticPolicy(undefined)
-        try {
-            await props.onResetSkillPolicy()
-        } finally {
-            setIsResetting(false)
-        }
-    }, [props])
 
     const handleRetry = useCallback(() => {
         void queryClient.invalidateQueries({ queryKey: queryKeys.skills(props.sessionId) })
@@ -86,13 +47,12 @@ export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
             <DialogContent
                 className="fixed inset-x-0 bottom-0 top-auto max-h-[min(85vh,640px)] w-full max-w-none translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none p-0"
                 style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-                aria-describedby="skills-policy-sheet-description"
             >
                 <div className="flex max-h-[min(85vh,640px)] flex-col">
                     <DialogHeader className="shrink-0 space-y-2 border-b border-[var(--app-divider)] px-6 py-4 text-left">
                         <div className="flex items-center justify-between gap-2">
                             <DialogTitle className="text-base font-semibold">
-                                {t('session.skills.sheetTitle')}
+                                {t('session.skills.title')}
                             </DialogTitle>
                             <button
                                 type="button"
@@ -102,9 +62,6 @@ export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
                                 {t('session.skills.done')}
                             </button>
                         </div>
-                        <DialogDescription id="skills-policy-sheet-description" className="text-xs">
-                            {t('session.skills.inheritedHelper')}
-                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="min-h-0 flex-1 overflow-y-auto px-6">
@@ -150,38 +107,10 @@ export function SkillsPolicySheet(props: SkillsPolicySheetProps) {
                         {!isLoading && !error && filteredSkills.length > 0 ? (
                             <div className="divide-y divide-[var(--app-divider)]">
                                 {filteredSkills.map((skill) => (
-                                    <SkillPolicyRow
-                                        key={skill.name}
-                                        skill={skill}
-                                        policyState={getSkillPolicyState(skill.name, optimisticPolicy)}
-                                        pending={pendingSkill === skill.name}
-                                        controlsDisabled={props.controlsDisabled || isResetting}
-                                        onPolicyChange={(state) => handlePolicyChange(skill.name, state)}
-                                    />
+                                    <SessionSkillsRow key={skill.name} skill={skill} />
                                 ))}
                             </div>
                         ) : null}
-                    </div>
-
-                    <div className="shrink-0 space-y-3 border-t border-[var(--app-divider)] px-6 py-4">
-                        <button
-                            type="button"
-                            className="text-sm font-medium text-[var(--app-link)]"
-                            onClick={() => {
-                                props.onOpenChange(false)
-                                navigate({ to: '/settings/skills' })
-                            }}
-                        >
-                            {t('session.skills.browseCatalog')}
-                        </button>
-                        <button
-                            type="button"
-                            disabled={props.controlsDisabled || isResetting}
-                            className="w-full text-sm font-semibold text-[var(--app-link)] disabled:opacity-50"
-                            onClick={() => void handleReset()}
-                        >
-                            {t('session.skills.resetAll')}
-                        </button>
                     </div>
                 </div>
             </DialogContent>

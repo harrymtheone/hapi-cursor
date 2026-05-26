@@ -12,7 +12,6 @@ import type { ModelFamily } from '@/lib/cursorModelFamilies'
 import { useHappyComposerState } from './useHappyComposerState'
 import { useHappyComposerHandlers } from './useHappyComposerHandlers'
 import { HappyComposerOverlays } from './HappyComposerOverlays'
-import { SkillsPolicySheet } from './SkillsPolicySheet'
 
 export type { TextInputState } from './useHappyComposerState'
 
@@ -206,19 +205,6 @@ export function HappyComposer(props: HappyComposerProps) {
                         />
                     </div>
                 </ComposerPrimitive.Root>
-
-                {canShowSkillsSheet ? (
-                    <SkillsPolicySheet
-                        open={skillsSheetOpen}
-                        onOpenChange={setSkillsSheetOpen}
-                        api={props.api ?? null}
-                        sessionId={props.sessionId!}
-                        skillPolicy={props.skillPolicy}
-                        controlsDisabled={controlsDisabled}
-                        onSetSkillPolicy={props.onSetSkillPolicy!}
-                        onResetSkillPolicy={props.onResetSkillPolicy!}
-                    />
-                ) : null}
             </div>
         </div>
     )

@@ -42,6 +42,27 @@ function FilesIcon(props: { className?: string }) {
     )
 }
 
+function SkillsIcon(props: { className?: string }) {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={props.className}
+        >
+            <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+            <path d="M5 19l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" />
+            <path d="M19 13l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" />
+        </svg>
+    )
+}
+
 function OutlineIcon(props: { className?: string }) {
     return (
         <svg
@@ -87,6 +108,8 @@ export function SessionHeader(props: {
     session: Session
     onBack: () => void
     onViewFiles?: () => void
+    onOpenSkills?: () => void
+    skillsSheetOpen?: boolean
     onOpenOutline?: () => void
     api: ApiClient | null
     onSessionDeleted?: () => void
@@ -178,6 +201,23 @@ export function SessionHeader(props: {
                             title={t('session.title')}
                         >
                             <FilesIcon />
+                        </button>
+                    ) : null}
+
+                    {props.onOpenSkills ? (
+                        <button
+                            type="button"
+                            onClick={props.onOpenSkills}
+                            className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-[var(--app-secondary-bg)] ${
+                                props.skillsSheetOpen
+                                    ? 'text-[var(--app-link)]'
+                                    : 'text-[var(--app-hint)] hover:text-[var(--app-fg)]'
+                            }`}
+                            title={t('session.skills.title')}
+                            aria-label={t('session.skills.title')}
+                            aria-expanded={props.skillsSheetOpen ?? false}
+                        >
+                            <SkillsIcon />
                         </button>
                     ) : null}
 

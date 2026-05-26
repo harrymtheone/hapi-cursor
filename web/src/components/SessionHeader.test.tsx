@@ -13,19 +13,37 @@ vi.mock('@/hooks/mutations/useSessionActions', () => ({
     }),
 }))
 
-const baseSession: Session = {
-    id: 'session-1',
-    active: true,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    metadata: { path: '/tmp/project' },
+function createSession(overrides: Partial<Session> = {}): Session {
+    return {
+        id: 'session-1',
+        seq: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        active: true,
+        activeAt: 1,
+        metadata: {
+            path: '/repo',
+            host: 'devbox'
+        },
+        metadataVersion: 1,
+        agentStateVersion: 1,
+        agentState: null,
+        mode: 'local',
+        thinking: false,
+        backgroundTaskCount: 0,
+        model: null,
+        modelReasoningEffort: null,
+        effort: null,
+        permissionMode: 'default',
+        ...overrides
+    } as Session
 }
 
 function renderHeader(overrides: Partial<Parameters<typeof SessionHeader>[0]> = {}) {
     return render(
         <I18nProvider>
             <SessionHeader
-                session={baseSession}
+                session={createSession()}
                 onBack={vi.fn()}
                 api={null}
                 {...overrides}

@@ -28,6 +28,7 @@ import { useHappyRuntime } from '@/lib/assistant-runtime'
 import { createAttachmentAdapter } from '@/lib/attachmentAdapter'
 import { useTranslation } from '@/lib/use-translation'
 import { SessionHeader } from '@/components/SessionHeader'
+import { SkillsPolicySheet } from '@/components/AssistantChat/SkillsPolicySheet'
 import { TeamPanel } from '@/components/TeamPanel'
 import { usePlatform } from '@/hooks/usePlatform'
 import { useSessionActions } from '@/hooks/mutations/useSessionActions'
@@ -112,6 +113,7 @@ export function SessionChat(props: {
     const visibleGroupsRef = useRef<ToolGroupBlock[]>([])
     const [forceScrollToken, setForceScrollToken] = useState(0)
     const [outlineOpen, setOutlineOpen] = useState(false)
+    const [skillsSheetOpen, setSkillsSheetOpen] = useState(false)
     const [modelSwitchState, setModelSwitchState] = useState<ModelSwitchState>({ status: 'idle' })
     const agentFlavor = 'cursor'
     const controlledByUser = props.session.agentState?.controlledByUser === true
@@ -362,9 +364,18 @@ export function SessionChat(props: {
                 session={props.session}
                 onBack={props.onBack}
                 onViewFiles={props.session.metadata?.path ? handleViewFiles : undefined}
+                onOpenSkills={() => setSkillsSheetOpen(true)}
+                skillsSheetOpen={skillsSheetOpen}
                 onOpenOutline={() => setOutlineOpen(true)}
                 api={props.api}
                 onSessionDeleted={props.onBack}
+            />
+
+            <SkillsPolicySheet
+                open={skillsSheetOpen}
+                onOpenChange={setSkillsSheetOpen}
+                api={props.api}
+                sessionId={props.session.id}
             />
 
             {props.session.teamState && (
