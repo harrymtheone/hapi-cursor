@@ -20,7 +20,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 - [x] **Phase 1: Cursor Runtime Config Contract** - Users can discover, choose, switch, and monitor Cursor model/effort state from mobile. (UAT gaps reopened — gap-closure plans 17-21 added 2026-05-24)
 - [x] **Phase 01.1: Model picker UX (CURS-05)** - Family visibility filter, Auto-only new sessions, Cursor Desktop-style in-session model picker. (INSERTED) (completed 2026-05-24)
 - [ ] **Phase 01.2: Fix durable tool call projection in Hub** - Hub maintains a canonical tool call projection so Web can render complete tool cards across pagination, reload, and reconnect. (INSERTED)
-- [ ] **Phase 01.3: Cursor 活动审计** - Capture real session NDJSON samples and complete the `*ToolCall` mapping table (Task/Agent/Notebook/Skill/AskUserQuestion). (INSERTED)
+- [x] **Phase 01.3: Cursor 活动审计** - Capture real session NDJSON samples and complete the `*ToolCall` mapping table (Task/Agent/Notebook/Skill/AskUserQuestion). (INSERTED) (completed 2026-05-26)
 - [ ] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files.
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
@@ -160,7 +160,7 @@ Plans:
 **Goal:** Audit real Cursor session NDJSON and complete the `*ToolCall` mapping table so Web can render all agent activity types (Task/Agent/Notebook/Skill/AskUserQuestion and other native Cursor tool variants).
 **Requirements:** TOOL-AUDIT-01, TOOL-AUDIT-02, TOOL-AUDIT-03, TOOL-AUDIT-04, TOOL-AUDIT-05, BUG-TOOL-01
 **Depends on:** Phase 01.2
-**Plans:** 2/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 
@@ -174,11 +174,11 @@ Plans:
 
 **Wave 2** *(depends on 01.3-02)*
 
-- [ ] 01.3-03-PLAN.md — Hub infer extension + legacy unknown recovery for advanced tools
+- [x] 01.3-03-PLAN.md — Hub infer extension + legacy unknown recovery for advanced tools
 
 **Wave 3** *(depends on 01.3-03)*
 
-- [ ] 01.3-04-PLAN.md — Web wire audit (Trace deferral) + minimal alias/hydration verification
+- [x] 01.3-04-PLAN.md — Web wire audit (Trace deferral) + minimal alias/hydration verification
 
 ### Phase 2: Skills Visibility and Session Policy
 
@@ -275,7 +275,7 @@ Phases execute in numeric order: 1 -> 01.1 -> 01.2 -> 01.3 -> 2 -> 3 -> 4 -> 5
 | 1. Cursor Runtime Config Contract | 21/21 | Complete   | 2026-05-24 |
 | 01.1 Model picker UX | 3/3 | Complete | 2026-05-24 |
 | 01.2 Fix durable tool call projection in Hub | 6/7 | CLI *ToolCall parser done; legacy recovery pending | 2026-05-26 |
-| 01.3 Cursor 活动审计 | 2/4 | In Progress|  |
+| 01.3 Cursor 活动审计 | 4/4 | Complete    | 2026-05-26 |
 | 2. Skills Visibility and Session Policy | 0/TBD | Not started | - |
 | 3. MCP Inventory and Session Policy | 0/TBD | Not started | - |
 | 4. Mobile Screenshot Display | 0/TBD | Not started | - |

@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Cursor mobile features
-status: verifying
-last_updated: "2026-05-26T02:25:29.661Z"
+status: ready_to_plan
+last_updated: 2026-05-26T02:48:33.571Z
 last_activity: 2026-05-26
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 35
-  completed_plans: 33
+  completed_plans: 35
   percent: 38
+stopped_at: Phase 01.3 complete (4/4) — ready to discuss Phase 2
 ---
 
 # Project State
@@ -20,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23 after v1.1 milestone start)
 
 **Core value:** 让 Cursor Agent 在手机端达到与桌面 Cursor IDE 等同的可用性
-**Current focus:** Phase 01.2 — fix-durable-tool-call-projection-in-hub
+**Current focus:** Phase 2 — skills visibility and session policy
 
 ## Current Position
 
-Phase: 01.2 (fix-durable-tool-call-projection-in-hub) — COMPLETE
-Plan: 7 of 7 complete
-Status: Phase complete — ready for verification
+Phase: 2
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-05-26
 
 Progress: [█████████░] 94%
@@ -35,7 +36,7 @@ Progress: [█████████░] 94%
 
 **Velocity:**
 
-- Total plans completed: 66
+- Total plans completed: 70
 - Average duration: 4min
 - Total execution time: 0.18 hours
 
@@ -52,6 +53,7 @@ Progress: [█████████░] 94%
 | 01.1 Model picker UX | 3/3 | - | - |
 | 01.2 Fix durable tool call projection in Hub | TBD | - | - |
 | 01.2 | 5 | - | - |
+| 01.3 | 4 | - | - |
 
 **Recent Trend:**
 
