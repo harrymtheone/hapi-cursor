@@ -19,7 +19,7 @@ Requirements for v1.1. Each maps to exactly one roadmap phase.
 ### Skills
 
 - [x] **SKIL-01**: User can view discovered Cursor skills with source, invocation mode, description, and invalid metadata states.
-- [ ] **SKIL-02**: User can set session-level inherited, enabled, or disabled skill policy without editing skill files or global Cursor config.
+- [x] **SKIL-02**: User can set session-level inherited, enabled, or disabled skill policy without editing skill files or global Cursor config.
 - [ ] **SKIL-03**: User can see whether skill policy is hard-enforced by Cursor or only represented as HAPI session policy.
 
 ### MCP
@@ -97,7 +97,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CURS-04 | Phase 1 | Complete |
 | CURS-05 | Phase 01.1 | Complete |
 | SKIL-01 | Phase 2 | Complete |
-| SKIL-02 | Phase 2 | Pending |
+| SKIL-02 | Phase 2 | Complete |
 | SKIL-03 | Phase 2 | Pending |
 | MCP-01 | Phase 3 | Pending |
 | MCP-02 | Phase 3 | Pending |
