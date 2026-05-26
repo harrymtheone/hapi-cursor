@@ -22,6 +22,7 @@ v1.1 turns the existing Cursor-only Tailscale PWA into a stronger mobile control
 - [ ] **Phase 01.2: Fix durable tool call projection in Hub** - Hub maintains a canonical tool call projection so Web can render complete tool cards across pagination, reload, and reconnect. (INSERTED)
 - [x] **Phase 01.3: Cursor 活动审计** - Capture real session NDJSON samples and complete the `*ToolCall` mapping table (Task/Agent/Notebook/Skill/AskUserQuestion). (INSERTED) (completed 2026-05-26)
 - [x] **Phase 2: Skills Visibility and Session Policy** - Users can inspect Cursor skills and set honest session-level skill policy without editing skill files. (completed 2026-05-26)
+- [ ] **Phase 02.1: Skills auto-enable and header skills UI** - CLI-discovered skills auto-enable with no user disable; session skills panel moves to header Files bar as a simplified Global/Local name list. (INSERTED, 4 plans)
 - [ ] **Phase 3: MCP Inventory and Session Policy** - Users can inspect redacted MCP servers, set session policy, and understand MCP approvals without mutating global config.
 - [ ] **Phase 4: Mobile Screenshot Display** - Users can view and inspect Cursor/browser image MCP results as mobile-friendly screenshot cards.
 - [ ] **Phase 5: Integration Guards and Mobile E2E** - The full v1.1 mobile flow survives lifecycle events and passes the milestone quality gates.
@@ -217,6 +218,34 @@ Plans:
 - [x] 02-06-PLAN.md — Session SkillsPolicySheet + composer affordance + SKIL-03 badges
 
 **UI hint**: yes
+
+### Phase 02.1: Skills auto-enable and header skills UI (INSERTED)
+
+**Goal:** When the CLI agent discovers skills, they are enabled automatically for the session with no user disable path; the session skills UI moves from the chat composer to the header Files bar as a read-only name list (Global/Local).
+**Requirements**: SKIL-01, SKIL-02, SKIL-03 (gap closure — supersedes session-policy UX from Phase 2)
+**Depends on:** Phase 2
+**Plans:** 4 plans
+
+**Success Criteria** (what must be TRUE):
+
+  1. CLI agent discovery enables each discovered skill for the session; users cannot disable skills from mobile or session policy UI.
+  2. Session skills control lives in the top-right header Files area (not the chat input), with a new icon and tooltip **Skills** (not “session skills policy”).
+  3. Skills panel shows skill names only — no enable/disable toggles, no “HAPI session policy” label, no skill descriptions; scope labels read **Global** / **Local** (not User/Project).
+
+Plans:
+
+**Wave 1**
+
+- [ ] 02.1-01-PLAN.md — Remove skillPolicy from protocol + Hub; SCHEMA_VERSION 13
+
+**Wave 2** *(depends on 02.1-01)*
+
+- [ ] 02.1-02-PLAN.md — CLI per-message listSkills refresh; delete preamble
+- [ ] 02.1-03-PLAN.md — Web delete policy mutations; valid-only `/` + merged autocomplete
+
+**Wave 3** *(depends on 02.1-03)*
+
+- [ ] 02.1-04-PLAN.md — Header Skills sheet; composer cleanup; i18n Global/Local/Invalid
 
 ### Phase 3: MCP Inventory and Session Policy
 
