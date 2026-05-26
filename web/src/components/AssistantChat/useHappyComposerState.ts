@@ -1,7 +1,7 @@
 import { useAssistantApi, useAssistantState } from '@assistant-ui/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getPermissionModeOptionsForFlavor } from '@hapi/protocol'
-import type { SkillPolicyState } from '@hapi/protocol/types'
+import type { SkillPolicyState } from './skillPolicyUtils'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
 import { hasExplicitSkillPolicy } from './skillPolicyUtils'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'

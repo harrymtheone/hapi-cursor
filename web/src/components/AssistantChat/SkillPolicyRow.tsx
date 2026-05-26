@@ -1,7 +1,9 @@
-import type { SkillPolicyState, SkillSummary } from '@hapi/protocol/types'
+import type { SkillSummary } from '@hapi/protocol/types'
+import type { SkillPolicyState } from './skillPolicyUtils'
 import { useTranslation } from '@/lib/use-translation'
 import { EnforcementBadge } from './EnforcementBadge'
 import { SkillTriStateControl } from './SkillTriStateControl'
+import { getSkillSourceLabelKey } from './skillPolicyUtils'
 
 export interface SkillPolicyRowProps {
     skill: SkillSummary
@@ -14,7 +16,7 @@ export interface SkillPolicyRowProps {
 export function SkillPolicyRow(props: SkillPolicyRowProps) {
     const { t } = useTranslation()
     const { skill } = props
-    const policyDisabled = props.controlsDisabled || !skill.valid
+    const policyDisabled = props.controlsDisabled || skill.valid === false
 
     return (
         <div
@@ -33,7 +35,7 @@ export function SkillPolicyRow(props: SkillPolicyRowProps) {
                     ) : null}
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[var(--app-hint)]">
                         <span className="rounded-full border border-[var(--app-border)] px-1.5 py-0.5">
-                            {t(`session.skills.source.${skill.source}`)}
+                            {t(getSkillSourceLabelKey(skill.source, 'session'))}
                         </span>
                         {skill.invocationMode ? (
                             <span>{t('session.skills.invocationMode', { mode: skill.invocationMode })}</span>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import type { SkillPolicyState } from '@hapi/protocol/types'
+import type { SkillPolicyState } from './skillPolicyUtils'
 import type { ApiClient } from '@/api/client'
 import { useSkills } from '@/hooks/queries/useSkills'
 import { queryKeys } from '@/lib/query-keys'

@@ -37,6 +37,7 @@ import { clearDraftsAfterSend } from '@/lib/clearDraftsAfterSend'
 import type { Machine } from '@/types/api'
 import { groupModelsIntoFamilies } from '@/lib/cursorModelFamilies'
 import { useVisibleModelFamilies } from '@/hooks/useVisibleModelFamilies'
+import { mergeAutocompleteSuggestions } from '@/lib/autocompleteMerge'
 import FilesPage from '@/routes/sessions/files'
 import FilePage from '@/routes/sessions/file'
 import TerminalPage from '@/routes/sessions/terminal'
@@ -351,11 +352,15 @@ function SessionPage() {
     } = useSlashCommands(api, sessionId, agentType)
     const {
         getSuggestions: getSkillSuggestions,
-    } = useSkills(api, sessionId, session?.metadata?.skillPolicy)
+    } = useSkills(api, sessionId)
 
     const getAutocompleteSuggestions = useCallback(async (query: string) => {
-        if (query.startsWith('$')) {
-            return await getSkillSuggestions(query)
+        if (query.startsWith('/')) {
+            const [skills, commands] = await Promise.all([
+                getSkillSuggestions(query),
+                getSlashSuggestions(query),
+            ])
+            return mergeAutocompleteSuggestions(skills, commands)
         }
         return await getSlashSuggestions(query)
     }, [getSkillSuggestions, getSlashSuggestions])

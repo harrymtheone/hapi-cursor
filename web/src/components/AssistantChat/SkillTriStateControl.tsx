@@ -1,4 +1,4 @@
-import type { SkillPolicyState } from '@hapi/protocol/types'
+import type { SkillPolicyState } from './skillPolicyUtils'
 import { useTranslation } from '@/lib/use-translation'
 
 const SEGMENTS: SkillPolicyState[] = ['inherited', 'enabled', 'disabled']

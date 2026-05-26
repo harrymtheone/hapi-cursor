@@ -148,9 +148,10 @@ export type SlashCommandsResponse = {
 
 export type {
     ListSkillsResponse,
-    SkillPolicyState,
     SkillSummary,
 } from '@hapi/protocol/types'
+
+export type { SkillPolicyState } from '@/components/AssistantChat/skillPolicyUtils'
 
 export type PushSubscriptionKeys = {
     p256dh: string

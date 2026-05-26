@@ -61,7 +61,7 @@ export function useHappyComposerHandlers(state: HappyComposerState, props: UseHa
     const handleSuggestionSelect = useCallback((index: number) => {
         const suggestion = suggestions[index]
         if (!suggestion || !textareaRef.current) return
-        if (suggestion.text.startsWith('$')) {
+        if (suggestion.source === 'builtin' && suggestion.text.startsWith('/')) {
             markSkillUsed(suggestion.text.slice(1))
         }
 

@@ -1,5 +1,5 @@
 import { ComposerPrimitive } from '@assistant-ui/react'
-import type { SkillPolicyState } from '@hapi/protocol/types'
+import type { SkillPolicyState } from './skillPolicyUtils'
 import type { ApiClient } from '@/api/client'
 import type { AgentState, PermissionMode, ThreadGoal } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'

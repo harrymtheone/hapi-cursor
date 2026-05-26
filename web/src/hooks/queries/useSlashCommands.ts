@@ -7,6 +7,11 @@ import { queryKeys } from '@/lib/query-keys'
 import { getBuiltinSlashCommands, mergeSlashCommands } from '@/lib/agentSlashCommands'
 import { levenshteinDistance } from '@/lib/fuzzyMatch'
 
+function slashCommandDescription(cmd: SlashCommand): string | undefined {
+    const base = cmd.description ?? (cmd.source === 'builtin' ? undefined : 'Custom command')
+    return base ? `${base} · Command` : 'Command'
+}
+
 export function useSlashCommands(
     api: ApiClient | null,
     sessionId: string | null,
@@ -58,7 +63,7 @@ export function useSlashCommands(
                 key: `/${cmd.name}`,
                 text: `/${cmd.name}`,
                 label: `/${cmd.name}`,
-                description: cmd.description ?? (cmd.source === 'builtin' ? undefined : 'Custom command'),
+                description: slashCommandDescription(cmd),
                 content: cmd.content,
                 source: cmd.source
             }))
@@ -84,7 +89,7 @@ export function useSlashCommands(
                 key: `/${cmd.name}`,
                 text: `/${cmd.name}`,
                 label: `/${cmd.name}`,
-                description: cmd.description ?? (cmd.source === 'builtin' ? undefined : 'Custom command'),
+                description: slashCommandDescription(cmd),
                 content: cmd.content,
                 source: cmd.source
             }))
